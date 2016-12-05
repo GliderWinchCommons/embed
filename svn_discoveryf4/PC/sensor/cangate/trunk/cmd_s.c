@@ -46,7 +46,7 @@ static int cmd_s_init(FILE* fpList)
 	{
 		if (strncmp(cmd_s_buf, "//C",3) == 0) // Select the line that has data.
 		{
-			sscanf (&cmd_s_buf[3],"%x %x %llx %x %x %d %d",&can.id, &can.dlc, &can.cd.ull, &can_poll.id, &can2, &numpolls, &burstct);
+			sscanf (&cmd_s_buf[3],"%x %x %llx %x %x %d %d",&can.id, &can.dlc, &can.cd.ull, &can_poll.id, &can2.id, &numpolls, &burstct);
 
 can2.dlc = 2;
 

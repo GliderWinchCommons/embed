@@ -35,6 +35,7 @@ cmd_p.o \
 cmd_q.o \
 cmd_r.o \
 cmd_s.o \
+cmd_c.o \
 parse.o \
 parse_print.o \
 sockclient.o \

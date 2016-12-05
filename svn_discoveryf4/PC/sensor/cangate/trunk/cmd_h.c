@@ -38,7 +38,7 @@ static int idsize;	// Number stored in the foregoing array.
 #define BUFSIZE	512
 static char buf[BUFSIZE];	// Keyboard entry line buffer
 
-static u32 keybrd_id;	// Unit ID
+//static u32 keybrd_id;	// Unit ID
 static u32 mode;	// 0 = histogram, 1 ADC3,2 filtered readings
 static int state = 0;
 static struct CANRCVBUF canmsg1;

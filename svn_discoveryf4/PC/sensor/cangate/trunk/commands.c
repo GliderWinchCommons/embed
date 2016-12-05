@@ -21,6 +21,7 @@ This takes care of dispatching keyboard commands.
 #include "cmd_p.h"
 #include "cmd_q.h"
 #include "cmd_r.h"
+#include "cmd_c.h"
 
 extern int fpListsw;
 
@@ -139,6 +140,11 @@ void do_command_keybrd(char* p)
 		msg_sw = 'x';
 		break;
 
+	case 'c': // 'c' requests & displays launch parameters
+		cmd_c_init(p);
+		msg_sw = 'c';
+		break;
+
 	default:
 		printf("1st char not a command 0x%02x ASCII: %c\n",*p, *p);
 		break;
@@ -186,6 +192,10 @@ void do_canbus_msg(struct CANRCVBUF* p)
 		cmd_p_do_msg1(p);
 		break;
 
+	case 'c':
+		cmd_c_do_msg(p);
+		break;
+
 	default:
 		break;
 	}
@@ -224,6 +234,7 @@ void do_printmenu(void)
 	printf("q - CAN bus file spec edit-check only\n");
 	printf("r - send high priority RESET\n");
 	printf("s - Toggle sending of test msg file to CAN bus on/off\n");
+	printf("c - request & display launch parameters\n");
 	printf("x - cancel command\n");
 	printf("Control C to quit program\n");
 	return;

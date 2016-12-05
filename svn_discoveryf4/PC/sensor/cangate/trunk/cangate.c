@@ -48,6 +48,7 @@ cd ~/svn_discoveryf4/PC/sensor/cangate/trunk
 #include "commands.h"
 #include "cmd_p.h"
 #include "cmd_s.h"
+#include "cmd_c.h"
 #include "sockclient.h"
 #include "var_size_chk.h"
 
@@ -82,11 +83,11 @@ char listbuf[LINESIZE];
 
 /* baudrate settings are defined in <asm/termbits.h>, which is
   included by <termios.h> */
-//#define BAUDRATE B115200
+#define BAUDRATE B115200
 //#define BAUDRATE B230400
 //#define BAUDRATE B460800
-#define BAUDRATE B921600
-char* baudratesetting = "921600";
+//#define BAUDRATE B921600
+char* baudratesetting = "115200";
 
 /* Serial port definition */
 
@@ -200,7 +201,7 @@ int main(int argc, char *argv[])
 	int	select_timeout;
 	int	xret;	// Subroutine return value
 	int	port;	// Socket port number
-	char xbuf[256];
+//	char xbuf[256];
 
 
 printf("BAUDRATE is FIXED AT: %s baud\n",baudratesetting);
@@ -214,7 +215,7 @@ printf("BAUDRATE is FIXED AT: %s baud\n",baudratesetting);
 	fpListsw = 0; // 0 = no test msg file list opened
 
 
-	printf ("CANGATGE has started\n");
+	printf ("CANGATE has started\n");
 
 printf ("argc %u\n",argc);
 for (i = 0; i < argc; i++)
@@ -372,8 +373,8 @@ printf("%d %s\n",i, argv[i]);
 		if ( !( (FD_ISSET(fdp, &ready)) || (FD_ISSET(STDIN_FILENO, &ready)) ) )
 		{ // When no file descriptors are responsible, then it must have been the timeout expiring
 		/* Sending test msgs to CAN if we opened a file with the list. */
-//			tmdetect = TMDETECT;		/* Refresh timeout timer */
-//			cmd_p_do_msg(fpList, fdp);
+			tmdetect = TMDETECT;		/* Refresh timeout timer */
+			cmd_c_do_msg(NULL);	// Poll cmd_c: launch parameter timeout detection
 		}
 
 		/* Incoming bytes from CAN gateway, arriving via serial port (file descriptor: 'fdp'). */

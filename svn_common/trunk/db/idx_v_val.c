@@ -1,4 +1,4 @@
-// 2016-11-12 16:46:44.497
+// 2016-12-05 13:20:06.685
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -11,6 +11,7 @@
 #define GPS_2_PARAM_SIZE 9
 #define LOGGER_1_PARAM_SIZE 4
 #define LOGGER_2_PARAM_SIZE 4
+#define MCL_PARAM_SIZE 22
 #define TENSION_a11_PARAM_SIZE 51
 #define TENSION_a12_PARAM_SIZE 51
 #define TENSION_a21_PARAM_SIZE 51
@@ -120,6 +121,35 @@ const uint32_t paramval[] = {
  0x00000001 , /*   2 1                    5  Logger_2: 2 Version number                                                      */
  0x00001F40 , /*   3 8000                 6  Logger_2: 3 Heartbeat count of time (ms) between msgs                           */
  0xE1A00000 , /*   4 CANID_HB_LOGGER_2   17  Logger_2: 4 CANID: Hearbeat sends running count of logged msgs                  */
+};
+#endif
+
+// =====================================================================
+#ifdef MCL	// Include following parameters?
+const uint32_t paramval[] = {
+ MCL_PARAM_SIZE,	/* Number of param entries that follow */
+ 0x00000000 , /*   1 0                    6  mcl: crc: CRC: Master Controller Launch parameters                              */
+ 0x00000001 , /*   2 1                    5  mcl: version: Master Controller Launch parameters                               */
+ 0x3F800000 , /*   3 1.00                11  mcl: ground tension factor: Master Controller Launch parameters                 */
+ 0x3FA66666 , /*   4 1.30                11  mcl: climb tension factor: Master Controller Launch parameters                  */
+ 0x44160000 , /*   5 600.0               11  mcl: glider mass (KG): Master Controller Launch parameters                      */
+ 0x441C4000 , /*   6 625                 11  mcl: @ glider weight (KG): Master Controller Launch parameters                  */
+ 0x44BB8000 , /*   7 1500                11  mcl: soft start timeM (MS): Master Controller Launch parameters                 */
+ 0x4237CCCD , /*   8 45.95               11  mcl: soft start constant: k1: Master Controller Launch parameters               */
+ 0x40D00000 , /*   9 6.5                 11  mcl: rotation taper: cable trigger speed (/MS): Master Controller Launch parameter*/
+ 0x428E0000 , /*  10 71.0                11  mcl: rotation taper: max ground cable speed (M/S): Master Controller Launch parameter*/
+ 0x3D978D50 , /*  11 0.074               11  mcl: rotation taper: constant k2: Master Controller Launch parameterS           */
+ 0x41080000 , /*  12 8.5                 11  mcl: transition to ramp: peak cable_speed_drop (M/S): Master Controller Launch parameter*/
+ 0x00001770 , /*  13 6000                 6  mcl: ramp taper up: ramp time (MS): Master Controller Launch parameter          */
+ 0x3F800000 , /*  14 1.0                 11  mcl: ramp taper up: constant k3: Master Controller Launch parameter             */
+ 0x42960000 , /*  15 75                  11  mcl: end of climb taper down: taper angle trig (DEG): Master Controller Launch parameter*/
+ 0x451C4000 , /*  16 2500                11  mcl: end of climb taper down: taper time: Master (MS) Controller Launch parameter*/
+ 0x3F800000 , /*  17 1.0                 11  mcl: end of climb taper down: constant k4: Master Controller Launch parameter   */
+ 0x40200000 , /*  18 2.5                 11  mcl: end of climb taper down: release delta: Master Controller Launch parameter */
+ 0x42480000 , /*  19 50.0                11  mcl: parachute tension taper: max parachute tension (KGF): Master Controller Launch parameter*/
+ 0x42820000 , /*  20 65.0                11  mcl: parachute tension taper: parachute taper speed (M/S): Master Controller Launch parameter*/
+ 0x42A00000 , /*  21 80.0                11  mcl: parachute tension taper: max parachute cable speed (M/S): Master Controller Launch parameter*/
+ 0x3F8CCCCD , /*  22 1.1                 11  mcl: parachute tension taper: constant k5: Master Controller Launch parameter   */
 };
 #endif
 

@@ -2,9 +2,17 @@
 * File Name          : cmd_c.c
 * Date First Issued  : 12/03/2016
 * Board              : PC
-* Description        : Details for handling the 'c' command (list msgs for the id entered)
+* Description        : Launch parameter transfer test
 *******************************************************************************/
 /*
+This routine is a hack of the cmd_c.c for the PC, in
+  ~/GliderWinchCommons/embed/svn_discoveryf4/sensor/gateway_ftdi_2can/trunk
+Minor modifications:
+  Timeout checking uses DWTTIME
+  Pusbutton starts, rather than command c being entered.
+
+Purpose: debugging the PC/HC transfer of launchparameters.
+
 CAN msg format--
   Handshake request to PC
     CAN ID = CANID_CMD_MCLR (Send)
@@ -37,13 +45,24 @@ CAN msg format--
 
 */
 
-#include <sys/time.h>
 #include <unistd.h>
 
+#include "libopencm3/stm32/f4/gpio.h"
 #include "cmd_c.h"
-#include "gatecomm.h"
 #include "PC_gateway_comm.h"	// Common to PC and STM32
 #include "USB_PC_gateway.h"
+#include "../../../../../svn_common/trunk/common_can.h"
+#include "../../../sw_discoveryf4/trunk/lib/libusartstm32f4/bsp_uart.h"
+//#include "clockspecifysetup.h"
+#include "DTW_counter.h"
+#include "DISCpinconfig.h"
+#include "common_can.h"
+#include "xprintf.h"
+
+#define UXPRT	6	// Uart number for 'xprintf' messages
+
+/* Debug xprintf */
+//#define DEBUGXPRINTF	// define to include
 
 /* Number of parameters we expect */
 #define NUMBER_PARAMETERS 28	// Number of parameters in list
@@ -52,7 +71,7 @@ CAN msg format--
 #define CMD_LAUNCH_PARM_HDSHK 38  // Send msg to handshake transferring launch parameters
 #define CMD_SEND_LAUNCH_PARM  39  // Send msg to send burst of parameters
 
-#define LAUNCH_PARAM_BURST_SIZE	16	// Maximum number of CAN msgs in a burst when sending launch parameters');
+#define LAUNCH_PARAM_BURST_SIZE	1	// Maximum number of CAN msgs in a burst when sending launch parameters');
 #define LAUNCH_PARAM_RETRY_CT	3	// Number of error retries when sending launch parameters');
 #define LAUNCH_PARAM_RETRY_TIMEOUT 500	// Number of milliseconds to wait for a response when sending launch parameters');
 #define VER_MCL	1	// Version number
@@ -61,9 +80,15 @@ CAN msg format--
 #define CANID_CMD_MCLI	0xFFE00000	// MCL: Master Controller Launch parameters I (HC)
 #define CANID_CMD_MCLR	0XFFE00004	// mcl: Master Controller Launch parameters R (MC)
 
-#define TIMEOUT_USEC    50000	// Timeout increment (microseconds) 0.3 secs
+#define TIMEOUT_USEC    50000	// Timeout increment (microseconds) 
 //#define TIMEOUT_USEC 500000	// Timeout increment (microseconds) 0.5 secs
 //#define TIMEOUT_USEC 2000000	// Timeout increment (microseconds) 2 secs LONG
+
+extern unsigned int sysclk_freq;
+
+/* Function calls in lptest.c (main) */
+void canbuf_add(struct CANRCVBUF* p);
+
 
 static void requestburst(struct CANRCVBUF* p);
 
@@ -72,13 +97,13 @@ static u32 lp_retry_ctr;	// Retry counter
 
 static u32 state;	// Receiving state
 
-static struct PCTOGATEWAY pctogateway; 
+//static struct PCTOGATEWAY pctogateway; 
 
 // Default command CAN ids
 static u32 keybrd_id_i;	// PC/HC sends with this CAN ID
 static u32 keybrd_id_r; // MC sends with this CAN ID
 
-static u32 canseqnumber;	// Serial ascii/hex msg has a seq number
+//static u32 canseqnumber;	// Serial ascii/hex msg has a seq number
 static struct CANRCVBUF can_last;	// Last CAN msg sent
 
 static u32 idx_burst;	// Index within burst
@@ -88,30 +113,71 @@ static u32 burst_bits;	// Bits for msg within burst OK
 
 static float flist[NUMBER_PARAMETERS];
 
-static struct timeval t1;	// Next time of a timeout
+static u32 t1;		// Next time of a timeout
 static int flag_to;	// Timeout flag: 0 = inactive; not zero = active
+
+// Overall time duration from request to end
+static u32 tim_req;	
+static u32 tim_end;
 
 extern int fdp;	/* port file descriptor */
 
+//  Input pin configuration */
+static const struct PINCONFIG	input = { \
+	GPIO_MODE_INPUT, 	// mode: Output
+	0,	 		// 
+	0,		 	// speed: fastest 
+	GPIO_PUPD_PULLDOWN, 	// pull up/down: pulldown
+	0 };			// 
+
+static u32 pbsw; // Pushbutton switch previous
 /******************************************************************************
- * static struct timeval setnexttimeout(int sec, int usec);
- * @brief 	: Add an increment to the current time
- * @param	: sec = increment secs
- * @param	: usec = increment usec (0 to 2147483647)
- * @return	: new time
+ * static int checkpushbutton(void);
+ * @brief	: Check pushbutton w logic for one polled return per press
+ * @return	: zero = not pressed; not zero = pressed
 *******************************************************************************/
-static struct timeval setnexttimeout(int sec, int usec)
+static int checkpushbutton(void)
 {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);	// Get current time
-	tv.tv_usec += usec;		// Add in microseconds
-	while (tv.tv_usec >= 1000000)	// Check turnover to secs
-	{ // Here, turnover of microseconds
-		tv.tv_usec -= 1000000;
-		tv.tv_sec += 1;	// Advance seconds
+	u32 gpioA1 = GPIO_IDR(GPIOA) & 0X1;
+	if (gpioA1 != 0)
+	{ // Here, button is pressed
+		if (pbsw == 0)
+		{
+			pbsw = gpioA1;
+			return 1;	
+		}
 	}
-	tv.tv_sec += sec;
-	return tv;
+	else
+	{
+		pbsw = gpioA1;
+	}
+	// Here button not pressed
+	// Or pressed, but previously pressed
+	return 0;
+}
+
+/******************************************************************************
+ * void pushbutton_pinsetup(void);
+ * @brief 	: Setup PA0 pin setup
+*******************************************************************************/
+void pushbutton_pinsetup(void)
+{
+	/*  Setup User pushbutton on Discovery F4 board */
+	f4gpiopins_Config ((volatile u32*)GPIOA, 0, (struct PINCONFIG*)&input);
+	return;
+}
+/******************************************************************************
+ * static u32 timeval setnexttimeout(int usec);
+ * @brief 	: Add an increment to the current time
+ * @param	: usec = increment usec (0 to 2147483647)
+ * @return	: new time (as processor sysclk ticks)
+*******************************************************************************/
+static u32 setnexttimeout(u32 usec)
+{
+	u32 tics = DTWTIME;		// Get current time
+	/* Convert usec to processor ticks. */
+	tics += (usec * (sysclk_freq/1000000));
+	return tics;
 }
 /******************************************************************************
  * static int timeout(void);
@@ -121,18 +187,16 @@ static struct timeval setnexttimeout(int sec, int usec)
 static int checktimeout(void)
 {
 	int temp = 0;
-	struct timeval tnow;
 	if (flag_to != 0) // Timing active?
 	{ // Here yes.
-		temp = 1;
-		gettimeofday(&tnow, NULL);
-		if (timercmp(&tnow,&t1, >))
+		if ( (int)(DTWTIME - t1) > 0)
 		{ // Here we have a timeout
+			temp = 1;	// Return the timeout code
 			lp_retry_ctr += 1;
-			printf("Timeout: retry ctr: %d: retry_size %d\t",lp_retry_ctr, LAUNCH_PARAM_RETRY_CT);
+			xprintf(UXPRT, "Timeout: retry ctr: %d: retry_size %d\t",lp_retry_ctr, LAUNCH_PARAM_RETRY_CT);
 			if (lp_retry_ctr >= LAUNCH_PARAM_RETRY_CT)
 			{ // Too many retries.  Give up, miserable fool.
-				printf("END OF RETRIES.  Re-execute command\n");
+				xprintf(UXPRT, "END OF RETRIES.  Re-execute command\n\r");
 				flag_to = 0;	// Stop timeout checks
 				state = 2;	// Go to idle state if response msgs come in
 				return temp;
@@ -143,14 +207,14 @@ static int checktimeout(void)
 			switch (state) // Add msg to show where we are at
 			{
 			case 0: // Handshake response
-				printf("Handshake request\n");
+				xprintf(UXPRT, "Handshake request\n\r");
 				break;
 				
 			case 1: // Handle request/receive bursts of msgs
-				printf("Burst @ list index: %d\tburst bits %08X\n",(idx_list + idx_burst),burst_bits);
+				xprintf(UXPRT, "Burst @ list index: %d\tburst bits %08X\n\r",(idx_list + idx_burst),burst_bits);
 				break;		
 			default:
-				printf("Timeout: should not come here!\n");
+				xprintf(UXPRT, "Timeout: should not come here!\n\r");
 				break;
 			}
 		}
@@ -166,12 +230,12 @@ static int checktimeout(void)
 static void printerror(char *pc,struct CANRCVBUF* p)
 {
 	int i;
-	printf("%s ",pc);	// Heading string
-	printf("%08X ",p->id);	// CAN id
-	printf(":%d: ",p->dlc);	// Payload length
+	xprintf(UXPRT,"%s ",pc);	// Heading string
+	xprintf(UXPRT,"%08X ",p->id);	// CAN id
+	xprintf(UXPRT,":%d: ",p->dlc);	// Payload length
 	for (i = 0; i < p->dlc; i++) // List payload in hex
-		printf("%02X ",p->cd.uc[i]);
-	printf("\n");	// A mess without this dear ones
+		xprintf(UXPRT,"%02X ",p->cd.uc[i]);
+	xprintf(UXPRT,"\n\r");	// A mess without this dear ones
 	return;
 }
 /******************************************************************************
@@ -181,12 +245,19 @@ static void printerror(char *pc,struct CANRCVBUF* p)
 *******************************************************************************/
 static void sendmsg_c (struct CANRCVBUF* p)
 {
-	pctogateway.mode_link = MODE_LINK;	// Set mode for routines that receive and send CAN msgs
-	pctogateway.cmprs.seq = canseqnumber++;	// Add sequence number (for PC checking for missing msgs)
-	USB_toPC_msg_mode(fdp, &pctogateway, p);  // Send to file descriptor (e.g. serial port)
-	can_last = *p;		// Save in case of timeout retry.
-	t1 = setnexttimeout(0, TIMEOUT_USEC); // Set next timeout time
+	canbuf_add(p);		// Place in buffer of msgs to go to PC
+	can_last = *p;		// Save msg in case of timeout retry.
+	t1 = setnexttimeout(TIMEOUT_USEC); // Set next timeout time
 	flag_to = 1;		// Set timer flag ON
+#ifdef DEBUGXPRINTF
+int i;
+xprintf(UXPRT,"%08X ",p->id);
+for (i = 0; i < p->dlc; i++)
+{
+  xprintf(UXPRT,"%02X ",p->cd.uc[i]);
+}
+xprintf(UXPRT," %08x\n\r",burst_bits);
+#endif
 	return;
 }
 /******************************************************************************
@@ -217,56 +288,23 @@ static void requestburst(struct CANRCVBUF* p)
 	p->cd.uc[0] = CMD_SEND_LAUNCH_PARM; // Code for burst request
 	p->cd.uc[1] = idx_list; // Index for first parameter in burst
 	sendmsg_c(p);
-
 	idx_burst = 0;	// Reset index within the burst
-
-	t1 = setnexttimeout(0, TIMEOUT_USEC); // Set next timeout time
-int i;
-printf("%08X ",p->id);
-for (i = 0; i < p->dlc; i++)
-{
-  printf("%02X ",p->cd.uc[i]);
-}
-printf(" %08x\n",burst_bits);
-
 	return;
 }
 /******************************************************************************
- * int cmd_c_init(char* p);
- * @brief 	: Check keyboard entry; send handshake CAN msg
- * @param	: p = pointer to line entered on keyboard
- * @return	: -1 = too few chars.  0 = OK.
+ * static void cmd_c_init(void);
+ * @brief 	: Init for transfer request
 *******************************************************************************/
-int cmd_c_init(char* p)
+static void cmd_c_init(void)
 {
 	struct CANRCVBUF can;
 	struct CANRCVBUF* pcan = &can;
 
-	/* Check keyboard entry and setup up the two CAN IDs */
-	if (strlen(p) < 1)
-	{ // Here too few chars
-		printf("%d is too few chars for the 'c' command, example\nc FFE00000 FFE00004 "\
-		"[CAN ID that PC-sends MC-sends]\nDefault CAN IDs is simply 'c'\n",(int)strlen(p));
-		return -1;
-	}
-	// Check if default IDs are to bel used
-	if (strlen(p) < 4)
-	{ // Use default CAN ID assignments
-		keybrd_id_i = CANID_CMD_MCLI; // HC Sends with this CAN ID
-		keybrd_id_r = CANID_CMD_MCLR; // MC Sends with this CAN ID	
-	}
-	else
-	{
-		if (strlen(p) < 20)
-		{ // Not enough chars for two CAN IDs
-			printf("%d is too few chars for the 'c' command with both CAN ids entered, example\n"\
-			"c FFE00000 FFE00004 [CAN ID that PC-sends MC-sends]\nDefault CAN IDs is simply 'c'\n",(int)strlen(p));
-			return -1;
-		}
-		sscanf( (p+1), "%x %x",&keybrd_id_i,&keybrd_id_r); // Get CAN IDs from keyboard entry
-	}
+	keybrd_id_i = CANID_CMD_MCLI; // HC Sends with this CAN ID
+	keybrd_id_r = CANID_CMD_MCLR; // MC Sends with this CAN ID	
 
-	printf ("CANIDs being used: PC/HC sends: %08X  MC sends: %08X\n", keybrd_id_i, keybrd_id_r);
+	xprintf(UXPRT, "\n\r\n\r###############################################################\n\r");
+	xprintf(UXPRT, "CANIDs being used: PC/HC sends: %08X  MC sends: %08X\n\r", keybrd_id_i, keybrd_id_r);
 
 	state = 0;	// Wait for response to handshake request
 	lp_retry_ctr = 0; // Retry counter reset
@@ -279,6 +317,8 @@ int cmd_c_init(char* p)
 	pcan->cd.uc[2] = NUMBER_PARAMETERS;
 	pcan->cd.uc[3] = VER_MCL;	// Version number
 
+tim_req = DTWTIME;
+
 	/* Send request for launch parameters.
 		Send to port number
 		Set next timer timeout time
@@ -286,7 +326,7 @@ int cmd_c_init(char* p)
 		Set timer flag ON (active) */
 	sendmsg_c(pcan); // Do all of the above wonderful things
 
-	return 0;
+	return;
 }
 /******************************************************************************
  * static float payloadtofloat(struct CANRCVBUF* p);
@@ -322,12 +362,23 @@ void cmd_c_do_msg(struct CANRCVBUF* p)
 	int i;
 	u32 temp_msk;
 	u32 temp;
+	int ret;
+	double dbl;
+
 	/* Union for float to bytes */
 	union {
 		float f;
 		unsigned int i;
 		unsigned char uc[8];
 	}u;
+
+	/* Check pushbutton */
+	ret = checkpushbutton();
+	if (ret != 0)
+	{ // Here, signal to initiate transfer
+		cmd_c_init();
+		return;
+	}
 
 	/* Were we called by the timer? */
 	if (p == NULL)
@@ -343,15 +394,21 @@ void cmd_c_do_msg(struct CANRCVBUF* p)
 	/* Check for command CAN id we want. */
 	if (!((p->id & 0xfffffffc) == (keybrd_id_i & 0xfffffffc))) return;
 
-printf("%2d %08X ",debug1++,p->id);
+/* Display msgs to this CAN id for debugging & test. */
+#ifdef DEBUGXPRINTF
+xprintf(UXPRT, "%2d %08X ",debug1++,p->id);
 for (i = 0; i < p->dlc; i++)
 {
-  printf("%02X ",p->cd.uc[i]);
+  xprintf(UXPRT, "%02X ",p->cd.uc[i]);
 }
-printf(" %08x\n",burst_bits);
+xprintf(UXPRT, " %08x\n\r",burst_bits);
+#endif
 
 	/* Is payload too short to be of any use? */
 	if (p->dlc < 2) return;
+
+	/* Assume a good enough msg to warrant a new timeout. */
+	t1 = setnexttimeout(TIMEOUT_USEC); // Set next timeout time
 
 	/* Handshake v Burst msgs */
 	switch(state)
@@ -360,29 +417,29 @@ printf(" %08x\n",burst_bits);
 		if (p->dlc != 4)
 		{ // Handshake payload length is incorrect for a handshake
 			printerror("Handshake response error: dlc not 4: ", p);
-			state = 2; // Failed so go to idle state
+//$			state = 2; // Failed so go to idle state
 			return;
 		}
 		/* The dlc is sufficient to proceed. */
 		if (p->cd.uc[0] != CMD_LAUNCH_PARM_HDSHK)
 		{ // Expected msg was not a handshake (assumes no other CANID_CMD_MCL activity)
 			printerror("Unexpected handshake code: ",p);
-			printf("	[0] should be %02X\n",CMD_LAUNCH_PARM_HDSHK);
-			printf("	      and not %02X\n",p->cd.uc[0]);
+			xprintf(UXPRT, "	[0] should be %02X\n\r",CMD_LAUNCH_PARM_HDSHK);
+			xprintf(UXPRT, "	      and not %02X\n\r",p->cd.uc[0]);
 			state = 2; // Go to idle state upon next entry.
 			return;
 		}
 		if (p->cd.uc[2] != NUMBER_PARAMETERS)
 		{ 	if (p->cd.uc[2] == 0)
 			{ // Here, PC telling us parameters are not ready/available
-				printf("Zero parameters: PC does not have parameters ready\n");
+				xprintf(UXPRT, "Zero parameters: PC does not have parameters ready\n\r");
 				state = 2; // Failed so go to idle state
 				return;
 			}
 			// PC parameter count does not match ours--something is wrong!
 			printerror("Handshake response error: number parameters ", p);
-			printf("        our expected count  = %d\n", NUMBER_PARAMETERS);
-			printf("          PC response count = %d\n", p->cd.uc[2]);
+			xprintf(UXPRT, "        our expected count  = %d\n\r", NUMBER_PARAMETERS);
+			xprintf(UXPRT, "          PC response count = %d\n\r", p->cd.uc[2]);
 			state = 2; // Failed so go to idle state
 			return;			
 		}
@@ -394,11 +451,11 @@ printf(" %08x\n",burst_bits);
 		{
 			lp_burst_size = LAUNCH_PARAM_BURST_SIZE;
 		}
-		printf("Working burst size = %d\n", lp_burst_size);
+		xprintf(UXPRT, "Working burst size = %d\n\r", lp_burst_size);
 
 		/* Handshake success! Request first burst */
 		idx_list = 0;	 	// Whole list reset
-		requestburst(p); 	// Send request
+		requestburst(p); 	// Send request for first burst
 		burst_bits_reset();	// Set bits for checking off msgs received
 		state = 1;		// Next state is handling the burst
 		break;
@@ -407,31 +464,31 @@ printf(" %08x\n",burst_bits);
 		
 		/* Validity and gross error checks. */
 		if (p->dlc != 6)
-		{ // Burst msg payload length is incorrect
+		{ // Burst msg payload length is incorrect.  
 			printerror("Burst msg response error: dlc not 6: ", p);
 			return;
 		}
 		if (p->cd.uc[0] != CMD_SEND_LAUNCH_PARM)
 		{ // Expected msg was not a burst msg (assumes no other CANID_CMD_MCL activity)
 			printerror("Unexpected burst request code: ",p);
-			printf("	[0] should be %02X\n",CMD_SEND_LAUNCH_PARM);
-			printf("	      and not %02X\n",p->cd.uc[0]);
+			xprintf(UXPRT, "	[0] should be %02X\n\r",CMD_SEND_LAUNCH_PARM);
+			xprintf(UXPRT, "	      and not %02X\n\r",p->cd.uc[0]);
 			state = 2;
 			return;
 		}
 		if (p->cd.uc[1] > NUMBER_PARAMETERS)
 		{ // Index with this parameter is out-of-range
 			printerror("Index of parameter is out-of-range: ",p);
-			printf("	[1] should be less than %d\n",NUMBER_PARAMETERS);
-			printf("			and not %d\n",p->cd.uc[1]);
+			xprintf(UXPRT, "	[1] should be less than %d\n\r",NUMBER_PARAMETERS);
+			xprintf(UXPRT, "			and not %d\n\r",p->cd.uc[1]);
 			return;	// Retry logic will pick this up
 		} 
 		// Compute burst index for the parameter index just received
 		idx_burst = p->cd.uc[1] - idx_list;
 		if (idx_burst >= lp_burst_size)
 		{ // Here, msg index is out of bounds to the burst being received
-			printf("Index in msg greater than start index plus burst size (or negative): "
-			" idx_burst: %d   p->cd.us[1]: %d  idx_list: %d\n",idx_burst,p->cd.uc[1],idx_list);
+			xprintf(UXPRT, "Index in msg greater than start index plus burst size (or negative): "
+			" idx_burst: %d   p->cd.us[1]: %d  idx_list: %d\n\r",idx_burst,p->cd.uc[1],idx_list);
 			return;
 		}
 
@@ -453,7 +510,7 @@ printf(" %08x\n",burst_bits);
 				lp_retry_ctr += 1;
 				if (lp_retry_ctr > LAUNCH_PARAM_RETRY_CT)
 				{ // Too many retries.  Give up you miserable fool!
-					printf("Burst failed at list index: %d\tburst bits %08X\n",(idx_list + idx_burst),temp);
+					xprintf(UXPRT, "Burst failed at list index: %d\tburst bits %08X\n\r",(idx_list + idx_burst),temp);
 					state = 2;
 					return;
 				}
@@ -464,11 +521,18 @@ printf(" %08x\n",burst_bits);
 				return;
 			}
 			/*  Huzzah!  All done (except CRC checking which we will implement later. */
-			printf("TRANSFER COMPLETE!\n");
+tim_end = DTWTIME;
+			xprintf(UXPRT, "TRANSFER COMPLETE!\n\r");
 			for (i = 0; i < (NUMBER_PARAMETERS-1); i++)
-				printf("%2d %f\n", (i+1), flist[i]);
+			{
+				dbl = flist[i];
+				xprintf(UXPRT, "%2d %f\n\r", (i+1), dbl);
+			}
 			u.i = flist[i];
-			printf("%2d 0x%08X\n",i, u.i); // Last one will be the CRC
+			xprintf(UXPRT, "%2d 0x%08X\n\r",i, u.i); // Last one will be the CRC
+double dx1 = (int)(tim_end - tim_req);
+xprintf(UXPRT,"Total time (ms): %d %10.3f\n\r",((int)tim_end-(int)tim_req),dx1/sysclk_freq);
+
 			flag_to = 0;	// Disable timer
 			state = 2;
 			return;
@@ -482,7 +546,7 @@ printf(" %08x\n",burst_bits);
 				lp_retry_ctr += 1;
 				if (lp_retry_ctr > LAUNCH_PARAM_RETRY_CT)
 				{ // Too many retries.  You tried, but alas, no joy.
-					printf("Burst failed at list index: %d\tburst bits %08X\n",(idx_list + idx_burst),burst_bits);
+					xprintf(UXPRT, "Burst failed at list index: %d\tburst bits %08X\n\r",(idx_list + idx_burst),burst_bits);
 					state = 2; // Idle state
 					return;
 				}

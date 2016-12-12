@@ -6,7 +6,7 @@ echo "ij tool update"
 rm x
 echo "-- db_update: script (NOTE: this is not a bash script)" x
 echo "-- connect to database" >> x
-echo "connect 'jdbc:derby://localhost:1527/$HOME/gitrepo/svn_common/trunk/db/pcc';" >>x
+echo "connect 'jdbc:derby://localhost:1527/$HOME/GliderWinchCommons/embed/svn_common/trunk/db/pcc';" >>x
 echo "-- Do a complete rebuild of the database" >>x
 echo "run 'LOAD_PCC_DB.sql';" >>x
 echo "-- "
@@ -23,15 +23,15 @@ ij x
 
 echo "java defines"
 cd ~/GliderWinchItems/db/pcc_gen_defines/dist
-java -jar pcc_gen_defines.jar | tee ~/gitrepo/svn_common/trunk/db/gen_db.h
+java -jar pcc_gen_defines.jar | tee ~/GliderWinchCommons/embed/svn_common/trunk/db/gen_db.h
 
 echo "java defines static final"
 cd ~/GliderWinchItems/db/pcc_gen_static_final/dist
-java -jar pcc_gen_static_final.jar | tee ~/gitrepo/svn_common/trunk/db/pcc_static_final.java
+java -jar pcc_gen_static_final.jar | tee ~/GliderWinchCommons/embed/svn_common/trunk/db/pcc_static_final.java
 
 echo "java table gen"
 cd ~/GliderWinchItems/db/pcc_values_table/dist
-java -jar pcc_values_table.jar | tee ~/gitrepo/svn_common/trunk/db/idx_v_val.c
+java -jar pcc_values_table.jar | tee ~/GliderWinchCommons/embed/svn_common/trunk/db/idx_v_val.c
 
 
 

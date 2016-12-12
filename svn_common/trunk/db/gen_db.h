@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2016-11-12 16:46:42.271
+// 2016-12-05 13:20:04.536
 
-#define CANID_COUNT 177
+#define CANID_COUNT 179
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -79,6 +79,8 @@
 #define  CANID_MSG_TIME_POLL      0x20000000  // MC             : MC: Time msg/Group polling
 #define  CANID_MC_STATE           0x26000000  // MC             : MC: Launch state msg
 #define  CANID_MC_TORQUE          0x25800000  // MC             : MC: Motor torque
+#define  CANID_CMD_MCLI           0xFFE00000  // MCL            : MCL: Master Controller Launch parameters I (HC)
+#define  CANID_CMD_MCLR           0xFFE00004  // MCL            : MCL: Master Controller Launch parameters R (MC)
 #define  CANID_CP_CTL_RMT         0x29000000  // CP             : Control Panel: Control lever remote
 #define  CANID_CP_CTL_LCL         0x29200000  // CP             : Control Panel: Control lever local
 #define  CANID_CP_CTL_IN_RMT      0x24C00000  // CP             : Control Panel: Control lever remote: input
@@ -199,7 +201,7 @@
 #define  TYP_ASC                 16        // 4           ascii chars
 #define  TYP_CANID               17        // 1           CANID (handled differently than a U32)
 
-#define CMD_CODES_COUNT 32
+#define CMD_CODES_COUNT 34
 #define  LDR_SET_ADDR            1         // 5 Set address pointer (not FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_SET_ADDR_FL         2         // 5 Set address pointer (FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_CRC                 3         // 8 Get CRC: 2-4 = count; 5-8 = start address; Reply CRC 2-4 na, 5-8 computed CRC 
@@ -232,6 +234,8 @@
 #define  CMD_SAVE                35        // Write current working parameters/calibrations/CANIDs to non-volatile storage
 #define  CMD_GET_READING         36        // Send a reading for the code specified in byte [1] specific to function
 #define  CMD_GET_READING_BRD     37        // Send a reading for the code specified in byte [1] for board; common to functions
+#define  CMD_LAUNCH_PARM_HDSHK   38        // Send msg to handshake transferring launch parameters
+#define  CMD_SEND_LAUNCH_PARM    39        // Send msg to send burst of parameters
 
 #define PAYLOAD_TYPE_COUNT 29
 #define  NONE                    0         //  No payload bytes                               
@@ -264,7 +268,7 @@
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
 
-#define PARAM_LIST_COUNT 154	// TOTAL COUNT OF PARAMETER LIST
+#define PARAM_LIST_COUNT 176	// TOTAL COUNT OF PARAMETER LIST
 
 #define  CANSENDER_LIST_CRC      	1         // Cansender: CRC                                  
 #define  CANSENDER_LIST_VERSION  	2         // Cansender: Version number                       
@@ -441,6 +445,31 @@
 
 #define PARAM_LIST_CT_YOGURT_1	56	// Count of same FUNCTION_TYPE in preceding list
 
+#define  MCL_LIST_CRC            	1         // mcl: crc: CRC: Master Controller Launch parameters
+#define  MCL_LIST_VERSION        	2         // mcl: version: Master Controller Launch parameters
+#define  MCL_GROUND_TENSION_FACTOR	3         // mcl: ground tension factor: Master Controller Launch parameters 
+#define  MCL_CLIMB_TENSION_FACTOR	4         // mcl: climb tension factor: Master Controller Launch parameters 
+#define  MCL_GLIDER_MASS         	5         // mcl: glider mass: Master Controller Launch parameters 
+#define  MCL_GLIDER_WEIGHT       	6         // mcl: glider weight: Master Controller Launch parameters 
+#define  MCL_SOFT_START_TIME     	7         // mcl: soft start time: Master Controller Launch parameters 
+#define  MCL_K1                  	8         // mcl: soft start constant: k1: Master Controller Launch parameters 
+#define  MCL_PROFILE_TRIG_CABLE_SPEED	9         // mcl: rotation taper: cable trigger speed: Master Controller Launch parameterS 
+#define  MCL_MAX_GROUND_CABLE_SPEED	10        // mcl: rotation taper: max ground cable speed: Master Controller Launch parameterS 
+#define  MCL_K2                  	11        // mcl: rotation taper: constant k2: Master Controller Launch parameterS 
+#define  MCL_PEAK_CABLE_SPEED_DROP	12        // mcl: transition to ramp: peak cable_speed_drop: Master Controller Launch parameterS 
+#define  MCL_RAMP_TIME           	13        // mcl: ramp taper up: ramp time: Master Controller Launch parameterS 
+#define  MCL_K3                  	14        // mcl: ramp taper up: constant k3: Master Controller Launch parameterS 
+#define  MCL_TAPERANGLETRIG      	15        // mcl: end of climb taper down: taper angle trig: Master Controller Launch parameterS 
+#define  MCL_TAPERTIME           	16        // mcl: end of climb taper down: taper time: Master Controller Launch parameterS 
+#define  MCL_K4                  	17        // mcl: end of climb taper down: constant k4: Master Controller Launch parameterS 
+#define  MCL_RELEASEDELTA        	18        // mcl: end of climb taper down: release delta: Master Controller Launch parameterS 
+#define  MCL_MAX_PARACHUTE_TENSION	19        // mcl: parachute tension taper: max parachute tension: Master Controller Launch parameterS 
+#define  MCL_PARACHUTE_TAPER_SPEED	20        // mcl: parachute tension taper: parachute taper speed: Master Controller Launch parameterS 
+#define  MCL_MAX_PARACHUTE_CABLE_SPEED	21        // mcl: parachute tension taper: max parachute cable speed: Master Controller Launch parameterS 
+#define  MCL_K5                  	22        // mcl: parachute tension taper: constant k5: Master Controller Launch parameterS 
+
+#define PARAM_LIST_CT_MCL	22	// Count of same FUNCTION_TYPE in preceding list
+
 
 #define READINGS_LIST_COUNT 26
 #define  TENSION_READ_FILTADC_THERM1	1         // Tension: READING: double thrm[0]; Filtered ADC for Thermistor on AD7799
@@ -533,9 +562,12 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-#define MISC_SYS_COUNT 1
-#define  LAUNCH_PARAM_BURST_SIZE 		8	// ASCII value 8         Number of CAN msgs in a burst when sending launch parameters
+#define MISC_SYS_COUNT 4
+#define  LAUNCH_PARAM_BURST_SIZE 		16	// ASCII value 16        Maximum number of CAN msgs in a burst when sending launch parameters
+#define  LAUNCH_PARAM_RETRY_CT   		3	// ASCII value 3         Number of error retries when sending launch parameters
+#define  LAUNCH_PARAM_RETRY_TIMEOUT		500	// ASCII value 500       Number of milliseconds to wait for a response when sending launch parameters
+#define  VER_MCL                 		1	// ASCII value 1         Version: Master Controller Launch parameters database table PARAM_LIST
 
-/* TOTAL COUNT OF #defines = 493  */
+/* TOTAL COUNT OF #defines = 522  */
 /* Test 2016/06/12 */
 

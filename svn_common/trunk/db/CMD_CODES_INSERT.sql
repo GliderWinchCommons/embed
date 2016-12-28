@@ -43,7 +43,7 @@ INSERT INTO CMD_CODES  VALUES ('LDR_SQUELCH',		24,	'8 Send squelch sending tick 
 INSERT INTO CMD_CODES  VALUES ('CMD_GET_IDENT',		30,	'Get parameter using indentification name/number in byte [1]');
 INSERT INTO CMD_CODES  VALUES ('CMD_PUT_IDENT',		31,	'Put parameter using indentification name/number in byte [1]');
 INSERT INTO CMD_CODES  VALUES ('CMD_GET_INDEX',		32,	'Get parameter using index name/number in byte [1]');
-INSERT INTO CMD_CODES  VALUES ('CMD_PUT_INDEX',		33,	'Put parameter using index name/number in byte [1]');
+INSERT INTO CMD_CODES  VALUES ('CMD_PUT_INDEX',		33,	'Put parameter using index name/number in byte [1]; parameter in [2]-[5]');
 INSERT INTO CMD_CODES  VALUES ('CMD_REVERT',		34,	'Revert (re-initialize) working parameters/calibrations/CANIDs back to stored non-volatile values');
 INSERT INTO CMD_CODES  VALUES ('CMD_SAVE',		35,	'Write current working parameters/calibrations/CANIDs to non-volatile storage');
 INSERT INTO CMD_CODES  VALUES ('CMD_GET_READING',	36,	'Send a reading for the code specified in byte [1] specific to function');

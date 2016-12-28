@@ -61,7 +61,7 @@ CAN msg format--
 #define CANID_CMD_MCLI	0xFFE00000	// MCL: Master Controller Launch parameters I (HC)
 #define CANID_CMD_MCLR	0XFFE00004	// mcl: Master Controller Launch parameters R (MC)
 
-#define TIMEOUT_USEC    50000	// Timeout increment (microseconds) 0.3 secs
+#define TIMEOUT_USEC   200000	// Timeout increment (microseconds) 0.2 secs
 //#define TIMEOUT_USEC 500000	// Timeout increment (microseconds) 0.5 secs
 //#define TIMEOUT_USEC 2000000	// Timeout increment (microseconds) 2 secs LONG
 
@@ -285,6 +285,13 @@ int cmd_c_init(char* p)
 		Save can msg in case timeout requires a retry
 		Set timer flag ON (active) */
 	sendmsg_c(pcan); // Do all of the above wonderful things
+int i;
+printf("%08X ",pcan->id);
+for (i = 0; i < pcan->dlc; i++)
+{
+  printf("%02X ",pcan->cd.uc[i]);
+}
+printf("\n");
 
 	return 0;
 }
@@ -394,7 +401,10 @@ printf(" %08x\n",burst_bits);
 		{
 			lp_burst_size = LAUNCH_PARAM_BURST_SIZE;
 		}
+               
 		printf("Working burst size = %d\n", lp_burst_size);
+		printf("    our size limit = %d\n"
+		       "     they will use = %d\n", LAUNCH_PARAM_BURST_SIZE, p->cd.uc[1]);
 
 		/* Handshake success! Request first burst */
 		idx_list = 0;	 	// Whole list reset

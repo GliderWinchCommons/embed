@@ -39,7 +39,7 @@ void unique_can_block(void)
  8000136:	e7fe      	b.n	8000136 <unique_can_block+0x6>
 
 08000138 <fixedaddress>:
- 8000138:	0000 02e0 0003 0000 2199 0800 0000 0000     .........!......
+ 8000138:	0000 0240 0003 0000 2199 0800 0000 0000     ..@......!......
 	...
 
 08000150 <usage_fault_handler>:
@@ -366,7 +366,7 @@ int main(void)
 	/* Initialize CAN for POD board (F103) and get control block */
 	pctl1 = canwinch_setup_F103_pod(&msginit,IAMUNITNUMBER);
  8000294:	4860      	ldr	r0, [pc, #384]	; (8000418 <main+0x24c>)
- 8000296:	f04f 7138 	mov.w	r1, #48234496	; 0x2e00000
+ 8000296:	f04f 7110 	mov.w	r1, #37748736	; 0x2400000
  800029a:	f001 ffc1 	bl	8002220 <canwinch_setup_F103_pod>
  800029e:	4a5f      	ldr	r2, [pc, #380]	; (800041c <main+0x250>)
  80002a0:	6010      	str	r0, [r2, #0]
@@ -399,7 +399,7 @@ int main(void)
 //canwinch_pod_common_systick2048_printerr_header();
 /* ---------------- When CAN interrupts are enabled reception of msgs begins! ------------------------ */
 	can_msg_reset_init(pctl1, IAMUNITNUMBER);	// Specify CAN ID for this unit for msg caused RESET
- 80002c6:	f04f 7138 	mov.w	r1, #48234496	; 0x2e00000
+ 80002c6:	f04f 7110 	mov.w	r1, #37748736	; 0x2400000
  80002ca:	f003 f88b 	bl	80033e4 <can_msg_reset_init>
 
 // RX msgs begin immediately following enabling CAN interrupts.  Get 'peek' 'toss' of RX msgs going soon.
@@ -407,7 +407,7 @@ int main(void)
  80002ce:	f002 fc87 	bl	8002be0 <can_driver_enable_interrupts>
 /* -------------- Get the program loader stuff setup -------------------------------------- */
 	canwinch_ldrproto_init(IAMUNITNUMBER);
- 80002d2:	f04f 7038 	mov.w	r0, #48234496	; 0x2e00000
+ 80002d2:	f04f 7010 	mov.w	r0, #37748736	; 0x2400000
  80002d6:	f000 f9fb 	bl	80006d0 <canwinch_ldrproto_init>
 printf(  "BOARD_TYP : %08X\n\r", pfixedaddress->board_typ); 	USART1_txint_send();
 printf(  "rc_crc32  : %08X\n\r", (u32)pfixedaddress->func1);
@@ -415,7 +415,7 @@ printf(  "MY CAN ID : %08X\n\r", IAMUNITNUMBER);
 */
 // Right justify to show unit number (based on a basic 11 bit CAN id, though 29 bit might be used 
 printf(  "  i.e. unit#: %d\n\r", IAMUNITNUMBER); USART1_txint_send();
- 80002da:	f04f 7138 	mov.w	r1, #48234496	; 0x2e00000
+ 80002da:	f04f 7110 	mov.w	r1, #37748736	; 0x2400000
  80002de:	4852      	ldr	r0, [pc, #328]	; (8000428 <main+0x25c>)
  80002e0:	f001 fc40 	bl	8001b64 <tfp_printf>
  80002e4:	f001 fd34 	bl	8001d50 <USART1_txint_send>
@@ -9124,7 +9124,7 @@ void configure_pin_in_pd ( volatile u32 * p, int n, char pd)
  8003a40:	00000060 00000020 00000010 00000008     `... ...........
 
 08003a50 <can_ldr_ready>:
- 8003a50:	02e00000 00000001 00000008 00000000     ................
+ 8003a50:	02400000 00000001 00000008 00000000     ..@.............
 
 08003a60 <table>:
  8003a60:	08040402 02020202 04040402 02020202     ................

@@ -63,7 +63,7 @@ Open minicom on the PC with 115200 baud and 8N1.
 
 /* &&&&&&&&&&&&& Each node on the CAN bus gets a unit number &&&&&&&&&&&&&&&&&&&&&&&&&& */
 #include "../../../../svn_common/trunk/db/gen_db.h"
-#define	  IAMUNITNUMBER		CANID_UNIT_16	/* Fixed loader (serial number concept) */
+#define	  IAMUNITNUMBER		CANID_UNIT_15	/* Fixed loader (serial number concept) */
 #define   BOARDTYPE		3		/* Board type (e.g. shaft encoder, manifold pressure, tension,... */
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& */
 

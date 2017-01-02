@@ -19,8 +19,8 @@
   Hack of 'canldr.c'
 
 compile and execute--
-cd ~/svn_discoveryf4/PC/sensor/cangate/trunk
-./mm && ./cangate 127.0.0.1 32123 /home/deh/svn_common/trunk/params/testmsg2C.txt
+cd ~/GliderWinchCommons/embed/svn_discoveryf4/PC/sensor/cangate/trunk
+./mm && ./cangate 127.0.0.1 32123 /GliderWinchCommons/embed/svn_discoveryf4/svn_common/trunk/params/testmsg2C.txt
 
 */
 #include <sys/types.h>
@@ -83,11 +83,13 @@ char listbuf[LINESIZE];
 
 /* baudrate settings are defined in <asm/termbits.h>, which is
   included by <termios.h> */
-#define BAUDRATE B115200
+//#define BAUDRATE B115200
+	//char* baudratesetting = "115200";
 //#define BAUDRATE B230400
 //#define BAUDRATE B460800
 //#define BAUDRATE B921600
-char* baudratesetting = "115200";
+#define BAUDRATE B2000000
+	char* baudratesetting = "2000000";
 
 /* Serial port definition */
 

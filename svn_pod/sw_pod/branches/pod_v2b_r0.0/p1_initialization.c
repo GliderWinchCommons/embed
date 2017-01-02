@@ -53,6 +53,12 @@ Subroutine call references shown as "@n"--
 #include "pod_v1.h"		// Tiny main routine
 #include "p1_common.h"		// Variables in common
 
+//#define EXBAUDRATE 115200	// External serial port baud rate
+//#define EXBAUDRATE 230400	// External serial port baud rate
+#define EXBAUDRATE 460800	// External serial port baud rat
+//#define EXBAUDRATE 921600	// External serial port baud rate
+//#define EXBAUDRATE 2000000	// External serial port baud rate (USB com)
+
 /* Subroutine prototyes used only in this file */
 void complete_adc(void);
 void complete_ad7799(void);
@@ -119,7 +125,7 @@ void p1_initialization_basic(void)
    The code in 'RS232_ctl.c' is retained for the in case I change my mind (!) */	
 	cRS232_skip_flag = 1;	// Set flag. Only do initialization once! (@5)
 	/* Initialize USART and setup control blocks and pointer */
-	USART1_rxinttxint_initRTC(115200,96,2,48,4);	//  (@5)
+	USART1_rxinttxint_initRTC(EXBAUDRATE,96,2,48,4);	//  (@5)
 	/* Initialize UART4 (GPS) */
 //	UART4_rxinttxint_initRTC(4800,96,2,48,4);	//  (@5) Old GPS BOX baud
 // ==> POD 2

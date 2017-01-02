@@ -91,6 +91,7 @@ static void converttime_ttochar(struct SS *s);
 /* baudrate settings are defined in <asm/termbits.h>, which is
   included by <termios.h> */
 #define BAUDRATE B115200
+
 /* Serial port definition */
 #define SERIALPORT "/dev/ttyUSB0"	/*  */
 // #define _POSIX_SOURCE 1 /* POSIX compliant source */

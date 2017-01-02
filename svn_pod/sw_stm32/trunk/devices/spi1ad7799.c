@@ -5,9 +5,13 @@
 * Board              : STM32F103VxT6_pod_mm
 * Description        : SPI1 routines for AD7799_1
 *******************************************************************************/
+/*
+01/01/2017 - Fixed floating /CS line (line 83 etc)
+*/
 
 #include "spi1ad7799.h"
 #include "PODpinconfig.h"
+#include "pinconfig_all.h"
 #include "libusartstm32/nvicdirect.h" 
 #include "libopenstm32/gpio.h"
 #include "libopenstm32/spi.h"
@@ -35,6 +39,11 @@ void SPIsd_dummy(void)
 {
 	return;
 }
+const struct PINCONFIGALL spi1_ncs1   = {(volatile u32 *)GPIOB, 10, OUT_PP   , MHZ_50};
+const struct PINCONFIGALL spi1_ncs2   = {(volatile u32 *)GPIOA,  4, OUT_PP   , MHZ_50};
+const struct PINCONFIGALL spi1_sck    = {(volatile u32 *)GPIOA,  5, OUT_AF_PP, MHZ_50};
+const struct PINCONFIGALL spi1_so     = {(volatile u32 *)GPIOA,  6, IN_PU    ,      0};
+const struct PINCONFIGALL spi1_si     = {(volatile u32 *)GPIOA,  7, OUT_AF_PP, MHZ_50};
 /******************************************************************************
  * void spi1ad7799_init(void);
  *  @brief Initialize SPI for SD Card Adapater
@@ -53,10 +62,6 @@ void spi1ad7799_init(void)
 	/* Enable bus clocking for alternate function */
 	RCC_APB2ENR |= (RCC_APB2ENR_AFIOEN);		// (p 103) 
 
-	//  PB10 - AD7799_1 /CS: gpio in, float.  AD7799 DOUT pulls this high or low for /READY.
-	GPIO_CRH(GPIOB) &= ~((0x000f ) << (4*2));	// Clear CNF reset bit 01 = Floating input (reset state)
-	GPIO_CRH(GPIOB) |=  (( (GPIO_CNF_INPUT_FLOAT) | (GPIO_MODE_INPUT) ) << (4*2));	
-
 	/* Turn on switch for 3.3v digital power to AD7799(s) */
 	ADC7799VCCSW_on		// gpio macro (macro is in PODpinconfig.h)
 
@@ -74,17 +79,12 @@ void spi1ad7799_init(void)
 		// PA5  AD7799(s) SCK :	SPI1_SCK  
 		// PA6	AD7799(s) DOUT/RDY:SPI1_MISO 
 		// PA7	AD7799(s) DIN:	SPI1_MOSI 
-	GPIO_CRL(GPIOA) &= 0x0000ffff ;	// Mask out CNF & MODE bits for PA4-PA7
-
-	// In/Out and mode bits
-		// PA4	AD7799_2 /CS:	gpio_out	
-		// PA5  AD7799(s) SCK :	SPI1_SCK  
-		// PA6	AD7799(s) DOUT/RDY:SPI1_MISO 
-		// PA7	AD7799(s) DIN:	SPI1_MOSI 
-	GPIO_CRL(GPIOA) |= ((( (GPIO_CNF_OUTPUT_PUSHPULL       <<2) | (GPIO_MODE_OUTPUT_50_MHZ) ) << (4*4)) \
-			 |  (( (GPIO_CNF_OUTPUT_ALTFN_PUSHPULL <<2) | (GPIO_MODE_OUTPUT_50_MHZ) ) << (4*5)) \
-			 |  (( (GPIO_CNF_INPUT_FLOAT           <<2) | (GPIO_MODE_INPUT        ) ) << (4*6)) \
-			 |  (( (GPIO_CNF_OUTPUT_ALTFN_PUSHPULL <<2) | (GPIO_MODE_OUTPUT_50_MHZ) ) << (4*7)));
+	/* Configure gpio pins for SPI1 use */
+	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_ncs1)) != 0) return -1;	// /CS ad7799-1
+	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_ncs2)) != 0) return -2;	// /CS ad7799-2
+	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_sck) ) != 0) return -3;	// Clock out AF
+	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_so)  ) != 0) return -4;	// MISO
+	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_si)  ) != 0) return -5;	// MISO
 
 	/* Note: PB10	AD7799_1 /CS:gpio_out and PA4	AD7799_2 /CS:	gpio_out was setup by earlier call to PODgpiopins_Config() */
 	

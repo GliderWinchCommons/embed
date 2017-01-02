@@ -1,6 +1,5 @@
-/******************** (C) COPYRIGHT 2011 **************************************
+/******************************************************************************
 * File Name          : p1_initialization.c
-* Hackeroos          : caw, deh
 * Date First Issued  : 08/30/2011
 * Board              : STM32F103VxT6_pod_mm (USART1)
 * Description        : Main program for version implementation
@@ -52,6 +51,12 @@ Subroutine call references shown as "@n"--
 
 #include "pod_v1.h"		// Tiny main routine
 #include "p1_common.h"		// Variables in common
+
+//#define EXBAUDRATE 115200	// External serial port baud rate
+//#define EXBAUDRATE 230400	// External serial port baud rate
+#define EXBAUDRATE 460800	// External serial port baud rat
+//#define EXBAUDRATE 921600	// External serial port baud rate
+//#define EXBAUDRATE 2000000	// External serial port baud rate (USB com)
 
 /* Subroutine prototyes used only in this file */
 void complete_adc(void);
@@ -130,7 +135,7 @@ void p1_initialization_basic(void)
 		tx line buffer size, (long enough for the longest line)
 		number of tx line buffers, (must be > 1)
 	*/
-	USART1_rxinttxint_initRTC(115200,96,2,148,3);	//  (@5)
+	USART1_rxinttxint_initRTC(EXBAUDRATE,96,2,148,3);	//  (@5)
 
 	/* Identify and Initialize for GPS unit. */
 
@@ -143,7 +148,7 @@ void p1_initialization_basic(void)
 	cGPStype = UBLOX_NEO_6M;	// Code for dealing with sentences
 
 	/* Announce who we are */
-	USART1_txint_puts("\n\rpod_v2b_u-blox  rev >809 \n\r"); USART1_txint_send();
+	USART1_txint_puts("\n\rpod_v2b_u-blox  01/01/2017 \n\r"); USART1_txint_send();
 	/* At this point the machine is somewhat(!) functional */	
 
 	/* Setup default calibration values */

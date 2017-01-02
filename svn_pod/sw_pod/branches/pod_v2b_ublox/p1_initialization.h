@@ -1,6 +1,5 @@
-/******************** (C) COPYRIGHT 2011 **************************************
+/******************************************************************************
 * File Name          : p1_initialization.h
-* Hackeroos          : caw, deh
 * Date First Issued  : 08/30/2011
 * Board              : STM32F103VxT6_pod_mm (USART1)
 * Description        : Main program for version implementation

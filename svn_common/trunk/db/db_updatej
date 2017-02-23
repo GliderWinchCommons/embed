@@ -1,3 +1,4 @@
+#!/bin/bash
 echo "ij tool update"
 
 # Make a temporary file that is the script used by 'ij' (derby database tools)

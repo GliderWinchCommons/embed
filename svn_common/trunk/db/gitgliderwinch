@@ -1,0 +1,20 @@
+cd ~
+mkdir GliderWinchCommons
+mkdir GliderWinchItems
+#
+date
+cd ~/GliderWinchCommons
+git clone https://github.com/GliderWinchCommons/Eastern_hc.git
+git clone https://github.com/GliderWinchCommons/Gonzaga_hc.git
+git clone https://github.com/GliderWinchCommons/embed.git
+git clone https://github.com/GliderWinchCommons/bb.git
+git clone https://github.com/GliderWinchCommons/ps.git
+git clone https://github.com/GliderWinchCommons/cp.git
+git clone https://github.com/GliderWinchCommons/mc.git
+#
+date
+cd ~/GliderWinchItems
+git clone https://github.com/GliderWinchItems/db.git
+#
+date
+#

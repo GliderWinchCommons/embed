@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2016-12-13 21:49:03.421
+// 2017-02-21 23:56:06.626
 
 #define CANID_COUNT 179
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -562,15 +562,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-#define MISC_SYS_COUNT 7
-#define  LAUNCH_PARAM_BURST_SIZE 		16	// ASCII value 16        Maximum number of CAN msgs in a burst when sending launch parameters
-#define  LAUNCH_PARAM_RETRY_CT   		3	// ASCII value 3         Number of error retries when sending launch parameters
-#define  LAUNCH_PARAM_RETRY_TIMEOUT		500	// ASCII value 500       Number of milliseconds to wait for a response when sending launch parameters
-#define  VER_MCL                 		1	// ASCII value 1         Version: Master Controller Launch parameters database table PARAM_LIST
-#define  VER_TENSION_a           		1	// ASCII value 1         Version: Tension_a: parameters database table PARAM_LIST
-#define  VER_LOGGER              		1	// ASCII value 1         Version: Logger: parameters database table PARAM_LIST
-#define  VER_GPS                 		1	// ASCII value 1         Version: GPS: parameters database table PARAM_LIST
-
-/* TOTAL COUNT OF #defines = 525  */
+/* TOTAL COUNT OF #defines = 518  */
 /* Test 2016/06/12 */
 

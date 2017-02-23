@@ -1,0 +1,98 @@
+README.setup
+02/22/2017
+
+Getting jcangate, etc., working
+
+
+1.  Get copy of github repositories
+
+2.  Build database
+
+# Navigate to directory with database files
+cd ~/GliderWinchCommons/embed/svn_common/trunk/db
+
+# Start database server engine
+./db_start
+
+# Create database
+./db_create
+
+# Check that database directory is present
+ls -l
+The directory 'pcc' should now be present
+
+# Load database with tables and values
+./db_updatej
+
+
+Netbeans and compiling
+
+1. jcangate
+
+- Open project:
+  ~/GliderWinchItems/db/jcangate
+
+- Compile/build
+
+  Error: derby jar files not found.
+  Click 'resolve' & browse
+    ~/jdk1.8.0_121/db/lib/
+  Directory has many .jar files starting with 'derby'
+
+  Try build again:
+   
+  Error: 'copylibstask' is not found
+
+  Tools|Options|Java|Add Jar
+    select in directory
+  ~/netbeans-8.2/java/ant/extra
+  'OK' your way back
+
+  Compile gives list of "Not copying ..."
+  Ignore.
+
+  Try to 'run'
+
+  Derby server & database not up
+
+  Services tab|java DB|
+  database name: pcc
+  |properties|location
+  /home/deh/GliderWinchCommons/embed/svn_common/trunk/db/pcc
+
+  Try connecting:  click jdbc:derby://localhost/1527/...
+  Hit enter for name & password (i.e. neither is used)
+  If successful:
+    Click on APP, and TABLES and you should see the tables
+    setup earlier.
+
+  Try running jcangate
+
+  Error: (paraphrased) derby ClientDriver class not found.
+  
+ In jcangate|libraries right click and add JAR
+   Navigate to jdk1.8.0_121/db/lib
+   Add all in the list
+
+ Try compile/run again
+
+ Error: Connection refused (Connection refused)
+ This error was the first, buried in the console output 
+
+ Get connection to data stream--
+   ssh -T -L32123:127.0.0.1:32123 -p 41576 hub-server@47.204.234.231
+ Open another terminal and check connection
+   nc localhost 32123
+ (It may take a little while for the connection to be established)
+
+ Try run again (F6)
+   Success!
+
+
+
+
+
+
+
+
+

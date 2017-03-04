@@ -90,7 +90,9 @@ static void converttime_ttochar(struct SS *s);
 
 /* baudrate settings are defined in <asm/termbits.h>, which is
   included by <termios.h> */
-#define BAUDRATE B115200
+//#define BAUDRATE B115200
+#define BAUDRATE B460800
+char *pbdrate = "460800";
 
 /* Serial port definition */
 #define SERIALPORT "/dev/ttyUSB0"	/*  */
@@ -211,7 +213,7 @@ tmeval.tv_sec = time(NULL);
 printf ("%9u %s",(unsigned int)tmeval.tv_sec,ctime(&tmeval.tv_sec));
 printf("timezone %lu\n",timezone);
 
-
+printf("Baud rate expected is: %s\n",pbdrate);
 
 /* Pass in args for tweaking xmit enable timing */
 	serialport = serialport_default;	// Compiled-in serial port device

@@ -5,13 +5,13 @@
 NAME		= gpiotest
 
 # Prefix the name for the particular toolchain
-PREFIX		= arm-none-eabi
-# The path for the commands to find the compiler, linker, et al.
-TOOLDIR 	= $(HOME)/CodeSourcery/Sourcery_G++_Lite/bin
-CC		= $(TOOLDIR)/$(PREFIX)-gcc
-LD		= $(TOOLDIR)/$(PREFIX)-ld
-OBJCOPY		= $(TOOLDIR)/$(PREFIX)-objcopy
-OBJDUMP		= $(TOOLDIR)/$(PREFIX)-objdump
+PREFIX = $(ARM_PREFIX)/bin/arm-none-eabi-
+
+CC	=$(PREFIX)gcc
+LD	=$(PREFIX)ld
+OBJCOPY	=$(PREFIX)objcopy
+SIZE	=$(PREFIX)size
+OBJDUMP	=$(PREFIX)objdump
 
 # Current directory
 SRCDIR=.
@@ -32,6 +32,8 @@ LIBF4D		= $(SRCDIR)/../../../sw_discoveryf4/trunk/lib
 CFLAGS		= -Os -g -Wall -Wextra  -I$(LIBDEV) -I$(LIBDIR) -I$(LIBF4D) -Iinclude -fno-common \
 		  -mcpu=cortex-m4 -mthumb -Wstrict-prototypes -mfix-cortex-m3-ldrd -msoft-float 
 
+CFLAGS	+= -I$(LIBF4D)/libmiscstm32f4
+
 AFLAGS  = -mcpu=cortex-m3 -mthumb
 
 # Linker script which has the definition of memory layout and "sections"
@@ -47,18 +49,18 @@ LIBDISCOVERYF4	= $(LIBF4D)/libdiscoveryf4
 LIBMISCSTM32F4	= $(LIBF4D)/libmiscstm32f4 
 LIBOPENCM3F4	= $(LIBF4D)/libopencm3
 
-LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
-LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
+#LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
+#LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
 
 # Libraries (.a), script (.ld), (.map) for the linker
-LDFLAGS         = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles -L$(LIBMISCSTM32F4) -L$(LIBUSARTSTM32) -L$(LIBDISCOVERYF4) -L$(LIBOPENCM3F4)
+LDFLAGS         = -L$(LOTHER)  -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles -L$(LIBMISCSTM32F4) -L$(LIBUSARTSTM32) -L$(LIBDISCOVERYF4) -L$(LIBOPENCM3F4)
 
 # List of files to be compiled
-OBJS		=  vector.o $(NAME).o startup_deh.o
+OBJS		=  vector.o $(NAME).o $(LIBF4D)/libmiscstm32f4/startup_deh.o
 
 
 # Paths for openocd and automatic flashing
-OPENOCD_BASE	= /usr/local
+OPENOCD_BASE	= /usr
 OPENOCD		= $(OPENOCD_BASE)/bin/openocd
 OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/share/openocd/scripts
 OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg

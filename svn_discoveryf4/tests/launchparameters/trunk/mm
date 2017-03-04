@@ -9,7 +9,7 @@ cd ../../../common_all/trunk
 make
 echo 1111111111111111111  libdiscoveryf4  1111111111111111111111111111111111111111111111
 cd ../../sw_discoveryf4/trunk/lib/libdiscoveryf4
-#make clean
+make clean
 make
 echo 2222222222222222222  libmiscstm32f4  2222222222222222222222222222222222222222222222
 cd ../libmiscstm32f4

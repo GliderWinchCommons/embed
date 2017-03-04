@@ -7,7 +7,8 @@ LIBNAME		= libmiscstm32f4
 
 ###################################################
 # Prefix the name for the particular toolchain
-PREFIX		= arm-none-eabi-
+#PREFIX		= arm-none-eabi-
+PREFIX = $(ARM_PREFIX)/bin/arm-none-eabi-
 
 CC	=$(PREFIX)gcc
 LD	=$(PREFIX)ld

@@ -109,7 +109,7 @@ LDFLAGS	 = -T$(LDFILE)
 OBJS = $(SRCS:.c=.o)
 
 # Paths for openocd and automatic flashing
-OPENOCD_BASE	= /usr/local
+OPENOCD_BASE	= /usr
 OPENOCD		= $(OPENOCD_BASE)/bin/openocd
 OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/share/openocd/scripts
 OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/stlink-v2.cfg

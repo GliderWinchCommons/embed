@@ -32,7 +32,7 @@ endif
 
 ###################################################
 # Prefix the name for the particular toolchain
-PREFIX		= arm-none-eabi-
+PREFIX = $(ARM_PREFIX)/bin/arm-none-eabi-
 
 CC	=$(PREFIX)gcc
 LD	=$(PREFIX)ld
@@ -95,7 +95,7 @@ LIBPATHS += -L$(LIBUSB)/lib/USB_OTG
 # Library paths--our stuff
 LIBPATHS += -L$(LIBF4D)/lib/libdiscoveryf4
 LIBPATHS += -L$(LIBF4D)/lib/libmiscstm32f4 
-LIBPATHS += -L$(LIBCOMMONALL)/stm32
+LIBPATHS += -L$(LIBCOMMONALL)/f4
 LIBPATHS += -L$(LIBF4D)/lib/libusartstm32f4
 LIBPATHS += -L$(LIBSVNCOMMON)/f4
 
@@ -110,7 +110,7 @@ LDFLAGS	 = -T$(LDFILE)
 OBJS = $(SRCS:.c=.o)
 
 # Paths for openocd and automatic flashing
-OPENOCD_BASE	= /usr/local
+OPENOCD_BASE	= /usr
 OPENOCD		= $(OPENOCD_BASE)/bin/openocd
 OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/share/openocd/scripts
 OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/stlink-v2.cfg

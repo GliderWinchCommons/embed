@@ -125,7 +125,7 @@ struct PKT_PTR gps_packetize_poll(void)
 //	struct TWO two;			// Two value return from 'rtc_tick_adjust_filter'
 	char * pgps;			// Pointer to '$' if found in string
 
-char vv[160]; // Char array for debugging using sprintf
+//char vv[160]; // Char array for debugging using sprintf
 	
 
 	switch (state_GPS)
@@ -203,7 +203,7 @@ char vv[160]; // Char array for debugging using sprintf
 		if (gps_crc_check(strlb) != 0)	// Is Checksum OK?
 		{ // Here, no.
 			printf("GPS checksum error\n\r"); USART1_txint_send();
-			return;
+			return pp;
 		}
 
 		/* Extract the date/time and error check based on type of gps. */

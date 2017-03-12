@@ -121,7 +121,7 @@ unsigned int tim3_running_sum;		// Carries running sum of fractional interrupt d
 
 void TIM3_IRQHandler(void)
 {
-	volatile int temp;
+	__attribute__((__unused__))int temp;	// Dummy for readback of hardware registers
 
 	if ( (TIM3_SR & 0x01) != 0)	// If the bit not on there is interrupt bogus'ness
 	{
@@ -160,7 +160,7 @@ static unsigned short DIFtmpctrPrev;	// For updating flag
 /* NOTE: This is a hack of 32KHz_p1.c.*/
 void pseudo_p1_RTC_IRQHandler(void)
 {
-	unsigned int uitemp;
+	__attribute__((__unused__))unsigned int uitemp;	// Dummy for readback of hardware registers
 
 		/* This is a running time count (8192 Hz) that is not adjusted, nor updated as is the 'SYS count */
 		strAlltime.TM3.ull += 1;	// 

@@ -12,22 +12,18 @@
 # Name of the .c file with 'main' as well as output file name
 NAME		= pod_v1
 
-# Prefix the name for the particular toolchain
-PREFIX		= arm-none-eabi
 # The path for the commands to find the compiler, linker, et al.
-TOOLDIR 	= $(HOME)/CodeSourcery/Sourcery_G++_Lite/bin
-CC		= $(TOOLDIR)/$(PREFIX)-gcc
-LD		= $(TOOLDIR)/$(PREFIX)-ld
-OBJCOPY		= $(TOOLDIR)/$(PREFIX)-objcopy
-OBJDUMP		= $(TOOLDIR)/$(PREFIX)-objdump
-
+PREFIX = $(ARM_PREFIX)/bin/arm-none-eabi-
+CC		= $(PREFIX)gcc
+LD		= $(PREFIX)ld
+OBJCOPY		= $(PREFIX)objcopy
+OBJDUMP		= $(PREFIX)objdump
 
 # Current directory
 SRCDIR=.
 # Library directory path
 LIBLIB		= $(SRCDIR)/../../../sw_stm32/trunk
 LIBDIR		= $(LIBLIB)/lib
-LIBSUP		= $(LIBLIB)/lib/libsupportstm32
 LIBDEV		= $(LIBLIB)/devices
 
 # Library directory path
@@ -38,26 +34,27 @@ LIBUSARTSTM32	 = $(LIBDIR)/libusartstm32
 LIBUSUPPORTSTM32 = $(LIBDIR)/libsupportstm32
 
 # Compiler flags -Os = no optimization, -Os = minimum space, -O3 = fastest
-CFLAGS		= -Os -g -Wall -Wextra  -I$(LIBDEV) -I$(LIBDIR) -I$(LIBUSUPPORTSTM32) -Iinclude -fno-common \
-		  -mcpu=cortex-m3 -mthumb -Wstrict-prototypes -fno-builtin-putc
-
+CFLAGS		= -Os -g -Wall -Wextra -Iinclude -fno-common 
+CFLAGS += -mcpu=cortex-m3 -mthumb -Wstrict-prototypes -fno-builtin-putc
+CFLAGS += -I$(LIBDEV) 
+CFLAGS += -I$(LIBDIR)
+CFLAGS += -I$(LIBUSUPPORTSTM32)
 
 AFLAGS  = -mcpu=cortex-m3 -mthumb
 
 # Linker script which has the definition of memory layout and "sections"
 LDSCRIPT	= $(NAME).ld
 
-LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
-LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
-
-
+# Path to lc lm lgcov lgcc and other good libraries
+LCC = $(ARM_PREFIX)/arm-none-eabi/lib/armv7-m
+LOTHER = $(ARM_PREFIX_GCCLIB)
 
 # Libraries (.a), script (.ld), (.map) for the linker
-LDFLAGS         = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles \
- -L$(LIBMISCSTM32) \
- -L$(LIBUSARTSTM32) \
- -L$(LIBDEVICESSTM32) \
- -L$(LIBUSUPPORTSTM32)
+LDFLAGS         = -L$(LOTHER) -lgcc -lgcov  -L$(LCC) -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles 
+LDFLAGS += -L$(LIBMISCSTM32) 
+LDFLAGS += -L$(LIBUSARTSTM32) 
+LDFLAGS += -L$(LIBDEVICESSTM32) 
+LDFLAGS += -L$(LIBUSUPPORTSTM32) 
 
 
 # List of files to be compiled
@@ -100,11 +97,10 @@ pwrctl_v2b.o
 
 
 # Paths for openocd and automatic flashing
-OPENOCD_BASE	= /usr/local
-OPENOCD		= $(OPENOCD_BASE)/bin/openocd
-OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/share/openocd/scripts
+OPENOCD_BASE	= /usr/share
+OPENOCD		= /usr/bin/openocd
+OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
 OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
-
 OPENOCD_BOARD	= $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
 
 # Be silent per default, but 'make V=1' will show all compiler calls.
@@ -136,7 +132,7 @@ images: $(NAME)
 
 $(NAME): $(OBJS) $(LDSCRIPT)
 	@printf "  LD      $(subst $(shell pwd)/,,$(@)) $(LFLAGS)\n"
-	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)  -lm -lgcc -lc -lgcc -lmiscstm32 -lusartstm32 -ldevicesstm32 -lsupportstm32 -ldevicesstm32 -lusartstm32 -lmiscstm32  -lsupportstm32 -lc -lm -lgcc
+	$(Q)$(LD)  $(LDFLAGS) -o $(NAME) $(OBJS)  -lm -lgcc -lc -lgcc -lmiscstm32 -ldevicesstm32 -lsupportstm32 -ldevicesstm32 -lusartstm32 -lmiscstm32  -lsupportstm32 -lc -lgcc -lm  -lusartstm32
 
 clean:
 	@printf "  CLEAN   $(subst $(shell pwd)/,,$(OBJS))\n"

@@ -142,7 +142,7 @@ unsigned int Tim3_gettime_ui(void)
 struct TIMCAPTRET32 Tim3_inputcapture_ui(void)
 {
 	struct TIMCAPTRET32 strY;			// 32b input capture time and flag counter
-	int	tmp;
+	__attribute__((__unused__))int tmp;	// Dummy for readback of hardware registers
 
 	TIM3_DIER &= ~(TIM_DIER_CC1IE | TIM_DIER_UIE);	// Disable CH1 capture interrupt and counter overflow (p 315)
 	tmp = TIM3_DIER;				// Readback ensures that interrupts have locked
@@ -158,7 +158,7 @@ struct TIMCAPTRET32 Tim3_inputcapture_ui(void)
  *####################################################################################### */
 void TIM3_IRQHandler(void)
 {
-	volatile unsigned int temp;
+	__attribute__((__unused__))unsigned int temp;	// Dummy for readback of hardware registers
 
 	unsigned short usSR = TIM3_SR & 0x09;	// Get capture & overflow flags
 

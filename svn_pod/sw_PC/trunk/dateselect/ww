@@ -12,6 +12,7 @@
 # If no argument supplied setup a default USB port
 if [ $# -lt 1 ] ; then
 	LOCAL=/dev/ttyUSB0
+        echo "No argument uses serial input: /dev/ttyUSB0"
 else	
 	LOCAL=$1
 fi
@@ -43,7 +44,7 @@ fi
 echo $LOCAL
 
 # This script might be located in ~/bin, so navigate to where the action starts
-cd /home/$USER/svn_pod/sw_PC/trunk/dateselect
+cd /home/$USER/GliderWinchCommons/embed/svn_pod/sw_PC/trunk/dateselect $LOCAL
 
 
 

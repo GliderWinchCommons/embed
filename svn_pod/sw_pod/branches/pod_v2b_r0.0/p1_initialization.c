@@ -129,9 +129,9 @@ void p1_initialization_basic(void)
 	/* Initialize UART4 (GPS) */
 //	UART4_rxinttxint_initRTC(4800,96,2,48,4);	//  (@5) Old GPS BOX baud
 // ==> POD 2
-//	UART4_rxinttxint_initRTC(57600,96,2,48,4);	//  (@5) 5 Hz on-board GPS baud
+	UART4_rxinttxint_initRTC(57600,96,2,48,4);	//  (@5) 5 Hz on-board GPS baud
 // ==> POD 1
-	UART4_rxinttxint_initRTC(38400,96,2,48,4);	//  (@5) 5 Hz on-board GPS baud 
+//	UART4_rxinttxint_initRTC(38400,96,2,48,4);	//  (@5) 5 Hz on-board GPS baud 
 
 	/* Identify and Initialize for GPS unit. */
 

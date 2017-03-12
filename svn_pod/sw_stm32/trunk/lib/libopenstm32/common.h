@@ -20,7 +20,7 @@
 #ifndef LIBOPENSTM32_COMMON_H
 #define LIBOPENSTM32_COMMON_H
 
-#include "../../../../svn_discoveryf4/sw_discoveryf4/trunk/lib/libopencm3/cm3/common.h"
+#include "../../../../../svn_discoveryf4/sw_discoveryf4/trunk/lib/libopencm3/cm3/common.h"
 
 #ifdef THISMESSWITHCOMMONSCREWEDMEUP
 

@@ -16,8 +16,8 @@ void vd3_eulertovector(VD3 *v, VD3 *e)
 	double cG = cos(e->x/2);	// Half angle of phi
 	double sG = sin(e->x/2);
 
-	e->x = (cA * cB * sG) - (sA * sB * cG);
-	e->y = (cA * sB * cG) + (sA * cB * sG);
-	e->z = (sA * cB * cG) - (cA * sB * sG);
+	v->x = (cA * cB * sG) - (sA * sB * cG);
+	v->y = (cA * sB * cG) + (sA * cB * sG);
+	v->z = (sA * cB * cG) - (cA * sB * sG);
 
 }

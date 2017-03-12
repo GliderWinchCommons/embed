@@ -80,11 +80,11 @@ void spi1ad7799_init(void)
 		// PA6	AD7799(s) DOUT/RDY:SPI1_MISO 
 		// PA7	AD7799(s) DIN:	SPI1_MOSI 
 	/* Configure gpio pins for SPI1 use */
-	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_ncs1)) != 0) return -1;	// /CS ad7799-1
-	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_ncs2)) != 0) return -2;	// /CS ad7799-2
-	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_sck) ) != 0) return -3;	// Clock out AF
-	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_so)  ) != 0) return -4;	// MISO
-	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_si)  ) != 0) return -5;	// MISO
+	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_ncs1)) != 0) return;	// /CS ad7799-1
+	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_ncs2)) != 0) return;	// /CS ad7799-2
+	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_sck) ) != 0) return;	// Clock out AF
+	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_so)  ) != 0) return;	// MISO
+	if ((pinconfig_all((struct PINCONFIGALL *)&spi1_si)  ) != 0) return;	// MISO
 
 	/* Note: PB10	AD7799_1 /CS:gpio_out and PA4	AD7799_2 /CS:	gpio_out was setup by earlier call to PODgpiopins_Config() */
 	

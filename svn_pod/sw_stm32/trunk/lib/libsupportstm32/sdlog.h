@@ -148,4 +148,7 @@ int sdlog_write_extra_block(int blocknum, char buf[SDCARD_BLOCKSIZE]);
 int sdlog_debug_get_card_size_in_blocks(void);
 void sdlog_debug_set_card_size_in_blocks(int);
 
+/*  This one was missing for years and no one noticed the compiler warning. */
+int sdlog_keepalive(void);
+
 #endif

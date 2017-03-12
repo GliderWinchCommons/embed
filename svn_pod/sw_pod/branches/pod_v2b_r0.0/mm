@@ -10,7 +10,7 @@ cd ../libsu*
 make clean
 make
 cd ../libu*
-#make clean
+make clean
 make
 cd $THIS
 #cd ../../../../sw_pod/branches/pod_v2b_r0.0

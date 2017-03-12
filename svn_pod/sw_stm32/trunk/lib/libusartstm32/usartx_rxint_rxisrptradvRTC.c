@@ -22,7 +22,8 @@ register time with a minimum of delay.
 #include "../libusartstm32/usartprotoprivate.h" // Subroutine prototypes for internal use
 
 /* Holds the RTC CNT register count that is maintained in memory during power up */
-extern unsigned int uiRTCsystemcounter;		// Holds the RTC CNT register count that is maintained in memory
+//extern unsigned int uiRTCsystemcounter;		// Holds the RTC CNT register count that is maintained in memory
+unsigned int uiRTCsystemcounter;		// Holds the RTC CNT register count that is maintained in memory
 
 /******************************************************************************
  * void usartx_rxint_rxisrptradv2 (struct USARTCBR* pUSARTcbrx);

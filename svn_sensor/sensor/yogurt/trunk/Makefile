@@ -49,11 +49,9 @@ LIBSVNCOMMON	= $(SRCDIR)/../../../../svn_common/trunk
 
 LIBF4D	  = $(CURDIR)/../../../../sw_discoveryf4/trunk
 
-# Library directory path--compile and stuff
-#LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
-#LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
-LGCC	= /opt/launchpad/gcc-arm-none-eabi-4_9-2015q2/lib/gcc/arm-none-eabi/4.9.3/armv7-m
-LOTHER	= /opt/launchpad/gcc-arm-none-eabi-4_9-2015q2/arm-none-eabi/lib/armv7-m
+# Path to lc lm lgcov lgcc and other good libraries
+LCC = $(ARM_PREFIX)/arm-none-eabi/lib/armv7-m
+LOTHER = $(ARM_PREFIX_GCCLIB)
 
 # Compiler directories for .h files
 CFLAGS	+= -I$(LIBDEVICEF103SE) 
@@ -78,7 +76,7 @@ LDSCRIPT	= $(NAME).ld
 #LDSCRIPT	= $(LIBCOMMONALL)/ldrapp.ld
 
 # Libraries (.a), script (.ld), (.map) for the linker
-LDFLAGS  = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles -lc
+LDFLAGS  = -L$(LOTHER) -L$(LCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles -lc
 LDFLAGS	+= -L$(LIBDEVICEF103SE) 
 LDFLAGS	+= -L$(LIBPODLIB) 
 LDFLAGS	+= -L$(LIBPODDEV) 
@@ -118,11 +116,10 @@ OBJS	+= derivative_iir.o
 OBJS	+= settables_print.o
 
 # Paths for openocd and automatic flashing
-OPENOCD_BASE	= /usr/local
-OPENOCD		= $(OPENOCD_BASE)/bin/openocd
-OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/share/openocd/scripts
+OPENOCD_BASE	= /usr/share
+OPENOCD		= /usr/bin/openocd
+OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
 OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
-
 OPENOCD_BOARD	= $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
 
 # Be silent per default, but 'make V=1' will show all compiler calls.

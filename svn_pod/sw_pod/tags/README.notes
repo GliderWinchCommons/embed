@@ -13,4 +13,9 @@ pod_v1_r2.0 - 6/23/2012
 Committed revision 661
 
 This tags "../svn_pod/sw_pod/trunk/pod_v1" at 9/30/2012 which is setup for 
-POD #2 (5 Hz GPS no accelerometer). 
+POD #2 (5 Hz GPS no accelerometer).
+
+03/11/2017
+  Makefile in the 'tags' routines needs to be updated/patterned after the routines in 
+  'branches' to work with the later version of launchpad compiler
+

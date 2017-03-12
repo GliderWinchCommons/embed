@@ -39,6 +39,7 @@ OBJCOPY	=$(PREFIX)objcopy
 SIZE	=$(PREFIX)size
 OBJDUMP	=$(PREFIX)objdump
 
+
 CFLAGS  = -std=gnu99 -g -Os -Wall
 CFLAGS += -mlittle-endian -mthumb -mthumb-interwork -nostartfiles -mcpu=cortex-m4
 CFLAGS += -mfp16-format=alternative
@@ -109,13 +110,11 @@ LDFLAGS	 = -T$(LDFILE)
 OBJS = $(SRCS:.c=.o)
 
 # Paths for openocd and automatic flashing
-OPENOCD_BASE	= /usr
-OPENOCD		= $(OPENOCD_BASE)/bin/openocd
-OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/share/openocd/scripts
-OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/stlink-v2.cfg
-
-OPENOCD_BOARD	= $(OPENOCD_SCRIPTS)/board/stm32f4discovery.cfg // F4
-#OPENOCD_BOARD	= $(OPENOCD_SCRIPTS)/board/stm32f3discovery.cfg // F3
+OPENOCD_BASE	= /usr/share
+OPENOCD		= /usr/bin/openocd
+OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
+OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
+OPENOCD_BOARD	= $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
 
 ###################################################
 

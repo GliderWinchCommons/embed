@@ -9,12 +9,11 @@ LIBNAME		= libusartstm32
 # Prefix the name for the particular toolchain
 PREFIX		= arm-none-eabi
 # The path for the commands to find the compiler, linker, et al.
-TOOLDIR 	= $(HOME)/CodeSourcery/Sourcery_G++_Lite/bin
-CC		= $(TOOLDIR)/$(PREFIX)-gcc
-LD		= $(TOOLDIR)/$(PREFIX)-ld
-OBJCOPY		= $(TOOLDIR)/$(PREFIX)-objcopy
-OBJDUMP		= $(TOOLDIR)/$(PREFIX)-objdump
-AR		= $(TOOLDIR)/$(PREFIX)-ar
+CC		= $(PREFIX)-gcc
+LD		= $(PREFIX)-ld
+OBJCOPY		= $(PREFIX)-objcopy
+OBJDUMP		= $(PREFIX)-objdump
+AR		= $(PREFIX)-ar
 
 # Compiler flags -Os = no optimization, -Os = minimum space, -O3 = fastest
 CFLAGS		= -Os -g -Wall -Wextra -Iinclude -fno-common \
@@ -98,7 +97,6 @@ USART1_rxdma_getchar.o \
 USART1_rxdma_getline.o \
  \
 usartx_rxint_init.o \
-usartx_rxint_rxisrptradvRTC.o \
 usartx_rxint_rxisrptradvRTC_p1.o \
 usartx_rxint_getline.o \
  \
@@ -192,7 +190,7 @@ USARTremap.o \
 \
 USART2_setbaud.o \
 \
-
+usartx_rxint_rxisrptradvRTC.o \
 
 
 

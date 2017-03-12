@@ -338,7 +338,7 @@ are not masked */
 
 void p1_RTC_IRQHandler(void)
 {
-	unsigned int uitemp;
+	__attribute__((__unused__))unsigned int uitemp;	// Dummy for readback of hardware registers
 
 	if ((RTC_CRL & RTC_CRL_SECF) != 0 ) // (see p 452)
 	{ // Here, "Seconds" flag, (osc divided by prescalar) TR_CLK (see p 449).

@@ -9,12 +9,11 @@ LIBNAME		= libdevicesstm32
 # Prefix the name for the particular toolchain
 PREFIX		= arm-none-eabi
 # The path for the commands to find the compiler, linker, et al.
-TOOLDIR 	= $(HOME)/CodeSourcery/Sourcery_G++_Lite/bin
-CC		= $(TOOLDIR)/$(PREFIX)-gcc
-LD		= $(TOOLDIR)/$(PREFIX)-ld
-OBJCOPY		= $(TOOLDIR)/$(PREFIX)-objcopy
-OBJDUMP		= $(TOOLDIR)/$(PREFIX)-objdump
-AR		= $(TOOLDIR)/$(PREFIX)-ar
+CC		= $(PREFIX)-gcc
+LD		= $(PREFIX)-ld
+OBJCOPY		= $(PREFIX)-objcopy
+OBJDUMP		= $(PREFIX)-objdump
+AR		= $(PREFIX)-ar
 
 # Current directory
 SRCDIR=.
@@ -32,17 +31,17 @@ LIBMISCSTM32	= $(LIBDIR)/libmiscstm32
 LIBOPENSTM32	= $(LIBDIR)/libopenstm32
 LIBUSARTSTM32	= $(LIBDIR)/libusartstm32
 LIBSUPPORTSTM32	= $(LIBDIR)/libsupportstm32
-LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
-LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
 
-
+# Path to lc lm lgcov lgcc and other good libraries
+LCC = $(ARM_PREFIX)/arm-none-eabi/lib/armv7-m
+LOTHER = $(ARM_PREFIX_GCCLIB)
 
 # Compiler flags -Os = no optimization, -Os = minimum space, -O3 = fastest
-CFLAGS		= -Os -g -Wall -Wextra  -I$(LIBDEV) -I$(LIBDIR) -Iinclude -fno-common \
-		  -mcpu=cortex-m3 -mthumb -Wstrict-prototypes \
- -I$(LIBOPENSTM32) \
- -I$(LIBMISCSTM32) \
- -I$(LIBSUPPORTSTM32) 
+CFLAGS	= -Os -g -Wall -Wextra  -I$(LIBDEV) -I$(LIBDIR) -Iinclude -fno-common 
+CFLAGS += -mcpu=cortex-m3 -mthumb -Wstrict-prototypes 
+CFLAGS += -I$(LIBOPENSTM32) 
+CFLAGS += -I$(LIBMISCSTM32) 
+CFLAGS += -I$(LIBSUPPORTSTM32) 
 
 AFLAGS  = -mcpu=cortex-m3 -mthumb
 

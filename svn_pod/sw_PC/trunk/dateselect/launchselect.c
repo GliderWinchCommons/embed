@@ -169,7 +169,8 @@ char file_total[128];		// String with total file to open, e.g. '~/winch/download
 
 /* baudrate settings are defined in <asm/termbits.h>, which is
   included by <termios.h> */
-#define BAUDRATE B115200
+//#define BAUDRATE B115200
+#define BAUDRATE B460800
 /* Serial port definition */
 #define SERIALPORT "/dev/ttyUSB0"	/*  */
 // #define _POSIX_SOURCE 1 /* POSIX compliant source */

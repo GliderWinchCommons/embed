@@ -9,12 +9,11 @@ LIBNAME		= libsensormisc
 # Prefix the name for the particular toolchain
 PREFIX		= arm-none-eabi
 # The path for the commands to find the compiler, linker, et al.
-TOOLDIR 	= $(HOME)/CodeSourcery/Sourcery_G++_Lite/bin
-CC		= $(TOOLDIR)/$(PREFIX)-gcc
-LD		= $(TOOLDIR)/$(PREFIX)-ld
-OBJCOPY		= $(TOOLDIR)/$(PREFIX)-objcopy
-OBJDUMP		= $(TOOLDIR)/$(PREFIX)-objdump
-AR		= $(TOOLDIR)/$(PREFIX)-ar
+CC		= $(PREFIX)-gcc
+LD		= $(PREFIX)-ld
+OBJCOPY		= $(PREFIX)-objcopy
+OBJDUMP		= $(PREFIX)-objdump
+AR		= $(PREFIX)-ar
 
 # Current directory
 SRCDIR=.
@@ -40,10 +39,8 @@ LIBDSENSORMISC	= $(LIBSENSORF103)/libsensormisc
 LIBCOMMONALL    = $(SRCDIR)/../../../../common_all/trunk
 LIBSVNCOMMON	= $(SRCDIR)/../../../../../svn_common/trunk
 
-# Library directory path--compile and stuff
-LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
-LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
-
+# Path to lc lm lgcov lgcc and other good libraries
+LCC = $(ARM_PREFIX)/arm-none-eabi/lib/armv7-m
 
 # Compiler flags -Os = no optimization, -Os = minimum space, -O3 = fastest
 CFLAGS		= -Os -g -Wall -Wextra\

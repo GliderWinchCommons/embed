@@ -330,14 +330,14 @@ int main(void)
 	PODgpiopins_Config();	// Now, configure pins
 
 	/* Configure pins not covered in the foregoing */	
-	configure_pin ((volatile u32 *)GPIOD, 14);	// 5v regulator supplying GPS and BOX LED
+	configure_pin_pod ((volatile u32 *)GPIOD, 14);	// 5v regulator supplying GPS and BOX LED
 	GPIO_BSRR(GPIOD) = (1<<14);			// Set bit
 
 	GPIO_BRR(GPIOA)  = (1<<2);			// Reset bit
-	configure_pin ((volatile u32 *)GPIOA, 2);	// N-FET that drives Lower cell shunt resistor
+	configure_pin_pod ((volatile u32 *)GPIOA, 2);	// N-FET that drives Lower cell shunt resistor
 
 	GPIO_BRR(GPIOD)  = (1<<12);			// Reset bit
-	configure_pin ((volatile u32 *)GPIOD, 12);	// N-FET switches P-FET drive for charge current (BEEPER PA2)
+	configure_pin_pod ((volatile u32 *)GPIOD, 12);	// N-FET switches P-FET drive for charge current (BEEPER PA2)
 
 
 //	gpio_setup();	// Olimex gpio setup for LED

@@ -134,7 +134,7 @@ extern void relocate_vector(void);
 	USART2_rxinttxint_init(115200,32,2,128,8); // Initialize USART and setup control blocks and pointers
 
 	/* Announce who we are */
-	USART2_txint_puts("\n\rYOGURT CONTROLLER 08-11-2015 deg F v1\n\r");USART2_txint_send();
+	USART2_txint_puts("\n\rYOGURT CONTROLLER 03-12-2017 deg F v1\n\r");USART2_txint_send();
 
 	/* Display things so's to entertain the hapless op */
 	printf ("  hclk_freq (MHz) : %9u\n\r",  hclk_freq/1000000);

@@ -1,0 +1,122 @@
+README.setup2
+Setting up Ubuntu 16.04 LTS
+02/25/2017
+
+
+======== launchpad compiler ==========================
+
+Download linux version--
+   https://launchpad.net/gcc-arm-embedded
+gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
+
+# Paste the following into a terminal window to move and untar
+cd ~
+mkdir launchpad
+cd launchpad
+mv ~/Down*/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2 .
+tar -jxvf gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2
+
+# Open to edit .profile to add path for compiler--
+# DON"T forget the '.' in the following
+cd ~
+gedit .profile
+# Add the following 3 lines--
+if [ -x ~/.arm_tools ]; then
+        . ~/.arm_tools
+fi
+
+Add file
+gedit .arm_tools
+Save the following 4 lines as filename .arm_tools--
+
+#!/bin/bash
+        echo '# ARM tools set to launchpad 4_9-2015q2'
+        PATH="$(HOME)/launchpad/gcc-arm-none-eabi-5_4-2016q3/bin:${PATH}"
+        export PATH
+
+
+# Add the following lines to .profile to setup the path
+  # launchpad compiler path
+  export PATH=$PATH:~/launchpad/gcc-arm-none-eabi-5_4-2016q3/bin
+
+# For .profile changes to come into effect logout/login or reboot is needed, or
+execute the following to set the path and test a compilation--
+
+export PATH=$PATH:~/launchpad/gcc-arm-none-eabi-5_4-2016q3/bin
+~/GliderWinchCommons/embed/svn_discoveryf4/tests/launchparameters/trunk
+./mm 
+
+If launchpad is installed on 64bit machine the following 32b routines are
+needed--
+
+sudo apt-get -y install lib32ncurses5
+
+
+=========== st-link ====================================
+Used for communcating via the USB on Discovery boards for 
+debugging (GDB) and program flashing
+
+# Get a copy of the source code from github
+See the following for notes on using GDB 
+cd ~
+git clone https://github.com/texane/stlink.git
+
+
+# Note: The following has directions on compiling--
+https://github.com/texane/stlink/blob/master/doc/compiling.md
+
+cd ~/stlink
+sudo apt-get install libusb-1.0
+cd build
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+make
+sudo make install
+
+sudo ldconfig
+cd ~
+gedit .profile
+#  Add the following to PATH
+
+if [ -d "/usr/local/lib" ] ; then
+    PATH="$PATH:/usr/local/lib"
+fi
+
+# Logout/login, or shutdown and reboot
+# See if it works.  
+# With the Discovery F4 plugged in to the USB try starting st-util--
+
+cd ~/GliderWinchCommons/embed/svn_discoveryf4/tests/launchparameters/trunk
+./k
+
+# Success will look similar to this--
+# killall st-util
+st-util: no process found
+# Starting st-util
+st-util 1.3.0
+2017-02-26T20:30:34 INFO /home/deh/stlink/stlink-1.3.0/src/common.c: Loading device parameters....
+2017-02-26T20:30:34 INFO /home/deh/stlink/stlink-1.3.0/src/common.c: Device connected is: F4 device, id 0x20006411
+2017-02-26T20:30:34 INFO /home/deh/stlink/stlink-1.3.0/src/common.c: SRAM size: 0x30000 bytes (192 KiB), Flash: 0x100000 bytes (1024 KiB) in pages of 16384 bytes
+2017-02-26T20:30:34 INFO /home/deh/stlink/stlink-1.3.0/src/gdbserver/gdb-server.c: Chip ID is 00000413, Core ID is  2ba01477.
+2017-02-26T20:30:34 INFO /home/deh/stlink/stlink-1.3.0/src/gdbserver/gdb-server.c: Listening at *:4242...
+
+================== openocd =======================
+# Get from Ubuntu--
+sudo apt-get install openocd
+
+
+# Download from download and compile--
+https://sourceforge.net/projects/openocd/files/openocd/0.10.0/
+
+cd ~
+mkdir openocd-0.10.0
+cd openocd-0.10.0
+# Move from download directory
+mv ~/Down*/openocd-0.10.0.tar.bz2 . 
+# Unpack
+tar -jxf openocd-0.10.0.tar.bz2
+#
+./configure
+
+
+
+

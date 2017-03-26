@@ -1,0 +1,207 @@
+README.setup
+02/22/2017
+
+Notes on getting Ubuntu 16.04 LTS running the java programs
+ using the parameter database
+
+Download the "bundle" of netbeans that brings in the jdk--
+http://www.oracle.com/technetwork/java/javase/downloads/jdk-netbeans-jsp-142931.html
+
+========== jcangate ===========
+Getting jcangate, etc., working
+
+1.  Get copy of github repositories
+
+=================
+cd ~
+mkdir GliderWinchCommons
+mkdir GliderWinchItems
+#
+date
+cd ~/GliderWinchCommons
+git clone https://github.com/GliderWinchCommons/Eastern_hc.git
+git clone https://github.com/GliderWinchCommons/Gonzaga_hc.git
+git clone https://github.com/GliderWinchCommons/embed.git
+git clone https://github.com/GliderWinchCommons/bb.git
+git clone https://github.com/GliderWinchCommons/ps.git
+git clone https://github.com/GliderWinchCommons/cp.git
+git clone https://github.com/GliderWinchCommons/mc.git
+#
+date
+cd ~/GliderWinchItems
+git clone https://github.com/GliderWinchItems/db.git
+#
+date
+#
+=================
+
+2.  Build database
+
+# Navigate to directory with database files
+cd ~/GliderWinchCommons/embed/svn_common/trunk/db
+
+# Start database server engine
+./db_start
+
+# Create database
+./db_create
+
+# Check that database directory is present
+ls -l
+The directory 'pcc' should now be present
+
+# Load database with tables and values
+./db_updatej
+
+
+Netbeans and compiling
+
+The following sort-of logs my bumbling through getting
+  it to compile and run the first time.
+
+1. jcangate
+
+- Open project:
+  ~/GliderWinchItems/db/jcangate
+
+- Compile/build
+
+  Error: derby jar files not found.
+  Click 'resolve' & browse
+    ~/jdk1.8.0_121/db/lib/
+  Directory has many .jar files starting with 'derby'
+
+  Try build again:
+   
+  Error: 'copylibstask' is not found
+
+  Tools|Options|Java|Add Jar
+    select in directory
+  ~/netbeans-8.2/java/ant/extra
+  'OK' your way back
+
+  Compile gives list of "Not copying ..."
+  Ignore.
+
+  Try to 'run'
+
+  Derby server & database not up
+
+  Services tab|java DB|
+  database name: pcc
+  |properties|location
+  /home/deh/GliderWinchCommons/embed/svn_common/trunk/db/pcc
+
+  Try connecting:  click jdbc:derby://localhost/1527/...
+  Hit enter for name & password (i.e. neither is used)
+  If successful:
+    Click on APP, and TABLES and you should see the tables
+    setup earlier.
+
+  Try running jcangate
+
+  Error: (paraphrased) derby ClientDriver class not found.
+  
+ In jcangate|libraries right click and add JAR
+   Navigate to jdk1.8.0_121/db/lib
+   Add all in the list
+
+ Try compile/run again
+
+ Error: Connection refused (Connection refused)
+ This error was the first, buried in the console output 
+
+ Get connection to data stream--
+   ssh -T -L32123:127.0.0.1:32123 -p 41576 hub-server@47.204.234.231
+ Open another terminal and check connection
+   nc localhost 32123
+ (It may take a little while for the connection to be established)
+
+ Try run again (F6)
+   Success!
+
+========= jcanpoll =========================
+In Netbeans
+ Projects|Open project|jcanpoll
+ (GliderWinchItems/db)
+
+ Popup error: click 'resolve'
+   Again, 'resolve'
+[Not necessary: see jtestlaunchparam below]
+
+
+ jacanpoll right click|properties
+ Add jar|select whole derby list
+ OK
+
+ Try run 
+   Success
+ (Note hub-server was still running from jcangate setup above)
+
+======== jtestlaunchparam ===================
+In Netbeans
+   Projects|Open project|jtestlaunchparam
+   (GliderWinchItems/db)
+
+Ignore the popup error
+
+ Right click jtestlaunchparam
+   Library
+     Add Jar
+      Select entire list of the derby files
+
+ Try to run
+   Success
+ (Note hub-server was still running)
+
+======== cangate test of launch params =============
+In terminal window
+
+~/GliderWinchCommons/embed/svn_discoveryf4/PC/sensor/cangate/trunk
+./mm [compile]
+./cangate 127.0.0.1 32123
+
+With jtestlaunchparam running--
+ Select the CANID to be used by the Master Controller for incoming 
+  launch parameter CAN id msgs (CANID_CMD_MCLI) and outgoing
+  CAN id msgs (CANID_CMD_MCLR):
+   Click column 'CanidHex'
+   Scroll down to 'FFE00000'
+   Click which will place hex canid into box beside "Xmit..."
+   Click button "Receive Select"
+   Click hexid in list 'FFE00004' which will place the can id
+    in the box next to "Receive Select"
+Note: the CAN IDs can also be typed into the boxes for Xmit and Receive.  They
+  will not be persistent, however as the database behind the display is 
+  read-only.
+
+
+Go to terminal window with cangate
+  "c<enter"> to execute a transfer request.
+
+The details of the transfer, followed by
+TRANSFER COMPLETE!
+followed by a listing of the parameters interpreted all as floats.  This
+list should replicate the list in the jtestlaunchparam file
+  PccFinal.java
+
+Note: When ssh into the netbook stream, i.e.--
+ ssh -T -L32123:127.0.0.1:32123 -p 41576 hub-server@$FITIP
+the transfer comes out "clean". However, if the data stream is not
+included and a local hub-server w/o a data strean is setup, e.g.
+  hub-server localhost 32123
+the transfer has a bunch of retries, but still does the transfer correctly.
+I've forgotten the reason for this, but at when I was debugging I realized
+that the behavior was logically correct...
+
+
+
+
+
+
+  
+
+
+
+
+

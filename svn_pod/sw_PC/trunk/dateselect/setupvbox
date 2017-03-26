@@ -1,9 +1,0 @@
-#! /bin/bash
-sudo mount -t vboxsf
-sudo chown ${USER}:dialout /dev/ttyUSB0
-cd /media/sf_vbox/GliderWinchCommons/embed/*pod/*PC/tr*/dateselect
-export PATH=$PATH:/media/sf_vbox/GliderWinchCommons/embed/svn_pod/sw_PC/trunk/dateselect
-./dateselect $1 $2 $3
-exec bash
-echo ""
-exit

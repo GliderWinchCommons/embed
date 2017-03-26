@@ -2,7 +2,7 @@ README.PODreadout
 
 03/25/2017
 
-1.  Serial access under vm
+1.  Ubuntu serial access under vm with Windows host
 
 With Ubuntu running in virtualbox on Wnidows host--
 
@@ -150,6 +150,19 @@ To begin download--
 It should begin search until if finds the start time, then begin the download.
 
 The downloadfile is in 'home' directory (and not '~/Downloads').
+
+7.  Readout--launch select
+
+The program 'launchselect' is 'dateselect' with additions to readout the
+table in the POD with the start/end times for detected launches.  When the tension
+exceeds a threshold, then drops below a lower threshold the date/time (plus a small 
+fixed amount of additional time) and SD card sector number are stored in a table.  By
+entering the table index launchselect in conjunction with the POD readsout the data
+from the end time stored until the start of the launch is detected (plus a fixed 
+amount of time).  The extracted data covers the launch duration slightly before the
+high tension is applied and slightly after the release.  The beginning of the SD
+card readout uses the sector number to go directly to the readout starting point
+and elimiinates the need for searching backward from "now" to the start point.
 
 
 

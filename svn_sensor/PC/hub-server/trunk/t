@@ -1,4 +1,0 @@
-./m
-
-echo "$./hub-server $1 localhost 32123"
-./hub-server $1 localhost 32123

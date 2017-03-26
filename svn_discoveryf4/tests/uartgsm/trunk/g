@@ -1,4 +1,0 @@
-#!/bin/bash
- ~/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-eabi-gdb $1.elf
-
-

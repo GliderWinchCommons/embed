@@ -1,2 +1,0 @@
-openocd -f interface/rlink.cfg -f board/olimex_stm32_h103.cfg
-

@@ -1,3 +1,0 @@
-xterm -e st-util &
-~/Co*y/*te/bin/arm-none-eabi-gdb -x gdbfile -s gpiotest
-

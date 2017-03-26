@@ -1,5 +1,0 @@
-NAME=$(basename "$PWD")
-rm -f "$NAME"
-gcc -o "$NAME" "$NAME".c
-sudo cp "$NAME" /bin/"$NAME"
-rm -f "$NAME"

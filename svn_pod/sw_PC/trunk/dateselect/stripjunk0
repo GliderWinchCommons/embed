@@ -1,2 +1,0 @@
-# stripjunk0 - clean up 'RM file lines for input to floattime.c
-sed  -e '/###/d' -e '/TIME/d' -e '/MISS/d' -e '/Pkt/d'

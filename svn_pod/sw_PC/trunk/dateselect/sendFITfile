@@ -1,3 +1,0 @@
-rsync -av -e 'ssh -p 41574' $1 $USER@$FITIP:/winch/download/$1
-
-

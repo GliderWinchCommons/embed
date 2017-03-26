@@ -1,0 +1,161 @@
+README.PODreadout
+
+03/25/2017
+
+1.  Serial access under vm
+
+With Ubuntu running in virtualbox on Wnidows host--
+
+ Plug in USB-serial cable.
+ Windows 10 gives a "ding" that it is recognized.
+
+ On the Ubuntu 
+  Devices [tab]
+  USB [select]
+  select Serial port USB, e.g. "Prolific..."
+
+Check that Ubuntu has the serial port--
+ls -l /dev/ttyUSB*
+
+2.  serial port permissions
+
+Serial port ownership defaults to 
+   root:dialout
+therefore a program that uses the serial port
+must either be started with 'sudo' or the
+user added to 'dialout' group.  Adding the user
+to dialout makes life easier.  Execute the 
+command to be added--
+
+sudo gpasswd --add ${USER} dialout
+
+This might not work on Ubuntu running under the vm,
+in which case a temporary way to avoid the 'sudo' each
+time the serial port is accessed--
+  sudo chown gsm:dialout /dev/ttyUSB0
+assuming gsm is the username, and ttyUSB0 is the serial
+port.
+
+3. POD serial port speed--460,800
+
+The serial port is 4x the usual 115,200.
+
+In 'minicom'
+ctlAZ to get menu
+ O for serial port seti[
+  A -    Serial Device /dev/ttyUSB0 
+  E to select speed
+  A twice to quadruple speed
+
+ Be sure both flow control options are off
+
+4.  Check the serial port with the POD
+
+Assume USB-serial cable is plugged into the computer from
+the above--
+
+- Plug wall-wart power to BOX
+- Plug the RJ45 cable from the BOX into the POD
+- USB-serial cable from BOX into computer
+- Start minicom if not already started and setup in the
+  steps above.
+
+- Press pushbutton on BOX.
+  POD led should start a slow single flashes.
+  (When the GPS locks on it changes to double flashes
+   and when the fixes lock it changes to triple flashes.)
+
+x<return> should trigger the POD to send the menu.
+Note: some of the menu items interact with the computer program
+ and don't work with minicom.
+
+- Check the battery-- 'b<return>'
+  Full charge is around 4.1v on each cell.
+  'x<return>' to kill the listing
+
+- Plug in load-cell
+  'm<return>' to monitor
+  The readings should responding to load-cell loads.
+
+  Zeroing and saving the new zero are covered in the other notes. 
+
+5.  Readout-rudimentary mode
+
+  The most rudimentary and simple readout is the 'r' command to 
+goes from "now" backwards in time until stopped.  Using 'minicom' 
+one can use ctlA Z select L (and type in a file name) to start
+capture.  Subsequent processing stips out the extraneious lines.
+
+  'r<return>' starts readout from the current "now".
+  '*<return' does a pause and displays the current date/time
+  '<return>' continues
+  'x<return> quit and return to menu
+  'e<return' sets the POD readout back to the current "now" date/time.
+     By not restarting "now" with each 'r' command different capture files
+     can be made without the need to restart from the beginning each time.
+
+Close the capture file
+  ctlA Z L "close"
+
+Quit minicom 
+  ctlA Z Q
+
+6.  Readout--start/duration specified
+
+SIDE ISSUE: Location of GliderWinchCommons/embed repo--
+
+I made a shared folder in the virtualbox/Ubuntu which I named 'vbox'.
+By placing the github repos in this folder there is a single local
+copy that Windows host and Ubuntu guest can access.
+
+Note: the folder (drive) needs to be 'mount'ed for Ubuntu to see it.
+Hovering the cursor over the shared folder selection in the vm devices it gives
+the command to mounting
+  sudo -t sf_vbox
+
+That mounts it and appears in Ubuntu as--
+  /media/sf_vbox
+
+cd /media/sf_vbox
+mkdir GliderWinchCommons
+cd GliderWinchCommons
+git clone https://github.com/GliderWinchCommons/embed.git
+
+Back to readout--start/duration
+
+cd /media/sf*/Gl*ons/*pod/*PC/t*/dateselect
+ ./dateselect /dev/ttyUSB0 [assuming serial port permissions were fixed]
+Press pushbutton on box if POD is not running.
+
+NB: Best to put POD in sleep ('s<return>') when not needed as it keeps logging
+that makes searching for the start point of a readout take longer.
+
+NB: Until the POD gps is locked and getting good fixes the logging does not start.  
+Once this is established the logging continues even if the gps lock is lost (IIRC!).
+
+For test check for a segement to be extracted--
+  'r<return>'' 
+  then quickly
+  '*<return>' 
+  Note: date/time
+
+Exit ctl C
+Restart with added date/time
+E.g. March 25 2017 19:03:00, and 60 seconds of data
+ ./dateselect /dev/ttyUSB0 170325.190300 60
+When dataselect starts it shows the start/end times.
+To begin download--
+ 'x<return>'
+ 'd<return>'
+It should begin search until if finds the start time, then begin the download.
+
+The downloadfile is in 'home' directory (and not '~/Downloads').
+
+
+
+
+
+
+
+
+

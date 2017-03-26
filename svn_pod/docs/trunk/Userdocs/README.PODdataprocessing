@@ -1,0 +1,17 @@
+README.PODdataprocessing
+
+Notes on converting data for plotting after
+it has been downloaded from the POD to 
+the PC.
+
+03/26/2017
+
+1.  Setup directories--
+
+In the ancient times when collecting and processing POD
+data was active the following directories were setup.
+
+cd [home directory]
+mkdir winch winch/computed winch/downloaded
+
+

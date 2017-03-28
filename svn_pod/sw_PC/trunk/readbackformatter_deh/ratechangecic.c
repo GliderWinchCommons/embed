@@ -36,6 +36,7 @@ Courtney Campbell--
 */
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
@@ -292,6 +293,11 @@ void extract_values(struct GPSVALUES *g, char * p, int j)
 	/* Tick time */
 	sscanf(buf,"%10llu",&ull64);
 	g->ulltime = ull64;
+
+	/* Tick times can be larger than 10 digits so adjust start-of-line pointer. */
+	char *ptmp = p;
+        while (isspace(*ptmp) == 0) ptmp++;
+        if ((ptmp-p) > 10) p = (ptmp-10);
 
 	/* Latitude (degrees) (we won't screw around with NS) */
 //printf("Lat: ");

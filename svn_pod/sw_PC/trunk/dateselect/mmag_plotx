@@ -47,7 +47,9 @@ fi
 echo $LOCAL
 
 # This script might be located in ~/bin, so navigate to where the action starts
-DATESELDIR=/home/$USER/svn_pod/sw_PC/trunk/dateselect
+#DATESELDIR=/home/$USER/svn_pod/sw_PC/trunk/dateselect
+echo "directory for dateselect"
+echo $DATESELDIR
 
 # Directory where files retrieved from FIT are stored
 SAVEDIR=/home/$USER/winch/download/$2
@@ -60,9 +62,11 @@ COMPDIR=/home/$USER/winch/computed/$2
 # 'reformat' outputs to stdout plus file with 'R' appended 
 # 'reformat2' outputs stdout with 'RM' appended (ReformattedMerged)
 cd $DATESELDIR
+echo " directory where computed results stored"
 echo $SAVEDIR/$3 
 
-# ===== TENSION ONLY (option "0") ==========
+echo "checkpt 1"
+# =====  TENSION ONLY (option "0") ==========
 case $4 in
 	*0)
 
@@ -89,10 +93,12 @@ case $4 in
 
 ../read*/reformat $SAVEDIR/$3 | sort -k 1 | tee $COMPDIR/$3RS | ../read*/ratechangecic | tee $COMPDIR/$3RC | sort | ../read*/reformatgps2 | tee $COMPDIR/$3RM | ./float_timegps $COMPDIR/$3.param | tee $COMPDIR/$3FT
 
-
+echo "  checkpt 2"
 
 # Strip extraneous lines from 'RM file
 awk '{if ( length > 110 ) print $0 }' $COMPDIR/$3RM > $COMPDIR/$3RMX
+
+echo "  checkpt 3"
 
 # Plot the file and save plot image as a png file
 ./podplot $COMPDIR/$3FT

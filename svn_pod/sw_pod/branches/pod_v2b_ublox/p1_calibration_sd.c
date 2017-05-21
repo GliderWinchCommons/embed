@@ -132,9 +132,11 @@ static void update_n(unsigned int blocknum)
 	
 	/* If default flag is on, then set SD card calibration with default values */
 // NOTE: no command currently implemented to set this flag (01/16/2012)
+cCalDefaultflag = 1;
+printf("A %d ",strDefaultCalib.accel_offset[0]);USART1_txint_send();
 	if (cCalDefaultflag != 0)	// Reset to default?
 	{ // Here, yes.  Re-initialize value to those compliled into the code
-		calibration_init_default(&sd.calblock);
+		calibration_init_default_u(&sd.calblock);
 
 		/* Generate the CRC for the calibration struct */
 		// hwcrcgen (pointer to calibration, count of ints for crc generation)
@@ -159,6 +161,7 @@ static void update_n(unsigned int blocknum)
 			sdlog_write_extra_block(blocknum, sd.sdcalblock);
 		}
 	}
+printf("B %d ",strDefaultCalib.accel_offset[0]);USART1_txint_send();
 	return;
 }
 /******************************************************************************

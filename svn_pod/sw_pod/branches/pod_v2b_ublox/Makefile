@@ -64,6 +64,7 @@ OBJS		=  vector.o $(NAME).o \
 ad7799_packetize.o \
 adc_packetize.o \
 calendar_arith.o \
+calibration_init_u.o \
 gps_packetize.o \
 gps_shutdown.o \
 LED_ctl.o \

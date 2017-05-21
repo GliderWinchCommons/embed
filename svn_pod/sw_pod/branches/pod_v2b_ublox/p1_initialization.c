@@ -148,14 +148,14 @@ void p1_initialization_basic(void)
 	cGPStype = UBLOX_NEO_6M;	// Code for dealing with sentences
 
 	/* Announce who we are */
-	USART1_txint_puts("\n\rpod_v2b_u-blox  01/01/2017 \n\r"); USART1_txint_send();
+	USART1_txint_puts("\n\r...pod_v2b_u-blox  01/01/2017 \n\r"); USART1_txint_send();
 	/* At this point the machine is somewhat(!) functional */	
 
 	/* Setup default calibration values */
 /* Note: This sets up the default calibrations.  When in deepsleep mode we don't take the time
 (power) to initialize and setup the SD card, so we will depend on the ADC calibrations for the
 temperature and battery voltages to be close enough */
-	calibration_init_default(&strDefaultCalib);	// (@12)
+	calibration_init_default_u(&strDefaultCalib);	// (@12)
 
 	return;
 }

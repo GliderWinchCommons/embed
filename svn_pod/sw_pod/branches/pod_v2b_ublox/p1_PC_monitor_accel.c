@@ -91,6 +91,7 @@ void p1_PC_monitor_accel(void)
 		
 		/* Calibrate accelerometer: Z,Y,X into g-force as x.xx  */
 
+//calibration_init_default_u(&strDefaultCalib); // Assure default values
 		llS = 0;	// Vector magnitude sum initialize
 		for ( i = 0; i < NUMBERACCELREADINGSPKT; i ++)
 		{
@@ -121,6 +122,8 @@ void p1_PC_monitor_accel(void)
 				nR = nT % 1000;				// Fractional part
 				printf (" %4d.%03u ",nX,nR);		// Setup the output
 			}
+//printf(" %d ",*(pp+i)); // Display raw ADC readings
+//printf(" %d ",strDefaultCalib.accel_offset[i]); // Check offset being used
 		}
 
 		/* Vector magnitude = square root of sum of squares */

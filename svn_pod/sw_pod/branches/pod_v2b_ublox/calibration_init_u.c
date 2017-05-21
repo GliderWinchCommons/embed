@@ -1,18 +1,17 @@
-/******************** (C) COPYRIGHT 2011 **************************************
+/******************************************************************************
 * File Name          : calibration_init.c
-* Hackerees          : deh
-* Date First Issued  : 12/14/2011
+* Date First Issued  : 05/20/20167
 * Board              : STM32F103VxT6_pod_mm
-* Description        : Initialize calibration block
+* Description        : Initialize calibration block--adxl-335 on ublox version of defaults
 *******************************************************************************/
 #include "calibration.h"
 
 /******************************************************************************
- * void calibration_init_default(struct CALBLOCK *p);
- * @brief	: Initialize calibration block
+ * void calibration_init_default_u(struct CALBLOCK *p);
+ * @brief	: Initialize calibration block (u for "ublox")
  * @param	: Pointer to the calibrationblock
  ******************************************************************************/
-void calibration_init_default(struct CALBLOCK *p)
+void calibration_init_default_u(struct CALBLOCK *p)
 {
 	p->version = CALVERSION;		/* Calibration version number 		*/
 	p->adcbot = 76590;			/* Bottom cell direct measurement 	*/
@@ -21,12 +20,12 @@ void calibration_init_default(struct CALBLOCK *p)
 	p->adcppm = -76;			/* ADC offset for temp compensation table lookup of 32 KHz osc */
 	p->tmpoff = -380;			/* Temp offset conversion table lookup (see also '../devices/adcthermtmp.c') */
 	p->ppmoff = 310;			/* ppm * 100 offset for 32 KHz osc nominal freq */
-	p->accel_offset[0] = 2350;		/* Z axis zero offset	*/
-	p->accel_offset[1] = 2308;		/* Y axis zero offset	*/
-	p->accel_offset[2] = 2307;		/* X axis zero offset	*/
-	p->accel_scale[0] = 351,		/* Z axis scale for 1g * 100 */
-	p->accel_scale[1] = 355,		/* Y axis scale for 1g * 100 */
-	p->accel_scale[2] = 347;		/* X axis scale for 1g * 100 */
+	p->accel_offset[0] = 2037;		/* Z axis zero offset	*/
+	p->accel_offset[1] = 2045;		/* Y axis zero offset	*/
+	p->accel_offset[2] = 2067;		/* X axis zero offset	*/
+	p->accel_scale[0] = 403,		/* Z axis scale for 1g * 100 */
+	p->accel_scale[1] = 405,		/* Y axis scale for 1g * 100 */
+	p->accel_scale[2] = 408;		/* X axis scale for 1g * 100 */
 	p->load_cell = 35268;			/* AD7799: counts per kg*10 */
 	p->load_cell_zero = 515;		/* AD7799: zero adjust */
 	p->xtal_To = 2447;			/* 32 KHz xtal turnpoint temp (25.0 C nominal, scaled to 2500) */

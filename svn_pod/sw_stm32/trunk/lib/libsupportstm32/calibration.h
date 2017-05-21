@@ -71,6 +71,12 @@ void calibration_init_default(struct CALBLOCK *p);
  * @param	: Pointer to the calibrationblock
  ******************************************************************************/
 
+/******************************************************************************/
+void calibration_init_default_u(struct CALBLOCK *p);
+/* @brief	: Initialize calibration block
+ * @param	: Pointer to the calibrationblock
+ ******************************************************************************/
+
 /* Default calibrations for various devices (@15) */
 extern struct CALBLOCK strDefaultCalib;	 // Default calibration
 

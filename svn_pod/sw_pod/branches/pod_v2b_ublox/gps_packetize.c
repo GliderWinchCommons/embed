@@ -22,10 +22,6 @@ Subroutine call references shown as "@n"--
 @9 = svn_pod/sw_pod/trunk/pod_v1/p1_gps_time_linux.ch
 @10 = svn_pod/sw_pod/trunk/pod_v1/tickadjust.c
 @11 = svn_pod/sw_pod/trunk/pod_v1/p1_Tim2_pod.c
-
-
-
-
 */
 
 //#define GPS_SWITCH_PRESENT	// check GPS ON/OFF switch
@@ -39,11 +35,17 @@ Subroutine call references shown as "@n"--
 #include "32KHz_p1.h"
 #include "gps_packetize.h"
 #include "p1_common.h"
+#include "lltoa.h"
 
 /* Subroutines */
 static void gpsfix_time_add(char * p);
 static int gpsfix_time_PUBX00save(char * p);
 static int gpsfix_time_GGAsave(char * p);
+
+void time_display_SYS(void);
+void time_display_GPS(void);
+
+char vv[128];
 
 //static int gps_power_updn(void);
 
@@ -157,6 +159,7 @@ struct PKT_PTR gps_packetize_poll(void)
 //			break;
 //		}
 		/* Flash onboard LED so that we know this mode is running */
+                // cGPS_ready comes on after uiConsecutiveGoodGPSctr > 4, i.e. consecutive count of good ones
 		if ((cGPS_ready != 0) && ((GPIO_IDR(GPIOD) & (1<<14) ) != 0))	// GPS ready AND GPS power is on
 //		if ((GPIO_IDR(GPIOD) & (1<<14) ) != 0) // Double flash when GPS power is on & 
 		{
@@ -167,7 +170,7 @@ struct PKT_PTR gps_packetize_poll(void)
 			LEDonboard_ctl_turnon_ct(25, 1000,1);	// ON time, OFF time (ms), one flash	
 		}
 
-//time_display(); // Debugging
+//time_display_SYS(); // Debugging
 
 		/* 'l' command sets 'gps_sentence_flag' to display lines from gps. */
 		if (gps_sentence_flag != 0)
@@ -198,13 +201,23 @@ struct PKT_PTR gps_packetize_poll(void)
 
 		/* See if this looks like a gps sentence */
 		if ((pgps = gps_time_find_dollars(strlb)) == 0) break;  // Not a '$' string
-
+static char gpserrorsave[256] = "gpserr 1st\n\r";
+static char gpserrorsw = 0;
 		/* Checksum check */
 		if (gps_crc_check(strlb) != 0)	// Is Checksum OK?
 		{ // Here, no.
-			printf("GPS checksum error\n\r"); USART1_txint_send();
+			printf("GPS checksum error: %d\n\r",strlb.ct); USART1_txint_send();
+printf("%s\n\r",gpserrorsave);
+gpserrorsw = 1;
 			return pp;
 		}
+
+strcpy(gpserrorsave,strlb.p);
+if (gpserrorsw == 1)
+{
+  printf("%s\n\r",strlb.p);USART1_txint_send();
+gpserrorsw = 0;
+}
 
 		/* Extract the date/time and error check based on type of gps. */
 		switch (cGPStype) // This set in 'p1_initialization.c'
@@ -219,13 +232,14 @@ struct PKT_PTR gps_packetize_poll(void)
 			uiGPSrtc = 25;	// Some error code
 		}		
 
+
 //sprintf (vv,"%u \n\r",uiGPSrtc); USART1_txint_puts (vv);
-//USART1_txint_puts(strlb.p+1);	// Echo back the line just received
+//USART1_txint_puts(strlb.p+1);	// Echo back the line just received 
 //USART1_txint_puts ("\n");	// Add line feed to make things look nice
 //USART1_txint_send();		// Start the line buffer sending
 
 		/* Check for a valid time/fix line and extract time and RTC counter at EOL.  */
-		if ( uiGPSrtc  == 99 )	// (@5) // 5 Hz onboard version
+		if ( uiGPSrtc == 99 )	// (@5) // 5 Hz onboard version
 		{ // Here we got a valid time/fix $GPRMC record and extracted the time fields */
 //USART1_txint_puts(strlb.p);	// Echo back the line just received
 //USART1_txint_puts ("\n");	// Add line feed to make things look nice
@@ -243,10 +257,19 @@ struct PKT_PTR gps_packetize_poll(void)
 			{
 				LED5_off;	// Green	
 			}
+
+/* debugging
+time_display_SYS();
+time_display_GPS();
+printf("SYSx: %s\n\r",lltoa(vv,strAlltime.SYS.ll,10));//USART1_txint_send();
+printf("GPSx: %s\n\r",lltoa(vv,strAlltime.GPS.ll,10));//USART1_txint_send();
+printf("GPSa: %s\n\r",lltoa(vv,(strAlltime.SYS.ll-strAlltime.GPS.ll),10));//USART1_txint_send();
+printf("DIFx: %s\n\r",lltoa(vv,strAlltime.DIF.ll,10));USART1_txint_send();
+
 //USART1_txint_putc (cFixstatus);
 //USART1_txint_puts ("\n\r");	// Add line feed to make things look nice
 //USART1_txint_send();		// Start the line buffer sending
-
+*/
 
 			/* Flag to controlling 1 versus 2 flashes of LED */
 			cGPSng = 1;	// Show gps good;
@@ -277,10 +300,10 @@ struct PKT_PTR gps_packetize_poll(void)
 				/* Convert gps time to linux format (seconds since year 1900) */
 				tLinuxtimecounter =  gps_time_linux_init(&pkt_gps_mn);	// Convert ascii GPS time to 32b linux format (@9)
 
-
 				strAlltime.GPS.ull  = tLinuxtimecounter; 	// Convert to signed long long
 				strAlltime.GPS.ull -= (PODTIMEEPOCH);		// Move to more recent epoch to fit into 40 bits (@9)
 				strAlltime.GPS.ull  = (strAlltime.GPS.ull << ALR_INC_ORDER);	// Scale linux time for 2048 ticks per sec
+
 				
 				/* Compute difference between GPS time and and the SYS tick counter stored by the 1PPS interrupt */
 				/* The GPS interrupt (TIM2) stores the current strAlltime.SYS.ull count (maintained by TIM3 divided to simulate
@@ -442,7 +465,6 @@ struct PKT_PTR gps_packetize_poll(void)
 					case UBLOX_NEO_6M:
 						if (gpsfix_time_GGAsave(pgps) == 0)	usGGAsavectr += 1; // Save the fix for PC display
 						gpsfix_time_PUBX00save(pgps);
-
 						break;
 					default:
 						uiGPSrtc = 25;	// Some error code
@@ -712,31 +734,55 @@ makes the sensed bit a one.  This polarity allows--
 //	ENCODERGPSPWR_on;
 //	return 1;
 //}
-
 /******************************************************************************
- * void time_display(void);
+ * void time_display(char *p, long long llt, long long llt_prev, int shift);
  * @brief	: Display time
+ * @param	: p = pointer to char string
+ * @param	: llt = long long with coded time
+ * @param	: llt_prev = previous llt
+ * @param 	: shift = number of bits to shift-right llt for 32b linux format
  ******************************************************************************/
-static union LL_L_S w_prev;
-void time_display(void)
+void time_display(char *p, long long llt, long long llt_prev, int shift )
 {
-	union LL_L_S w;
-
 	/* Should give us 1 sec displays */
-	if ( (strAlltime.SYS.ull & ((1 << 11) - 1) ) == 0)
+	if ( (llt & ((1 << shift) - 1) ) == 0)
 	{
-		w.ull = (strAlltime.SYS.ull >> 11);	
+		llt = (llt >> shift);	
 
-		if (w_prev.ull != w.ull)
+		if (llt_prev != llt)
 		{
-			w_prev.ull = w.ull;
-			printf ("%10u", w.ul[0]);
-			w.ul[0] +=  PODTIMEEPOCH;  
-			printf (" %s\r", ctime((const time_t*)&w.ul[0]));
-			USART1_txint_send();		// Start line sending.	
+			llt_prev = llt;
+			printf ("%10u", llt);
+			llt +=  PODTIMEEPOCH;  
+			printf ("%s %s\r", p, ctime((const time_t*)&llt));
 		}
 	}
+        else
+        {
+ 		printf ("%s strAlltime.xxx.ull = 0\n\r", p);
+        }
+	USART1_txint_send();		// Start line sending.	
 	return;
 }
-
+/******************************************************************************
+ * void time_display_SYS(void);
+ * @brief	: Display time of strAlltime.SYS.ull
+ ******************************************************************************/
+static long long strAlltimeSYSull_prev;
+void time_display_SYS(void)
+{
+   long long llt = strAlltime.SYS.ull;
+   time_display("SYS: ", (llt & ~((1 << 11) - 1)), strAlltimeSYSull_prev, 11);
+   return;
+}
+/******************************************************************************
+ * void time_display_GPS(void);
+ * @brief	: Display time of strAlltime.SYS.ull
+ ******************************************************************************/
+static long long strAlltimeGPSull_prev;
+void time_display_GPS(void)
+{
+   time_display("GPS: ", strAlltime.GPS.ull, strAlltimeGPSull_prev, 11);
+   return;
+}
 

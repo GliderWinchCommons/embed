@@ -218,7 +218,7 @@ Now, setup the remainder for polling the AD7799 and the filtering/packetizing of
 the ADC data for accelerometer, battery voltage, and thermister readings.
 
 Waiting for a rtc "tick" sychronizes the setting of the subroutine addresses so that an rtc interrupt doesn't
-causes consternation of other attitudinal side effects.
+causes consternation or other attitudinal side effects.
 
 This will setup the following sequence--
 32KHz secf interrupt (every 4 32768 KHz osc ticks) counts down a count-down-by-four counter.  When this counter

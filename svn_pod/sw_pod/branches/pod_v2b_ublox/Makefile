@@ -96,7 +96,8 @@ tickadjust.o \
 newlib_support.o \
 p1_calibration_sd.o \
 p1_PC_monitor_inputcal.o \
-pwrctl_v2b.o 
+pwrctl_v2b.o \
+lltoa.o
 
 
 # Paths for openocd and automatic flashing

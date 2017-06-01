@@ -34,4 +34,55 @@ Enable FTDI serial port.
 
 Text (F8) shows u-blox msg stream.
 
+================================
+05/26/2017
+Fixed up code for POD board.
+
+"#define POD" to compile the POD code,
+and comment out for the sensor board code.
+
+Warning: The sensor board code may have been broken
+by the changes.
+
+Makefile was updated to the latest scheme that uses
+the gcc launchpad compiler.
+
+Getting serial port to work on Windows 10--
+  Close u-center, if open
+  Check DeviceManager to find com port, e.g. COM3
+  Try PuTTY @ 38400 COM3, and open session
+    should see NEMA lines
+  Close PuTTY
+
+  Open u-center.
+    Receiver|port should show COM3; select
+    Receiver|baud rate: select 38400
+    Tiny green simulated led in lower right corner on.
+
+  F9 to see NEMA msgs.
+    Highlighted ones are the ones currently working.
+    Click and select disable or enable to delete/add to
+      list being sent.  Takes a few secs for the gps unit
+      to respond.
+
+  Get rid of the UBX msgs (which are binary and don't pass
+    the checksum check in the POD code).
+
+  For ublox POD--
+  GGA, GRCTM, GZDA, PUBX 00
+  
+   GZDA not necessary, however.
+
+Let gps unit set with power off long enough for the on-board
+battery to discharge so that it doesn't start from SRAM and
+see if the messages really got updated, i.e. the "save" above
+did not work.
+
+
+Saving the changes in u-center 8.25--
+  Top level tab "Receiver"|"Action|Save
+
+
+  
+
 

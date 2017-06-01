@@ -48,8 +48,12 @@ char *gpspubx00_get_save(void);
 /* @brief	: Get pointer to zero terminated string with data extracted from $GPGGA/$PUBX,00 sentences
  * @return	: Point to string.
  ******************************************************************************/
-void time_display(void);
-/* @brief	: Display time
+ void time_display(char *p, long long llt, long long llt_prev, int shift);
+ /* @brief	: Display time
+ * @param	: p = pointer to char string
+ * @param	: llt = long long with coded time
+ * @param	: llt_prev = previous llt
+ * @param 	: shift = number of bits to shift-right llt for 32b linux format
  ******************************************************************************/
 
 void shuttest(char c);

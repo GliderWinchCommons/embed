@@ -14,8 +14,8 @@
 void calibration_init_default_u(struct CALBLOCK *p)
 {
 	p->version = CALVERSION;		/* Calibration version number 		*/
-	p->adcbot = 76590;			/* Bottom cell direct measurement 	*/
-	p->adctop = 142253;			/* Top cell direct measurement 		*/
+	p->adcbot = 77262;//76590;			/* Bottom cell direct measurement 	*/
+	p->adctop = 144165;//42253;			/* Top cell direct measurement 		*/
 	p->celllow = 3450;			/* Cell low voltage limit (mv)		*/
 	p->adcppm = -76;			/* ADC offset for temp compensation table lookup of 32 KHz osc */
 	p->tmpoff = -380;			/* Temp offset conversion table lookup (see also '../devices/adcthermtmp.c') */

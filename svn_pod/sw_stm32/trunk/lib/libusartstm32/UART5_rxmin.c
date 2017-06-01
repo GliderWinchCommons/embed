@@ -43,6 +43,10 @@ void UART5_rxmin_init(u32 BaudRate)
 	// Enable clock for UART5.
 	RCC_APB1ENR |= RCC_APB1ENR_UART5EN;
 
+	/* Setup GPIO pin for GPIO_UART5 tx (PC12) (See Ref manual, page 158) */
+	GPIO_CRH(GPIOC) &= ~((0x000f ) << (4*4));	// Clear CNF reset bit 01 = Floating input (reset state)
+	GPIO_CRH(GPIOC) |=  (( (GPIO_CNF_OUTPUT_ALTFN_PUSHPULL<<2) | (GPIO_MODE_OUTPUT_50_MHZ) ) << (4*4));
+	
 	/* Set up usart and baudrate */
 	usartx_rxmin_init (UART5,BaudRate);
 

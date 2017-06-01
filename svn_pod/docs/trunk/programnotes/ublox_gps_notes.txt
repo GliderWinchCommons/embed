@@ -1,0 +1,46 @@
+ublox_gps_notes.txt
+05/21/2017
+
+Notes about the ublox version of POD--
+
+
+Currently in the directory of the github repository--
+~/GliderWinchCommons/embed/svn_pod/sw_pod/branches/pod_v2b_ublox
+
+
+1.  On board LED flashing
+
+Of the two pairs of on-board SMD LEDs--
+
+Red 
+  single
+     Program running
+     Good "sentences" lines from the GPS module
+     But, GPS is not ready ('cGPS_ready' flag)
+       which means logging has not started
+
+  double
+     Above, but GPS ready ('cGPS_ready' flag)
+     The ready flag is set when there has been 
+     four consecutive good time ticks
+     (counted by 'uiConsecutiveGoodGPSctr')
+
+Green
+  Good GPS fixes
+
+
+2.  LED on GPS module
+
+Steady OFF = not powered
+  'j' command manually turns power off
+
+Steady ON = powered
+  'i' command manually turns power on
+  Pushing pushbutton turns power on.
+
+Flashing = once per second ticks
+  GPS as locked onto satellites and is producing
+  good fixes.
+
+
+

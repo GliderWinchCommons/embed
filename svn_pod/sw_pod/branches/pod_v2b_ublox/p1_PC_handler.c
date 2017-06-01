@@ -457,7 +457,7 @@ static short input_check(void)
 		if (strlb.p > (char*)0)			// Check if we have a completed line (@1)
 		{ // Here we have a pointer to the line and a char count
 
-//printf("cmd %c strlb.ct %d\n\r",*strlb.p, strlb.ct); USART1_txint_send();
+//printf("A cmd %c strlb.ct %d\n\r",*strlb.p, strlb.ct); USART1_txint_send();
 
 			if (abortline(strlb) == 0)
 			{ // Here check 1st char for a command		
@@ -808,16 +808,15 @@ static struct TWO atoifield (char *p)
 
 	/* There must be a leading blank */
 	if (*p != ' ') return tw;
-
 	/* Spin forward to first non-blank */
-	while ((*p == ' ') && (i++ < FIELDLIMIT)) p++;;
+	while ((*p == ' ') && (i++ < FIELDLIMIT)) p++;
 	if (i >= FIELDLIMIT) return tw;
 
 	/* Handle negative numbers */
 	if (*p == '-') 
 	{
 		sw = -1;	// After conversion to decimal make number negative
-		p ++;		// Advance to char following '-'
+		p++;		// Advance to char following '-'
 	}
 
 	/* Convert chars to decimal */
@@ -840,7 +839,7 @@ static struct TWO atoifield (char *p)
 	if (i >= FIELDLIMIT) return tw;	// Check if the while terminated because of too many chars
 
 	/* Make negative if necessary */
-	if (sw != 0) tw.n2 = -tw.n2;
+	if (sw != 0) tw.n2 = -tw.n2;USART1_txint_send();
 
 	/* Show that result is OK by returning the pointer to next char */
 	tw.n1 = (unsigned int)p;

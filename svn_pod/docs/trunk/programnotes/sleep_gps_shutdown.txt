@@ -16,6 +16,10 @@ turns the GPS on.  GPS data will be late into the launch.  If the threshold
 is set too low, having the rigging in a situation where the tension exceeds
 the threshold means the GPS never turns off.
 
+05/21/2017
+3) Pushing the pushbutton, which records the time & SD card sector in the 'qq' table
+on the SD card turns ON or resets the timeout for GPS power.
+
 GPS turned off by--
 
 Goal--shutdown the (large) battery drain from the GPS when launching is over.

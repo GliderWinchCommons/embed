@@ -12,14 +12,12 @@
 # Name of the .c file with 'main' as well as output file name
 NAME		= ublox
 
-# Prefix the name for the particular toolchain
-PREFIX		= arm-none-eabi
 # The path for the commands to find the compiler, linker, et al.
-TOOLDIR 	= $(HOME)/CodeSourcery/Sourcery_G++_Lite/bin
-CC		= $(TOOLDIR)/$(PREFIX)-gcc
-LD		= $(TOOLDIR)/$(PREFIX)-ld
-OBJCOPY		= $(TOOLDIR)/$(PREFIX)-objcopy
-OBJDUMP		= $(TOOLDIR)/$(PREFIX)-objdump
+PREFIX = $(ARM_PREFIX)/bin/arm-none-eabi-
+CC		= $(PREFIX)gcc
+LD		= $(PREFIX)ld
+OBJCOPY		= $(PREFIX)objcopy
+OBJDUMP		= $(PREFIX)objdump
 
 
 # Current directory
@@ -41,8 +39,10 @@ AFLAGS  = -mcpu=cortex-m3 -mthumb
 # Linker script which has the definition of memory layout and "sections"
 LDSCRIPT	= $(NAME).ld
 
-LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
-LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
+# Path to lc lm lgcov lgcc and other good libraries
+LCC = $(ARM_PREFIX)/arm-none-eabi/lib/armv7-m
+LOTHER = $(ARM_PREFIX_GCCLIB)
+
 
 # Library directory path
 LIBDEVICESSTM32	 = $(LIBDEV)
@@ -52,7 +52,7 @@ LIBUSARTSTM32	 = $(LIBDIR)/libusartstm32
 LIBUSUPPORTSTM32 = $(LIBDIR)/libsupportstm32
 
 # Libraries (.a), script (.ld), (.map) for the linker
-LDFLAGS         = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles \
+LDFLAGS         = -L$(LOTHER) -lgcc -lgcov  -L$(LCC) -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles \
  -L$(LIBMISCSTM32) \
  -L$(LIBUSARTSTM32) \
  -L$(LIBDEVICESSTM32) \
@@ -64,10 +64,11 @@ OBJS		=  vector.o $(NAME).o
 
 
 # Paths for openocd and automatic flashing
-OPENOCD_BASE	= /usr/local
-OPENOCD		= $(OPENOCD_BASE)/bin/openocd
-OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/share/openocd/scripts
+OPENOCD_BASE	= /usr/share
+OPENOCD		= /usr/bin/openocd
+OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
 OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
+OPENOCD_BOARD	= $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
 
 OPENOCD_BOARD	= $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
 

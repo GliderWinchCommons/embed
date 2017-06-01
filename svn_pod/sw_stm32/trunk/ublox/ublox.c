@@ -40,7 +40,7 @@ the 'CFG-CFG' command with I2C eeprom specified.
 #include "libmiscstm32/clockspecifysetup.h"
 #include "PODpinconfig.h"
 
-//#define POD	// POD versus sensor boards
+#define POD	// POD versus sensor boards
 
 
 /* ----------------- Clocking -------------------------------------------------- */
@@ -131,20 +131,25 @@ int main(void)
 
 /* ---------- Initializations ------------------------------------------------------ */
 	clockspecifysetup((struct CLOCKS *)&clocks);// Get the system clock and bus clocks running
-	gpio_setup();		// Need this to make the LED work
+	
 	init_printf(0,putc);	// This one-time initialization is needed by the tiny printf routine
-	ENCODERGPSPWR_on;	// Turn on power to GPS
 
 	// Initialize USART and setup control blocks and pointer
-#define BAUD 57600
-//#define BAUD 38400
+//#define BAUD 57600
+#define BAUD 38400
 #define BAUD1 BAUD
 //#define BAUD1 115200
 
 #ifdef POD
+	PODgpiopins_default();	// Set gpio port register bits for low power (@1)
+	PODgpiopins_Config();	// Now, configure pins (@1)
+	MAX3232SW_on;
+	ENCODERGPSPWR_on;	// Turn on power to GPS
 	UART5_txmin_init(BAUD);
 	UART5_rxmin_init(BAUD);
 #else
+	gpio_setup();		// Need this to make the LED work
+	ENCODERGPSPWR_on;	// Turn on power to GPS
 	USART3_txmin_init(BAUD);
 	USART3_rxmin_init(BAUD);
 #endif
@@ -152,7 +157,7 @@ int main(void)
 	USART1_rxmin_init(BAUD1);
 
 	/* Announce who we are */
-	USART1_txmin_puts("\n\ru-blox 05-06-2014\n\r");
+	USART1_txmin_puts("\n\ru-blox 05-22-2017\n\r");
 
 
 	while (1==1)

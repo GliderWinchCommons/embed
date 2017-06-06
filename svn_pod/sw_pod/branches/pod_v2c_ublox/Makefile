@@ -10,7 +10,7 @@
 
 
 # Name of the .c file with 'main' as well as output file name
-NAME		= sdcardtest
+NAME		= pod_ublox
 
 # The path for the commands to find the compiler, linker, et al.
 PREFIX = $(ARM_PREFIX)/bin/arm-none-eabi-
@@ -23,42 +23,82 @@ OBJDUMP		= $(PREFIX)objdump
 # Current directory
 SRCDIR=.
 # Library directory path
-LIBDIR		= $(SRCDIR)/../lib
-LIBDEV		= $(SRCDIR)/../devices
-GPIODIR		= $(SRCDIR)/../gpiotest
+LIBLIB		= $(SRCDIR)/../../../sw_stm32/trunk
+LIBDIR		= $(LIBLIB)/lib
+LIBSUP		= $(LIBLIB)/lib/libsupportstm32
+LIBDEV		= $(LIBLIB)/devices
 
+# Library directory path
+LIBDEVICESSTM32	 = $(LIBDEV)
+LIBMISCSTM32	 = $(LIBDIR)/libmiscstm32
+LIBOPENSTM32	 = $(LIBDIR)/libopenstm32
+LIBUSARTSTM32	 = $(LIBDIR)/libusartstm32
+LIBUSUPPORTSTM32 = $(LIBDIR)/libsupportstm32
 
 # Compiler flags -Os = no optimization, -Os = minimum space, -O3 = fastest
-CFLAGS		= -Os -g -Wall -Wextra  -I$(LIBDEV) -I$(LIBDIR) -Iinclude -fno-common \
-		  -mcpu=cortex-m3 -mthumb -Wstrict-prototypes -fno-builtin-putc
-
+CFLAGS		= -Os -g -Wall -Wextra -Iinclude -fno-common 
+CFLAGS += -mcpu=cortex-m3 -mthumb -Wstrict-prototypes -fno-builtin-putc
+CFLAGS += -I$(LIBDEV) 
+CFLAGS += -I$(LIBDIR)
+CFLAGS += -I$(LIBUSUPPORTSTM32)
+CFLAGS += -I$(LIBOPENSTM32)
 
 AFLAGS  = -mcpu=cortex-m3 -mthumb
 
 # Linker script which has the definition of memory layout and "sections"
 LDSCRIPT	= $(NAME).ld
 
-# Current directory
-SRCDIR=.
-
-# Library directory path
-LIBOPENSTM32	= $(LIBDIR)/libopenstm32
-LIBUSARTSTM32	= $(LIBDIR)/libusartstm32
-LIBMISCSTM32	= $(LIBDIR)/libmiscstm32
-LIBSUPPORTSTM32 = $(LIBDIR)/libsupportstm32
-LIBTIMERSTM32	= $(SRCDIR)/libtimerstm32
-
 # Path to lc lm lgcov lgcc and other good libraries
 LCC = $(ARM_PREFIX)/arm-none-eabi/lib/armv7-m
 LOTHER = $(ARM_PREFIX_GCCLIB)
 
-
-
 # Libraries (.a), script (.ld), (.map) for the linker
-LDFLAGS         = -L$(LOTHER) -L$(LCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles -L$(LIBMISCSTM32) -L$(LIBUSARTSTM32) -L$(LIBSUPPORTSTM32)
+LDFLAGS         = -L$(LOTHER) -lgcc -lgcov  -L$(LCC) -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles 
+LDFLAGS += -L$(LIBMISCSTM32) 
+LDFLAGS += -L$(LIBUSARTSTM32) 
+LDFLAGS += -L$(LIBDEVICESSTM32) 
+LDFLAGS += -L$(LIBUSUPPORTSTM32)
+
 
 # List of files to be compiled
-OBJS		=  vector.o  $(NAME).o sdlog.o crc_ccitt.o $(LIBDEV)/sdcard.o $(LIBDEV)/sdcard_ll.o $(LIBDEV)/spi2sdcard.o
+OBJS		=  vector.o $(NAME).o \
+ad7799_packetize.o \
+adc_packetize.o \
+calendar_arith.o \
+calibration_init_u.o \
+gps_packetize.o \
+gps_shutdown.o \
+LED_ctl.o \
+pushbutton_packetize.o \
+p1_ad7799_filter.o \
+p1_common.o \
+p1_cold_run.o \
+p1_deepsleep_run.o \
+p1_gps_time_convert.o \
+p1_gps_time_linux.o \
+p1_gps_1pps_v2.o \
+p1_initialization.o \
+p1_launchtime_sd.o \
+p1_logging_handler.o \
+p1_normal_run.o \
+p1_PC_handler.o \
+p1_PC_monitor.o \
+p1_PC_monitor_accel.o \
+p1_PC_monitor_batt.o \
+p1_PC_monitor_gps.o \
+p1_PC_monitor_gpsfix.o \
+p1_PC_monitor_readout.o \
+p1_pushbuttontime_sd.o \
+p1_shutdown.o \
+RS232_ctl.o \
+Tim2_pod_se.o \
+tickadjust.o \
+newlib_support.o \
+p1_calibration_sd.o \
+p1_PC_monitor_inputcal.o \
+pwrctl_v2b.o \
+lltoa.o
+
 
 # Paths for openocd and automatic flashing
 OPENOCD_BASE	= /usr/share
@@ -67,7 +107,6 @@ OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
 OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
 OPENOCD_BOARD	= $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
 
-OPENOCD_BOARD	= $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
 # Be silent per default, but 'make V=1' will show all compiler calls.
 ifneq ($(V),1)
 Q := @
@@ -79,8 +118,8 @@ all: images
 
 
 images: $(NAME)
-#	@printf "  OBJCOPY $(NAME).bin\n"
-#	$(Q)$(OBJCOPY) -Obinary $(NAME) $(NAME).bin
+	@printf "  OBJCOPY $(NAME).bin\n"
+	$(Q)$(OBJCOPY) -Obinary $(NAME) $(NAME).bin
 	@printf "  OBJCOPY $(NAME).hex\n"
 	$(Q)$(OBJCOPY) -Oihex $(NAME) $(NAME).hex
 	@printf "  OBJCOPY $(NAME).srec\n"
@@ -97,14 +136,15 @@ images: $(NAME)
 
 $(NAME): $(OBJS) $(LDSCRIPT)
 	@printf "  LD      $(subst $(shell pwd)/,,$(@)) $(LFLAGS)\n"
-	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS) $(LIBDEV)/PODpinconfig.o -lm -lgcc -lc -lgcc -lmiscstm32 -lusartstm32 -lsupportstm32
+	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)  -lm -lgcc -lc -lgcc -lmiscstm32 -lusartstm32 -ldevicesstm32 -lsupportstm32 -ldevicesstm32 -lusartstm32 -lmiscstm32  -lsupportstm32 -lc -lm -lgcc
+
 clean:
 	@printf "  CLEAN   $(subst $(shell pwd)/,,$(OBJS))\n"
 	$(Q)rm -f *.o $(LIBOPENSTM32)/*.o
 	@printf "  CLEAN   $(NAME):"
 	$(Q)rm -f $(NAME)
 	@printf " .bin"
-#	$(Q)rm -f $(NAME).bin
+	$(Q)rm -f $(NAME).bin
 #	@printf " .hex"
 	$(Q)rm -f $(NAME).hex
 	@printf " .srec"
@@ -114,11 +154,6 @@ clean:
 	@printf " .map\n "
 	$(Q)rm -f $(NAME).map
 
-libusart:
-	cd libusartstm32; $(MAKE)
-
-libmisc:
-	cd libmiscstm32; $(MAKE)
 
 flash: images
 	@printf "  FLASH   $(NAME).srec\n"

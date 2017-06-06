@@ -198,6 +198,7 @@ void pseudo_p1_RTC_IRQHandler(void)
 				if (DIFjamflag == 1)				// Take the difference in one big step? (@1)(@2)
 				{ // Here, yes, take update in one step
 					strAlltime.SYS.ll += strAlltime.DIF.ll;	// Make the adjustment
+//					strAlltime.SYS.ll += strAlltime.GPS.ll;	// Jam GPS date/time
 					strAlltime.nTickAdjust = 0;		// Zero out 'tickadjust.c' vars
 					DIFjamflag = 0;				// Reset the jam flag 
 				}

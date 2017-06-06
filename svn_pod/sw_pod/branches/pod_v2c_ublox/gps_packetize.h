@@ -1,18 +1,11 @@
-/******************** (C) COPYRIGHT 2011 **************************************
+/******************************************************************************
 * File Name          : gps_packetize.h
-* Hacker	     : deh
 * Date First Issued  : 09/05/2011
 * Board              : STM32F103VxT6_pod_mm
-* Description        : Buffering/unbuffering GPS time versus RTC tick counter
+* Description        : GPS time handling
 *******************************************************************************/
-/*
-@1 = svn_pod/sw_stm32/trunk/lib/libsupportstm32/gps_time_convert.h
-
-*/
 #ifndef __P1_GPS_PACKETIZE
 #define __P1_GPS_PACKETIZE
-
-
 
 #define GPSLIMITCT	90	// Limit time to get a good fix/time (secs)
 #define GPSTIMEOUTCT	90	// Limit time to get a good fix/time (secs)
@@ -22,7 +15,6 @@
 
 #include "p1_common.h"
 #include "p1_gps_time_convert.h"
-
 
 /******************************************************************************/
 struct PKT_PTR gps_packetize_poll(void);
@@ -58,7 +50,6 @@ char *gpspubx00_get_save(void);
 
 void shuttest(char c);
 
-
 /* These are in 'gps_packetize.c' */
 extern volatile unsigned int gps_sd_pkt_ready;		// SD packet ready:    	0 = not ready, + = ready. ?
 extern volatile short gps_sd_pkt_ctr;		// SD packet ready:    	0 = not ready, + = ready. ?
@@ -71,12 +62,9 @@ extern unsigned short usGGAsavectr;	// GGA save flag/ctr for PC monitoring
 extern struct TIMESTAMPGP1 pkt_gps_sd;		// GPS time versus rtc tickcounter packet writing to SD card
 extern struct TIMESTAMPGP1 pkt_gps_mn;		// GPS time versus rtc tickcounter packet for monitoring
 
-
-
 /* Used for setting offset calibration */
 extern unsigned int uiConsecutiveGoodGPSctr;	// Count of consecutive good GPS fixes
 extern int nOffsetCalFlag;			// 0 = we have not updated the freq offset calibration
-
 
 extern char cGPS_flag;
 extern char cGPS_ready;		// Enough GPS fixes for it to have settled in
@@ -85,6 +73,9 @@ extern unsigned char gps_sentence_flag;	// GPS sentence listing on/off flag
 
 extern short gps_limit_ctr;	// Discard fixes until at least 4 secs of consecutive good fixes
 extern unsigned int uiGPSrtc;	// RTC tickcount saved at EOL of GPS time
+
+extern u8 	gps_poll_flag;	// 0 = idle; 1 = update .SYS time
+extern u32 gps_poll_flag_ctr;	// Running count of GPS v SYS time updates
 
 #endif
 

@@ -68,7 +68,7 @@ unsigned long pass_no, data_mask;
 // USART1 = POD, Sensor
 // USART2 = Olimex
 
-#define OLIMEX	// Comment out for POD
+//#define OLIMEX	// Comment out for POD
 #ifdef OLIMEX
 #define USART_txint_putc USART2_txint_putc
 #define USART_txint_send USART2_txint_send

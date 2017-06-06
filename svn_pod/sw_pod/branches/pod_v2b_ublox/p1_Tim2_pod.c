@@ -173,7 +173,6 @@ struct TIMCAPTRET32 p1_Tim2_inputcapture_ui(void)
  *####################################################################################### */
 void p1_TIM2_IRQHandler(void)
 {
-
 	unsigned short usSR = TIM2_SR & 0x05;	// Get capture & overflow flags
 	__attribute__((__unused__))int temp;	// Dummy for readback of hardware registers
 
@@ -198,16 +197,6 @@ void p1_TIM2_IRQHandler(void)
 			strTim2.ui[1] = strTim2cnt.ui[1];	// Extended time of upper 32 bits of long long
 			p1_usTim2ch2_Flag += 1;			// Advance the flag counter to signal mailine IC occurred
 			strTim2m = strTim2;			// Update buffered value		
-
-			/* Blip the external LED on the BOX to amuse the hapless op */
-			if (nOffsetCalFlag == 0)		// Check flag set by 'gps_packetize.c' 
-			{ // Here the freq calibration offset has not been updated
-//				LED_ctl_turnon(10,150,1);	// Pulse ON width, space width, number of pulses
-			}
-			else
-			{ // Here the freq calibration has been updated
-//				LED_ctl_turnon(10,150,6);	// Pulse ON width, space width, number of pulses
-			}
 		
 			break;
 
@@ -236,19 +225,11 @@ void p1_TIM2_IRQHandler(void)
 			strTim2m = strTim2;			// Update buffered value		
 			strTim2cnt.ull	+= 0x10000;		// Increment the high order 48 bits of the timer counter
 
-			/* Blip the external LED on the BOX to amuse the hapless op */
-			if (nOffsetCalFlag == 0)		// Check flag set by 'gps_packetize.c' 
-			{ // Here the freq calibration offset has not been updated
-//				LED_ctl_turnon(10,150,1);	// Pulse ON width, space width, number of pulses
-			}
-			else
-			{ // Here the freq calibration has been updated
-//				LED_ctl_turnon(10,150,6);	// Pulse ON width, space width, number of pulses
-			}
-
-			break;
-	
+			break;	
 	}
+	// Prevent high order from exceeding plus limit when GPS is not powered (allow for 2 tick situation)
+	if (strTim2.ui[1] > 2147483645) strTim2.ui[1] = 2147483645;
+
 	temp = TIM2_SR;		// Readback to assure no tail chaining
 	return;
 }

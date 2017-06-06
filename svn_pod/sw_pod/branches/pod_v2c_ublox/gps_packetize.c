@@ -1,9 +1,8 @@
-/******************** (C) COPYRIGHT 2011 **************************************
+/******************************************************************************
 * File Name          : gps_packetize.c
-* Hacker	     : deh
 * Date First Issued  : 09/05/2011
 * Board              : STM32F103VxT6_pod_mm
-* Description        : Buffering/unbuffering GPS time versus RTC tick counter
+* Description        : GPS time handling
 *******************************************************************************/
 /*
 06-24-2012 Modifications for on-board GPS.
@@ -49,6 +48,9 @@ char vv[128];
 
 //static int gps_power_updn(void);
 
+u8 	gps_poll_flag = 0;	// 0 = idle; 1 = update .SYS time
+u32 gps_poll_flag_ctr = 0;	// Running count of GPS v SYS time updates
+
 /* GPS FIX packets */
 #define PKTGPSFIXBUFFSIZE  3	// Number of gps fix packets buffered
 struct PKT_GPSFIX pkt_gpsfix_buf[PKTGPSFIXBUFFSIZE];	// GPS fix packet buffers
@@ -83,8 +85,8 @@ static struct USARTLB strlb;	// Holds the return from 'getlineboth' of char coun
 unsigned int uiConsecutiveGoodGPSctr;	// Count of consecutive good GPS fixes
 
 /* For Xtal & time calibration */
-static unsigned int uiTim2Prev;	// Used to compute difference
-static unsigned int styflgPrev;	// Previous flag count for testing for new TIM2 input capture data
+//static unsigned int uiTim2Prev;	// Used to compute difference
+//static unsigned int styflgPrev;	// Previous flag count for testing for new TIM2 input capture data
 int nOffsetCalFlag;		// 0 = we have not updated the freq offset calibration
 
 /* These are for flashing the onboard and external LEDs (not BOX LED) */
@@ -123,7 +125,7 @@ struct PKT_PTR gps_packetize_poll(void)
 {
 	struct PKT_PTR pp = {0,0};	// Default return values (@4)
 	time_t tLinuxtimecounter;	// Fancy name for int used by time routines
-	struct TIMCAPTRET32 stY;	// TIM2 returns counts in this 
+//	struct TIMCAPTRET32 stY;	// TIM2 returns counts in this 
 //	struct TWO two;			// Two value return from 'rtc_tick_adjust_filter'
 	char * pgps;			// Pointer to '$' if found in string
 
@@ -301,14 +303,29 @@ printf("DIFx: %s\n\r",lltoa(vv,strAlltime.DIF.ll,10));USART1_txint_send();
 				/* Show we have one or more consecutive good GPS readings */
 				uiConsecutiveGoodGPSctr += 1;
 				
+// =================================== from gps_poll.c in sensor/co1_sensor_ublox ========================465
+			/* Convert gps time to linux format (seconds since year 1900) */
+			tLinuxtimecounter   = gps_time_linux_init(&pkt_gps_mn);	// Convert ascii GPS time to 32b linux format
+			strAlltime.GPS.ull  = tLinuxtimecounter; 	// Convert to signed long long
+			strAlltime.GPS.ull -= (PODTIMEEPOCH);		// Move to more recent epoch to fit into 40 bits
+			strAlltime.GPS.ull  = (strAlltime.GPS.ull << 6); // Scale linux time for 64 ticks per sec
+
+//printf("gps_poll GPS %u SYS %u\n\r",(unsigned int)(strAlltime.GPS.ull >> 6),(unsigned int)(strAlltime.SYS.ull >> 6));USART1_txint_send();
+
+			/* GPS and SYS (running time stamp count) should stay in step, once it gets started */
+			if ( strAlltime.GPS.ull != (strAlltime.SYS.ull & ~0x3f) ) // Same at the 1 sec level?
+			{ // Here, no. Set a flag for 'Tim4_pod_se.c' to pick up the time.
+				gps_poll_flag = 1;
+				gps_poll_flag_ctr += 1;	// Keep track of these "anomolies" for the hapless programmer.	
+			}
+// =======================================================================================================
 				/* NOTE: refer to '32KHz_p1.h' for description about the synchronization to GPS (@7) */
 
 				/* Convert gps time to linux format (seconds since year 1900) */
-				tLinuxtimecounter =  gps_time_linux_init(&pkt_gps_mn);	// Convert ascii GPS time to 32b linux format (@9)
-
-				strAlltime.GPS.ull  = tLinuxtimecounter; 	// Convert to signed long long
-				strAlltime.GPS.ull -= (PODTIMEEPOCH);		// Move to more recent epoch to fit into 40 bits (@9)
-				strAlltime.GPS.ull  = (strAlltime.GPS.ull << ALR_INC_ORDER);	// Scale linux time for 2048 ticks per sec
+//				tLinuxtimecounter =  gps_time_linux_init(&pkt_gps_mn);	// Convert ascii GPS time to 32b linux format (@9)
+//				strAlltime.GPS.ull  = tLinuxtimecounter; 	// Convert to signed long long
+//				strAlltime.GPS.ull -= (PODTIMEEPOCH);		// Move to more recent epoch to fit into 40 bits (@9)
+//				strAlltime.GPS.ull  = (strAlltime.GPS.ull << ALR_INC_ORDER);	// Scale linux time for 2048 ticks per sec
 
 				
 				/* Compute difference between GPS time and and the SYS tick counter stored by the 1PPS interrupt */
@@ -316,29 +333,29 @@ printf("DIFx: %s\n\r",lltoa(vv,strAlltime.DIF.ll,10));USART1_txint_send();
 				   the 32 KHz 8192 interrupts) in  strAlltime.TIC.ull.  Later, when we come through this code the difference
 				   between the 'TIC and 'GPS times is the offset, or error, in the 'SYS counter.  This difference is then used in
 				   p1_tim3_OC_pod.c isr to take out the difference (in small steps, or one big jam-in). */
-				strAlltime.DIF.ll = strAlltime.GPS.ull - strAlltime.TIC.ull;	// NOTE: signed result
+//				strAlltime.DIF.ll = strAlltime.GPS.ull - strAlltime.TIC.ull;	// NOTE: signed result
 
 				/* Update ticks per second used by TIM3 to produce 8192 interrupts per second */
-				if ( rtc_tick_edit(strAlltime.uiTim2diff) == 0)	// Is uiTim2diff out-of-range? (tickadjust.c)
-				{ // Here, no.
-					tim3_tickspersec = strAlltime.uiTim2diff;
-				}
+//				if ( rtc_tick_edit(strAlltime.uiTim2diff) == 0)	// Is uiTim2diff out-of-range? (tickadjust.c)
+//				{ // Here, no.
+//					tim3_tickspersec = strAlltime.uiTim2diff;
+//				}
 
 				/* GPS 1_PPS drives TIM1 input capture.  This will give processor clock calibration */
 				// 'p1_gps_1pps.c' saves the difference between successive readings in 'uiTim1onesec'
 
 				/* Get latest GPS input capture time plus flag */
 				/* The following gets the number of timer ticks between 1 pps GPS pulses (strAlltime.uiTim2diff) */
-				stY = p1_Tim2_inputcapture_ui();		// Get latest GPS IC time & flag counter
-				if (stY.flg != styflgPrev)
-				{ // Here, new data.
-					styflgPrev = stY.flg;
-					strAlltime.uiTim2diff = stY.ic - uiTim2Prev;	// Processor ticks between 1_PPS interrupts
-					uiTim2Prev = stY.ic;				// Save for next pass
+//				stY = p1_Tim2_inputcapture_ui();		// Get latest GPS IC time & flag counter
+//				if (stY.flg != styflgPrev)
+//				{ // Here, new data.
+//					styflgPrev = stY.flg;
+//					strAlltime.uiTim2diff = stY.ic - uiTim2Prev;	// Processor ticks between 1_PPS interrupts
+//					uiTim2Prev = stY.ic;				// Save for next pass
 //sprintf(vv,"%8u\n\r",strAlltime.uiTim2diff);
 //USART1_txint_puts(vv);
 //USART1_txint_send();
-				}
+//				}
 
 				/* When the GPS starts, the 1st 'strAlltime.uiTim2diff' can be large */
 				if ( (rtc_tick_edit(strAlltime.uiTim2diff)) == 0) // Is 'uiTim2diff' out-of-range?  Precludes a double second count

@@ -48,6 +48,12 @@ void dump_cawreal(char * p);
 
 #include "./crc_ccitt.h"
 
+extern unsigned int	hclk_freq;	/* 	SYSCLKX/HPREDIV	 	E.g. 72000000 	*/
+extern unsigned int	pclk1_freq;	/*	SYSCLKX/PCLK1DIV	E.g. 72000000 	*/
+extern unsigned int	pclk2_freq;	/*	SYSCLKX/PCLK2DIV	E.g. 36000000 	*/
+extern unsigned int	sysclk_freq;	/* 	SYSCLK freq		E.g. 72000000	*/
+
+
 
 /* Simpleton routines to convert input ascii */
 int dumbasctoint(char *p);
@@ -218,9 +224,8 @@ int main(void)
 {
 	u16 temp;
 	int i = 0; 		// Timing loop variable
-	int j;			// Another (fixed pt FORTRAN!) variable
-	int k; 			// Just a temp var
 	int l;
+        int j,k;
 
 	unsigned int uiBlockNum;// Block number typed int
 	struct USARTLB lb;	// Holds the return from 'getlineboth' of char count & pointer
@@ -256,8 +261,8 @@ int main(void)
 
 	/* Display things for to entertain the hapless op */
 	printf ("pclk1_freq  (MHz): %9u\n\r",pclk1_freq/1000000);		USART_txint_send();
-	printf ("sysclk_freq (MHz): %9u\n\r",k);				USART_txint_send();
-	printf ("caw_init()   (us): %9u\n\r",j/k);				USART_txint_send();
+	printf ("sysclk_freq (MHz): %9u\n\r",sysclk_freq);				USART_txint_send();
+	printf ("caw_init()   (us): %9u\n\r",1000000/(sysclk_freq/1000));				USART_txint_send();
 	
 #if (1==0)	/* Grubby test code */
 {

@@ -77,7 +77,7 @@ void WEAK TIM3_IRQHandler(void);	// tim3_isr(void);
 void WEAK tim4_isr(void);
 void WEAK i2c1_ev_isr(void);
 void WEAK i2c1_er_isr(void);
-void WEAK i2c2_ev_isr(void);
+void WEAK I2C2_EV_IRQHandler(void);	// i2c2_ev_isr(void);
 void WEAK i2c2_er_isr(void);
 void WEAK SPI1_IRQHandler(void);	// spi1_isr(void);
 void WEAK SPI2_IRQHandler(void);	// spi2_isr(void);
@@ -155,7 +155,7 @@ void (*const vector_table[]) (void) = {
 	tim4_isr,
 	i2c1_ev_isr,
 	i2c1_er_isr,
-	i2c2_ev_isr,
+	I2C2_EV_IRQHandler,	//i2c2_ev_isr,
 	i2c2_er_isr,
 	SPI1_IRQHandler,	//spi1_isr,
 	SPI2_IRQHandler,	//spi2_isr,
@@ -248,7 +248,7 @@ void null_handler(void)
 #pragma weak tim4_isr = null_handler
 #pragma weak i2c1_ev_isr = null_handler
 #pragma weak i2c1_er_isr = null_handler
-#pragma weak i2c2_ev_isr = null_handler
+#pragma weak I2C2_EV_IRQHandler = null_handler
 #pragma weak i2c2_er_isr = null_handler
 #pragma weak spi1_isr = null_handler
 #pragma weak spi2_isr = null_handler

@@ -150,9 +150,6 @@ which execute and return, and the returing TIM6 handler resets that interrupt le
 active bit.
 */
 
-/* We don't have TIM6 on this processor so we will use the interrupt */
-#define TIM6_IRQ_PRIORITY	0xE0	// Interrupt priority for TIM6
-
 
 
 

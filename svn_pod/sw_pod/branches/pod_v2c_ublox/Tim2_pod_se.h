@@ -21,4 +21,14 @@ struct TIMCAPTRET32 Tim2_inputcapture_ui(void);
  * @return	: Current timer count and flag counter in a struct
 *******************************************************************************/
 
+extern u16	tim2_64th_0_er;	// Count of date/time adjustments at interval 0
+extern u16	tim2_64th_31_er;// Count of date/time adjustments at interval 31
+
+/* Running sums where the whole is added to an OC interval (and removed from the sum) */
+extern s32	phasing_sum;		// Running sum of accumulated phase adjustment
+extern s32	deviation_sum;		// Running sum of accumulated error
+
+extern unsigned int ticksm;	// Save for 'g' command monitoring
+
+
 #endif

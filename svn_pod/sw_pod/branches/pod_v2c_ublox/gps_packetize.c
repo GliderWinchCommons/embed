@@ -221,7 +221,6 @@ if (gpserrorsw == 1)
   printf("%s\n\r",strlb.p);USART1_txint_send();
 gpserrorsw = 0;
 }
-
 		/* Extract the date/time and error check based on type of gps. */
 		switch (cGPStype) // This set in 'p1_initialization.c'
 		{
@@ -234,7 +233,6 @@ gpserrorsw = 0;
 		default:
 			uiGPSrtc = 25;	// Some error code
 		}		
-
 
 //sprintf (vv,"%u \n\r",uiGPSrtc); USART1_txint_puts (vv);
 //USART1_txint_puts(strlb.p+1);	// Echo back the line just received 
@@ -266,19 +264,6 @@ gpserrorsw = 0;
 				LED5_off;	// Green	
 			}
 
-/* debugging
-time_display_SYS();
-time_display_GPS();
-printf("SYSx: %s\n\r",lltoa(vv,strAlltime.SYS.ll,10));//USART1_txint_send();
-printf("GPSx: %s\n\r",lltoa(vv,strAlltime.GPS.ll,10));//USART1_txint_send();
-printf("GPSa: %s\n\r",lltoa(vv,(strAlltime.SYS.ll-strAlltime.GPS.ll),10));//USART1_txint_send();
-printf("DIFx: %s\n\r",lltoa(vv,strAlltime.DIF.ll,10));USART1_txint_send();
-
-//USART1_txint_putc (cFixstatus);
-//USART1_txint_puts ("\n\r");	// Add line feed to make things look nice
-//USART1_txint_send();		// Start the line buffer sending
-*/
-
 			/* Flag to controlling 1 versus 2 flashes of LED */
 			cGPSng = 1;	// Show gps good;
 
@@ -291,9 +276,6 @@ printf("DIFx: %s\n\r",lltoa(vv,strAlltime.DIF.ll,10));USART1_txint_send();
 
 			if (gps_limit_ctr <= GPSDISCARDCT) 
 			{ // Here, not through discarding the initial fixes
-				/* Blip the external LED on the BOX to amuse the hapless op */
-//				LED_ctl_turnon(10,100,2);	// Pulse ON width, space width, two flashes
-
 				gps_limit_ctr += 1;	// Discard counter
 				break;	// Return until enough readings discarded 
 			}
@@ -301,130 +283,55 @@ printf("DIFx: %s\n\r",lltoa(vv,strAlltime.DIF.ll,10));USART1_txint_send();
 			{ // Here, any initial, dubious readings should be long gone.  Time to use it for sync'ing time.
 
 				/* Show we have one or more consecutive good GPS readings */
-				uiConsecutiveGoodGPSctr += 1;
+				cGPS_ready = 1;	// Set flag so that logging can begin
 				
 // =================================== from gps_poll.c in sensor/co1_sensor_ublox ========================465
-			/* Convert gps time to linux format (seconds since year 1900) */
-			tLinuxtimecounter   = gps_time_linux_init(&pkt_gps_mn);	// Convert ascii GPS time to 32b linux format
-			strAlltime.GPS.ull  = tLinuxtimecounter; 	// Convert to signed long long
-			strAlltime.GPS.ull -= (PODTIMEEPOCH);		// Move to more recent epoch to fit into 40 bits
-			strAlltime.GPS.ull  = (strAlltime.GPS.ull << 6); // Scale linux time for 64 ticks per sec
-
-//printf("gps_poll GPS %u SYS %u\n\r",(unsigned int)(strAlltime.GPS.ull >> 6),(unsigned int)(strAlltime.SYS.ull >> 6));USART1_txint_send();
-
-			/* GPS and SYS (running time stamp count) should stay in step, once it gets started */
-			if ( strAlltime.GPS.ull != (strAlltime.SYS.ull & ~0x3f) ) // Same at the 1 sec level?
-			{ // Here, no. Set a flag for 'Tim4_pod_se.c' to pick up the time.
-				gps_poll_flag = 1;
-				gps_poll_flag_ctr += 1;	// Keep track of these "anomolies" for the hapless programmer.	
-			}
-// =======================================================================================================
-				/* NOTE: refer to '32KHz_p1.h' for description about the synchronization to GPS (@7) */
-
 				/* Convert gps time to linux format (seconds since year 1900) */
-//				tLinuxtimecounter =  gps_time_linux_init(&pkt_gps_mn);	// Convert ascii GPS time to 32b linux format (@9)
-//				strAlltime.GPS.ull  = tLinuxtimecounter; 	// Convert to signed long long
-//				strAlltime.GPS.ull -= (PODTIMEEPOCH);		// Move to more recent epoch to fit into 40 bits (@9)
-//				strAlltime.GPS.ull  = (strAlltime.GPS.ull << ALR_INC_ORDER);	// Scale linux time for 2048 ticks per sec
+				tLinuxtimecounter   = gps_time_linux_init(&pkt_gps_mn);	// Convert ascii GPS time to 32b linux format
+				strAlltime.GPS.ull  = tLinuxtimecounter; 	 // Convert to signed long long
+				strAlltime.GPS.ull -= (long long)PODTIMEEPOCH;	 // Translate to more recent epoch to fit into 40 bits
+				strAlltime.GPS.ull  = (strAlltime.GPS.ull << 6); // Scale linux time for 64 ticks per sec
 
-				
-				/* Compute difference between GPS time and and the SYS tick counter stored by the 1PPS interrupt */
-				/* The GPS interrupt (TIM2) stores the current strAlltime.SYS.ull count (maintained by TIM3 divided to simulate
-				   the 32 KHz 8192 interrupts) in  strAlltime.TIC.ull.  Later, when we come through this code the difference
-				   between the 'TIC and 'GPS times is the offset, or error, in the 'SYS counter.  This difference is then used in
-				   p1_tim3_OC_pod.c isr to take out the difference (in small steps, or one big jam-in). */
-//				strAlltime.DIF.ll = strAlltime.GPS.ull - strAlltime.TIC.ull;	// NOTE: signed result
 
-				/* Update ticks per second used by TIM3 to produce 8192 interrupts per second */
-//				if ( rtc_tick_edit(strAlltime.uiTim2diff) == 0)	// Is uiTim2diff out-of-range? (tickadjust.c)
-//				{ // Here, no.
-//					tim3_tickspersec = strAlltime.uiTim2diff;
-//				}
-
-				/* GPS 1_PPS drives TIM1 input capture.  This will give processor clock calibration */
-				// 'p1_gps_1pps.c' saves the difference between successive readings in 'uiTim1onesec'
-
-				/* Get latest GPS input capture time plus flag */
-				/* The following gets the number of timer ticks between 1 pps GPS pulses (strAlltime.uiTim2diff) */
-//				stY = p1_Tim2_inputcapture_ui();		// Get latest GPS IC time & flag counter
-//				if (stY.flg != styflgPrev)
-//				{ // Here, new data.
-//					styflgPrev = stY.flg;
-//					strAlltime.uiTim2diff = stY.ic - uiTim2Prev;	// Processor ticks between 1_PPS interrupts
-//					uiTim2Prev = stY.ic;				// Save for next pass
-//sprintf(vv,"%8u\n\r",strAlltime.uiTim2diff);
-//USART1_txint_puts(vv);
-//USART1_txint_send();
-//				}
-
-				/* When the GPS starts, the 1st 'strAlltime.uiTim2diff' can be large */
-				if ( (rtc_tick_edit(strAlltime.uiTim2diff)) == 0) // Is 'uiTim2diff' out-of-range?  Precludes a double second count
-				{ // Here, no.  From the two timer times compute a (32 KHz osc) filtered offset 
-					if (uiConsecutiveGoodGPSctr > 4) 
-						 cGPS_ready = 1;	// Set flag so that logging can begin
-
-//					two = rtc_tick_filtered_offset(uiTim1onesec, strAlltime.uiTim2diff); // (@10)
-//					if (two.n1 == 1) // Check new data flag (see @4 for struct TWO)
-//					{ // Here we have a new data output.  Save it for others to use
-//						strAlltime.nOscOffFilter = two.n2;	// Save data (see @4 for struct TWO)
-						// When we are sure we have enough good readings in the filtering it is safe to update the offset
-						// The time adjust flag is to prevent updating for the 'c' command where we are testing and the gps is running
-//						if ( (uiConsecutiveGoodGPSctr > 37) && (gps_timeadjustflag == 0) )
-//						{ // Here, enough readings, so update offset used to adjust time (@10)
-//							strAlltime.nOscOffset32 = strAlltime.nOscOffFilter - nAdcppm_temp_latest;	// Update offset
-//							strAlltime.nOscOffset8 =  strAlltime.uiTim2diff    - strAlltime.nPolyOffset8 - 48000000; // Update offset
-//							strDefaultCalib.xtal_o8 -= strAlltime.nOscOffset8;	// Save in calibration 
-//							cCalChangeFlag = 1; 	// Cause calibration in SD card to update when 'shutdown'
-//							nOffsetCalFlag = 1;	// Set flag to show we have updated the offset (@11)
-//						}
-//						else
-//						{
-//							nOffsetCalFlag = 0;	// Set flag to show we are not updating offset (@11)
-//						}
-//					}
+				/* GPS and SYS (running time stamp count) should stay in step, once it gets started */
+				if ( strAlltime.GPS.ull != (strAlltime.SYS.ull & ~0x3f) ) // Same at the 1 sec level?
+				{ // Here, no. Set a flag for 'Tim2_pod_se.c' to pick up the time.
+					gps_poll_flag = 1;
+					gps_poll_flag_ctr += 1;	// Keep track of these "anomolies" for the hapless programmer.	
 				}
-				
+/* debugging
+time_display_SYS();
+time_display_GPS();
+printf("gpsz: %u SYS %u\n\r",(unsigned int)(strAlltime.GPS.ull >> 6),(unsigned int)(strAlltime.SYS.ull >> 6));USART1_txint_send();
+printf ("tLin: %s\n\r", ctime((const time_t*)&tLinuxtimecounter));
 
+printf("tLin: %d\n\r",tLinuxtimecounter);
+long long tl1 = tLinuxtimecounter;
+tl1 -= (long long)PODTIMEEPOCH;
+printf("tl1 : %s\n\r",lltoa(vv,tl1,10));
+tl1 = tl1 << 6;
+printf("tl1 : %s\n\r",lltoa(vv,tl1,10));
+
+
+unsigned long long tx = strAlltime.GPS.ull >> 6;  tx += (long long)(PODTIMEEPOCH); 
+printf ("gpsk: %s\n\r", ctime((const time_t*)&tx));
+printf("SYSx: %s\n\r",lltoa(vv,strAlltime.SYS.ull,10));//USART1_txint_send();
+printf("GPSx: %s\n\r",lltoa(vv,strAlltime.GPS.ull,10));//USART1_txint_send();
+printf("GPSa: %s\n\r",lltoa(vv,(strAlltime.SYS.ull-strAlltime.GPS.ull),10));//USART1_txint_send();
+printf("DIFx: %s\n\r",lltoa(vv,strAlltime.DIF.ull,10));USART1_txint_send();
+*/
+/*
+USART1_txint_putc (cFixstatus); // Fix status
+USART1_txint_puts ("\n\r");	// Add line feed to make things look nice
+USART1_txint_send();		// Start the line buffer sending
+*/
+//
 				/* 'c' command stops the time adjusting with the gps (@8) */
 				if (gps_timeadjustflag == 0)	// When this flag == 1, then don't adjust the time
 				{ // Here, someone wants us to adjust the time
 					/* Adjust rtc tick time to GPS */
 					gps_tickadjust();
 				}
-
-// Monitoring crap for debugging
-//printf (" %6d %6d %6d",two.n1,two.n2,strAlltime.nOscOffFilter);
-
-//static int secctr; secctr += 1;
-//char vv[256];
-
-//sprintf(vv,"DIF %10d %10d %4u",strAlltime.DIF.ul[1],strAlltime.DIF.ul[0],strAlltime.sPreTickTIC);
-//USART1_txint_puts(vv);
-
-//sprintf (vv," %5u",secctr);
-//USART1_txint_puts(vv);
-
-//sprintf (vv," %5u %2u",DIFtmpctr,DIFjamflag);
-//USART1_txint_puts(vv);
-
-//sprintf (vv," %6d %9d",strAlltime.uiNextTickAdjTime,strAlltime.nTickErrAccum);
-//USART1_txint_puts(vv);
-
-//sprintf (vv," %6d %6d %6d",Debug_nError,nAdcppm_temp_latest,Debug_nErrorO);
-//USART1_txint_puts(vv);
-
-//printf (" %9d %9d", uiTim1onesec,strAlltime.uiTim2diff );
-//USART1_txint_puts(vv);
-
-//sprintf (vv," %6u",strAlltime.nOscOffset);
-//USART1_txint_puts(vv);
-
-//sprintf (vv," %8d",strAlltime.nOscOffFilter);
-//sprintf (vv," %6d %8d",Debug_TIM1,nTim1Debug0);
-//USART1_txint_puts(vv);
-
-//USART1_txint_puts("\n\r");
-//USART1_txint_send();
 
 
 				/* Save the whole "mess" of time counts, etc in the 'ALLTIME' struct (@6) */
@@ -776,13 +683,13 @@ void time_display(char *p, long long llt, long long llt_prev, int shift )
 		{
 			llt_prev = llt;
 			printf ("%10u", llt);
-			llt +=  PODTIMEEPOCH;  
+			llt +=  (long long)PODTIMEEPOCH;  
 			printf ("%s %s\r", p, ctime((const time_t*)&llt));
 		}
 	}
         else
         {
- 		printf ("%s strAlltime.xxx.ull = 0\n\r", p);
+ 		printf ("%sOOPs strAlltime.xxx.ull = 0\n\r", p);
         }
 	USART1_txint_send();		// Start line sending.	
 	return;
@@ -795,7 +702,7 @@ static long long strAlltimeSYSull_prev;
 void time_display_SYS(void)
 {
    long long llt = strAlltime.SYS.ull;
-   time_display("SYS: ", (llt & ~((1 << 11) - 1)), strAlltimeSYSull_prev, 11);
+   time_display("SYS: ", (llt & ~((1 << 11) - 1)), strAlltimeSYSull_prev, 6);
    return;
 }
 /******************************************************************************
@@ -805,7 +712,7 @@ void time_display_SYS(void)
 static long long strAlltimeGPSull_prev;
 void time_display_GPS(void)
 {
-   time_display("GPS: ", strAlltime.GPS.ull, strAlltimeGPSull_prev, 11);
+   time_display("GPS: ", strAlltime.GPS.ull, strAlltimeGPSull_prev, 6);
    return;
 }
 

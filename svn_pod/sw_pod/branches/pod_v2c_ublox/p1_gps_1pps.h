@@ -15,8 +15,12 @@
  The higher the priority number, the lower the priority */
 #define TIM1CC_PRIORITY		0x30	// Interrupt priority for TIM1 interrupt
 #define TIM1UP_PRIORITY		0x30	// Interrupt priority for TIM1 interrupt
-#define TIM2_PRIORITY		0x10	// Interrupt priority for TIM2 interrupt
-#define TIM3_PRIORITY		0x20	// Interrupt priority for TIM3 interrupt
+#define TIM2_PRIORITY		0x20	// Interrupt priority for TIM2 interrupt
+//#define TIM3_PRIORITY		0x20	// Interrupt priority for TIM3 interrupt
+#define TIM6_IRQ_PRIORITY			0xE0	// TIM2 gps 1 pps IC low priority handling after TIM2 interrupt
+#define NVIC_I2C2_EV_IRQ_PRIORITY_CO		0xA0	// TIM2 OC interupt starts this for measurement and logging
+
+
 
 
 

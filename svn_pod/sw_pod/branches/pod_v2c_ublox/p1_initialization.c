@@ -177,8 +177,6 @@ void p1_initialization_active(void)
 	adc_packetize_init();	// (@9)
 	ad7799_packetize_init();// (@10)
 
-	/*  Setup TIM2 so that the GPS 1_PPS on PA1 causes time stamps */
-//	p1_Tim2_pod_init();	// Setup TIM2CH1  driven by 1_PPS via PA1 (spare RJ-45 pin) (@8)
 
 	/* Setup TIM1 to measure processor clock using GPS 1_PPS */
 //	p1_GPS_1pps_init();	// Setup of the timers and pins for TIM1CH1* (* = remapped) driven from RTC
@@ -204,8 +202,7 @@ void p1_initialization_active(void)
 	/* Setup: Zero calibration, sampling rate, and continuous conversions */
 	complete_ad7799();
 
-	/* Setup TIM3 which is used in place of 32768 Hz osc for timing of readings */
-//	Tim3_pod_init();
+	/* Setup TIM2 which measures processor freq and phases ticks to gps. */
 	Tim2_pod_init();
 
 	/* Setup and variable "skip"s, for logging, e.g. accelerometer */
@@ -238,8 +235,7 @@ expires it sets a TIM6 interrupt pending.  The TIM6 (very low priority) interrup
 	rtc_ad7799_packetizedone_ptr = &adc_packetize;		// rtc_ad7799_filterdone_ptr -> adc_packetize
 	ad7799_filterdone_ptr        = &ad7799_packetize_add;	// ad7799_poll_rdy -> ad7799_filterdone_ptr
 	rtc_timerdone_ptr            = &ad7799_poll_rdy;	// tickadjust -> ad7799_poll_rdy
-	p1_rtc_secf_ptr  	     = &rtctimers_countdown;	// TIM6 isr -> rtctimers_countdown
-
+	p1_rtc_secf_ptr  	     = &rtctimers_countdown;	// I2C2_EV isr -> rtctimers_countdown
 
 	return;
 }

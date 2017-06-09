@@ -69,15 +69,16 @@ void (*p1_rtc_secf_ptr)(void);	// Address of function to call during RTC_IRQHand
 extern unsigned int	pclk1_freq;	/*	SYSCLKX/PCLK1DIV	E.g. 32000000 	*/
 extern unsigned int	sysclk_freq;	/* 	SYSCLK freq		E.g. 64000000	*/
 
-// Logger /* #### => Base this on 64,000,000 TIM4 clock <= #### */
 /* #### => POD: Base this on 48,000,000 TIM2 clock <= #### */
 
-/* Number of intervals in 1/64th sec */
-#define TIM2_NUM_INTERVALS	20	// 1/64th sec is covered by 20 intervals (i.e. interrupts)
+/* Number of OC interrupts in 1/2048th sec */
+#define TIM2_OC_PER_SEC	2048	// 
+
+/* Number of OC interrupts in 1/64th sec */
+#define TIM2_NUM_INTERVALS (TIM2_OC_PER_SEC/64)	// 32
 
 /* Each interrupt duration, nominal. */
-//#define TIM2NOMINAL	50000	// At 64,000,000 p1clk_freq, (50000 * 20) -> 1/64th sec
-#define TIM2NOMINAL	37500	// At 48,000,000 p1clk_freq, (37500 * 20) -> 1/64th sec
+#define TIM2NOMINAL	23437	// At 48,000,000 p1clk_freq, (23437.5 * 2048) -> 1 sec
 
 /* Scale interval durations scale deviation to "whole.fraction" form. */
 #define TIM2SCALE	18	// Number of bits to scale deviation of clock upwards
@@ -136,11 +137,11 @@ unsigned int ticks_flg;	// Incremented each 1 PPS
 
 /* Count of instances where strAlltime.ull lower 6 bits were not zero at the end of second */
 u16	tim2_64th_0_er = 0;	// Count of date/time adjustments at interval 0
-u16	tim2_64th_19_er = 0;	// Count of date/time adjustments at interval 19
+u16	tim2_64th_31_er = 0;	// Count of date/time adjustments at interval 31
 static u16	tim2_64th_0_er_prev = 0;	// Count of date/time adjustments at interval 0, previous
-static u16	tim2_64th_19_er_prev = 0;	// Count of date/time adjustments at interval 19, previous
+static u16	tim2_64th_31_er_prev = 0;	// Count of date/time adjustments at interval 31, previous
 static u16	tim2_64th_0_ctr = 0;	// Count of changes of 'tim2_64th_0_er'
-static u16	tim2_64th_19_ctr = 0;	// Count of changes of 'tim2_64th_19_er'
+static u16	tim2_64th_31_ctr = 0;	// Count of changes of 'tim2_64th_31_er'
 
 /* Index for double buffer that switches each second when GPS 1 PPS (ic) arrives. */
 volatile u32 idx_cmd_n_ct;	// Index for double buffering can msg counts
@@ -156,9 +157,8 @@ static void tim2lowlevel_init(void);
 *******************************************************************************/
 void Tim2_pod_init(void)
 {
-	/* Setup limits */
+	/* Setup limits on tick counts */
 	tim2lowlevel_init();
-
 
 /* CYCCNT counter is in the Cortex-M-series core.  See the following for details 
 http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0337g/BABJFFGJ.html */
@@ -190,15 +190,21 @@ http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0337g/BABJFFGJ.ht
 	TIM2_CR1  = TIM_CR1_CEN; 			// Counter enable: counter begins counting
 
 	/* Set and enable interrupt controller for doing software interrupt */
+        // Compute processor freq at low priority after 1 PPS handling at high priority
 	NVICIPR (NVIC_TIM6_IRQ, TIM6_IRQ_PRIORITY );	// Set interrupt priority ('../lib/libusartstm32/nvicdirect.h')
 	NVICISER(NVIC_TIM6_IRQ);			// Enable interrupt controller for RTC ('../lib/libusartstm32/nvicdirect.h')
+
+	/* Set and enable interrupt controller for doing software interrupt */
+        // Execute a series of routines for measurement and logging
+	NVICIPR (NVIC_I2C2_EV_IRQ, NVIC_I2C2_EV_IRQ_PRIORITY_CO );	// Set interrupt priority ('../lib/libusartstm32/nvicdirect.h')
+	NVICISER(NVIC_I2C2_EV_IRQ);			// Enable interrupt controller ('../lib/libusartstm32/nvicdirect.h')
 
 	/* Set and enable interrupt controller for TIM2 interrupt */
 	NVICIPR (NVIC_TIM2_IRQ, TIM2_PRIORITY );	// Set interrupt priority
 	NVICISER(NVIC_TIM2_IRQ);			// Enable interrupt controller for TIM1
 	
-	/* Enable input capture interrupts */
-	TIM2_DIER |= (TIM_DIER_CC4IE | TIM_DIER_CC2IE | TIM_DIER_UIE);	// Enable CH2 capture interrupt and counter overflow (p 376,7)
+	/* Enable output, input, and overflow capture interrupts */
+	TIM2_DIER |= (TIM_DIER_CC4IE | TIM_DIER_CC2IE | TIM_DIER_UIE);
 
 	return;
 }
@@ -265,13 +271,13 @@ struct TIMCAPTRET32 Tim2_inputcapture_ui(void)
 /* 
 We enter this when there is a 1 PPS IC.  The goal is to either synchronize by jamming
 in new values to the OC interrupt scheme if we are way off of correct phasing.
-Or, if we are in the 0 or 19 intervals of the 1/64th sec, then we compute a small 
+Or, if we are in the 0 or 31 intervals of the 1/64th sec, then we compute a small 
 adjustment in the form (whole.fraction) to bring it into close phase over the next
 1 sec of OC interrupts. 
 
 Item:  When we come into this routine, as part of the 1 PPS IC handling, the OC may have *preceded*
-the IC.  When this happens the oc counter might be at 19, whereas is the OC had been handled first, it
-would be at 0.  Hence, the 19 case is checked to see if the OC time difference is "way off".
+the IC.  When this happens the oc counter might be at 31, whereas is the OC had been handled first, it
+would be at 0.  Hence, the 31 case is checked to see if the OC time difference is "way off".
 */
 
 void ocphasing(void)
@@ -284,11 +290,11 @@ tim2debug7 = tim2_oc_ctr;
 
 	if (tim2_oc_ctr == 0)	// Are we in the 1st interval of 1/64th sec?
 	{ // Here, the ending OC was after the 1 PPS, so longer OC interval times are needed
-		/* Compute the time difference */
+		/* Compute the time difference between the 1 PPS and last OC */
 		diff = ((int)TIM2_CCR2 - (int)tim2_ccr4);	// (1 PPS IC - OC)
 		if (diff < 0)	diff += 65536;	// Adjust for the wrap-around
 tim2debug0 = diff;
-		if (diff > 12000) diff = 12000;
+		if (diff > 12000) diff = 12000; // Limit difference
 
 		/* 'phasing_oneinterval' = ticks difference / number of intervals in 1 second */
 		phasing_oneinterval = +( (diff << (TIM2SCALE - 6)) / TIM2_NUM_INTERVALS );	// Interval = whole.fraction
@@ -301,7 +307,7 @@ tim2debug0 = diff;
 	}
 	else
 	{
-		if (tim2_oc_ctr == (TIM2_NUM_INTERVALS - 1)) // Are we in the 20th (last) interval of 1/64th sec?
+		if (tim2_oc_ctr == (TIM2_NUM_INTERVALS - 1)) // Are we in the 32nd (last) interval of 1/64th sec?
 		{ // Here, the OC ending has yet to occur, so shorter OC interval times are needed
 			/* Compute the time difference */
 			diff = ((int)TIM2_CCR4 - (int)TIM2_CCR2);	// (OC - 1 PPS IC)
@@ -313,7 +319,7 @@ tim2debug0 = -diff; //
 			if ((strAlltime.SYS.ull & 0x3f) != 63)
 			{ // Here, the soon-to-follow OC should increment the 1/64th tick to 0
 				strAlltime.SYS.ull |= 0x3f;	// 
-				tim2_64th_19_er += 1;		// Count these for the hapless programmer
+				tim2_64th_31_er += 1;		// Count these for the hapless programmer
 			}
 		}
 		else
@@ -340,29 +346,31 @@ void setnextoc(void)
 	s32 	tmp;
 	s32	tmp1;
 
-	TIM2_SR = ~0x4;				// Reset OC interrupt flag
+	TIM2_SR = ~0x10;			// Reset OC interrupt flag
 	tim2_oc_ctr += 1;			// Count OC intervals to get 1/64th sec
-	if (tim2_oc_ctr >= TIM2_NUM_INTERVALS)
-	{ // Here, the end of the last interval is the demarcation of the 1/64th sec tick
-		/* ======== This is where the CAN msg is intiated ======== */
-		strAlltime.SYS.ull += 1;	// Update ticks
-//		can_sync_msg.cd.uc[0] = strAlltime.SYS.uc[0] & 63; // Tick count
 
-		/* Call other routines if an address is set up */
-		if (p1_rtc_secf_ptr != 0)	// Having no address for the following is bad.
-			(*p1_rtc_secf_ptr)();	// Go do something (e.g. poll the AD7799)	
+	/* Call series of routines at 2048 per sec rate */
+	NVICISPR(NVIC_I2C2_EV_IRQ);	// Set pending (low priority) interrupt ('../lib/libusartstm32/nvicdirect.h')
+
+	/* End of 1/64th interval check */
+	if (tim2_oc_ctr >= (TIM2_OC_PER_SEC/64) )
+	{ // Here, end of 1/64th sec interval
+
+		strAlltime.SYS.ull += 1;	// Update ticks
 		
 		/* ======== this is where the time stamp is sync'd to 1/64th sec tick zero ==== */
-		// See if 'gps_poll.c' signals a new date/time is to be jammed
+		// See if the gps sentence handling signals a new date/time is to be jammed
 		if (gps_poll_flag != 0)
-		{
+		{ // Here, gps_packetize found GPS and SYS times differ at x.0 second sentences
 			gps_poll_flag = 0;	// Reset flag
-			strAlltime.SYS.ull = strAlltime.GPS.ull; // Load new time (lower 6 bits are zero)
+			// Jam GPS time into SYS
+			strAlltime.SYS.ull = strAlltime.GPS.ull & ~0x3f; // Load new time (lower 6 bits are zero)
 		}
+		// Reset count of OC's for next 1/64th interval 
 		tim2_oc_ctr = 0;
 	}
 
-	/* Goal: set the OC register with the next OC time */
+	/* Goal of following: set the OC register with the next OC time */
 
 	/* Determine the time increment for the next interval */
 
@@ -374,12 +382,12 @@ void setnextoc(void)
 
 	/* Adjust the sum to account for the amount applied to the interval */
 	//   Remove the 'whole' from 'whole.fraction' (Remember: this is signed)
-	deviation_sum -= (tmp  << TIM2SCALE);	// Remove 'whole' from sum
+	deviation_sum -= (tmp << TIM2SCALE);	// Remove 'whole' from sum
 
 	/* Same process as above, but for phasing. */
 	phasing_sum += phasing_oneinterval;
 	tmp1 = phasing_sum/(1 << TIM2SCALE);
-	phasing_sum -= (tmp1 << TIM2SCALE);
+	phasing_sum  -= (tmp1 << TIM2SCALE);
 
 	/* Set up CH4 OC register for next interval duration */
 	tim2_ccr4 = TIM2_CCR4;	// Save "previous" OC interval end time
@@ -399,7 +407,7 @@ db3 += 1;	// Count OC interrupts
 /*#######################################################################################
  * ISR routine for TIM2
  *####################################################################################### */
-void TIM2_IRQHandler(void)
+void p1_TIM2_IRQHandler(void)
 {
 	u16 usSR = TIM2_SR & 0x15;
 	__attribute__((__unused__))volatile u32 temp;
@@ -424,7 +432,7 @@ tim2debug3 = db3;
 tim2debug2 = db2;
 tim2debug4 = db4;
 tim2debug6 = db6;
-		strTim2.us[0] = TIM2_CCR3;		// Read the captured count which resets the capture flag
+		strTim2.us[0] = TIM2_CCR2;		// Read the captured count which resets the capture flag
 		strTim2.us[1] = strTim2cnt.us[1];	// Extended time of upper 16 bits of lower order 32 bits
 		strTim2.ui[1] = strTim2cnt.ui[1];	// Extended time of upper 32 bits of long long
 		strTim2m = strTim2;			// Update buffered value		
@@ -437,7 +445,6 @@ tim2debug6 = db6;
 
 		break;
 
-
 	case 0x5:	// Both flags are on	
 			// Set up the input capture with extended time
 tim2cyncnt = *(volatile unsigned int *)0xE0001004; // DWT_CYCNT
@@ -449,8 +456,7 @@ tim2debug2 = db2;
 tim2debug4 = db4;
 tim2debug6 = db6;
 
-
-		strTim2.us[0] = TIM2_CCR3;		// Read the captured count which resets the capture flag
+		strTim2.us[0] = TIM2_CCR2;		// Read the captured count which resets the capture flag
 		strTim2.us[1] = strTim2cnt.us[1];	// Extended time of upper 16 bits of lower order 32 bits
 		strTim2.ui[1] = strTim2cnt.ui[1];	// Extended time of upper 32 bits of long long
 
@@ -472,7 +478,6 @@ tim2debug6 = db6;
 		NVICISPR(NVIC_TIM6_IRQ);	// Set pending (low priority) interrupt ('../lib/libusartstm32/nvicdirect.h')
 
 		break;
-	
 	}
 	/* OC output duration & phasing: Handle the 1 PPS input capture (CC2IF) and CH4 output capture (CC4IF) flags */
 	switch (usSR & 0x14)	
@@ -511,6 +516,7 @@ tim2debug6 = db6;
  *####################################################################################### */
 
 unsigned int ticksadj;
+unsigned int ticksm;	// Save for 'g' command monitoring
 
 void TIM6_IRQHandler(void)
 {
@@ -525,6 +531,7 @@ void TIM6_IRQHandler(void)
 	strIC.flg = uiTim2ch2_Flag; 
 	ticks_temp = (s32)(strIC.ic - Tim2tickctr_prev);// Ticks in one second
 	ticks = ticks_temp;
+	ticksm = ticks;
 	Tim2tickctr_prev = strIC.ic;			// Save for computing difference next time
 
 	ticks_flg += 1;	// main will use this flag for pacing
@@ -561,25 +568,25 @@ ticksadj = deviation_oneinterval;
 			tim2_64th_0_ctr += 1;
 	}
 
-	/* Do the same as above, but for interval 19. */
-	if (tim2_64th_19_er != tim2_64th_19_er_prev)
+	/* Do the same as above, but for interval 31. */
+	if (tim2_64th_31_er != tim2_64th_31_er_prev)
 	{
-		tim2_64th_19_er_prev = tim2_64th_19_er;
-		tim2_64th_19_ctr = 0;		 
+		tim2_64th_31_er_prev = tim2_64th_31_er;
+		tim2_64th_31_ctr = 0;		 
 		tim2_readyforlogging &= ~0x2;
 	}
 	else
 	{ // Here, no adjustment needed.  Count a "few" 
-		if (tim2_64th_19_ctr >= 3)
+		if (tim2_64th_31_ctr >= 3)
 			tim2_readyforlogging |= 0x2;
 		else
-			tim2_64th_19_ctr += 1;
+			tim2_64th_31_ctr += 1;
 	}
 
 	/* Check that the adjustment factor is under control. */
 	if ( (deviation_oneinterval > 500000) || (deviation_oneinterval < -500000) )
-	{ // Here, the adjustment is way out we might get bogus no-change intervals 0 and 19.
-		tim2_64th_0_ctr = 0; tim2_64th_19_ctr = 0; tim2_readyforlogging = 0;
+	{ // Here, the adjustment is way out we might get bogus no-change intervals 0 and 31.
+		tim2_64th_0_ctr = 0; tim2_64th_31_ctr = 0; tim2_readyforlogging = 0;
 	}
 
 	return;
@@ -597,6 +604,15 @@ static void tim2lowlevel_init(void)
 	/* Set limits for valid processor ticks between 1 PPS events */
 	tickspersecHI = (2 * pclk1_freq) + temp;
 	tickspersecLO = (2 * pclk1_freq) - temp;
+	return;
+}
+/*#######################################################################################
+ * ISR routine for executing a series of routines for measurement and logging
+ *####################################################################################### */
+void I2C2_EV_IRQHandler(void)
+{
+	if (p1_rtc_secf_ptr != 0)	// Having no address for the following is bad.
+		(*p1_rtc_secf_ptr)();	// Go do something (e.g. poll the AD7799)	
 	return;
 }
 

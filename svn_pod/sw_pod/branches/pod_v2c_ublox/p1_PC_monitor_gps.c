@@ -52,9 +52,10 @@ void p1_PC_monitor_gps(void)
 		USART1_txint_puts("Columns--\n\r");
 		USART1_txint_puts(" 1 c = skip time adjust, g = regular adj\n\r");
 		USART1_txint_puts(" 2 diff = gps - sys time\n\r");
-		USART1_txint_puts(" 3 phasing sum / 4096\n\r");
-		USART1_txint_puts(" 4 rate deviation sum / 4096\n\r");
-		USART1_txint_puts(" 5 sys ticks per sec\n\r");
+//		USART1_txint_puts(" 3 phasing sum / 4096\n\r");
+		USART1_txint_puts(" 3 rate deviation sum\n\r");
+		USART1_txint_puts(" 4 sys ticks per sec\n\r");
+		USART1_txint_puts(" 5 tim2_tickspersec_err\n\r");
 		USART1_txint_send();
 		state = 2;
 		break;
@@ -91,17 +92,18 @@ void p1_PC_monitor_gps(void)
 		printf("  %s ",lltoa(vv,strAlltime.DIF.ull,10) );
 
 		/* Running sums where the whole is added to an OC interval (and removed from the sum) */
-		// s32	phasing_sum;		// Running sum of accumulated phase adjustment
 		// s32	deviation_sum;		// Running sum of accumulated error
-		printf("%10d  %10d", phasing_sum/4096, deviation_sum/4096);
+		printf("%10d ", deviation_sum_g);
 
 		/* Processor ticks in one sec */
-		printf("%10d", ticksm);
+		printf("%10d", tim2_ic);
+
+		printf(" %4d",tim2_tickspersec_err);
 
 		/* Running error counters */
 		//tim2_64th_0_er;	// Count of date/time adjustments at interval 0
 		//tim2_64th_31_er;// Count of date/time adjustments at interval 31
-		printf (" %6d %6d",tim2_64th_0_er, tim2_64th_31_er);
+		printf (" %4d %4d",tim2_64th_0_er, tim2_64th_31_er);
 
 		printf (" %4d",gps_poll_flag_ctr);
 
@@ -122,7 +124,31 @@ void p1_PC_monitor_gps(void)
 		uitemp += PODTIMEEPOCH;		// Adjust for shifted epoch
 
 		/* Reconvert to ascii (should match the above ascii where appropriate) */
-		printf ("  %s\r", ctime((const time_t*)&uitemp));		
+		printf ("  %s\r", ctime((const time_t*)&uitemp));
+
+// Debug SYS v GPS	
+/* Make Linux format time */
+uitemp = (  (strAlltime.SYS.ull >> 6) );
+printf (" %11u",  uitemp );
+
+/* Get epoch out of our hokey scheme for saving a byte to the 'ctime' routine basis */
+uitemp += PODTIMEEPOCH;		// Adjust for shifted epoch
+
+/* Reconvert to ascii (should match the above ascii where appropriate) */
+printf ("  %s\r", ctime((const time_t*)&uitemp));
+
+int yy = (ticks_per_oc_fraction * 10000)/(1 << TIM2SCALE);
+printf(" %d.%04d ",ticks_per_oc_whole,yy);
+
+printf(" %d",tim2debug1);
+
+static unsigned int tim2debug3_prev;
+printf(" %d",tim2debug3-tim2debug3_prev);tim2debug3_prev = tim2debug3;
+
+static unsigned int tim2debug0_prev;
+printf(" %d",tim2debug0-tim2debug0_prev);tim2debug0_prev = tim2debug0;
+
+USART1_txint_puts("\n\r");			
 
 		USART1_txint_send();		// Start line sending.
 

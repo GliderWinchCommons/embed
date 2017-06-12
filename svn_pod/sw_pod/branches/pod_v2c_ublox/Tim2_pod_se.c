@@ -34,6 +34,8 @@ at 64 per second phased to the 1 PPS interrupts.
 //#include "common.h"
 //#include "common_time.h"
 #include "gps_packetize.h"
+#include "running_average.h"
+
 
 /* Debug */
 volatile unsigned int tim2debug0;
@@ -161,12 +163,18 @@ volatile u32 idx_cmd_n_ct;	// Index for double buffering can msg counts
 /* Subroutine prototypes */
 static void tim2lowlevel_init(void);
 
+/* Average processor ticks persecond */
+#define RUNNINGAVE_CT	16
+struct RUNNING_AVE rave;
+
 /******************************************************************************
  * void Tim2_pod_init(void);
  * @brief	: Initialize Tim2 for input capture
 *******************************************************************************/
 void Tim2_pod_init(void)
 {
+	/* Initialize for averaging processor ticks */
+	running_average_init(&rave, RUNNINGAVE_CT, TIM2SCALE);
 
 	/* Setup limits on tick counts +/- 10% */
 	tim2lowlevel_init();
@@ -305,6 +313,7 @@ Item:  When we come into this routine, as part of the 1 PPS IC handling, the OC 
 the IC.  When this happens the oc counter might be at 31, whereas is the OC had been handled first, it
 would be at 0.  Hence, the 31 case is checked to see if the OC time difference is "way off".
 */
+int64_t ticks_ave_scaled;
 
 void ocphasing(void)
 {
@@ -316,15 +325,14 @@ tim2debug7 = tim2_oc_ctr;
 	/* Discard out-of-bounds ticks per 1 PPS */
 	if ( ( tim2_ic > tickspersecLO) && ( tim2_ic < tickspersecHI) ) // Allow +/- 10%
 	{ // 
-		tim2_ic_scaled = tim2_ic * (uint64_t)(1 << TIM2SCALE);	// Scale upwards
+		tim2_ic_scaled = running_average(&rave, tim2_ic);
+//		tim2_ic_scaled = tim2_ic * (uint64_t)(1 << TIM2SCALE);	// Scale upwards
 		ticks_per_oc_scaled = tim2_ic_scaled / (uint64_t)TIM2_OC_PER_SEC;	// Ticks per OC (scaled)
 		ticks_per_oc_whole = (ticks_per_oc_scaled >> TIM2SCALE);	// Whole amount
 		TIM2_CCR4 += ticks_per_oc_whole;		// Load next OC time
 		ticks_per_oc_fraction = ticks_per_oc_scaled - (ticks_per_oc_whole << TIM2SCALE);// Fraction
 		TIM2_SR = ~0x10;	// Reset OC flag if it came on
 		deviation_sum = ticks_per_oc_fraction;
-		tim2_oc_ctr = 0;	// Reset 1/64th sec counter
-		strAlltime.SYS.ull &= ~0x3f;	// Sync time 1/64th ticks to 1 PPS
 
 		/* If oc_ctr == 0, then the OC followed the 1 PPS IC and the first 1/64th
                    interval was started w/o the IC, and therefore the time has already
@@ -333,6 +341,10 @@ tim2debug7 = tim2_oc_ctr;
 		{
 			strAlltime.SYS.ull += 0x40; 	// 
 		}
+		tim2_oc_ctr = 0;	// Reset 1/64th sec counter
+		strAlltime.SYS.ull &= ~0x3f;	// Sync time 1/64th ticks to 1 PPS
+
+ticks_ave_scaled  = tim2_ic_scaled; // Debug 'g' cmd
 tim2debug0 = db0;
 		NVICISPR(NVIC_TIM6_IRQ);
 	}
@@ -357,7 +369,7 @@ void setnextoc(void)
 	{ // Here, end of 1/64th sec interval
 
 		strAlltime.SYS.ull += 1;	// Update 1/64th sec ticks
-		
+
 		/* ======== this is where the time stamp is sync'd to 1/64th sec tick zero ==== */
 		// See if the gps sentence handling signals a new date/time is to be jammed
 		if (gps_poll_flag != 0)
@@ -365,9 +377,9 @@ void setnextoc(void)
 			gps_poll_flag = 0;	// Reset flag
 			// Jam GPS time into SYS
 			strAlltime.SYS.ull = strAlltime.GPS.ull & ~0x3f; // Load new time (lower 6 bits are zero)
-			strAlltime.SYS.ull += 0x40; // ??? Next second to match next GPS second
+//			strAlltime.SYS.ull += 0x40; // ??? Next second to match next GPS second
 		}
-
+ 
 		// Reset count of OC's for next 1/64th interval 
 		tim2_oc_ctr = 0;
 	}
@@ -385,7 +397,7 @@ void setnextoc(void)
 	/* Adjust the sum to account for the amount applied to the interval */
 	//   Remove the 'whole' from 'whole.fraction' (Remember: this is signed)
 	deviation_sum -= (tmp << TIM2SCALE);	// Remove 'whole' from sum
-;
+
 
 	// Add an increment of ( "nominal" + duration adjustment + phasing adjustment)
 	TIM2_CCR4 += (ticks_per_oc_whole + tmp);	// Set next interval end time

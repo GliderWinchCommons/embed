@@ -50,6 +50,7 @@ extern uint64_t tim2_ic_scaled;
 extern uint32_t tim2_ic;	// Number of processor ticks between IC interrupts
 extern uint64_t ticks_per_oc_scaled;
 extern uint32_t ticks_per_oc_fraction;
+extern int64_t ticks_ave_scaled;
 
 extern volatile unsigned int tim2debug0;
 extern volatile unsigned int tim2debug1;

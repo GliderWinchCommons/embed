@@ -65,6 +65,5 @@ int64_t running_average(struct RUNNING_AVE* p, int32_t x)
 		tmp = p->sum / p->n; // Return scaled average
 		p->n += 1;
 		return tmp;
-	}
-	
+	}	
 }

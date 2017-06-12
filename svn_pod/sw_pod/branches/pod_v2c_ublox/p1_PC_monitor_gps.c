@@ -148,6 +148,11 @@ printf(" %d",tim2debug3-tim2debug3_prev);tim2debug3_prev = tim2debug3;
 static unsigned int tim2debug0_prev;
 printf(" %d",tim2debug0-tim2debug0_prev);tim2debug0_prev = tim2debug0;
 
+int64_t aa = (ticks_ave_scaled * 1000)/(1 << TIM2SCALE);
+int64_t bb = aa/1000;
+int64_t cc = aa - (bb * 1000);
+printf(" %d.%03d", (int32_t)bb,(int32_t)cc);
+
 USART1_txint_puts("\n\r");			
 
 		USART1_txint_send();		// Start line sending.

@@ -30,9 +30,6 @@ extern s32	deviation_sum;		// Running sum of accumulated error
 
 extern unsigned int ticksm;	// Save ticks per sec for 'g' command monitoring
 
-/* Running count of instances where measured tickspersec of clock is outside limits. */
-extern u32	tim2_tickspersec_err;
-
 /* Save foregoing for gps monitor command */
 extern s32	phasing_sum_g;		// Running sum of accumulated phase adjustment
 extern s32	deviation_sum_g;	// Running sum of accumulated error
@@ -51,6 +48,7 @@ extern uint32_t tim2_ic;	// Number of processor ticks between IC interrupts
 extern uint64_t ticks_per_oc_scaled;
 extern uint32_t ticks_per_oc_fraction;
 extern int64_t ticks_ave_scaled;
+extern int32_t tim2_diff;
 
 extern volatile unsigned int tim2debug0;
 extern volatile unsigned int tim2debug1;
@@ -61,5 +59,8 @@ extern volatile unsigned int tim2debug5;
 extern volatile unsigned int tim2debug6;
 extern volatile unsigned int tim2debug7;
 extern volatile unsigned int tim2ticks;
+
+extern u32	tickspersecHI;	// TIM2 clock ticks for one sec: high limit
+extern u32	tickspersecLO;	// TIM2 clock ticks for one sec: low limit
 
 #endif

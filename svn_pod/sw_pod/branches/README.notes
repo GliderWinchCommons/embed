@@ -22,4 +22,11 @@ No longer being used.
 pod_v2b_r0.0 - POD 1 & 2 with Garmin 18X 5Hz
 pod_v2b_ublox - POD 3 with u-blox GPS (and some code for handling either Garmin or u-blox)
 
+06/16/2017
+pod_v2b_ublox - log time not correct and reworked
+pod_v2c_ublox - Tim2_pod_se.c is revised method for syncing to gps
+   1 PPS is always the reference for starting the next second of OC interrupts
+pod_2d_ublox - *v2c* with phase-in to start
+
+
 

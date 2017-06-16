@@ -14,13 +14,6 @@ polling loop for writing the SD card.
 p1_PC_handler.c polls this routine if a 'm' command has been entered.  The polling
 continues until a 'x' command is received.
 
-The data 
-*/
-/*
-Subroutine call references shown as "@n"--
-@1 = svn_pod/sw_stm32/trunk/lib/libsupport/gps_packetize.h
-
-
 */
 
 #include "p1_common.h"	// Just about everything is in this one
@@ -31,8 +24,6 @@ Subroutine call references shown as "@n"--
 /* Toggles load_cell zeroing on/off when the 'm' command is in effect */
 extern unsigned int uiLoad_cell_zeroing;	// 0 = OFF, not-zero = ON.
 extern unsigned int Debugtoggle;
-
-
 
 /******************************************************************************
  * void p1_PC_monitor(void);

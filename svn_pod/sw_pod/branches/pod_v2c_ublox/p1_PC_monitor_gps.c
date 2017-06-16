@@ -101,7 +101,7 @@ void p1_PC_monitor_gps(void)
 		printf ("%4d.%02u",strAlltime.uiThermtmp/100,(strAlltime.uiThermtmp % 100) );	
 				
 		/* 7 Make Linux format time */
-		uitemp = (  (pkt_gps_mn.alltime.GPS.ull >> 6) );
+		uitemp = (  (pkt_gps_mn.alltime.GPS.ull >> 11) );
 		printf (" %10u",  uitemp );
 
 		/* Get epoch out of our hokey scheme for saving a byte to the 'ctime' routine basis */
@@ -121,7 +121,7 @@ char* pc = strchr(pt,'\n'); // Eliminate '\n' from ctime to make all on one line
 #ifdef GCMDDEBUG
 
 /* Make Linux format time from SYS to compare to GPS */
-uitemp = (  (strAlltime.SYS.ull >> 6) );
+uitemp = (  (strAlltime.SYS.ull >> 11) );
 printf (" %11u",  uitemp );
 
 /* Get epoch out of our hokey scheme for saving a byte to the 'ctime' routine basis */
@@ -143,6 +143,9 @@ int64_t aa = (ticks_ave_scaled * 1000)/(1 << TIM2SCALE);
 int64_t bb = aa/1000;
 int64_t cc = aa - (bb * 1000);
 printf(" %d.%03d", (int32_t)bb,(int32_t)cc);
+
+/* 'oc_ctr' in 'ocphasing' */
+printf(" %3d", tim2debug7);
 
 #endif
 

@@ -290,11 +290,11 @@ gpserrorsw = 0;
 				tLinuxtimecounter   = gps_time_linux_init(&pkt_gps_mn);	// Convert ascii GPS time to 32b linux format
 				strAlltime.GPS.ull  = tLinuxtimecounter; 	 // Convert to signed long long
 				strAlltime.GPS.ull -= (long long)PODTIMEEPOCH;	 // Translate to more recent epoch to fit into 40 bits
-				strAlltime.GPS.ull  = (strAlltime.GPS.ull << 6); // Scale linux time for 64 ticks per sec
+				strAlltime.GPS.ull  = (strAlltime.GPS.ull << 11); // Scale linux time for 64 ticks per sec
 
 
 				/* GPS and SYS (running time stamp count) should stay in step, once it gets started */
-				if ( strAlltime.GPS.ull != (strAlltime.SYS.ull & ~0x3f) ) // Same at the 1 sec level?
+				if ( strAlltime.GPS.ull != (strAlltime.SYS.ull & ~0x7ff) ) // Same at the 1 sec level?
 				{ // Here, no. Set a flag for 'Tim2_pod_se.c' to pick up the time.
 					gps_poll_flag = 1;
 					gps_poll_flag_ctr += 1;	// Keep track of these "anomolies" for the hapless programmer.	
@@ -302,7 +302,7 @@ gpserrorsw = 0;
 /* debugging
 time_display_SYS();
 time_display_GPS();
-printf("gpsz: %u SYS %u\n\r",(unsigned int)(strAlltime.GPS.ull >> 6),(unsigned int)(strAlltime.SYS.ull >> 6));USART1_txint_send();
+printf("gpsz: %u SYS %u\n\r",(unsigned int)(strAlltime.GPS.ull >> 11),(unsigned int)(strAlltime.SYS.ull >> 11));USART1_txint_send();
 printf ("tLin: %s\n\r", ctime((const time_t*)&tLinuxtimecounter));
 
 printf("tLin: %d\n\r",tLinuxtimecounter);
@@ -313,7 +313,7 @@ tl1 = tl1 << 6;
 printf("tl1 : %s\n\r",lltoa(vv,tl1,10));
 
 
-unsigned long long tx = strAlltime.GPS.ull >> 6;  tx += (long long)(PODTIMEEPOCH); 
+unsigned long long tx = strAlltime.GPS.ull >> 11;  tx += (long long)(PODTIMEEPOCH); 
 printf ("gpsk: %s\n\r", ctime((const time_t*)&tx));
 printf("SYSx: %s\n\r",lltoa(vv,strAlltime.SYS.ull,10));//USART1_txint_send();
 printf("GPSx: %s\n\r",lltoa(vv,strAlltime.GPS.ull,10));//USART1_txint_send();

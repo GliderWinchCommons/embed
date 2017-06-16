@@ -74,10 +74,10 @@ extern unsigned int	sysclk_freq;	/* 	SYSCLK freq		E.g. 64000000	*/
 /* #### => POD: Base this on 48,000,000 TIM2 clock <= #### */
 
 /* Number of OC interrupts in 1 sec */
-#define TIM2_OC_PER_SEC	8192	// 
+#define TIM2_OC_PER_SEC	2048	// 
 
 /* Number of OC interrupts in 1/64th sec */
-#define TIM2_NUM_INTERVALS (TIM2_OC_PER_SEC/64)	// e.g. 8192/64 = 128
+#define TIM2_NUM_INTERVALS (TIM2_OC_PER_SEC/64)	// e.g. 8192/64 = 128, 2048/64 = 32
 unsigned int tim2_num_intervals;
 
 
@@ -177,14 +177,14 @@ void Tim2_pod_init(void)
 	tim2lowlevel_init();
 
 	/* Set processor tick count, nominal, for OC interrupts */
-	// E.g. (48000000 << 4) / 8192 = 93750
+	// E.g. (48000000 << 4) / 8192 = 93750, 2048 = 23437.5
 	tim2_oc_ticks = (sysclk_freq << TIM2_NOMINAL_SCALE)/TIM2_OC_PER_SEC;
 
 	// Nominal ticks for one OC (not scaled)
 	tim2_oc_ticks_jam = (tim2_oc_ticks)/(1<<TIM2_NOMINAL_SCALE); // Not rounded
 
 	/* Number of OC interrupts per 1/64th sec */
-	// E.g. 8192 / 64 = 128
+	// E.g. 8192 / 64 = 128, 2048 / 64 = 32
 	tim2_num_intervals = TIM2_OC_PER_SEC/64;
 
 /* CYCCNT counter is in the Cortex-M-series core.  See the following for details 
@@ -289,9 +289,9 @@ This routine is entered when there was an IC interrupt (caused by the gps 1 PPS)
 interrupts is the count of the processor system clock ticks.  This varies slowly with temperature and has
 shows a small amount of jitter.
 
-Goal: Generate 8192 interrupts per second with the leading edge phased to the 1 PPS.
+Goal: Generate 2048 interrupts per second with the leading edge phased to the 1 PPS.
 
-Strategy: average the ticks-per-second and divide that by 8192 to get the number of processor ticks per
+Strategy: average the ticks-per-second and divide that by 2048 to get the number of processor ticks per
 output capture timing.  The remainder of the division, i.e the fractional part, is the amount not accounted
 for in each OC duration.  Since these accumulate over the course of the 1 second interval the fraction is
 summed each time the OC register is incremented to compute next OC duration and when the whole part of the sum
@@ -303,6 +303,8 @@ int64_t ticks_ave_scaled;
 int32_t tim2_diff;
 uint32_t tim2_ccr4_last;
 uint32_t tim2_oc_1sec_ctr;
+int32_t phz_diff_oto;
+#define DIFFDIFF  5000
 
 void ocphasing(void)
 {
@@ -310,21 +312,26 @@ tim2debug7 = tim2_oc_ctr;
 
 	deviation_sum_g = deviation_sum >> 8; // Save for 'g' cmd display
 
-// Debugging/monitoring OC phase difference each 1 PPS. 
-/* Are we in to the first OC interval? */	
-if (tim2_oc_ctr == 0)
-{ // Here, yes.  The OC terminated second ended before the 1 PPS interrupt second
-	tim2_diff = (int)TIM2_CCR2 - (int)tim2_ccr4_last; // (IC - latest OC)	
-	if (tim2_diff < 0) tim2_diff += 65536;	// Wrap around
-}
-else
-{ // Here, the last (most likely) OC has not completed
+	/* Are we in to the first OC interval? */	
+	if (tim2_oc_ctr == 0)
+	{ // Here, yes.  The OC terminated second ended before the 1 PPS interrupt second
+		tim2_diff = (int)TIM2_CCR2 - (int)tim2_ccr4_last; // (IC - latest OC)	
+		if (tim2_diff < 0) tim2_diff += 65536;	// Wrap around
+	}
+	else
+	{ // Here, the last (most likely) OC has not completed
 
-	tim2_diff = (int)TIM2_CCR4 - (int)TIM2_CCR2; // (OC - IC)
-	if (tim2_diff < 0) tim2_diff += 65536;	// Wrap around
+		tim2_diff = (int)TIM2_CCR4 - (int)TIM2_CCR2; // (OC - IC)
+		if (tim2_diff < 0) tim2_diff += 65536;	// Wrap around
 
-	tim2_diff = -tim2_diff;
-}
+		tim2_diff = -tim2_diff;
+	}
+	if (tim2_diff > DIFFDIFF) tim2_diff = DIFFDIFF;
+	else
+	{
+		if (tim2_diff < -DIFFDIFF) tim2_diff = -DIFFDIFF;
+	}
+	phz_diff_oto = tim2_diff/4;	
 
 	/* Discard out-of-bounds ticks per 1 PPS */
 	if ( ( tim2_ic > tickspersecLO) && ( tim2_ic < tickspersecHI) ) // Allow +/- 10%
@@ -335,6 +342,14 @@ else
 		TIM2_CCR4 = TIM2_CCR2 + ticks_per_oc_whole;		// Load first OC count of this second
 		ticks_per_oc_fraction = (uint32_t)(ticks_per_oc_scaled - (ticks_per_oc_whole << TIM2SCALE));// Fraction
 		TIM2_SR = ~0x10;	// Reset OC flag if it came on
+
+		/* When OC has not expired, the ocphasing interrupt is lost. */
+		if (tim2_diff < 0)
+		{
+			NVICISPR(NVIC_I2C2_EV_IRQ);	// Set pending (lower priority) interrupt ('../lib/libusartstm32/nvicdirect.h')
+db0 += 1;// Count OC interrupts
+		}
+
 		deviation_sum = ticks_per_oc_fraction;	// Start sum with fraction for first OC duration
 
 		/* If oc_ctr == 0, then the OC followed the 1 PPS IC and the first 1/64th OC
@@ -361,36 +376,35 @@ tim2debug0 = db0;
  -----------------------------------------------------------------------------*/
 void setnextoc(void)
 {
-	int32_t tmp;
+	int32_t tmp;	
+	uint32_t oc_ctr;
 
 	TIM2_SR = ~0x10; // Reset OC interrupt flag. Routine was called because flag was on.
 
-	/* Call series of routines at TIM2_OC_PER_SEC (e.g. 8192) per sec rate */
+	/* Call series of routines at TIM2_OC_PER_SEC (e.g. 2048) per sec rate */
 	NVICISPR(NVIC_I2C2_EV_IRQ);	// Set pending (lower priority) interrupt ('../lib/libusartstm32/nvicdirect.h')
+db0 += 1; // Count OC interrupts
+
 
 	/* For marking end of 1 sec of OC's, mostly for debugging */
 	tim2_oc_1sec_ctr += 1;	// OC intervals per second counter
 	if (tim2_oc_1sec_ctr >= TIM2_OC_PER_SEC)	tim2_oc_1sec_ctr = 0;
 
-	/* End of 1/64th interval check */
 	tim2_oc_ctr += 1;			// Count OC intervals to get 1/64th sec
 	if (tim2_oc_ctr >= tim2_num_intervals )
 	{ // Here, end of 1/64th sec interval
-
-		strAlltime.SYS.ull += 1;	// Update 1/64th sec ticks
-
-		/* ======== this is where the time stamp is sync'd to 1/64th sec tick zero ==== */
-		// See if the gps sentence handling signals a new date/time is to be jammed
-		if (gps_poll_flag != 0)
-		{ // Here, gps_packetize found GPS and SYS times differ at x.0 second sentences
-			gps_poll_flag = 0;	// Reset flag
-			// Jam GPS time into SYS
-			strAlltime.SYS.ull = strAlltime.GPS.ull & ~0x3f; // Load new time (lower 6 bits are zero)
-		}
- 
-		// Reset count of OC's for next 1/64th interval 
 		tim2_oc_ctr = 0;
-		tim2_oc_1sec_ctr = 0;
+	}
+	strAlltime.SYS.ull += 1;	// Update fraction of seconds (e.g. 1/2048)
+	oc_ctr = (strAlltime.SYS.ull & 0x7ff);	// Low order "phase"
+
+	// See if the gps sentence handling signals a new date/time is to be jammed
+	if (gps_poll_flag != 0)
+	{ // Here, gps_packetize found GPS and SYS times differ at x.0 second sentences
+		gps_poll_flag = 0;	// Reset flag
+		// Jam GPS time into SYS
+		strAlltime.SYS.ull  = (strAlltime.GPS.ull & ~0x7ff); // Load new date/time (lower 11 bits are zero)
+		strAlltime.SYS.ull |= oc_ctr;	// Use existing phase.
 	}
 
 	/* Goal of following: set the OC register with the next OC time. */
@@ -407,9 +421,12 @@ void setnextoc(void)
 
 	// Add an increment of ( "nominal" + duration adjustment)
 	tim2_ccr4_last = TIM2_CCR4;	// Save for possible later 1 PPS IC interrupt
-	TIM2_CCR4 += (ticks_per_oc_whole + tmp);	// Set next interval end time
+	TIM2_CCR4 += (ticks_per_oc_whole + tmp + phz_diff_oto);	// Set next interval end time
+	phz_diff_oto = 0;
 
-db0 += 1;
+	/* Non-GPS date/time counter, counting OC interrupts. */
+	strAlltime.TM3.ull += 1;
+
 	return;
 }
 /*#######################################################################################
@@ -476,7 +493,6 @@ void p1_TIM2_IRQHandler(void)
 	{ // Here, an OC interrupt flag
 	case 0x04:	// IC only
 			ocphasing();	// Phasing adjustment 
-db0 += 1;	// Count OC interrupts
 
 		break;
 	case 0x10:	// OC only
@@ -498,7 +514,6 @@ db0 += 1;	// Count OC interrupts
 				setnextoc();	// Set up next OC time
 				ocphasing();	// Phasing adjustment 
 			}
-db0 += 1;	// Count OC interrupts
 		break;
 	}
 	temp = TIM2_SR;	// Prevent tail-chaining

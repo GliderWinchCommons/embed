@@ -38,6 +38,8 @@ extern s32	deviation_sum_g;	// Running sum of accumulated error
 /* Scale 1 PPS interval durations to "whole.fraction" form. */
 #define TIM2SCALE	16	// Number of bits to scale deviation of clock upwards
 
+
+/* Most of these 'extern's are for debugging & 'g' command monitoring */
 extern u32 tim2_oc_ticks_jam;
 extern unsigned int tim2_num_intervals;
 extern uint32_t ticks_per_oc_whole;
@@ -50,6 +52,8 @@ extern int32_t tim2_diff;
 extern uint32_t tim2_ticks_outofbounds;	// Count cases: Discard out-of-bounds ticks per 1 PPS
 extern uint32_t tim2_phase_oneOCplus;	// Count cases	
 extern uint32_t tim2_phase_diffdiff;	// Count cases
+extern int64_t phase_sum_oc_scaled;	// Running sum of phase difference, scaled
+
 
 
 extern volatile unsigned int tim2debug0;
@@ -61,6 +65,7 @@ extern volatile unsigned int tim2debug5;
 extern volatile unsigned int tim2debug6;
 extern volatile unsigned int tim2debug7;
 extern volatile unsigned int tim2ticks;
+extern volatile int64_t tim2debug64a;
 
 extern u32	tickspersecHI;	// TIM2 clock ticks for one sec: high limit
 extern u32	tickspersecLO;	// TIM2 clock ticks for one sec: low limit

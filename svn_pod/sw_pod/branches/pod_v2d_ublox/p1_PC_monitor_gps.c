@@ -153,10 +153,10 @@ else
 tim2debug0_prev = tim2debug0;
 
 
-int64_t aa = (ticks_ave_scaled * 1000)/(1 << TIM2SCALE);
-int64_t bb = aa/1000;
-int64_t cc = aa - (bb * 1000);
-printf(" %d.%03d", (int32_t)bb,(int32_t)cc);
+int64_t aa = (ticks_ave_scaled * 10000)/(1 << TIM2SCALE);
+int64_t bb = aa/10000;
+int64_t cc = aa - (bb * 10000);
+printf(" %d.%04d", (int32_t)bb,(int32_t)cc);
 
 printf(" %d", tim2_ticks_outofbounds);	// Count cases: Discard out-of-bounds ticks per 1 PPS
 printf(" %d", tim2_phase_oneOCplus);	// Count cases: oc_ctr not 0 or 2047	
@@ -164,7 +164,11 @@ printf(" %d", tim2_phase_diffdiff);	// Count cases
 
 printf(" %d",tim2debug6);	// oc_ctr
 
-printf(" %4d", tim2debug3); 	// ticks_per_ocphz_scaled
+printf(" %5d", tim2debug3); 	//
+
+static unsigned int tim2debug4_prev;
+printf(" %2d",tim2debug4-tim2debug4_prev);
+
 
 #endif
 

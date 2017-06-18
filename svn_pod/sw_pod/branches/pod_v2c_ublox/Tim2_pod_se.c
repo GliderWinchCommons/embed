@@ -379,8 +379,6 @@ void setnextoc(void)
 	int32_t tmp;	
 	uint32_t oc_ctr;
 
-	TIM2_SR = ~0x10; // Reset OC interrupt flag. Routine was called because flag was on.
-
 	/* Call series of routines at TIM2_OC_PER_SEC (e.g. 2048) per sec rate */
 	NVICISPR(NVIC_I2C2_EV_IRQ);	// Set pending (lower priority) interrupt ('../lib/libusartstm32/nvicdirect.h')
 db0 += 1; // Count OC interrupts
@@ -422,6 +420,9 @@ db0 += 1; // Count OC interrupts
 	// Add an increment of ( "nominal" + duration adjustment)
 	tim2_ccr4_last = TIM2_CCR4;	// Save for possible later 1 PPS IC interrupt
 	TIM2_CCR4 += (ticks_per_oc_whole + tmp + phz_diff_oto);	// Set next interval end time
+
+	TIM2_SR = ~0x10; // Reset OC interrupt flag. Routine was called because flag was on.
+
 	phz_diff_oto = 0;
 
 	/* Non-GPS date/time counter, counting OC interrupts. */

@@ -47,6 +47,7 @@ volatile unsigned int tim2debug5;
 volatile unsigned int tim2debug6;
 volatile unsigned int tim2debug7;
 volatile unsigned int tim2ticks;
+volatile int64_t tim2debug64a;
 
 int db0;
 
@@ -104,8 +105,8 @@ uint64_t ticks_per_oc_scaled;	// whole.fraction
 uint32_t ticks_per_oc_whole;	// whole
 uint32_t ticks_per_oc_fraction;	// fraction
 
-int64_t tim2_diff_ave_scaled;	// Phase difference ('tim2_diff') averaged and scaled
-int64_t ticks_per_ocphz_scaled; // 'tim2_diff_ave_scaled' per OC (whole.fraction)
+int64_t tim2_diffphz_ave_scaled;	// Phase difference ('tim2_diff') averaged and scaled
+int64_t ticks_per_ocphz_scaled; // 'tim2_diffphz_ave_scaled' per OC (whole.fraction)
 int32_t ticks_per_ocphz_whole;  // whole
 int32_t ticks_per_ocphz_fraction;	// fraction
 
@@ -139,7 +140,7 @@ s32	phasing_oneinterval = 0;	// Interval adjustment for phasing
 int64_t	deviation_sum = 0;		// Running sum of accumulated error
 int32_t	deviation_sum_g = 0;		// Save for 'g' command monitoring
 
-int64_t phase_sum = 0;
+int64_t phase_sum = 0;	// Running sum of phase difference, scaled
 
 /* Count cases where there is a '000' interrupt flag isr entry (not expected) */
 u32	tim2_zeroflag_ctr;
@@ -286,7 +287,7 @@ struct TIMCAPTRET32 Tim2_inputcapture_ui(void)
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 /* 
-This routine is entered when there was an IC interrupt (caused by the gps 1 PPS).  The time between 1 PPS
+'ocphasing' is entered when there was an IC interrupt (caused by the gps 1 PPS).  The time between 1 PPS
 interrupts is the count of the processor system clock ticks.  This varies slowly with temperature and has
 shows a small amount of jitter.
 
@@ -314,7 +315,6 @@ void reset_phase(uint32_t ctr)
 	running_average_reset(&ravephz, 0);	// Reset phase average to zero
 	strAlltime.SYS.ull &= ~(uint64_t)(TIM2_OC_PER_SEC-1);	// RE-Sync sub-second time
 	TIM2_CCR4 = TIM2_CCR2 + ticks_per_oc_whole; // Load first OC reg with first OC counter ct
-	ticks_per_oc_fraction = (uint32_t)((ticks_per_oc_scaled) - (uint64_t)(ticks_per_oc_whole << TIM2SCALE));
 	TIM2_SR = ~0x10;	// Reset OC flag if it came on
 	deviation_sum = ticks_per_oc_fraction;	// Start sum with fraction for first OC duration
 	phase_sum = 0;		// Assume start is exactly in phase
@@ -334,7 +334,7 @@ tim2debug0 = db0;
 	uint32_t oc_ctr;
 
 	/* Discard out-of-bounds ticks per 1 PPS (e.g. the 1st 1 PPS after a gps no-lock). */
-	if ( ( tim2_ic < tickspersecLO) && ( tim2_ic > tickspersecHI) ) // Allow +/- 10%
+	if ( ( tim2_ic < tickspersecLO) || ( tim2_ic > tickspersecHI) ) // Allow +/- 10%
 	{ // 
 		tim2_ticks_outofbounds += 1;	// Count cases
 		return;
@@ -344,6 +344,7 @@ tim2debug0 = db0;
 	tim2_ic_ave_scaled = running_average(&rave, tim2_ic);	// ticks per 1PPS: Averaged 
 	ticks_per_oc_scaled = tim2_ic_ave_scaled / (uint64_t)TIM2_OC_PER_SEC;// Ticks per OC (scaled)
 	ticks_per_oc_whole = (uint32_t)(ticks_per_oc_scaled >> TIM2SCALE);// Ticks per OC: Whole amount
+	ticks_per_oc_fraction = (uint32_t)((ticks_per_oc_scaled) - (uint64_t)(ticks_per_oc_whole << TIM2SCALE));
 
 	/* Low order bits of SYS time is sub-second tick count. */
 	oc_ctr = strAlltime.SYS.ull & (uint64_t)(TIM2_OC_PER_SEC-1);
@@ -382,14 +383,14 @@ tim2debug6 = oc_ctr;
 	}
 
 	// Phase
-	// PI control loop
-	tim2_diff_ave_scaled = running_average(&ravephz, tim2_diff) / 16; // diff ticks: averaged
-	tim2_diff_ave_scaled += (tim2_diff << TIM2SCALE);	// Difference at this 1 PPS interrupt
-	ticks_per_ocphz_scaled = tim2_diff_ave_scaled / (uint64_t)TIM2_OC_PER_SEC; // Ticks per OC (scaled)
+	// PI control loop?
+	tim2_diffphz_ave_scaled = running_average(&ravephz, tim2_diff) / 8; // diff ticks: averaged
+	tim2_diffphz_ave_scaled += (tim2_diff << TIM2SCALE);	// Difference at this 1 PPS interrupt
+	ticks_per_ocphz_scaled = tim2_diffphz_ave_scaled / (uint64_t)TIM2_OC_PER_SEC; // Ticks per OC (scaled)
 
 	/* Remove 1/2 processor tick bias */
-	if (ticks_per_ocphz_scaled < 0) 
-		ticks_per_ocphz_scaled -=0x8000/TIM2_OC_PER_SEC; // Round downward
+//	if (ticks_per_ocphz_scaled < 0) 
+//		ticks_per_ocphz_scaled -=0x8000/TIM2_OC_PER_SEC; // Round downward
 
 ticks_ave_scaled  = tim2_ic_ave_scaled; // Debug 'g' cmd
 
@@ -451,7 +452,9 @@ void setnextoc(void)
 	tim2_ccr4_last = TIM2_CCR4;	// Save for possible later 1 PPS IC interrupt
 	TIM2_CCR4 += (ticks_per_oc_whole + dur + phz);	// Set next interval end time
 
-tim2debug3 = ticks_per_ocphz_scaled;
+tim2debug3 = (uint32_t)phase_sum;
+tim2debug4 += phz;	// running sum of whole
+tim2debug64a = phase_sum;
 
 db0 += 1;	// Count OC interrupts
 

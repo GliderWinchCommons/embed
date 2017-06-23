@@ -250,7 +250,7 @@ void extract_values(struct ACCELVALUES *g, char * p, int j)
 	}
 
 	/* LInux tick time */
-	sscanf(buf,"%10llu",&ull64);
+	sscanf(buf,"%11llu",&ull64);
 	g->ulltime = ull64;
 
 	/* X-axis */
@@ -336,10 +336,10 @@ void ratechangeall(void)
 
 	// Write output here
 		/* Output rate changed line */
-		printf ("%10llu %8.3F%8.3F%8.3F%8.3F 5\n",(ull64-CICMIDDLE),dSum[0],dSum[1],dSum[2],dSum[3]);
+		printf ("%11llu %8.3F%8.3F%8.3F%8.3F 5\n",(ull64-CICMIDDLE),dSum[0],dSum[1],dSum[2],dSum[3]);
 
 // Debug: printf with extras
-//printf ("%10llu %13.9F %13.9F %8.2F %8.2F %8.2F %8.2F %4u %3u %3u\n",ull64,dSum[0],dSum[1],dSum[2],dSum[3],dSum[4],dSum[5],(int)(ull64 & 63), iR, m);
+//printf ("%11llu %13.9F %13.9F %8.2F %8.2F %8.2F %8.2F %4u %3u %3u\n",ull64,dSum[0],dSum[1],dSum[2],dSum[3],dSum[4],dSum[5],(int)(ull64 & 63), iR, m);
 
 		m     += 1;	// Just a counter for debugging
 		ull64 += 1;	// Fill in times

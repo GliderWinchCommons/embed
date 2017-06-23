@@ -93,7 +93,7 @@ if (j < 3) continue;
 		case '1':
 		case '4':
 		case '6':
-			sscanf(buf,"%10llu",&ullNewtime64);	// Time ticks
+			sscanf(buf,"%11llu",&ullNewtime64);	// Time ticks
 			if (ullNewtime64 != ullLasttime64)
 			{
 				outputpair();
@@ -122,7 +122,7 @@ if (j < 3) continue;
 			break;
 
 		case '5': // Accelerometer reformatted line size
-			pkt_accelerometer();
+//$$$			pkt_accelerometer();
 			nPktct[4] += 1;  // Count this type of packet
 			break;
 
@@ -157,7 +157,7 @@ void pkt_tension(void)
 	char * p;
 
 	/* Get time (1/64th secs) */
-	sscanf(buf,"%10llu",&strT.ull);	// Time ticks
+	sscanf(buf,"%11llu",&strT.ull);	// Time ticks
 	ullLasttime64 = strT.ull;	// Update the latest time
 	
 	/* Save time string */
@@ -195,7 +195,7 @@ void pkt_tension(void)
 void pkt_accelerometer(void)
 {
 	/* Get time (1/64th secs) */
-	sscanf(buf,"%10llu",&ullAticktime64);	// Time ticks
+	sscanf(buf,"%11llu",&ullAticktime64);	// Time ticks
 	ullLasttime64 = ullPticktime64;	// Update the latest time
 
 	/* Extract readings */
@@ -211,7 +211,7 @@ void pkt_accelerometer(void)
 void ratechggps(void)
 {
 	/* Get time (1/64th secs) */
-	sscanf(buf,"%10llu",&strG.ull);	// Time ticks
+	sscanf(buf,"%11llu",&strG.ull);	// Time ticks
 	ullLasttime64 = strG.ull;	// Update the latest time
 
 	/* Pair the tension reading with the gps reading and output if paired */
@@ -236,7 +236,7 @@ void outputpair(void)
 
 if (strT.ull != strG.ull)
 {
-//	printf ("@@@@ ERROR pairing: %10llu %10llu\n",strT.ull,strG.ull);
+//	printf ("@@@@ ERROR pairing: %11llu %11llu\n",strT.ull,strG.ull);
 }
 
 	/* Add flag when pushbutton is present */
@@ -253,7 +253,7 @@ if (strT.ull != strG.ull)
 	/* Note: skip time field on strG output since it is the same as the time in strT.buf */
 	printf ("%s%s%c\n",strT.buf,&strG.buf[11],c);	// Output the combined line
 	
-//printf ("%10llu %10llu\n",strT.ull, strG.ull);
+//printf ("%11llu %11llu\n",strT.ull, strG.ull);
 
 	/* Reset pairing counters */
 	strG.ct = 0;
@@ -289,7 +289,7 @@ void pairing (struct SAVEDOUTPUT * s)
 void pkt_pushbutton(void)
 {
 	/* Get time (1/64th secs) */
-	sscanf(buf,"%10llu",&ullPticktime64);	// Time ticks
+	sscanf(buf,"%11llu",&ullPticktime64);	// Time ticks
 	ullLasttime64 = ullPticktime64;	// Update the latest time
 //printf("PB\n");
 	return;

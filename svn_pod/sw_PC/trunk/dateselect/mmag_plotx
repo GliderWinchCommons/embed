@@ -47,15 +47,19 @@ fi
 echo $LOCAL
 
 # This script might be located in ~/bin, so navigate to where the action starts
-#DATESELDIR=/home/$USER/svn_pod/sw_PC/trunk/dateselect
+DATESELDIR=/home/$USER/Glider*ons/embed/svn_pod/*PC/trunk/dateselect
 echo "directory for dateselect"
 echo $DATESELDIR
+echo
 
 # Directory where files retrieved from FIT are stored
 SAVEDIR=/home/$USER/winch/download/$2
 
 # Directory where computed files are located
 COMPDIR=/home/$USER/winch/computed/$2
+echo "directory: COMPDIR"
+echo $COMPDIR
+echo
 
 
 # Reformat raw--pipe->sort by tick time--pipe->merge accelerometer and tension lines > output file
@@ -63,7 +67,7 @@ COMPDIR=/home/$USER/winch/computed/$2
 # 'reformat2' outputs stdout with 'RM' appended (ReformattedMerged)
 cd $DATESELDIR
 echo " directory where computed results stored"
-echo $SAVEDIR/$3 
+echo $COMPDIR/$3 
 
 echo "checkpt 1"
 # =====  TENSION ONLY (option "0") ==========
@@ -71,11 +75,16 @@ case $4 in
 	*0)
 
 # Specify exact length of tension only line length so that float_time will strip out junk lines
-TONLYLENGTH=52
+TONLYLENGTH=53
 
 #../read*/reformat $SAVEDIR/$3 | sort -k 1 | tee $COMPDIR/$3RS | ../read*/ratechangecic | tee $COMPDIR/$3RC | sort | ../read*/reformatgps2 | tee $COMPDIR/$3RM | ./float_timegps $COMPDIR/$3.param | tee $COMPDIR/$3FT
 
-../read*/reformat $SAVEDIR/$3 | sort -k 1 | tee $COMPDIR/$3RS | sort -k 1 | tee $COMPDIR/$3RCS | ../read*/reformatgpsaccelmerge $4 | tee $COMPDIR/$3RM | stripjunk0 | ./float_time $TONLYLENGTH | tee $COMPDIR/$3FT
+echo
+echo $SAVEDIR/$3
+ls -l $SAVEDIR
+echo
+
+../read*/reformat $SAVEDIR | sort -k 1 | tee $COMPDIR/$3RS | sort -k 1 | tee $COMPDIR/$3RCS | ../read*/reformatgpsaccelmerge $4 | tee $COMPDIR/$3RM | stripjunk0 | ./float_time $TONLYLENGTH | tee $COMPDIR/$3FT
 
 # Strip extraneous lines from 'RM file.  'X' = file for matlab input
 awk '{if ( length > 110 ) print $0 }' $COMPDIR/$3RM > $COMPDIR/$3RMX
@@ -91,7 +100,10 @@ esac
 case $4 in
 	*1)
 
-../read*/reformat $SAVEDIR/$3 | sort -k 1 | tee $COMPDIR/$3RS | ../read*/ratechangecic | tee $COMPDIR/$3RC | sort | ../read*/reformatgps2 | tee $COMPDIR/$3RM | ./float_timegps $COMPDIR/$3.param | tee $COMPDIR/$3FT
+../read*/reformat $SAVEDIR | sort -k 1 | tee $COMPDIR/$3RS | 
+../read*/ratechangecic | tee $COMPDIR/$3RC | sort -k 1 | tee $COMPDIR/$3RCS | 
+../read*/reformatgps2 | tee $COMPDIR/$3RM | 
+./float_timegps $COMPDIR/$3.param | tee $COMPDIR/$3FT
 
 echo "  checkpt 2"
 
@@ -110,7 +122,7 @@ esac
 case $4 in
 	*2)
 
-../read*/reformat $SAVEDIR/$3 | sort -k 1 | tee $COMPDIR/$3RS | ../read*/ratechangecic | sort -k 1 > $COMPDIR/$3RCS 
+../read*/reformat $SAVEDIR | sort -k 1 | tee $COMPDIR/$3RS | ../read*/ratechangecic | sort -k 1 > $COMPDIR/$3RCS 
  ../read*/ratechangecic_accel < $COMPDIR/$3RCS | tee $COMPDIR/$3RA | sort > $COMPDIR/$3RAS
  ../read*/reformatgpsaccelmerge $4 < $COMPDIR/$3RAS > $COMPDIR/$3RM
   ./float_timegps | tee $COMPDIR/$3FT < $COMPDIR/$3RM
@@ -130,7 +142,7 @@ esac
 case $4 in
 	*3)
 
-../read*/reformat $SAVEDIR/$3 | sort -k 1 | tee $COMPDIR/$3RS | ../read*/ratechangecic | sort -k 1| tee $COMPDIR/$3RCS | ../read*/ratechangecic_accel | tee $COMPDIR/$3RA | sort | tee $COMPDIR/$3RAS
+../read*/reformat $SAVEDIR | sort -k 1 | tee $COMPDIR/$3RS | ../read*/ratechangecic | sort -k 1| tee $COMPDIR/$3RCS | ../read*/ratechangecic_accel | tee $COMPDIR/$3RA | sort -k 1 | tee $COMPDIR/$3RAS
  ../read*/reformatgpsaccelmerge $4 < $COMPDIR/$3RAS > $COMPDIR/$3RM
   ./float_timegps | tee $COMPDIR/$3FT < $COMPDIR/$3RM
 

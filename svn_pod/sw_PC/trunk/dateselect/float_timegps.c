@@ -45,7 +45,7 @@ int nDelaySw;
 int nMassCt;
 double MassSum;
 
-main(int argc, char *argv[])
+void main(int argc, char *argv[])
 {
 		char mybuf[MYBUFSZ], *p = mybuf;
 		
@@ -96,14 +96,14 @@ main(int argc, char *argv[])
 		if(strlen(p) < 70) continue; // Skip short lines (summary, junk, etc.)
 		
 		/* Convert numbers that will be used in graph */
-		sscanf(&mybuf[  0],"%10llu",&time);
-		sscanf(&mybuf[ 10],"%d",&tension[nDelayIdx]);
-		sscanf(&mybuf[ 51],"%lf",&latitude);
-		sscanf(&mybuf[ 63],"%lf",&longitude);
-		sscanf(&mybuf[ 77],"%lf",&height);
-		sscanf(&mybuf[ 86],"%lf",&velocity_North);
-		sscanf(&mybuf[ 95],"%lf",&velocity_East);
-		sscanf(&mybuf[104],"%lf",&velocity_Vert);
+		sscanf(&mybuf[  0],"%11llu",&time);
+		sscanf(&mybuf[ 11],"%d",&tension[nDelayIdx]);
+		sscanf(&mybuf[ 53],"%lf",&latitude);
+		sscanf(&mybuf[ 66],"%lf",&longitude);
+		sscanf(&mybuf[ 81],"%lf",&height);
+		sscanf(&mybuf[ 89],"%lf",&velocity_North);
+		sscanf(&mybuf[ 98],"%lf",&velocity_East);
+		sscanf(&mybuf[107],"%lf",&velocity_Vert);
 		
 		dtime =  time;
 

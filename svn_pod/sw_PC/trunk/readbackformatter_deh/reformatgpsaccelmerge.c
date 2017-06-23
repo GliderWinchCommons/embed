@@ -107,7 +107,7 @@ if (j < 9) continue;
 		case '4':	// pushbutton
 		case '5':	// accelerometer
 		case '6':	// gps
-			sscanf(buf,"%10llu",&ullNewtime64);	// Time ticks
+			sscanf(buf,"%11llu",&ullNewtime64);	// Time ticks
 			if (ullNewtime64 != ullLasttime64)	// Did this input encounter a new time?
 			{ // Here, yes.  Output what we have paired up.
 				if (ullLasttime64 != 0)
@@ -170,7 +170,7 @@ void pkt_tension(void)
 	char * p;
 
 	/* Get time (1/64th secs) */
-	sscanf(buf,"%10llu",&strT.ull);	// Time ticks
+	sscanf(buf,"%11llu",&strT.ull);	// Time ticks
 	ullLasttime64 = strT.ull;	// Update the latest time
 	
 
@@ -185,10 +185,10 @@ void pkt_tension(void)
 		p++;
 	}
 	/* Save for pairing with other reading */
-	strncpy (&asciitime[0],&buf[19],29);		// This gets appended at the end of the output line
+	strncpy (&asciitime[0],&buf[20],29);		// This gets appended at the end of the output line
 	asciitime[29] = 0;				// String terminator
-	strncpy (&strT.buf[0],&buf[0],19);		// Copy data
-	strT.buf[19] = 0;
+	strncpy (&strT.buf[0],&buf[0],20);		// Copy data
+	strT.buf[20] = 0;
 
 //printf("T %s \n",strT.buf);
 
@@ -201,7 +201,7 @@ void pkt_tension(void)
 void pkt_accelerometer(void)
 {
 	/* Get time (1/64th secs) */
-	sscanf(buf,"%10llu",&strA.ull);	// Time ticks
+	sscanf(buf,"%11llu",&strA.ull);	// Time ticks
 	ullLasttime64 = strA.ull;	// Update the latest time
 	
 	/* Save for pairing with other reading */
@@ -217,7 +217,7 @@ void pkt_accelerometer(void)
 void ratechggps(void)
 {
 	/* Get time (1/64th secs) */
-	sscanf(buf,"%10llu",&strG.ull);	// Time ticks
+	sscanf(buf,"%11llu",&strG.ull);	// Time ticks
 	ullLasttime64 = strG.ull;	// Update the latest time
 
 	/* Save for pairing with other reading */
@@ -238,7 +238,7 @@ void outputpair(void)
 	signed long long ullD = (ullNewtime64 - ullLasttime64);
 	if (ullD > 1)
 	{
-		printf ("%10llu %10llu TIME GAP (1/64 ticks) = %10llu\n",ullNewtime64, ullLasttime64, ullD);
+		printf ("%11llu %11llu TIME GAP (1/64 ticks) = %11llu\n",ullNewtime64, ullLasttime64, ullD);
 		nGapct += 1;
 
 	}
@@ -287,7 +287,7 @@ void outputpair(void)
 	}
 	else
 	{ //Here no tension so we dump all the others
-		printf("%10llu TENSION MISS\n",ullLasttime64);
+		printf("%11llu TENSION MISS\n",ullLasttime64);
 	}
 
 	/* Reset */

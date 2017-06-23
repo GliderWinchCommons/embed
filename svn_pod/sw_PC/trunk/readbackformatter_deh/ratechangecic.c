@@ -291,13 +291,17 @@ void extract_values(struct GPSVALUES *g, char * p, int j)
 	}
 
 	/* Tick time */
-	sscanf(buf,"%10llu",&ull64);
+	sscanf(buf,"%11llu",&ull64);
 	g->ulltime = ull64;
 
 	/* Tick times can be larger than 10 digits so adjust start-of-line pointer. */
 	char *ptmp = p;
         while (isspace(*ptmp) == 0) ptmp++;
-        if ((ptmp-p) > 10) p = (ptmp-10);
+
+//?        if ((ptmp-p) > 11) p = (ptmp-11);
+
+        while (isspace(*ptmp) != 0) ptmp++;
+	p = ptmp - 11;
 
 	/* Latitude (degrees) (we won't screw around with NS) */
 //printf("Lat: ");
@@ -413,10 +417,10 @@ void ratechangeall(void)
 	// Write output here
 		/* Output rate changed line */
 		ull64 = (ullGpstime320 + 2)/5;	// Somewhat rounded up conversion to 64 ticks per sec
-		printf ("%10llu %13.9F %13.9F %8.2F %8.2F %8.2F %8.2F 6\n",ull64,dSum[0],dSum[1],dSum[2],dSum[3],dSum[4],dSum[5]);
+		printf ("%11llu %13.9F %13.9F %8.2F %8.2F %8.2F %8.2F 6\n",ull64,dSum[0],dSum[1],dSum[2],dSum[3],dSum[4],dSum[5]);
 
 // Debug: printf with extras
-//printf ("%10llu %13.9F %13.9F %8.2F %8.2F %8.2F %8.2F %4u %3u %3u\n",ull64,dSum[0],dSum[1],dSum[2],dSum[3],dSum[4],dSum[5],(int)(ull64 & 63), iR, m);
+//printf ("%11llu %13.9F %13.9F %8.2F %8.2F %8.2F %8.2F %4u %3u %3u\n",ull64,dSum[0],dSum[1],dSum[2],dSum[3],dSum[4],dSum[5],(int)(ull64 & 63), iR, m);
 
 		m  += 1;	// Just a counter for debugging
 		ullGpstime320 += INPUTRATE;	// Advance group delay adjusted time

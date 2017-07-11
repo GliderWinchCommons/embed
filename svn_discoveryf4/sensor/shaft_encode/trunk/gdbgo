@@ -1,0 +1,9 @@
+#!/bin/bash
+# Start GDB with connect to target automatically
+echo '# Starting arm-none-eabi-gdb'
+# Make a file with the GDB command that will be loaded when GDB starts
+echo >f4d-debug.tmp 'target extended-remote:4242'
+echo $ARM_PREFIX/bin/arm-none-eabi-gdb
+
+$ARM_PREFIX/bin/arm-none-eabi-gdb -x f4d-debug.tmp $1.elf
+rm -f f4d-debug.tmp

@@ -1,0 +1,114 @@
+README.pins
+06/29/2017
+
+Discovery F4--Winch instrumentationL incremental encoder w CAN 
+
+This is the pin usage for implementing two incremental shaft encoders
+using the two 32b timers TIM2 and TIM5 with TIM3 for timing.
+
+Console monitoring via FTDI, using USART3
+
+CAN1
+
+
+On-board ICs
+(1) - CS43L22
+(2) - MP45DT02
+(3) - STMPS2141STR
+(4) - LIS302DL
+
+* Marks the pins used for--
+  32b encoder timers: TIM2, TIM5 pin selections
+  USART3 RX TX
+  CAN1 RX TX
+  
+
+PA *0 TIM5 CH1 (Encoder 2A)		Pushbutton wakeup
+PA *1 TIM5 CH2 (Encoder 2B)
+PA *2 TIM5 CH3
+PA *3 TIM5 CH4
+PA  4 /LRCK (1)
+PA  5 SCL (4)
+PA  6 SDO (4)
+PA  7 SDA (4)
+PA  8 
+PA  9 VBUS (3)
+PA 10 OTG_FS_ID (3)
+PA 11 OTG_FS_DM (3)
+PA 12 OTG_FS_DP (3)
+PA 13 
+PA 14 
+PA*15 TIM2 CH1 (Encoder 1A)
+
+PB  0 
+PB  1 
+PB  2 Pullup SB19
+PB *3 TIM2 CH2 (Encoder 1B)
+PB  4 
+PB  5 CAN2 RX
+PB  6 CAN2 TX 	4.7K SCL
+PB  7 USART1 TX
+PB  8 CAN1 RX
+PB  9 CAN1 TX 4.7K SDA
+PB*10 TIM2 CH3  CLK_IN (2)
+PB*11 TIM2 CH4
+PB 12 CAN2 RX
+PB 13 CAN2 TX
+PB 14 
+PB 15 
+
+PC  0 OTG_FS_Power on
+PC  1 
+PC  2 
+PC  3 PDM_OUT (2)
+PC  4 R49 not fitted
+PC  5 
+PC  6 USART6 TX
+PC  7 USART6 RX	MCLK
+PC *8 TIM3_CH3 (Encoder 1A)
+PC *9 TIM3 CH4 (Encoder 2A)
+PC 10 USART3 TX SCLK
+PC 11 USART3 RX 
+PC 12 UART5 TX	SDIN
+PC 13 
+PC 14 32KHz Xtal
+PC 15 32KHz Xtal
+
+
+PD *0 CAN1 RX blu -> MP2552 (1) TXD
+PD *1 CAN1 TX UART5 RX yel -> MP2551 (4) RXD
+PD  2 
+PD  3 
+PD  4 
+PD  5 USART2 TX	OTG_OVER_CURRENT
+PD  6 USART2 RX
+PD  7 
+PD *8 USART3 TX blu->fdti tx 4 (gnd blk->fdti 1)
+PD *9 USART3 RX wht->fdti rx 5
+PD 10 
+PD 11 
+PD 12 LED GRN
+PD 13 LED ORG
+PD 14 LED RED
+PD 15 LED BLU
+
+PE  0 INT1 (4)
+PE  1 INT2 (4)
+PE  2 
+PE  3 CS_I2C (4)
+PE  4 
+PE  5 
+PE  6 
+PE  7 
+PE  8 
+PE  9 
+PE 10 
+PE 11 
+PE 12 
+PE 13 
+PE 14 
+PE 15 
+
+PH  0 8 MHz xtal
+PH  1 8 MHz xtal
+

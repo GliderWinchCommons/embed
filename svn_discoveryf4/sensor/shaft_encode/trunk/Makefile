@@ -1,7 +1,7 @@
 # Sources
 
 # Name of the .c file with 'main' as well as output file name
-NAME	= gatef
+NAME	= shaft_encode
 
 # Linker file
 LDFILE	=stm32_flash.ld
@@ -15,6 +15,7 @@ SRCS += $(NAME).c syscalls.c
 SRCS += CAN_test_msgs.c
 SRCS += CAN_error_msgs.c
 SRCS += Default_Handler.c
+SRCS += encoder_timers.c
 
 ###################################################
 
@@ -30,12 +31,15 @@ endif
 endif
 
 ###################################################
-PREFIX = $(ARM_PREFIX)/bin/arm-none-eabi-
-CC		= $(PREFIX)gcc
-LD		= $(PREFIX)ld
-SIZE		= $(PREFIX)size
-OBJCOPY		= $(PREFIX)objcopy
-OBJDUMP		= $(PREFIX)objdump
+# Prefix the name for the particular toolchain
+PREFIX		= arm-none-eabi-
+
+CC	=$(PREFIX)gcc
+LD	=$(PREFIX)ld
+OBJCOPY	=$(PREFIX)objcopy
+SIZE	=$(PREFIX)size
+OBJDUMP	=$(PREFIX)objdump
+
 
 CFLAGS  = -std=gnu99 -g -Os -Wall
 CFLAGS += -mlittle-endian -mthumb -mthumb-interwork -nostartfiles -mcpu=cortex-m4

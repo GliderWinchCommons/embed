@@ -71,10 +71,10 @@ int uart_pins(u32 iuart, struct UARTPINS* pu)
 			break;
 			
 		case (u32)USART3:
-			rxport = GPIOB; txport = GPIOB; txpin = 10; rxpin = 11; af = 7; pu->pclk = pclk1_freq;
-			RCC_AHB1ENR |= 0x02;	// Port B
-//			rxport = GPIOD; txport = GPIOD; txpin =  8; rxpin =  9; af = 7; pu->pclk = pclk1_freq;
-//			RCC_AHB1ENR |= 0x08;	// Port D
+//A			rxport = GPIOB; txport = GPIOB; txpin = 10; rxpin = 11; af = 7; pu->pclk = pclk1_freq;
+//A			RCC_AHB1ENR |= 0x02;	// Port B
+			rxport = GPIOD; txport = GPIOD; txpin =  8; rxpin =  9; af = 7; pu->pclk = pclk1_freq;
+			RCC_AHB1ENR |= 0x08;	// Port D
 			RCC_APB1ENR |= (1<<18); // Enable peripheral clock
 			pu->irqnumber = UART3_IRQ_NUMBER;
 			break;

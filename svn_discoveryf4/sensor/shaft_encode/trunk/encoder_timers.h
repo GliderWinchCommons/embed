@@ -26,10 +26,13 @@ struct TIMCAPTRET32
 };
 
 /* **************************************************************************************/
-int encoder_timers_init(void);
+ int encoder_timers_init(uint32_t canid);
 /* @brief	: Initialize TIM2,5,3 for shaft encoder
+ * @param	: canid = CAN id for time sync msgs
  * @return	: 0 = OK; not 0 = fail
  * ************************************************************************************** */
+
+extern uint32_t encode_oc_flag;	// 1/64sec tick flag
 
 
 #endif 

@@ -84,6 +84,7 @@ OBJS	+= can_driver_filter.o
 OBJS	+= can_msg_reset.o
 OBJS	+= register_clear.o
 OBJS	+= queue_dbl.o
+OBJS	+= running_average.o
 
 # Be silent per default, but 'make V=1' will show all compiler calls.
 ifneq ($(V),1)

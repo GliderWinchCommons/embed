@@ -104,7 +104,7 @@ LIBPATHS += -L$(LIBSVNCOMMON)/f4
 #   USB
 LIBS 	 = -lm -lusbf4 -lstdperiph -lusbdevcdc -lusbcore -lusbdevcore  -lusbf4  -lstdperiph
 #   our stuff
-LIBS	+= -ldiscoveryf4 -lmiscstm32f4 -lusartstm32f4 -lcommon_allf4
+LIBS	+= -ldiscoveryf4 -lmiscstm32f4 -lusartstm32f4 -lcommon_allf4  -ldiscoveryf4
 
 LDFLAGS	 = -T$(LDFILE)
 

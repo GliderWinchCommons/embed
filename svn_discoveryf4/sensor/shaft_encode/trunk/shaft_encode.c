@@ -49,9 +49,12 @@ TODO
 #include "CAN_test_msgs.h"
 #include "CAN_error_msgs.h"
 #include "canwinch_setup_F4_discovery.h"
+#include "can_msg_reset.h"
 #include "DTW_counter.h"
 #include "db/gen_db.h"
 #include "encoder_timers.h"
+#include "running_average.h"
+#include "ledf4.h"
 
 
 #ifndef NULL 
@@ -88,8 +91,8 @@ const struct CAN_INIT msginit2 = { \
 //#define IAMUNITNUMBER	CAN_UNITID_GATE2	// PC<->CAN bus gateway
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& */
 /* ######################### GATEWAY HEARTBEAT CAN ID ############################ */
-//static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY1}; // See CANID_INSERT.sql
-static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY2}; // See CANID_INSERT.sql
+static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY1}; // See CANID_INSERT.sql
+//static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY2}; // See CANID_INSERT.sql
 //static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY3}; // See CANID_INSERT.sql
 /* ############################################################################### */
 /* %%%%%%%%%%%%% Board hardware setup %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
@@ -110,7 +113,7 @@ NOTE: PLL48CK must be 48 MHz for the USB
 
 /* Easy way for other routines to access via 'extern'*/
 struct CAN_CTLBLOCK* pctl1;	// CAN1 control block pointer
-struct CAN_CTLBLOCK* pctl2;	// CAN1 control block pointer
+struct CAN_CTLBLOCK* pctl2;	// CAN2 control block pointer
 
 static struct PCTOGATEWAY pctogateway; 	// CAN->PC
 static struct PCTOGATEWAY pctogateway1; // PC->CAN
@@ -159,7 +162,6 @@ static void printmsg(struct CANRCVBUF* p, int sw)
  * @param	: pg = Pointer to message buffer (see common_can.h)
  * @return	: 0 = OK; -1 = dlc greater than 8; -2 = illegal extended address
  * ************************************************************************************** */
-
 static int CAN_gateway_send(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF* pg)
 {
 	/* Check number of bytes in payload and limit to 8. */
@@ -176,52 +178,7 @@ static int CAN_gateway_send(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF* pg)
 	return can_driver_put(pctl, pg, 8, 0);
 }
 
-/******************************************************************************
- * static int adv_index(int idx, int size)Default_HandlerCode
- * @brief	: Format and print date time in readable form
- * @param	: idx = incoming index
- * @param	: size = number of items in FIFO
- * return	: index advanced by one
- ******************************************************************************/
-#ifdef ADV_INDEX
-static int adv_index(int idx, int size)
-{
-	int localidx = idx;
-	localidx += 1; if (localidx >= size) localidx = 0;
-	return localidx;
-}
-#endif
 
-/* LED identification
-Discovery F4 LEDs: PD 12, 13, 14, 15
-
-|-number on pc board below LEDs
-|   |- color
-v vvvvvv  macro
-12 green   
-13 orange
-14 red
-15 blue
-*/
-
-/* ************************************************************
-Turn the LEDs on in sequence, then turn them back off 
-***************************************************************/
-static int lednum = 12;	// Lowest port bit numbered LED
-void toggle_4leds (void)
-{
-	if ((GPIO_ODR(GPIOD) & (1<<lednum)) == 0)
-	{ // Here, LED bit was off
-		GPIO_BSRR(GPIOD) = (1<<lednum);	// Set bit
-	}
-	else
-	{ // HEre, LED bit was on
-		GPIO_BSRR(GPIOD) = (1<<(lednum+16));	// Reset bit
-	}
-	lednum += 1;		// Step through all four LEDs
-	if (lednum > 15) lednum = 12;
-
-}
 /*#################################################################################################
 And now for the main routine 
   #################################################################################################*/
@@ -292,7 +249,7 @@ int main(void)
 	for (i = 0; i < 1; i++) 
 	{
 		/* Announce who we are. ('xprintf' uses uart number to deliver the output.) */
-		xprintf(UXPRT,  " \n\rF4 DISCOVERY SHAFT ENCODER FTDI w LINKED LIST CAN1 DRIVER: 07/09/2017 \n\r");
+		xprintf(UXPRT,  " \n\rF4 DISCOVERY SHAFT ENCODER FTDI w LINKED LIST CAN1 DRIVER: 07/16/2017 \n\r");
 		/* Make sure we have the correct bus frequencies */
 		xprintf (UXPRT, "   hclk_freq (MHz) : %9u...............................\n\r",  hclk_freq/1000000);	
 		xprintf (UXPRT, "  pclk1_freq (MHz) : %9u...............................\n\r", pclk1_freq/1000000);	
@@ -362,8 +319,8 @@ f2 = DTWTIME;
 xprintf (UXPRT, "  dur0 (tick): %d  dur1 (usec): %d\n\r",(f1-f0),(f2-f1)/168);
 
 /* --------------------- Timer setup ----------------------------------------------------------------- */
-
-	encoder_timers_init();
+	
+	encoder_timers_init(0x00200000);
 
 /* --------------------- CAN setup ------------------------------------------------------------------- */
 	/*  Pin usage for CAN1 on DiscoveryF4--
@@ -388,12 +345,17 @@ xprintf (UXPRT, "  dur0 (tick): %d  dur1 (usec): %d\n\r",(f1-f0),(f2-f1)/168);
 	xprintf(UXPRT,"CAN1 initialized OK@ baudrate %d\n\r",CANWINCH_BAUDRATE);
 	can_driver_enable_interrupts();	// Enable CAN interrupts
 	xprintf(UXPRT,"CAN interrupts enabled\n\r");
-/* --------------------- Initialize the time for the test msg generation ----------------------------- */
+/* --------------------- Initialize the time for the test msg generation ------------------------------ */
 	CAN_test_msg_init();
+
+/* --------------------- Monitoring incoming CAN ids  ------------------------------------------------- */
+
+	can_msg_reset_init(pctl1, 0xffe00000);	// Specify CAN ID for this unit for msg caused RESET
+
 
 /* --------------------- Hardware is ready, so do program-specific startup ---------------------------- */
 #define FLASHCOUNT 21000000;	// LED flash
-u32	t_led = DTWTIME + FLASHCOUNT; // Set initial time
+//u32	t_led = DTWTIME + FLASHCOUNT; // Set initial time
 
 	PC_msg_initg(&pctogateway);	// Initialize struct for CAN message from PC
 	PC_msg_initg(&pctogateway1);	// Initialize struct for CAN message from PC
@@ -411,16 +373,29 @@ t_cmdn = DTWTIME + 168000000; // Set initial time
 u32 hb_inc = DELAYHEARTBEAT * (sysclk_freq/64);
 t_hb = DTWTIME + hb_inc;
 
+uint32_t encode_oc_flag_prev = 3;  // Check TIM3 1/64sec ticking
+
 /* --------------------- Endless Polling Loop ----------------------------------------------- */
 	while (1==1)
 	{
 		/* Flash the LED's to amuse the hapless Op or signal the wizard programmer that the loop is running. */
-		if (((int)(DTWTIME - t_led)) > 0) // Has the time expired?
+/*		if (((int)(DTWTIME - t_led)) > 0) // Has the time expired?
 		{ // Here, yes.
 			toggle_4leds(); 	// Advance some LED pattern
 			t_led += FLASHCOUNT; 	// Set next toggle time
 		}
+*/
 
+		/* Check the TIM3 OC timing correctly (yes, and it didn't!) */
+		if (encode_oc_flag != encode_oc_flag_prev)
+		{ // Here, 1/64th sec tick incremented the flag
+			encode_oc_flag_prev = encode_oc_flag;
+			if ((encode_oc_flag & 0x3f) == 0)
+			{ // Here, end of one second 
+				xprintf(UXPRT,"TIM3_OC: %5d\n\r",(int)encode_oc_flag>>6);
+				 LED_TOGGLE(GRN); // Green LED
+			}
+		}
 
 		/* Send heart-beat periodically. */
 		if (((int)(DTWTIME - t_hb)) > 0) // Has the time expired?

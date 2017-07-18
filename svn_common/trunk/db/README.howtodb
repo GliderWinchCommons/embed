@@ -8,7 +8,7 @@ The following is based on manual operations that use SQL files (and not a
 custom program working directly with the database).
 
 The database tables are located in--
-gitrepo/svn_common/trunk/db
+GliderWinchCommons/embed/svn_common/trunk/db
 
 These are .sql files that have commands that the derby tools program, 'ij',
 uses to work with the database.

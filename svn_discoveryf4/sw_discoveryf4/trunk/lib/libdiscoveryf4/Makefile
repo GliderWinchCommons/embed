@@ -79,6 +79,7 @@ OBJS	+= spi2rw.o
 OBJS	+= spi2rwB.o
 OBJS	+= switchdebounce.o
 OBJS	+= switchdebounce2.o
+OBJS 	+= ledf4.o
 
 
 

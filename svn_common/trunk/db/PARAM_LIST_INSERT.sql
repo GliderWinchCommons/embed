@@ -33,11 +33,11 @@ DELETE from PARAM_LIST;
 --                              Parameter name                Code     Type  format     Function_type            Description
 INSERT INTO PARAM_LIST VALUES ('ENCODER_LIST_CRC'	     	, 1, 'TYP_U32','%08X', 	'SHEAVE_H',	'Encoder_f4_1: crc: CRC for tension list');
 INSERT INTO PARAM_LIST VALUES ('ENCODER_LIST_VERSION'  	    	, 2, 'TYP_S32','%d', 	'SHEAVE_H',	'Encoder_f4_1: version: Version number for Tension List');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_CT_PER_REV'		, 3, 'TYP_U32','%d',	'SHEAVE_H',	'Encoder_f4_1: Number of counts per revolution');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_DIST_PER_REV'		, 4, 'TYP_FLT','%f',	'SHEAVE_H',	'Encoder_f4_1: Distance per revolution (meters)');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_HEARTBEAT_CT'		, 5, 'TYP_U32','%d',	'SHEAVE_H',	'Encoder_f4_1: Heartbeat count of time (ms) between msgs');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_HEARTBEAT_CT'		, 3, 'TYP_U32','%d',	'SHEAVE_H',	'Encoder_f4_1: Heartbeat count of time (ms) between msgs');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_CT_PER_REV'		, 4, 'TYP_U32','%d',	'SHEAVE_H',	'Encoder_f4_1: Number of counts per revolution');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_DIST_PER_REV'		, 5, 'TYP_FLT','%f',	'SHEAVE_H',	'Encoder_f4_1: Distance per revolution (meters)');
 INSERT INTO PARAM_LIST VALUES ('ENCODER_HEARTBEAT_MSG'    	, 6, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: Hearbeat sends running count');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL'	    		, 7, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: Poll this cansender');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL'	    		, 7, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: Poll with time sync msg');
 INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL_R'	  		, 8, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: Response to POLL');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
 INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT1'    , 9, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1:  9 CANID 1 added to CAN hardware filter to allow incoming msg');

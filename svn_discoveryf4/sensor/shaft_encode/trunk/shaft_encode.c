@@ -363,6 +363,35 @@ xprintf (UXPRT, "  dur0 (tick): %d  dur1 (usec): %d\n\r",(f1-f0),(f2-f1)/168);
 	/* Set modes for routines that receive and send CAN msgs */
 	pctogateway.mode_link = MODE_LINK;
 	pctogateway1.mode_link = MODE_LINK;
+#ifdef ENCODERAFUNCTIONSETUPSTUFF
+/* ---------------- Encoder A function ---------------------------------------------------------------- */
+	ret = encoder_a_functionS_init_all();
+	if (ret <= 0)
+	{
+		printf("encoder_a_functionS: table size mismatch count: %d\n\r", ret); 
+		while(1==1);
+	}
+	xprintf(UXPRT,"tension_a_functionS: table size : %d\n\r", ret);USART1_txint_send();
+
+/* ----------------- CAN filter registers ------------------------------------------------------------- */
+	can_filter_print(14);	// Print the CAN filter registers
+/* ----------------- Debug parameters ----------------------------------------------------------------- */
+for (i = 0; i < NUMTENSIONFUNCTIONS; i++)
+{
+	xprintf(UXPRT,"\n\rENCODER #%1d values\n\r",i+1);
+	tension_a_printf(&enc_f[i].enc_a);	// Print parameters
+}
+/* ------------------------ CAN msg loop (runs under interrupt) --------------------------------------- */
+int ret;
+	ret = CAN_poll_loop_init();
+	if (ret != 0)
+	{ // Here the init failed (e.g. malloc)
+		xprintf(UXPRT,"CAN_poll_loop_init: failed %d\n\r",ret);USART1_txint_send(); 
+		while (1==1);		
+	}
+#endif
+/* ---------------- When CAN interrupts are enabled reception of msgs begins! ------------------------ */
+	can_driver_enable_interrupts();	// Enable CAN interrupts
 
 /* Test disable/enable global interrupts */
 __asm__ volatile ("CPSID I");
@@ -373,7 +402,7 @@ t_cmdn = DTWTIME + 168000000; // Set initial time
 u32 hb_inc = DELAYHEARTBEAT * (sysclk_freq/64);
 t_hb = DTWTIME + hb_inc;
 
-uint32_t encode_oc_flag_prev = 3;  // Check TIM3 1/64sec ticking
+uint32_t encode_oc_ticks_prev = 3;  // Check TIM3 1/64sec ticking
 
 /* --------------------- Endless Polling Loop ----------------------------------------------- */
 	while (1==1)
@@ -387,12 +416,12 @@ uint32_t encode_oc_flag_prev = 3;  // Check TIM3 1/64sec ticking
 */
 
 		/* Check the TIM3 OC timing correctly (yes, and it didn't!) */
-		if (encode_oc_flag != encode_oc_flag_prev)
+		if (encode_oc_ticks != encode_oc_ticks_prev)
 		{ // Here, 1/64th sec tick incremented the flag
-			encode_oc_flag_prev = encode_oc_flag;
-			if ((encode_oc_flag & 0x3f) == 0)
+			encode_oc_ticks_prev = encode_oc_ticks;
+			if ((encode_oc_ticks & 0x3f) == 0)
 			{ // Here, end of one second 
-				xprintf(UXPRT,"TIM3_OC: %5d\n\r",(int)encode_oc_flag>>6);
+				xprintf(UXPRT,"TIM3_OC: %5d\n\r",(int)encode_oc_ticks>>6);
 				 LED_TOGGLE(GRN); // Green LED
 			}
 		}

@@ -195,13 +195,15 @@ INSERT INTO CANID VALUES ('CANID_MSG_UPPER1_H_RAW'	'D1000000', 'SHEAVE_UP_H', 	'
 INSERT INTO CANID VALUES ('CANID_MSG_UPPER1_H_CAL'	'D1200000', 'SHEAVE_UP_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: msg--upper calibrated--distance and speed');
 INSERT INTO CANID VALUES ('CANID_HB_UPPER1_H_RAW'	'D1E00000', 'SHEAVE_UP_H', 	'U32_U32','F4 shaft_encoder: hi-res: heartbeat--upper raw count and delta time');
 INSERT INTO CANID VALUES ('CANID_HB_UPPER1_H_CAL'	'D2000000', 'SHEAVE_UP_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: heartbeat--upper calibrated--distance and speed');
+INSERT INTO CANID VALUES ('CANID_TST_SHEAVE_1UP'	'D2000004', 'SHEAVE_UP_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: testing poll');
 
 INSERT INTO CANID VALUES ('CANID_CMD_LOWER1_HI',	'D1400000', 'SHEAVE_LO_H', 	'UNDEF'  ,'F4 shaft_encoder: Lower sheave hi-res: I Command CAN: send commands to subsystem');
 INSERT INTO CANID VALUES ('CANID_CMD_LOWER1_HR',	'D1600004', 'SHEAVE_LO_H', 	'UNDEF'  ,'F4 shaft_encoder: Lower sheave hi-res: R Command CAN: send commands to subsystem');
-INSERT INTO CANID VALUES ('CANID_MSG_LOWER1_H_RAW'	'D1800000', 'SHEAVE_LO_H', 	'U32_U32','F4 shaft_encoder: hi-res: msg--lower raw count and delta time');
+INSERT INTO CANID VALUES ('CANID_MSG_LOWER1_H_RAW'	'D2400000', 'SHEAVE_LO_H', 	'U32_U32','F4 shaft_encoder: hi-res: msg--lower raw count and delta time');
 INSERT INTO CANID VALUES ('CANID_MSG_LOWER1_H_CAL'	'D1A00000', 'SHEAVE_LO_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: msg--lower calibrated--distance and speed');
 INSERT INTO CANID VALUES ('CANID_HB_LOWER1_H_RAW'	'D1800000', 'SHEAVE_LO_H', 	'U32_U32','F4 shaft_encoder: hi-res: heartbeat--lower raw count and delta time');
 INSERT INTO CANID VALUES ('CANID_HB_LOWER1_H_CAL'	'D1C00000', 'SHEAVE_LO_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: heartbeat--lower calibrated--distance and speed');
+INSERT INTO CANID VALUES ('CANID_TST_SHEAVE_1LO'	'D2200004', 'SHEAVE_UP_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: testing poll');
 
 INSERT INTO CANID VALUES ('CANID_TILT_ALARM',		'04600000', 'TILT_SENSE', 	'UNDEF','Tilt: alarm: Vector angle exceeds limit');
 INSERT INTO CANID VALUES ('CANID_TILT_ANGLE',		'42E00000', 'TILT_SENSE', 	'UNDEF','Tilt: Calibrated angles (X & Y)');

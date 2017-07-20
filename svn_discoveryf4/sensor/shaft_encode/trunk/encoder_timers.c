@@ -74,7 +74,7 @@ static struct RUNNING_AVE dtw_ave; // Running average for CAN time msg durations
 
 uint32_t en_interval_reset;	// Running count of interval jam resets
 
-uint32_t encode_oc_flag;	// 1/64sec tick flag
+uint32_t encode_oc_ticks;	// 1/64sec tick flag
 
 /* **************************************************************************************
  * int encoder_timers_init(uint32_t canid);
@@ -317,7 +317,7 @@ void TIM3_IRQHandler(void)
 		{ // Here, end of 1/64th interval
 			interval_ct = 0;	// Reset interval counter
 			dtw_oc = temp;		// Save: might be used for time sync'ing
-			encode_oc_flag += 1;	// Signal somebody that something happened
+			encode_oc_ticks += 1;	// Signal somebody that something happened
 		}
 	}
 	return;

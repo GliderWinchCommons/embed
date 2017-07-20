@@ -48,7 +48,7 @@ void encoder_get_all(struct ENCODERCOMPUTE *p, uint16_t unit);
  * @return	: re-populated struct
 *******************************************************************************/
 
-extern uint32_t encode_oc_flag;	// 1/64sec tick flag
+extern uint32_t encode_oc_ticks;	// 1/64sec tick flag
 
 
 #endif 

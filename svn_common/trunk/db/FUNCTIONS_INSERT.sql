@@ -85,7 +85,8 @@ INSERT INTO FUNCTIONS VALUES ('TILT_SENSE_a',	'CANID_CMD_TILTR',	 'R', 'CAN_UNIT
 
 INSERT INTO FUNCTIONS VALUES ('YOGURT_1',	'CANID_CMD_YOGURT_1I', 	 'I', 'CAN_UNIT_13',	'YOGURT_1',	'Yogurt_1: I Ver 1 of maker' );
 INSERT INTO FUNCTIONS VALUES ('YOGURT_1',	'CANID_CMD_YOGURT_1R',	 'R', 'CAN_UNIT_13',	'YOGURT_1',	'Yogurt_1: R Ver 1 of maker' );
-
+--                                                                       CMD-IR
+--                            FUNCTION_NAME       CANID_CMD_NAME               CAN_UNIT_NAME     FUNCTION_TYPE     DESCRIPTION7
 INSERT INTO FUNCTIONS VALUES ('TENSION_a0X',	'CANID_CMD_TENSION_0I'  ,'I', 'CAN_UNIT_11',	'TENSION_a',	'Tension_a: I 1 AD7799 VE POD Test (hence X) 0' );
 INSERT INTO FUNCTIONS VALUES ('TENSION_a0X',	'CANID_CMD_TENSION_0R'  ,'R', 'CAN_UNIT_11',	'TENSION_a',	'Tension_a: R 1 AD7799 VE POD Test (hence X) 0' );
 
@@ -112,7 +113,6 @@ INSERT INTO FUNCTIONS VALUES ('TENSION_a2G',	'CANID_CMD_TENSION_a2GR','R', 'CAN_
 
 INSERT INTO FUNCTIONS VALUES ('CANSENDER_1',	'CANID_CMD_CANSENDER_1I','I', 'CAN_UNIT_1B',	'CANSENDER',	'Cansender_1: I Sensor board test' );
 INSERT INTO FUNCTIONS VALUES ('CANSENDER_1',	'CANID_CMD_CANSENDER_1R','R', 'CAN_UNIT_1B',	'CANSENDER',	'Cansender_1: R Sensor board test' );
-
 --                                                                       CMD-IR
 --                            FUNCTION_NAME       CANID_CMD_NAME               CAN_UNIT_NAME     FUNCTION_TYPE     DESCRIPTION7
 INSERT INTO FUNCTIONS VALUES ('SHEAVE_1UP',	'CANID_CMD_UPPER1_HI','I', 'CANID_UNIT_1E',	'SHEAVE_UP_H',	'Shaft encoder_a1: I upper' );

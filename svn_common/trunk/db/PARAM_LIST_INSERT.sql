@@ -25,7 +25,7 @@
 -- For transport the parameters and readings are handled the same way, and the lists have the same
 --   structure.
 --
--- Code 0 reserved for SIZE
+-- Code: 0 reserved for SIZE (whatever that means? 7/19/17)
 --
 DELETE from PARAM_LIST;
 --
@@ -36,20 +36,19 @@ INSERT INTO PARAM_LIST VALUES ('ENCODER_LIST_VERSION'  	    	, 2, 'TYP_S32','%d'
 INSERT INTO PARAM_LIST VALUES ('ENCODER_HEARTBEAT_CT'		, 3, 'TYP_U32','%d',	'SHEAVE_H',	'Encoder_f4_1: Heartbeat count of time (ms) between msgs');
 INSERT INTO PARAM_LIST VALUES ('ENCODER_CT_PER_REV'		, 4, 'TYP_U32','%d',	'SHEAVE_H',	'Encoder_f4_1: Number of counts per revolution');
 INSERT INTO PARAM_LIST VALUES ('ENCODER_DIST_PER_REV'		, 5, 'TYP_FLT','%f',	'SHEAVE_H',	'Encoder_f4_1: Distance per revolution (meters)');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_HEARTBEAT_MSG'    	, 6, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: Hearbeat sends running count');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL'	    		, 7, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: Poll with time sync msg');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL_R'	  		, 8, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: Response to POLL');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_HEARTBEAT_MSG'    	, 6, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: Heartbeat sends raw (long long) running encoder count');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL_MSG'	    	, 7, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: hi-res: msg--upper calibrated--distance and speed');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL'	    		, 8, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: Poll with time sync msg');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL_R'	  		, 9, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: Response to POLL');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT1'    , 9, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1:  9 CANID 1 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT2'    ,10, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: 10 CANID 2 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT3'    ,11, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: 11 CANID 3 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT4'    ,12, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: 12 CANID 4 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT5'    ,13, 'TYP_CANID','%x', 	'SHEAVE_H',	'Encoder_f4_1: 13 CANID 5 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT6'    ,14, 'TYP_CANID','%x',  	'SHEAVE_H',	'Encoder_f4_1: 14 CANID 6 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT7'    ,15, 'TYP_CANID','%x',  	'SHEAVE_H',	'Encoder_f4_1: 15 CANID 7 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT8'    ,16, 'TYP_CANID','%x',  	'SHEAVE_H',	'Encoder_f4_1: 16 CANID 8 added to CAN hardware filter to allow incoming msg');
-
-
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT1'    ,10, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 1 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT2'    ,11, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 2 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT3'    ,12, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 3 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT4'    ,13, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 4 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT5'    ,14, 'TYP_CANID','%x', 	'SHEAVE_H',	'Encoder_f4_1: CANID 5 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT6'    ,15, 'TYP_CANID','%x',  	'SHEAVE_H',	'Encoder_f4_1: CANID 6 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT7'    ,16, 'TYP_CANID','%x',  	'SHEAVE_H',	'Encoder_f4_1: CANID 7 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT8'    ,17, 'TYP_CANID','%x',  	'SHEAVE_H',	'Encoder_f4_1: CANID 8 added to CAN hardware filter to allow incoming msg');
 --
 -- Cansender 
 --                              Parameter name                 Code     Type  format Function_type       Description10
@@ -59,7 +58,6 @@ INSERT INTO PARAM_LIST VALUES ('CANSENDER_HEARTBEAT_CT'		, 3, 'TYP_U32','%d',	'C
 INSERT INTO PARAM_LIST VALUES ('CANSENDER_HEARTBEAT_MSG'    	, 4, 'TYP_CANID','%x', 	'CANSENDER',  	'Cansender: CANID: Hearbeat sends running count');
 INSERT INTO PARAM_LIST VALUES ('CANSENDER_POLL'	    		, 5, 'TYP_CANID','%x', 	'CANSENDER',  	'Cansender: CANID: Poll this cansender');
 INSERT INTO PARAM_LIST VALUES ('CANSENDER_POLL_R'	  	, 6, 'TYP_CANID','%x', 	'CANSENDER',  	'Cansender: CANID: Response to POLL');
-
 --
 -- AD7799 Tension
 --                              Parameter name                Code     Type  format     Function_type            Description
@@ -106,7 +104,6 @@ INSERT INTO PARAM_LIST VALUES ('TENSION_a_IIR_Z_RECAL_SCALE' ,	40, 'TYP_U32','%u
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_Z_RECAL_CT'        ,	41, 'TYP_U32','%u',  	'TENSION_a',  	'Tension_a: ADC conversion counts between zero recalibrations');
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_LIMIT_HI'          ,	42, 'TYP_FLT','%f',  	'TENSION_a',  	'Tension_a: Exceeding this calibrated limit (+) means invalid reading');
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_LIMIT_LO'          ,	43, 'TYP_FLT','%f', 	'TENSION_a',  	'Tension_a: Exceeding this calibrated limit (-) means invalid reading');
-
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT1'    ,	44, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID1 parameter in this list for CAN hardware filter to allow');
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT2'    ,	45, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID2 CANID parameter in this list for CAN hardware filter to allow');
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT3'    ,	46, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID3 CANID parameter in this list for CAN hardware filter to allow');
@@ -148,7 +145,6 @@ INSERT INTO PARAM_LIST VALUES ('GPS_HEARTBEAT_TIME'    		, 6, 'TYP_CANID','%x', 
 INSERT INTO PARAM_LIST VALUES ('GPS_HEARTBEAT_LLH'  		, 7, 'TYP_CANID','%x', 	'GPS',  	'GPS: Heartbeat (3 separate msgs) lattitude longitude height');
 INSERT INTO PARAM_LIST VALUES ('GPS_DISABLE_SYNCMSGS'		, 8, 'TYP_U32','%d',	'GPS',		'GPS: time sync msgs; 0 = enable  1 = disable');
 INSERT INTO PARAM_LIST VALUES ('GPS_TIME_SYNC_MSG'    		, 9, 'TYP_CANID','%x', 	'GPS',  	'GPS: Time sync msg');
-
 --
 -- Logger
 --                              Parameter name                 Code     Type  format Function_type       Description
@@ -156,7 +152,6 @@ INSERT INTO PARAM_LIST VALUES ('LOGGER_LIST_CRC'	   	, 1, 'TYP_U32','%08X', 	'LO
 INSERT INTO PARAM_LIST VALUES ('LOGGER_LIST_VERSION'      	, 2, 'TYP_S32','%d', 	'LOGGER',	'Logger: Version number');
 INSERT INTO PARAM_LIST VALUES ('LOGGER_HEARTBEAT1_CT'		, 3, 'TYP_U32','%d',	'LOGGER',	'Logger: Heartbeat count of time (ms) between msgs');
 INSERT INTO PARAM_LIST VALUES ('LOGGER_HEARTBEAT_MSG'    	, 4, 'TYP_CANID','%x', 	'LOGGER',  	'Logger: CANID: Hearbeat sends running count of logged msgs');
-
 ---
 -- Engine sensor
 --                              Parameter name            Code     Type  format Function_type            Description

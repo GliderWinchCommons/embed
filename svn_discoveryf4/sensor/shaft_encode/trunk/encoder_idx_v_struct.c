@@ -46,7 +46,26 @@ bomb with a mis-match error.
 	uint32_t cid_msg_time_poll;	//
 	uint32_t cid_tst_enc_a;		// 
 	uint32_t cid_cmd_hi;		// CANID-Command incoming/interrogation
-	uint32_t code_CAN_filt[4];	// Remaining unassigned in list (CANID_DUMMY)
+	uint32_t hw_CAN_filt[4];	// Remaining unassigned in list (CANID_DUMMY)
+
+ INSERT INTO PARAM_LIST VALUES ('ENCODER_LIST_CRC'	     	, 1, 'TYP_U32','%08X', 	'SHEAVE_H',	'Encoder_f4_1: crc: CRC for tension list');
+ INSERT INTO PARAM_LIST VALUES ('ENCODER_LIST_VERSION'  	    	, 2, 'TYP_S32','%d', 	'SHEAVE_H',	'Encoder_f4_1: version: Version number for Tension List');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_HEARTBEAT_CT'		, 3, 'TYP_U32','%d',	'SHEAVE_H',	'Encoder_f4_1: Heartbeat count of time (ms) between msgs');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_CT_PER_REV'		, 4, 'TYP_U32','%d',	'SHEAVE_H',	'Encoder_f4_1: Number of counts per revolution');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_DIST_PER_REV'		, 5, 'TYP_FLT','%f',	'SHEAVE_H',	'Encoder_f4_1: Distance per revolution (meters)');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_HEARTBEAT_MSG'    	, 6, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: Heartbeat sends raw (long long) running encoder count');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL_MSG'	    	, 7, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: hi-res: msg--upper calibrated--distance and speed');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL'	    		, 8, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: Poll with time sync msg');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL_R'	  		, 9, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: Response to POLL');
+-- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT1'    ,10, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 1 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT2'    ,11, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 2 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT3'    ,12, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 3 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT4'    ,13, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 4 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT5'    ,14, 'TYP_CANID','%x', 	'SHEAVE_H',	'Encoder_f4_1: CANID 5 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT6'    ,15, 'TYP_CANID','%x',  	'SHEAVE_H',	'Encoder_f4_1: CANID 6 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT7'    ,16, 'TYP_CANID','%x',  	'SHEAVE_H',	'Encoder_f4_1: CANID 7 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT8'    ,17, 'TYP_CANID','%x',  	'SHEAVE_H',	'Encoder_f4_1: CANID 8 added to CAN hardware filter to allow incoming msg');
 */
 int encoder_idx_v_struct_copy(struct ENCODERLC* p, uint32_t* ptbl)
 {
@@ -57,9 +76,31 @@ int encoder_idx_v_struct_copy(struct ENCODERLC* p, uint32_t* ptbl)
 	}u;
 
 /* NOTE: values that are not uint32_t  */
-p->size            = ptbl[0];		 			  /*  0 Tension: Number of elements in the following list */
-p->crc             = ptbl[TENSION_a_LIST_CRC];		 	  /*  1 Tension: CRC for tension list */
-p->version         = ptbl[TENSION_a_LIST_VERSION];		  /*  2 Version number */	
+p->size         = ptbl[0];		 	/*  0 Tension: Number of elements in the following list */
+p->crc          = ptbl[ENCODER_LIST_CRC];	/*  1 Tension: CRC for tension list */
+p->version      = ptbl[ENCODER_LIST_VERSION];	/*  2 Version number */
+p->hbct		= ptbl[ENCODER_HEARTBEAT_CT];	/*  3 Heartbeat count of time (ms) between msgs */
+p->ctperrev	= ptbl[ENCODER_CT_PER_REV];	/*  4 Number of counts per revolution */
+u.ui = ptbl[ENCODER_DIST_PER_REV]; 		p->distperrev = u.f;/*  5 Distance per revolution (meters) */
+p->cid_heartbeat= ptbl[ENCODER_HEARTBEAT_MSG];	/*  5 Heartbeat sends raw (long long) running encoder count */
+
+p->cid_poll_msg   	= ptbl[ENCODER_POLL_MSG];		// CANID-Fully calibrated encoder msg
+p->cid_poll_r   	= ptbl[ENCODER_POLL_R];		// CANID-Response to poll (??)
+	// CAN ID's for setting up hw filter
+p->cid_hb_timesync   	= ptbl[SHEAVE_H_CANID_HW_FILT1];// CANID-GPS time sync msg polls encoders
+p->cid_msg_time_pol   	= ptbl[SHEAVE_H_CANID_HW_FILT2];//
+p->cid_tst_enc_a   	= ptbl[SHEAVE_H_CANID_HW_FILT3];// 
+p->cid_cmd_hi   	= ptbl[SHEAVE_H_CANID_HW_FILT4];// CANID-Command incoming/interrogation
+p->hw_CAN_filt[0]   	= ptbl[SHEAVE_H_CANID_HW_FILT5];// Remaining unassigned in list (CANID_DUMMY)
+p->hw_CAN_filt[1]   	= ptbl[SHEAVE_H_CANID_HW_FILT6];// Remaining unassigned in list (CANID_DUMMY)
+p->hw_CAN_filt[2]   	= ptbl[SHEAVE_H_CANID_HW_FILT7];// Remaining unassigned in list (CANID_DUMMY)
+p->hw_CAN_filt[3]   	= ptbl[SHEAVE_H_CANID_HW_FILT8];// Remaining unassigned in list (CANID_DUMMY)
+
+
+
+
+
+
 p->ad.offset       = (int)ptbl[TENSION_a_AD7799_1_OFFSET];	  /*  3 Tension: AD7799 offset */
 u.ui = ptbl[TENSION_a_AD7799_1_SCALE]; 		p->ad.scale        = u.f;/*  4 Tension: AD7799 #1 Scale (convert to kgf) */
 u.ui = ptbl[TENSION_a_THERM1_CONST_B]; 		p->ad.tp[0].B      = u.f;/*  5 Tension: Thermistor1 param: constant B */

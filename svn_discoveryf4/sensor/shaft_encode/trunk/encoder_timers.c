@@ -43,6 +43,8 @@ struct ENCODERREADING enr_wrk[2];	// Latest, working, reading
 struct ENCODERCOMPUTE enc_can[2];	// Compute rate from reading
 struct ENCODERCOMPUTE enc_use[2];	// Compute rate from reading
 
+union TIMCAPTURE64 ovcnt;	// Overflow for extending time to 64b
+
 volatile uint32_t dtw_oc;	// DTW time saved at OC
 
 /* Output compare */
@@ -106,10 +108,22 @@ int encoder_timers_init(uint32_t canid)
 	TIM2_SMCR |= (0x1 << 0);	// Mode 1: Counter counts up/down on TI2FP1 edge
 	TIM5_SMCR |= (0x1 << 0);	// Mode 1: Counter counts up/down on TI2FP1 edge
 
+	/* TIM2 encoder mode: map pins */
+	// CC2 channel is configured as input, IC2 is mapped on TI2
+	// CC1 channel is configured as input, IC1 is mapped on TI1
+	TIM2_CCMR1 = (0X01<<8) | (0X01<<0);
+
+	/* TIM5 encoder mode: map pins */
+	// CC2 channel is configured as input, IC2 is mapped on TI2
+	// CC1 channel is configured as input, IC1 is mapped on TI1
+	TIM5_CCMR1 = (0X01<<8) | (0X01<<0);
+
 	/* Prescale divider (freq/(PSC+1)) */
 	// Use default: 0 = divide by one
 
-	/* CH4 & CH3 input capture */
+	/* TIM3 CH4 & CH3 input capture. */
+	// CC4 channel is configured as input, IC4 is mapped on TI4
+	// CC3 channel is configured as input, IC3 is mapped on TI3
 	TIM3_CCMR2 = (0X01<<8) | (0X01<<0);
 
 	/* CH1 CH2 output capture, frozen state */
@@ -221,10 +235,11 @@ void can_msg_check(void* pctl, struct CAN_POOLBLOCK* pblk)
 ======================================================================================== */
 static void IC_only(struct ENCODERREADING *p, uint32_t ccr,  uint32_t enccr)
 {
-	/* Compute extended time for new input capture */
+	/* Save extended time for new input capture */
 	p->t.us[0] = ccr;		// Read the captured count which resets the capture flag
-	p->t.us[1] = p->t.us[1];	// Extended time of upper 16 bits of lower order 32 bits
-	p->t.ui[1] = p->t.ui[1];	// Extended time of upper 32 bits of long long
+	p->t.us[1] = ovcnt.us[1];	// Extended time of upper 16 bits of lower order 32 bits
+	p->t.ui[1] = ovcnt.ui[1];	// Extended time of upper 32 bits of long long
+
 	p->n = enccr;	// Save latest encoder from encoder timer
 	return;
 }
@@ -240,15 +255,15 @@ static void IC_ov(struct ENCODERREADING *p,  uint32_t ccr, uint32_t enccr)
 {
 	/* Compute extended time for new input capture */
 	p->t.us[0] = ccr;		// Read the captured count which resets the capture flag
-	p->t.us[1] = p->t.us[1];	// Extended time of upper 16 bits of lower order 32 bits
-	p->t.ui[1] = p->t.ui[1];	// Extended time of upper 32 bits of long long
+	p->t.us[1] = ovcnt.us[1];	// Extended time of upper 16 bits of lower order 32 bits
+	p->t.ui[1] = ovcnt.ui[1];	// Extended time of upper 32 bits of unsigned long long
 
 	// Adjust input capture: Determine which flag came first.  If overflow came first increment the overflow count
 	if (p->t.us[0] < 32768)		// Is the capture time in the lower half of the range?
 	{ // Here, yes.  The IC flag must have followed the overflow flag, so we 
-		p->t.ull+= 0x10000;	// Increment the high order 48 bits 0f the *capture time*
+		p->t.ull+= 0x10000;	// Increment the high order 48 bits 0f the *input capture time*
 	}
-
+	ovcnt.ull += 0x10000;		// Increment the high order 48 bits of extended 64b *time counter*
 	p->n = enccr;	// Save latest encoder count from encoder timer
 	return;
 }
@@ -261,15 +276,14 @@ void TIM3_IRQHandler(void)
 	uint32_t temp = DTWTIME;	// Save DTW 32b sys counter (if time sync of OC implemented)
 	uint16_t usSR;	// Status register save upon entry
 
-	usSR = TIM3_SR & 0x1F;	// Get current flags
+	usSR = TIM3_SR;	// Get current flags
 	
 	/* Get extended time for input capture on CH4 & CH3 & overflow */
 	switch (usSR & 0x19)	// Seven combinations for the three flags (null means not these flags)
 	{	
 	case 0x01:	// Overflow flag only
 		TIM3_SR = ~0x1;				// Reset overflow flag
-		enr_wrk[0].t.ull += 0x10000;		// Increment the high order 48 bits of the time counter		
-		enr_wrk[1].t.ull += 0x10000;		// Increment the high order 48 bits of the time counter		
+		ovcnt.ull += 0x10000;			// Increment the high order 48 bits of extended 64b time counter		
 		break;
 		
 	case 0x08:	// CH3 Input Capture flag only

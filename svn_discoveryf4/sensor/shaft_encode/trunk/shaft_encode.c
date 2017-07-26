@@ -61,6 +61,8 @@ TODO
 #define NULL	0
 #endif
 
+
+
 /* Circular buffer for passing CAN BUS msgs to PC */
 #define CANBUSBUFSIZE	64	// Number of incoming CAN msgs to buffer
 
@@ -319,7 +321,6 @@ f2 = DTWTIME;
 xprintf (UXPRT, "  dur0 (tick): %d  dur1 (usec): %d\n\r",(f1-f0),(f2-f1)/168);
 
 /* --------------------- Timer setup ----------------------------------------------------------------- */
-	
 	encoder_timers_init(0x00200000);
 
 /* --------------------- CAN setup ------------------------------------------------------------------- */
@@ -404,6 +405,9 @@ t_hb = DTWTIME + hb_inc;
 
 uint32_t encode_oc_ticks_prev = 3;  // Check TIM3 1/64sec ticking
 
+struct ENCODERCOMPUTE enc_main[2];	// Encoder count and time
+float enc_cal[2] = {1.0, (84E6/720)};		// Calibration for test & debug
+double dtmp;
 /* --------------------- Endless Polling Loop ----------------------------------------------- */
 	while (1==1)
 	{
@@ -414,15 +418,25 @@ uint32_t encode_oc_ticks_prev = 3;  // Check TIM3 1/64sec ticking
 			t_led += FLASHCOUNT; 	// Set next toggle time
 		}
 */
+		/* Have LEDs follow encoder phase signals */
+		encoder_leds();
 
-		/* Check the TIM3 OC timing correctly (yes, and it didn't!) */
+		/* Check that the TIM3 OC is timing correctly (yes, and it didn't!) */
 		if (encode_oc_ticks != encode_oc_ticks_prev)
 		{ // Here, 1/64th sec tick incremented the flag
 			encode_oc_ticks_prev = encode_oc_ticks;
-			if ((encode_oc_ticks & 0x3f) == 0)
+			if ((encode_oc_ticks & 0x1f) == 0)
 			{ // Here, end of one second 
-				xprintf(UXPRT,"TIM3_OC: %5d\n\r",(int)encode_oc_ticks>>6);
-				 LED_TOGGLE(GRN); // Green LED
+				xprintf(UXPRT,"\n\rTIM3_OC: %5d ",(int)encode_oc_ticks>>6);
+				for (i = 0; i < 2; i++)
+				{
+					encoder_get_all(&enc_main[i],i); // Readings and rate computation
+					dtmp = (enc_main[i].r * enc_cal[i]);
+					xprintf(UXPRT," %8d %10d %10lld %11.5f",enc_main[i].enr.n,enc_main[i].dn,enc_main[i].dt,dtmp );
+					enc_main[i].enr_prev = enc_main[i].enr;
+				}
+
+				LED_TOGGLE(GRN); // Green LED (Encoder #2 uses)
 			}
 		}
 

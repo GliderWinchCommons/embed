@@ -80,6 +80,7 @@ OBJS	+= SYSTICK_systickduration.o
 OBJS	+= reset.o 
 #OBJS	+= USB_PC_gateway.o
 OBJS	+= DTW_counter.o
+OBJS	+= lltoflt.o
 
 
 

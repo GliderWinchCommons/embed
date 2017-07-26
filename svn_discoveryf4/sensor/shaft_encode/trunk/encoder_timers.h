@@ -47,8 +47,15 @@ void encoder_get_all(struct ENCODERCOMPUTE *p, uint16_t unit);
  * @param	: unit = 0 TIM2 encoder; 1 = TIIM5 encoder
  * @return	: re-populated struct
 *******************************************************************************/
+void encoder_leds(void);
+/* @brief	: All four LEDs follow the two Encoder phase signals
+ * ************************************************************************************** */
 
 extern uint32_t encode_oc_ticks;	// 1/64sec tick flag
+
+/* Count rare occurences of 'encoder_get_reading' loop hit by interrupt */
+extern unsigned long encoder_get_reading_loop_cnt;
+
 
 
 #endif 

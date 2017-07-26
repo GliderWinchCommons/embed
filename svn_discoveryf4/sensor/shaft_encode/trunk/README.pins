@@ -1,10 +1,10 @@
 README.pins
-06/29/2017
+07/23/2017
 
 Discovery F4--Winch instrumentationL incremental encoder w CAN 
 
 This is the pin usage for implementing two incremental shaft encoders
-using the two 32b timers TIM2 and TIM5 with TIM3 for timing.
+using the two 32b timers TIM2 and TIM5 with TIM3 for time capture.
 
 Console monitoring via FTDI, using USART3
 
@@ -23,10 +23,10 @@ On-board ICs
   CAN1 RX TX
   
 
-PA *0 TIM5 CH1 (Encoder 2A)		Pushbutton wakeup
+PA *0 TIM5 CH1 (Encoder 2A)	Pushbutton wakeup
 PA *1 TIM5 CH2 (Encoder 2B)
-PA *2 TIM5 CH3
-PA *3 TIM5 CH4
+PA  2 TIM5 CH3
+PA  3 TIM5 CH4
 PA  4 /LRCK (1)
 PA  5 SCL (4)
 PA  6 SDO (4)
@@ -50,8 +50,8 @@ PB  6 CAN2 TX 	4.7K SCL
 PB  7 USART1 TX
 PB  8 CAN1 RX
 PB  9 CAN1 TX 4.7K SDA
-PB*10 TIM2 CH3  CLK_IN (2)
-PB*11 TIM2 CH4
+PB 10 TIM2 CH3  CLK_IN (2)
+PB 11 TIM2 CH4
 PB 12 CAN2 RX
 PB 13 CAN2 TX
 PB 14 
@@ -65,8 +65,8 @@ PC  4 R49 not fitted
 PC  5 
 PC  6 USART6 TX
 PC  7 USART6 RX	MCLK
-PC *8 TIM3_CH3 (Encoder 1A)
-PC *9 TIM3 CH4 (Encoder 2A)
+PC *8 TIM3_CH3 (Encoder 1A input capture)
+PC *9 TIM3 CH4 (Encoder 2A input capture)
 PC 10 USART3 TX SCLK
 PC 11 USART3 RX 
 PC 12 UART5 TX	SDIN

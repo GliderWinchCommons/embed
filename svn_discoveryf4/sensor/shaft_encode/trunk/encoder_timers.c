@@ -5,13 +5,14 @@
 * Description        : TIM2,TIM5,TIM3--two encoders with speed timing
 *******************************************************************************/
 /* 
+Encoder phase, encoder TIM CHk (pin), timer TIM CH, (pin), wire color, (LED color)
 Encoder #1 --
-  A -> TIM2 CH1, TIM3 CH3
-  B -> TIM2 CH2
+  A -> TIM2 CH1 (PA15)->TIM3 CH3 (PC8) green wire (GRN)
+  B -> TIM2 CH2 (PB3) (BLU)
 
 Encoder #2 --
-  A -> TIM5 CH1, TIM3 CH4
-  B -> TIM5 CH2
+  A -> TIM5 CH1 (PA0)->TIM3 CH4 (PC9) green wire (ORG)
+  B -> TIM5 CH2 (PA1) (RED)
 
 TIM3 --
  CH1 - Output capture: 1/64th sec synchronized ticks
@@ -22,6 +23,13 @@ TIM3 --
 These timers are connected to the APB1 bus with a max of 42 MHz.  
 (Note, the F42x and F43X have RCC_DCKCNFG register with a bit
 to run timers at 84 and 169 MHz, but not the F407.)
+
+Wiring--
+        Encoder   RJ14
+Ground 	- black	- black
++5 	- red	- red
+ A 	- green	- green
+ B 	- white	- yellow
 
 */
 #include "nvicdirect.h" 
@@ -37,13 +45,16 @@ to run timers at 84 and 169 MHz, but not the F407.)
 #include "can_msg_reset.h"
 #include "running_average.h"
 #include "common_can.h"
+#include "ledf4.h"
 
 
-struct ENCODERREADING enr_wrk[2];	// Latest, working, reading
-struct ENCODERCOMPUTE enc_can[2];	// Compute rate from reading
-struct ENCODERCOMPUTE enc_use[2];	// Compute rate from reading
+static volatile struct ENCODERREADING enr_wrk[2];	// Latest, working, reading
+static struct ENCODERCOMPUTE enc_can[2];	// Compute rate from reading
 
-union TIMCAPTURE64 ovcnt;	// Overflow for extending time to 64b
+static union TIMCAPTURE64 ovcnt; // TIM3 overflow count for extending time to 64b
+
+/* Error monitoring: Count rare occurences of 'get_reading' loop hit by interrupt */
+unsigned long encoder_get_reading_loop_cnt = 0;
 
 volatile uint32_t dtw_oc;	// DTW time saved at OC
 
@@ -72,11 +83,80 @@ uint64_t dtw_can_dur_ave; // SCALED by << DTWAVE_SCALE
 
 #define DTWAVE_N	64	// Size of running average
 #define DTWAVE_SCALE	8	// Number of bits to scale
-static struct RUNNING_AVE dtw_ave; // Running average for CAN time msg durations
+//static struct RUNNING_AVE dtw_ave; // Running average for CAN time msg durations
 
 uint32_t en_interval_reset;	// Running count of interval jam resets
 
 uint32_t encode_oc_ticks;	// 1/64sec tick flag
+
+/* **************************************************************************************
+ * static void led(uint32_t lednum);
+ * @brief	: LED follows Encoder phase signal
+ * @param	: lednum = LED number (e.g. GRN, ORG, RED, BLU)
+ * ************************************************************************************** */
+static char ledpin[4] = {15,3,0,1};
+static void led(uint32_t lednum)
+{
+	/* Get encoder pin number associated with led color */
+	char enc_pin = ledpin[lednum - 12];
+
+
+	/* Get port for encoder pin */
+	u32 p = GPIOA;	// All but ORG corresponds to GPIOA pins
+	if (lednum == 1)
+	{ // ORG led corresponds to a PB pin (PB3)
+		p = GPIOB;
+	}
+
+	/* Set LED according to encoder pin */	
+	if ((GPIO_IDR(p) & (1<<enc_pin)) == 0)
+	{ // Here, encoder pin is low
+		GPIO_BSRR(GPIOD)=(1<<lednum); // Set LED ON
+	}
+	else
+	{ // Here, encoder pin is high
+		GPIO_BSRR(GPIOD)=(1<<(lednum+16)); // Set LED OFF
+	}
+	return;
+}
+/* **************************************************************************************
+ * void encoder_leds(void);
+ * @brief	: All four LEDs follow the two Encoder phase signals
+ * ************************************************************************************** */
+void encoder_leds(void)
+{
+//	led(GRN);
+//	led(ORG);
+	led(RED);
+	led(BLU);
+	return;
+}
+/******************************************************************************
+ struct's for configuring timer pins
+*******************************************************************************/
+// Note: Use the external resistors to +5v for pullup rather than internal (to +3.3v)
+// TIM2 encoder #1
+static const struct PINCONFIG	inputpup1 = { \
+	GPIO_MODE_AF,	// mode: Input alternate function 
+	0, 			// output type: not applicable 		
+	0, 			// speed: not applicable
+	GPIO_PUPD_NONE, 	// pull up/down: none
+	GPIO_AF1 };		// AFRLy & AFRHy selection
+// TIM5 encoder #2
+static const struct PINCONFIG	inputpup2 = { \
+	GPIO_MODE_AF,	// mode: Input alternate function 
+	0, 			// output type: not applicable 		
+	0, 			// speed: not applicable
+	GPIO_PUPD_NONE, 	// pull up/down: none
+	GPIO_AF2 };		// AFRLy & AFRHy selection
+
+// TIM3 timer
+static const struct PINCONFIG	inputpup3 = { \
+	GPIO_MODE_AF,	// mode: Input alternate function 
+	0, 			// output type: not applicable 		
+	0, 			// speed: not applicable
+	GPIO_PUPD_NONE, 	// pull up/down: none
+	GPIO_AF2 };		// AFRLy & AFRHy selection
 
 /* **************************************************************************************
  * int encoder_timers_init(uint32_t canid);
@@ -86,10 +166,10 @@ uint32_t encode_oc_ticks;	// 1/64sec tick flag
  * ************************************************************************************** */
 int encoder_timers_init(uint32_t canid)
 {
-	canid_tim = canid;	// Save CAN id for time msgs used for time syncing
+	canid_tim = canid;	// Save CAN id for time msgs used for time syncinghttps://rhondastephens.wordpress.com/2016/04/01/parenting-are-we-getting-a-raw-deal/
 
-	running_average_init(&dtw_ave, DTWAVE_N, DTWAVE_SCALE);
-	dtw_can_dur_ave = DTW_64TH << DTWAVE_SCALE; // Nominal, scaled 64th sec
+//	running_average_init(&dtw_ave, DTWAVE_N, DTWAVE_SCALE);
+//	dtw_can_dur_ave = DTW_64TH << DTWAVE_SCALE; // Nominal, scaled 64th sec
 
 	if (init_sw != 0) return 0;	// Init just once
 	init_sw = 1;
@@ -98,7 +178,17 @@ int encoder_timers_init(uint32_t canid)
 	can_msg_reset_ptr = &can_msg_check;
 
 	/* Enable bus clocking for TIM2,3,5, */
-	RCC_APB1ENR |= 0x0B;		 
+	RCC_APB1ENR |= 0x0B;	
+
+	/*  Setup pins: alternate function pullup input: CH1, CH2 for TIM5, TIM2, and TIM3 IC3 IC4 */
+	// TIM2 CH1 wired to TIM3 CH3 PA15->PC8 (Encoder 1: GRN)
+	// TIM5 CH1 wired to TIM3 CH4 PA0 ->PC9 (Encoder 2: GRN)
+	f4gpiopins_Config ((volatile u32*)GPIOA,15, (struct PINCONFIG*)&inputpup1); // TIM2 CH1	 
+	f4gpiopins_Config ((volatile u32*)GPIOB, 3, (struct PINCONFIG*)&inputpup1); // TIM2 CH2
+	f4gpiopins_Config ((volatile u32*)GPIOA, 0, (struct PINCONFIG*)&inputpup2); // TIM5 CH1
+	f4gpiopins_Config ((volatile u32*)GPIOA, 1, (struct PINCONFIG*)&inputpup2); // TIM5 CH2
+	f4gpiopins_Config ((volatile u32*)GPIOC, 8, (struct PINCONFIG*)&inputpup3); // TIM3 CH3
+	f4gpiopins_Config ((volatile u32*)GPIOC, 9, (struct PINCONFIG*)&inputpup3); // TIM3 CH4
 
 	/* Reload register for encoders (default) */
 //	TIM2_ARR = ~0L;
@@ -125,6 +215,9 @@ int encoder_timers_init(uint32_t canid)
 	// CC4 channel is configured as input, IC4 is mapped on TI4
 	// CC3 channel is configured as input, IC3 is mapped on TI3
 	TIM3_CCMR2 = (0X01<<8) | (0X01<<0);
+
+	/* Enable capture on TIM3 CH4, CH3. both input edges */
+	TIM3_CCER = (0X0B<<12) | (0X0B<<8);
 
 	/* CH1 CH2 output capture, frozen state */
 	TIM3_CCR1 = 0;
@@ -157,9 +250,37 @@ int encoder_timers_init(uint32_t canid)
 void encoder_speed(struct ENCODERCOMPUTE *p)
 {
 	/* Change in time and count since last 1/64th sec. */
-	p->dt = (p->enr.t.ull - p->enr_prev.t.ull); // Time difference
+	p->dt = (p->enr.t.ull - p->enr_prev.t.ull); // Time difference (long long)
 	p->dn = p->enr.n - p->enr_prev.n;	// Number of counts
-	p->r = (float)(p->dn)/(float)(p->dt);	// encoder counts/per counter tick
+
+	float ft;
+	int i; // Count divisions by 2
+
+	/* A time difference count greater than an 'int' needs scaling */
+	if ((p->dt > 2147483647) || (p->dt < 2147483648))
+	{ // Here, either + or - bigger than 32b int
+		i = 0;
+		while (p->dt > 2147483647)
+		{ // Scale until it fits in an int
+			p->dt /= 2;
+		}
+		ft = p->dt;
+		ft *= (1<<i); // Fix float for scale factor
+	}
+	else
+	{ // Here, value is within the range of an 'int'
+		ft = (int)p->dt;
+	}
+
+	/* Idle encoder has no IC flags so 't' doesn't update. */
+	if (p->dt != 0) // Avoid divide by zero giving NAN
+	{ 
+		p->r = (float)p->dn/ft;	// encoder counts/per counter tick
+	}
+	else
+	{
+		p->r = 0.0;
+	}
 	return;
 }
 /******************************************************************************
@@ -171,14 +292,14 @@ void encoder_speed(struct ENCODERCOMPUTE *p)
 *******************************************************************************/
 void encoder_get_reading(struct ENCODERREADING *p, uint16_t unit)
 {
-	struct ENCODERREADING enr_tmp;
-
 	/* Read twice to be sure copy didn't get hit by a new encoder count */
-	do
+	while (1==1)
 	{
-		*p = enr_wrk[unit];		// Latest encoder reading
-		enr_tmp = enr_wrk[unit];	// Copy again
-	} while ((enr_tmp.n != p->n) || (enr_tmp.t.ll != p->t.ll));
+		*p = enr_wrk[unit];	// Local copy
+		if ((p->n == enr_wrk[unit].n) && (p->t.ll == enr_wrk[unit].t.ll)) 
+			break;
+		encoder_get_reading_loop_cnt += 1;
+	}
 	return;
 }
 /******************************************************************************
@@ -233,7 +354,7 @@ void can_msg_check(void* pctl, struct CAN_POOLBLOCK* pblk)
  * @param  : enccr = TIMx_CCR1 (timer for encoder)
  * @return : t & n have the latest time and encoder count
 ======================================================================================== */
-static void IC_only(struct ENCODERREADING *p, uint32_t ccr,  uint32_t enccr)
+static void IC_only(volatile struct ENCODERREADING *p, uint32_t ccr,  uint32_t enccr)
 {
 	/* Save extended time for new input capture */
 	p->t.us[0] = ccr;		// Read the captured count which resets the capture flag
@@ -251,7 +372,7 @@ static void IC_only(struct ENCODERREADING *p, uint32_t ccr,  uint32_t enccr)
  * @param  : enccr = TIMx_CCR1 (timer for encoder)
  * @return : t & n have the latest time and encoder count
 ======================================================================================== */
-static void IC_ov(struct ENCODERREADING *p,  uint32_t ccr, uint32_t enccr)
+static void IC_ov(volatile struct ENCODERREADING *p,  uint32_t ccr, uint32_t enccr)
 {
 	/* Compute extended time for new input capture */
 	p->t.us[0] = ccr;		// Read the captured count which resets the capture flag
@@ -259,65 +380,46 @@ static void IC_ov(struct ENCODERREADING *p,  uint32_t ccr, uint32_t enccr)
 	p->t.ui[1] = ovcnt.ui[1];	// Extended time of upper 32 bits of unsigned long long
 
 	// Adjust input capture: Determine which flag came first.  If overflow came first increment the overflow count
-	if (p->t.us[0] < 32768)		// Is the capture time in the lower half of the range?
-	{ // Here, yes.  The IC flag must have followed the overflow flag, so we 
-		p->t.ull+= 0x10000;	// Increment the high order 48 bits 0f the *input capture time*
+// Clever compiler; the following compiles the same as if (p->t.s[0] < 0)  lsls r1, r1, #16
+	if (p->t.s[0] > 32767)		// Is the capture time in the upper half of the range?
+	{ // Here, yes.  The IC flag must have preceded the overflow flag, so we 
+		p->t.ull-= 0x10000;	// decrement the already incremented high order 48 bits 0f the *input capture time*
 	}
-	ovcnt.ull += 0x10000;		// Increment the high order 48 bits of extended 64b *time counter*
 	p->n = enccr;	// Save latest encoder count from encoder timer
 	return;
 }
 /* ===================================================================================== */
 void TIM3_IRQHandler(void)
 {
-//	__attribute__((__unused__))volatile u32 temp;
-
-	
 	uint32_t temp = DTWTIME;	// Save DTW 32b sys counter (if time sync of OC implemented)
-	uint16_t usSR;	// Status register save upon entry
-
-	usSR = TIM3_SR;	// Get current flags
+	uint16_t usSR = TIM3_SR;	// Get current flags
 	
-	/* Get extended time for input capture on CH4 & CH3 & overflow */
-	switch (usSR & 0x19)	// Seven combinations for the three flags (null means not these flags)
-	{	
-	case 0x01:	// Overflow flag only
-		TIM3_SR = ~0x1;				// Reset overflow flag
-		ovcnt.ull += 0x10000;			// Increment the high order 48 bits of extended 64b time counter		
-		break;
+	if ((usSR & 0x1) != 0)
+	{ // Here, overflow flag
+		TIM3_SR = ~0x1;		// Reset overflow flag
+		ovcnt.ull += 0x10000;	// Increment the high order 48 bits of extended 64b time counter
 		
-	case 0x08:	// CH3 Input Capture flag only
-		IC_only(&enr_wrk[0], TIM3_CCR3,TIM2_CNT);// CH3
-		break;
-
-	case 0x10:	// CH4 Input Capture flag only
-		IC_only(&enr_wrk[1], TIM3_CCR4,TIM5_CNT);// CH4
-		break;
-
-	case 0x18:	// CH4 and CH3 IC flags, no overflow flag
-		IC_only(&enr_wrk[0],TIM3_CCR3,TIM2_CNT);	// CH3
-		IC_only(&enr_wrk[1],TIM3_CCR4,TIM5_CNT);	// CH4
-		break;
-
-	case 0x9:  	// CH3 IC & Overflow flag are on	
-		TIM3_SR = ~0x1;		// Reset overflow flag
-		// Set up the input capture with extended time
-		IC_ov(&enr_wrk[0],TIM3_CCR3,TIM2_CNT);	// CH3
-		break;
-
-	case 0x11:	// CH4 IC & Overflow flags are on	
-		TIM3_SR = ~0x1;		// Reset overflow flag
-		// Set up the input capture with extended time
-		IC_ov(&enr_wrk[1],TIM3_CCR4,TIM5_CNT);	// CH4
-		break;
-
-	case 0x19:	// CH4, CH3, Overflow flag are on
-		TIM3_SR = ~0x1;		// Reset overflow flag
-		IC_ov(&enr_wrk[0],TIM3_CCR3,TIM2_CNT);	// CH3
-		IC_ov(&enr_wrk[1],TIM3_CCR4,TIM5_CNT);	// CH4
+		if ((usSR & 0x08) != 0)
+		{ // CH3 Input Capture flag w overflow flag
+			IC_ov(&enr_wrk[0], TIM3_CCR3,TIM2_CNT);// CH3	
+		}
+		if ((usSR & 0x10) != 0)
+		{ // CH4 Input Capture flag w overflow flag
+			IC_ov(&enr_wrk[1], TIM3_CCR4,TIM5_CNT);// CH4
+		}		
 	}
-
-
+	else
+	{ // Here no overflow flag
+		if ((usSR & 0x08) != 0)
+		{ // CH3 Input Capture flag only
+			IC_only(&enr_wrk[0], TIM3_CCR3,TIM2_CNT);// CH3	
+		}
+		if ((usSR & 0x10) != 0)
+		{ // CH4 Input Capture flag 
+			IC_only(&enr_wrk[1], TIM3_CCR4,TIM5_CNT);// CH4
+		}
+	}	
+	
 	/* OC timing TIM3_CH1 */
 	if ((usSR & 0x02) != 0)
 	{ // Here OC flag is on

@@ -33,6 +33,7 @@ struct ENCODERCOMPUTE
 	int32_t dn;	// Diff = last-prev
 	float r;	// Rate = dn/dt
 	uint16_t flag;	// Patriotism
+float ft; // Debug
 };
 
 /* **************************************************************************************/

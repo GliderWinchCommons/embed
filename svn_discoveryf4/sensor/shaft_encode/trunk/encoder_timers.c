@@ -224,7 +224,6 @@ int encoder_timers_init(uint32_t canid)
 
 	/* Set and enable interrupt controller for TIM3 interrupt (timing) */
 
-// ##### NOTE: INTERRUPT PRIORITY OF CAN AND RX1 MUST BE THE SAME #####################
 #define TIM3_PRIORITY NVIC_CAN_RX1_IRQ_PRIORITY //   Set TIM3 priority same as CAN RX1 (time msg)
 //#define TIM3_PRIORITY 0x30	// Timer priority
 
@@ -247,22 +246,32 @@ int encoder_timers_init(uint32_t canid)
  * @brief : compute rate and buffer stuff
  * @param : p = pointer to encoder data struct
 *******************************************************************************/
+#include "lltoflt.h"
 void encoder_speed(struct ENCODERCOMPUTE *p)
 {
+	
+
 	/* Change in time and count since last 1/64th sec. */
 	p->dt = (p->enr.t.ull - p->enr_prev.t.ull); // Time difference (long long)
 	p->dn = p->enr.n - p->enr_prev.n;	// Number of counts
 
+	/* Convert long long time difference to float */
 	float ft;
+//#define OLDCUMBERSOMEWAY
+#ifndef OLDCUMBERSOMEWAY
+
+	ft = lltoflt(p->dt);
+#else
 	int i; // Count divisions by 2
 
 	/* A time difference count greater than an 'int' needs scaling */
-	if ((p->dt > 2147483647) || (p->dt < 2147483648))
-	{ // Here, either + or - bigger than 32b int
+	if (p->dt > 2147483647)
+	{ // Here, (always + is bigger than an int)
 		i = 0;
 		while (p->dt > 2147483647)
 		{ // Scale until it fits in an int
-			p->dt /= 2;
+			p->dt = p->dt/2;
+			i += 1;
 		}
 		ft = p->dt;
 		ft *= (1<<i); // Fix float for scale factor
@@ -271,6 +280,8 @@ void encoder_speed(struct ENCODERCOMPUTE *p)
 	{ // Here, value is within the range of an 'int'
 		ft = (int)p->dt;
 	}
+#endif
+
 
 	/* Idle encoder has no IC flags so 't' doesn't update. */
 	if (p->dt != 0) // Avoid divide by zero giving NAN
@@ -281,6 +292,7 @@ void encoder_speed(struct ENCODERCOMPUTE *p)
 	{
 		p->r = 0.0;
 	}
+p->ft = ft;
 	return;
 }
 /******************************************************************************

@@ -320,6 +320,26 @@ xprintf (UXPRT, "atanl test: %10.6f",xxx);
 f2 = DTWTIME;
 xprintf (UXPRT, "  dur0 (tick): %d  dur1 (usec): %d\n\r",(f1-f0),(f2-f1)/168);
 
+/* Test double to float using inline asm */
+extern float lltoflt(long long x);
+extern void encoder_speed(struct ENCODERCOMPUTE *p);
+long long llw = 5000000000000000;
+struct ENCODERCOMPUTE enc_w;
+enc_w.enr_prev.t.ll = 0;
+enc_w.enr_prev.n = 0;
+enc_w.enr.t.ll = llw;
+enc_w.enr.n = 0;
+
+xprintf(UXPRT,"xxx %016llX\n\r",llw);
+
+encoder_speed(&enc_w);
+double dtmp3 = enc_w.ft;
+xprintf(UXPRT,"@@@ %15.8e\n\r",dtmp3);
+
+double dtmp2 = lltoflt(llw);
+xprintf(UXPRT,"### %15.8e\n\r", dtmp2 );
+
+
 /* --------------------- Timer setup ----------------------------------------------------------------- */
 	encoder_timers_init(0x00200000);
 
@@ -408,6 +428,8 @@ uint32_t encode_oc_ticks_prev = 3;  // Check TIM3 1/64sec ticking
 struct ENCODERCOMPUTE enc_main[2];	// Encoder count and time
 float enc_cal[2] = {1.0, (84E6/720)};		// Calibration for test & debug
 double dtmp;
+
+
 /* --------------------- Endless Polling Loop ----------------------------------------------- */
 	while (1==1)
 	{

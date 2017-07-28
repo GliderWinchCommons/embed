@@ -450,13 +450,16 @@ double dtmp;
 			if ((encode_oc_ticks & 0x1f) == 0)
 			{ // Here, end of one second 
 				xprintf(UXPRT,"\n\rTIM3_OC: %5d ",(int)encode_oc_ticks>>6);
-				for (i = 0; i < 2; i++)
+				for (i = 0; i < 2; i++) // Do both encoders
 				{
-					encoder_get_all(&enc_main[i],i); // Readings and rate computation
-					dtmp = (enc_main[i].r * enc_cal[i]);
+					encoder_get_all(&enc_main[i],i);     // Readings and rate computation
+					dtmp = (enc_main[i].r * enc_cal[i]); // Apply temporary test calibration
 					xprintf(UXPRT," %8d %10d %10lld %11.5f",enc_main[i].enr.n,enc_main[i].dn,enc_main[i].dt,dtmp );
-					enc_main[i].enr_prev = enc_main[i].enr;
+//					enc_main[i].enr_prev = enc_main[i].enr; // Update '_prev' for next time
 				}
+extern unsigned int debugirq1;
+extern unsigned int debugirq2;
+xprintf(UXPRT," %d %d",debugirq1,debugirq2);
 
 				LED_TOGGLE(GRN); // Green LED (Encoder #2 uses)
 			}

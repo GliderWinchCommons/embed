@@ -158,6 +158,13 @@ static const struct PINCONFIG	inputpup3 = { \
 	GPIO_PUPD_NONE, 	// pull up/down: none
 	GPIO_AF2 };		// AFRLy & AFRHy selection
 
+static const struct PINCONFIG	inputpup33 = { \
+	GPIO_MODE_AF,	// mode: Input alternate function 
+	0, 			// output type: not applicable 		
+	0, 			// speed: not applicable
+	GPIO_PUPD_PULLDOWN, 	// pull up/down: none ####### temporary
+	GPIO_AF2 };		// AFRLy & AFRHy selection
+
 /* **************************************************************************************
  * int encoder_timers_init(uint32_t canid);
  * @brief	: Initialize TIM2,5,3 for shaft encoder
@@ -181,13 +188,13 @@ int encoder_timers_init(uint32_t canid)
 	RCC_APB1ENR |= 0x0B;	
 
 	/*  Setup pins: alternate function pullup input: CH1, CH2 for TIM5, TIM2, and TIM3 IC3 IC4 */
-	// TIM2 CH1 wired to TIM3 CH3 PA15->PC8 (Encoder 1: GRN)
-	// TIM5 CH1 wired to TIM3 CH4 PA0 ->PC9 (Encoder 2: GRN)
+	// TIM2 CH1 wired to TIM3 CH3 PA15->PC8 (Encoder 1 wire: GRN) (PB3: YEL)
+	// TIM5 CH1 wired to TIM3 CH4 PA0 ->PC9 (Encoder 2 wire: GRN) (PB3: YEL)
 	f4gpiopins_Config ((volatile u32*)GPIOA,15, (struct PINCONFIG*)&inputpup1); // TIM2 CH1	 
 	f4gpiopins_Config ((volatile u32*)GPIOB, 3, (struct PINCONFIG*)&inputpup1); // TIM2 CH2
 	f4gpiopins_Config ((volatile u32*)GPIOA, 0, (struct PINCONFIG*)&inputpup2); // TIM5 CH1
 	f4gpiopins_Config ((volatile u32*)GPIOA, 1, (struct PINCONFIG*)&inputpup2); // TIM5 CH2
-	f4gpiopins_Config ((volatile u32*)GPIOC, 8, (struct PINCONFIG*)&inputpup3); // TIM3 CH3
+	f4gpiopins_Config ((volatile u32*)GPIOC, 8, (struct PINCONFIG*)&inputpup33); // TIM3 CH3
 	f4gpiopins_Config ((volatile u32*)GPIOC, 9, (struct PINCONFIG*)&inputpup3); // TIM3 CH4
 
 	/* Reload register for encoders (default) */
@@ -232,7 +239,7 @@ int encoder_timers_init(uint32_t canid)
 	
 	/* Enable TIM3 interrupts */
 #define INTERRUPTFLAGS	0X1B
-	TIM3_DIER |= INTERRUPTFLAGS;	// Enable TIM3 flags
+	TIM3_DIER = INTERRUPTFLAGS;	// Enable TIM3 flags
 
 	/* Control register 1 */
 	TIM2_CR1 |= TIM_CR1_CEN; 	// Counter enable: counter starts counting.
@@ -256,32 +263,7 @@ void encoder_speed(struct ENCODERCOMPUTE *p)
 	p->dn = p->enr.n - p->enr_prev.n;	// Number of counts
 
 	/* Convert long long time difference to float */
-	float ft;
-//#define OLDCUMBERSOMEWAY
-#ifndef OLDCUMBERSOMEWAY
-
-	ft = lltoflt(p->dt);
-#else
-	int i; // Count divisions by 2
-
-	/* A time difference count greater than an 'int' needs scaling */
-	if (p->dt > 2147483647)
-	{ // Here, (always + is bigger than an int)
-		i = 0;
-		while (p->dt > 2147483647)
-		{ // Scale until it fits in an int
-			p->dt = p->dt/2;
-			i += 1;
-		}
-		ft = p->dt;
-		ft *= (1<<i); // Fix float for scale factor
-	}
-	else
-	{ // Here, value is within the range of an 'int'
-		ft = (int)p->dt;
-	}
-#endif
-
+	float ft = lltoflt(p->dt);
 
 	/* Idle encoder has no IC flags so 't' doesn't update. */
 	if (p->dt != 0) // Avoid divide by zero giving NAN
@@ -326,13 +308,7 @@ void encoder_get_all(struct ENCODERCOMPUTE *p, uint16_t unit)
 	struct ENCODERREADING enr_tmp;
 
 	encoder_get_reading(&enr_tmp,unit);// Get latest reading
-
-	/* Skip updating 'prev if there are no counts */
-	if (p->enr.n != enr_tmp.n)
-	{ // Here, there was one or more encoder counts since last time
-		p->enr_prev = p->enr;		// Update previous reading				
-	}
-	
+	p->enr_prev = p->enr;	// Update previous
 	p->enr = enr_tmp;	// Copy new reading
 	encoder_speed(p);	// Compute speed (rate)
 	return;
@@ -401,9 +377,12 @@ static void IC_ov(volatile struct ENCODERREADING *p,  uint32_t ccr, uint32_t enc
 	return;
 }
 /* ===================================================================================== */
+unsigned int debugirq1;
+unsigned int debugirq2;
+
 void TIM3_IRQHandler(void)
 {
-	uint32_t temp = DTWTIME;	// Save DTW 32b sys counter (if time sync of OC implemented)
+	volatile uint32_t temp = DTWTIME;// Save DTW 32b sys counter (if time sync of OC implemented)
 	uint16_t usSR = TIM3_SR;	// Get current flags
 	
 	if ((usSR & 0x1) != 0)
@@ -413,6 +392,7 @@ void TIM3_IRQHandler(void)
 		
 		if ((usSR & 0x08) != 0)
 		{ // CH3 Input Capture flag w overflow flag
+debugirq1+= 1;
 			IC_ov(&enr_wrk[0], TIM3_CCR3,TIM2_CNT);// CH3	
 		}
 		if ((usSR & 0x10) != 0)
@@ -423,7 +403,9 @@ void TIM3_IRQHandler(void)
 	else
 	{ // Here no overflow flag
 		if ((usSR & 0x08) != 0)
-		{ // CH3 Input Capture flag only
+		{ // CH3 Input Capture flag
+debugirq2+= 1;
+
 			IC_only(&enr_wrk[0], TIM3_CCR3,TIM2_CNT);// CH3	
 		}
 		if ((usSR & 0x10) != 0)

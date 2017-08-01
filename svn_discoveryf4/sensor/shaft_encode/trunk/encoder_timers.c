@@ -94,7 +94,7 @@ uint32_t encode_oc_ticks;	// 1/64sec tick flag
  * @brief	: LED follows Encoder phase signal
  * @param	: lednum = LED number (e.g. GRN, ORG, RED, BLU)
  * ************************************************************************************** */
-static char ledpin[4] = {15,3,0,1};
+static char ledpin[4] = {15,0,3,1}; // GRN, ORG, RED, BLU
 static void led(uint32_t lednum)
 {
 	/* Get encoder pin number associated with led color */
@@ -103,8 +103,8 @@ static void led(uint32_t lednum)
 
 	/* Get port for encoder pin */
 	u32 p = GPIOA;	// All but ORG corresponds to GPIOA pins
-	if (lednum == 1)
-	{ // ORG led corresponds to a PB pin (PB3)
+	if (lednum == 14)
+	{ // RED led corresponds to a PB pin (PB3)
 		p = GPIOB;
 	}
 
@@ -123,10 +123,11 @@ static void led(uint32_t lednum)
  * void encoder_leds(void);
  * @brief	: All four LEDs follow the two Encoder phase signals
  * ************************************************************************************** */
+/*  Call this from 'main' so it doesn't burden the interrupt and measurement code */
 void encoder_leds(void)
 {
-//	led(GRN);
-//	led(ORG);
+	led(GRN);
+	led(ORG);
 	led(RED);
 	led(BLU);
 	return;
@@ -162,7 +163,7 @@ static const struct PINCONFIG	inputpup33 = { \
 	GPIO_MODE_AF,	// mode: Input alternate function 
 	0, 			// output type: not applicable 		
 	0, 			// speed: not applicable
-	GPIO_PUPD_PULLDOWN, 	// pull up/down: none ####### temporary
+	GPIO_PUPD_NONE, 	// pull up/down: none
 	GPIO_AF2 };		// AFRLy & AFRHy selection
 
 /* **************************************************************************************
@@ -202,8 +203,9 @@ int encoder_timers_init(uint32_t canid)
 //	TIM5_ARR = ~0L;
 
 	/* Encoder interface mode. */
-	TIM2_SMCR |= (0x1 << 0);	// Mode 1: Counter counts up/down on TI2FP1 edge
-	TIM5_SMCR |= (0x1 << 0);	// Mode 1: Counter counts up/down on TI2FP1 edge
+        // 001: Encoder mode 1 - Counter counts up/down on TI2FP1 edge depending on TI1FP2 level
+	TIM2_SMCR |= (0x1 << 0); 
+	TIM5_SMCR |= (0x1 << 0);
 
 	/* TIM2 encoder mode: map pins */
 	// CC2 channel is configured as input, IC2 is mapped on TI2
@@ -223,8 +225,10 @@ int encoder_timers_init(uint32_t canid)
 	// CC3 channel is configured as input, IC3 is mapped on TI3
 	TIM3_CCMR2 = (0X01<<8) | (0X01<<0);
 
-	/* Enable capture on TIM3 CH4, CH3. both input edges */
-	TIM3_CCER = (0X0B<<12) | (0X0B<<8);
+	/* Enable capture on TIM3 CH4, CH3. */
+//	TIM3_CCER = (0X0B<<12) | (0X0B<<8); // Both edges
+	TIM3_CCER = (0X03<<12) | (0X03<<8); // Falling edge
+//	TIM3_CCER = (0X01<<12) | (0X01<<8); // Rising edge
 
 	/* CH1 CH2 output capture, frozen state */
 	TIM3_CCR1 = 0;
@@ -334,6 +338,9 @@ void can_msg_check(void* pctl, struct CAN_POOLBLOCK* pblk)
 /* ######################################################################################
    TIM3 Interrupt routines
    ###################################################################################### */
+struct ENCODERREADING enr_test[ENCTESTBUFFSIZE];
+unsigned int enr_test_ct;
+
 /* ===================================================================================== */
 /* static void IC_only(struct ENCODERREADING *p, uint32_t ccr,  uint32_t enccr)
  * @brief  : Input capture flag only for CH3 or CH4
@@ -368,8 +375,7 @@ static void IC_ov(volatile struct ENCODERREADING *p,  uint32_t ccr, uint32_t enc
 	p->t.ui[1] = ovcnt.ui[1];	// Extended time of upper 32 bits of unsigned long long
 
 	// Adjust input capture: Determine which flag came first.  If overflow came first increment the overflow count
-// Clever compiler; the following compiles the same as if (p->t.s[0] < 0)  lsls r1, r1, #16
-	if (p->t.s[0] > 32767)		// Is the capture time in the upper half of the range?
+	if (p->t.us[0] > 32767)		// Is the capture time in the upper half of the range?
 	{ // Here, yes.  The IC flag must have preceded the overflow flag, so we 
 		p->t.ull-= 0x10000;	// decrement the already incremented high order 48 bits 0f the *input capture time*
 	}
@@ -392,25 +398,36 @@ void TIM3_IRQHandler(void)
 		
 		if ((usSR & 0x08) != 0)
 		{ // CH3 Input Capture flag w overflow flag
-debugirq1+= 1;
 			IC_ov(&enr_wrk[0], TIM3_CCR3,TIM2_CNT);// CH3	
 		}
 		if ((usSR & 0x10) != 0)
 		{ // CH4 Input Capture flag w overflow flag
+debugirq1+= 1;
 			IC_ov(&enr_wrk[1], TIM3_CCR4,TIM5_CNT);// CH4
+if(enr_test_ct < ENCTESTBUFFSIZE)
+{
+   encoder_get_reading(&enr_test[enr_test_ct], 1);
+   enr_test_ct += 1;
+}
 		}		
 	}
 	else
 	{ // Here no overflow flag
 		if ((usSR & 0x08) != 0)
 		{ // CH3 Input Capture flag
-debugirq2+= 1;
 
 			IC_only(&enr_wrk[0], TIM3_CCR3,TIM2_CNT);// CH3	
 		}
 		if ((usSR & 0x10) != 0)
 		{ // CH4 Input Capture flag 
+debugirq2+= 1;
 			IC_only(&enr_wrk[1], TIM3_CCR4,TIM5_CNT);// CH4
+if(enr_test_ct < ENCTESTBUFFSIZE)
+{
+   encoder_get_reading(&enr_test[enr_test_ct], 1);
+   enr_test_ct += 1;
+}
+
 		}
 	}	
 	
@@ -421,6 +438,7 @@ debugirq2+= 1;
 		TIM3_CCR1 += INTERVAL_TICKS;	// Compute next OC time call goes here
 
 // #### NOTE: Currently no syncing of OC to CAN time msgs ####
+
 		/* End of 1/64th sec tick */
 		interval_ct += 1;
 		if (interval_ct >= INTERVAL_CT) // End of 1/64th sec tick?
@@ -428,6 +446,16 @@ debugirq2+= 1;
 			interval_ct = 0;	// Reset interval counter
 			dtw_oc = temp;		// Save: might be used for time sync'ing
 			encode_oc_ticks += 1;	// Signal somebody that something happened
+
+#ifdef ARRAYSTOREUPONOCTICKS
+
+if(enr_test_ct < ENCTESTBUFFSIZE)
+{
+   encoder_get_reading(&enr_test[enr_test_ct], 1);
+   enr_test_ct += 1;
+}
+#endif
+
 		}
 	}
 	return;

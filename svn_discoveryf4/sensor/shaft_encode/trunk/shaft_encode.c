@@ -426,9 +426,16 @@ t_hb = DTWTIME + hb_inc;
 uint32_t encode_oc_ticks_prev = 3;  // Check TIM3 1/64sec ticking
 
 struct ENCODERCOMPUTE enc_main[2];	// Encoder count and time
-float enc_cal[2] = {1.0, (84E6/720)};		// Calibration for test & debug
-double dtmp;
 
+/* Calibration for test & debug */
+//float enc_cal[2] = {(84E6/720), (84E6/720)};	   // Rev per sec
+float enc_cal[2] = {84E6/(720/60), (84E6/(720/60))}; // Rev per min
+
+/* Distance per pulse based on 7 inch dia pulley. */
+#define FEETPERPULSE	2.54527182E-03
+#define METERSPERPULSE	7.75798852E-04
+
+double dtmp;
 
 /* --------------------- Endless Polling Loop ----------------------------------------------- */
 	while (1==1)
@@ -442,7 +449,7 @@ double dtmp;
 */
 		/* Have LEDs follow encoder phase signals */
 		encoder_leds();
-
+//#ifdef NOTBUFFERSAVETEST
 		/* Check that the TIM3 OC is timing correctly (yes, and it didn't!) */
 		if (encode_oc_ticks != encode_oc_ticks_prev)
 		{ // Here, 1/64th sec tick incremented the flag
@@ -454,17 +461,45 @@ double dtmp;
 				{
 					encoder_get_all(&enc_main[i],i);     // Readings and rate computation
 					dtmp = (enc_main[i].r * enc_cal[i]); // Apply temporary test calibration
-					xprintf(UXPRT," %8d %10d %10lld %11.5f",enc_main[i].enr.n,enc_main[i].dn,enc_main[i].dt,dtmp );
+					xprintf(UXPRT," %8d %10d %10lld %12.4f",enc_main[i].enr.n,enc_main[i].dn,enc_main[i].dt,dtmp);
 //					enc_main[i].enr_prev = enc_main[i].enr; // Update '_prev' for next time
 				}
-extern unsigned int debugirq1;
-extern unsigned int debugirq2;
-xprintf(UXPRT," %d %d",debugirq1,debugirq2);
 
-				LED_TOGGLE(GRN); // Green LED (Encoder #2 uses)
+extern unsigned int debugirq1; // Count of IC flag with overflow
+extern unsigned int debugirq2; // Count of IC flag only
+
+xprintf(UXPRT," %3d %8d",debugirq1,debugirq2);
+
+// Line out converted to meters
+double dtmp3 = (lltoflt(enc_main[1].enr.n))*METERSPERPULSE;
+xprintf(UXPRT," %10.2f",dtmp3 );
+//xprintf(UXPRT," #%4d",encoder_get_reading_loop_cnt);
+
+//$				LED_TOGGLE(GRN); // Green LED (Encoder #2 uses)
 			}
 		}
+//#else
+//#define ASDFLKAOEJCVEQRG
+#ifdef  ASDFLKAOEJCVEQRG
+static struct ENCODERCOMPUTE enc_test;
 
+	if (enr_test_ct >= ENCTESTBUFFSIZE-1)
+	{ // Here, buffer full
+		xprintf(UXPRT,"BUFFFULL\n\r");	
+		for (i = 0; i < ENCTESTBUFFSIZE; i++)
+		{
+			enc_test.enr_prev = enc_test.enr;
+			enc_test.enr = enr_test[i]; 
+			encoder_speed(&enc_test);
+			dtmp = (enc_test.r * enc_cal[1]); // Apply temporary test calibration
+			xprintf(UXPRT," %8d %10d %12lld %12.4f %d\n\r",enc_test.enr.n,enc_test.dn,enc_test.dt,dtmp, encoder_get_reading_loop_cnt);
+		}
+
+
+     	        enr_test_ct = 0; // Reset for next run
+	}
+
+#endif
 		/* Send heart-beat periodically. */
 		if (((int)(DTWTIME - t_hb)) > 0) // Has the time expired?
 		{ // Here, yes.

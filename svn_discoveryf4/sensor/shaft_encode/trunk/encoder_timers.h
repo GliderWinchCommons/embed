@@ -36,7 +36,7 @@ struct ENCODERCOMPUTE
 float ft; // Debug
 };
 
-/* **************************************************************************************/
+/* ************************************************************************************** */
  int encoder_timers_init(uint32_t canid);
 /* @brief	: Initialize TIM2,5,3 for shaft encoder
  * @param	: canid = CAN id for time sync msgs
@@ -47,15 +47,24 @@ void encoder_get_all(struct ENCODERCOMPUTE *p, uint16_t unit);
  * @param	: p = pointer to encoder data struct to be updated/computed
  * @param	: unit = 0 TIM2 encoder; 1 = TIIM5 encoder
  * @return	: re-populated struct
-*******************************************************************************/
+***************************************************************************************** */
 void encoder_leds(void);
 /* @brief	: All four LEDs follow the two Encoder phase signals
  * ************************************************************************************** */
+void encoder_speed(struct ENCODERCOMPUTE *p);
+/* @brief : compute rate and buffer stuff
+ * @param : p = pointer to encoder data struct
+***************************************************************************************** */
 
 extern uint32_t encode_oc_ticks;	// 1/64sec tick flag
 
 /* Count rare occurences of 'encoder_get_reading' loop hit by interrupt */
 extern unsigned long encoder_get_reading_loop_cnt;
+
+/* Testing */
+#define ENCTESTBUFFSIZE 1600
+extern struct ENCODERREADING enr_test[ENCTESTBUFFSIZE];
+extern unsigned int enr_test_ct;
 
 
 

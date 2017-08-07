@@ -16,6 +16,7 @@ SRCS += CAN_test_msgs.c
 SRCS += CAN_error_msgs.c
 SRCS += Default_Handler.c
 SRCS += encoder_timers.c
+SRCS += recursive_variance_flt.c
 
 ###################################################
 

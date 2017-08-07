@@ -2,6 +2,10 @@
 # 1 "<built-in>"
 # 1 "<command-line>"
 # 1 "startup_stm32f4xx.S"
+# 1 "startup_stm32f4xx.S"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "startup_stm32f4xx.S"
 # 33 "startup_stm32f4xx.S"
   .syntax unified
   .cpu cortex-m3
@@ -260,8 +264,8 @@ g_pfnVectors:
    .weak TIM2_IRQHandler
    .thumb_set TIM2_IRQHandler,Default_Handler37
 
-#   .weak TIM3_IRQHandler
-#   .thumb_set TIM3_IRQHandler,Default_Handler38
+# .weak TIM3_IRQHandler
+# .thumb_set TIM3_IRQHandler,Default_Handler38
 
    .weak TIM4_IRQHandler
    .thumb_set TIM4_IRQHandler,Default_Handler39

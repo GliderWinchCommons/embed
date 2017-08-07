@@ -32,7 +32,7 @@ struct ENCODERCOMPUTE
 	uint64_t dt;	// Diff = last-prev
 	int32_t dn;	// Diff = last-prev
 	float r;	// Rate = dn/dt
-	uint16_t flag;	// Patriotism
+//	uint16_t flag;	// Patriotism
 float ft; // Debug
 };
 
@@ -61,11 +61,25 @@ extern uint32_t encode_oc_ticks;	// 1/64sec tick flag
 /* Count rare occurences of 'encoder_get_reading' loop hit by interrupt */
 extern unsigned long encoder_get_reading_loop_cnt;
 
-/* Testing */
+/* Test: store readings each IC  */
+//#define IC_TO_IC_TIME_W_BIG_BUFFER  // Uncomment this statement to enable
+#ifdef IC_TO_IC_TIME_W_BIG_BUFFER
 #define ENCTESTBUFFSIZE 1600
 extern struct ENCODERREADING enr_test[ENCTESTBUFFSIZE];
 extern unsigned int enr_test_ct;
+#endif
 
+/* Test: store readings for 2nd encoder (unit=1) each OC timed 1/64th sec */
+#define CIRCULARBUFF_64PERSEC_OC_TIMED_READINGS  // Uncomment this statement to enable
+
+#ifdef CIRCULARBUFF_64PERSEC_OC_TIMED_READINGS
+#define ENCTESTVARBUFFSIZE 64
+/******************************************************************************/
+struct ENCODERREADING* encoder_getOC64(void);
+/* @brief	: Get 1/64 second "n" and "t" if available
+ * @return	: pointer: null = no new data; pointer to struct with new data
+*******************************************************************************/
+#endif
 
 
 #endif 

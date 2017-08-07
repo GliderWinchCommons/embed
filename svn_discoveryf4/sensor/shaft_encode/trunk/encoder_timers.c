@@ -338,8 +338,24 @@ void can_msg_check(void* pctl, struct CAN_POOLBLOCK* pblk)
 /* ######################################################################################
    TIM3 Interrupt routines
    ###################################################################################### */
+
+/* TEST: Save each IC reading in a big buffer: encoder segment-to-segment variation. */
+#ifdef IC_TO_IC_TIME_W_BIG_BUFFER
 struct ENCODERREADING enr_test[ENCTESTBUFFSIZE];
 unsigned int enr_test_ct;
+struct ENCODERREADING enr_testB[ENCTESTBUFFSIZE];
+unsigned int enr_test_ctB;
+#endif
+
+
+/* TEST: save readings each OC timed 1/64th to look at speed variance */
+#ifdef CIRCULARBUFF_64PERSEC_OC_TIMED_READINGS
+struct ENCODERREADING enr_test64[ENCTESTVARBUFFSIZE];
+struct ENCODERREADING *penr_test64_put = &enr_test64[0];
+struct ENCODERREADING *penr_test64_get = &enr_test64[0];
+struct ENCODERREADING *penr_test64_begin = &enr_test64[0];
+struct ENCODERREADING *penr_test64_end = &enr_test64[ENCTESTVARBUFFSIZE];
+#endif
 
 /* ===================================================================================== */
 /* static void IC_only(struct ENCODERREADING *p, uint32_t ccr,  uint32_t enccr)
@@ -398,17 +414,29 @@ void TIM3_IRQHandler(void)
 		
 		if ((usSR & 0x08) != 0)
 		{ // CH3 Input Capture flag w overflow flag
-			IC_ov(&enr_wrk[0], TIM3_CCR3,TIM2_CNT);// CH3	
+			IC_ov(&enr_wrk[0], TIM3_CCR3,TIM2_CNT);// CH3
+	
+#ifdef IC_TO_IC_TIME_W_BIG_BUFFER // define in .h file so 'main' sees it too
+if(enr_test_ctB < ENCTESTBUFFSIZE)
+{
+   encoder_get_reading(&enr_testB[enr_test_ctB], 0);
+   enr_test_ctB += 1;
+}
+#endif
 		}
 		if ((usSR & 0x10) != 0)
 		{ // CH4 Input Capture flag w overflow flag
 debugirq1+= 1;
+
 			IC_ov(&enr_wrk[1], TIM3_CCR4,TIM5_CNT);// CH4
+
+#ifdef IC_TO_IC_TIME_W_BIG_BUFFER
 if(enr_test_ct < ENCTESTBUFFSIZE)
 {
    encoder_get_reading(&enr_test[enr_test_ct], 1);
    enr_test_ct += 1;
 }
+#endif
 		}		
 	}
 	else
@@ -417,16 +445,28 @@ if(enr_test_ct < ENCTESTBUFFSIZE)
 		{ // CH3 Input Capture flag
 
 			IC_only(&enr_wrk[0], TIM3_CCR3,TIM2_CNT);// CH3	
+
+#ifdef IC_TO_IC_TIME_W_BIG_BUFFER
+if(enr_test_ctB < ENCTESTBUFFSIZE)
+{
+   encoder_get_reading(&enr_testB[enr_test_ctB], 0);
+   enr_test_ctB += 1;
+}
+#endif
+
 		}
 		if ((usSR & 0x10) != 0)
 		{ // CH4 Input Capture flag 
 debugirq2+= 1;
 			IC_only(&enr_wrk[1], TIM3_CCR4,TIM5_CNT);// CH4
+
+#ifdef IC_TO_IC_TIME_W_BIG_BUFFER
 if(enr_test_ct < ENCTESTBUFFSIZE)
 {
    encoder_get_reading(&enr_test[enr_test_ct], 1);
    enr_test_ct += 1;
 }
+#endif
 
 		}
 	}	
@@ -436,28 +476,43 @@ if(enr_test_ct < ENCTESTBUFFSIZE)
 	{ // Here OC flag is on
 		TIM3_SR = ~0x02;	// Reset flag
 		TIM3_CCR1 += INTERVAL_TICKS;	// Compute next OC time call goes here
+//TIM3_CCR1 += 56534; // Close to synchronous to test motor speed
 
-// #### NOTE: Currently no syncing of OC to CAN time msgs ####
+// #### NOTE: Currently no syncing of OC to CAN time msgs #####ifdef CIRCULARBUFF_64PERSEC_OC_TIMED_READINGS
 
 		/* End of 1/64th sec tick */
 		interval_ct += 1;
 		if (interval_ct >= INTERVAL_CT) // End of 1/64th sec tick?
+//if (interval_ct >= 25) // Close to synchronous to test motor speed
 		{ // Here, end of 1/64th interval
 			interval_ct = 0;	// Reset interval counter
 			dtw_oc = temp;		// Save: might be used for time sync'ing
 			encode_oc_ticks += 1;	// Signal somebody that something happened
 
-#ifdef ARRAYSTOREUPONOCTICKS
-
-if(enr_test_ct < ENCTESTBUFFSIZE)
-{
-   encoder_get_reading(&enr_test[enr_test_ct], 1);
-   enr_test_ct += 1;
-}
+#ifdef CIRCULARBUFF_64PERSEC_OC_TIMED_READINGS // define in .h file so 'main' sees it too
+encoder_get_reading(penr_test64_put, 1); // Get and store reading for UNIT 1 only
+penr_test64_put += 1;	// Advance pointer in circular buffer
+if (penr_test64_put >= penr_test64_end) penr_test64_put = penr_test64_begin;
 #endif
 
 		}
 	}
 	return;
 }
+/******************************************************************************
+ * struct ENCODERREADING* encoder_getOC64(void);
+ * @brief	: Get 1/64 second "n" and "t" if available
+ * @return	: pointer: null = no new data; pointer to struct with new data
+*******************************************************************************/
+#ifdef CIRCULARBUFF_64PERSEC_OC_TIMED_READINGS // define in .h file so 'main' sees it too
+struct ENCODERREADING* encoder_getOC64(void)
+{
+	struct ENCODERREADING* p;
+	if (penr_test64_get == penr_test64_put) return 0;
+	p = penr_test64_get;
+	penr_test64_get += 1;
+	if (penr_test64_get >= penr_test64_end) penr_test64_get = penr_test64_begin;
+	return p;
+}
+#endif
 

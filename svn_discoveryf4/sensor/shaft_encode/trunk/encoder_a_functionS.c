@@ -63,7 +63,7 @@ static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct TE
 	can.cd.uc[3] = (*pv >> 16);
 	can.cd.uc[4] = (*pv >> 24);
 	can_hub_send(&can, p->phub_encoder);// Send CAN msg to 'can_hub'
-	p->hbct_ticks = (p->ten_a.hbct * tim3_ten2_rate) / 1000; // Convert ms to timer ticks
+	p->hbct_ticks = (p->enc_a.hbct * tim3_ten2_rate) / 1000; // Convert ms to timer ticks
 	p->hb_t = tim3_ten2_ticks + p->hbct_ticks;	 // Reset heart-beat time duration each time msg sent
 	return;
 }
@@ -123,22 +123,15 @@ static int encoder_a_functionS_init(int n, struct ENCODERAFUNCTION* p )
 	p->pparamflash = (uint32_t*)pparamflash[n];
 
 	/* Copy table entries to struct in sram from high flash. */
-	ret = encoder_idx_v_struct_copy(&p->ten_a, p->pparamflash);
-
-	/* Set pointers to struct holding the constants for iir filters. */
-	for (i = 0; i < NIIR; i++)
-	{
-		p->iir_filtered[i].pprm = &p->ten_a.iir[i]; // iir filter pointer to filter constants
-		p->iir_filtered[i].sw = 0; // Init switch causes iir routine to init upon first call
-	}
+	ret = encoder_idx_v_struct_copy(&p->enc_a, p->pparamflash);
 
 	/* Setup mask for checking if this function responds to a poll msg. */
 	// Combine so the polling doesn't have to do two tests
-	p->poll_mask = (p->ten_a.p_pollbit << 8) || (p->ten_a.f_pollbit & 0xff);
+	p->poll_mask = (p->enc_a.p_pollbit << 8) || (p->enc_a.f_pollbit & 0xff);
 
 	/* First heartbeat time */
 	// Convert heartbeat time (ms) to timer ticks (recompute for online update)
-	p->hbct_ticks = (p->ten_a.hbct * tim3_ten2_rate) / 1000;
+	p->hbct_ticks = (p->enc_a.hbct * tim3_ten2_rate) / 1000;
 	p->hb_t = tim3_ten2_ticks + p->hbct_ticks;	
 
 	/* Add this function (encoder_a) to the "hub-server" msg distribution. */
@@ -146,7 +139,7 @@ static int encoder_a_functionS_init(int n, struct ENCODERAFUNCTION* p )
 	if (p->phub_encoder == NULL) return -997;	// Failed
 
 	/* Add CAN IDs to incoming msgs passed by the CAN hardware filter. */ 
-	ret2 = can_driver_filter_add_param_tbl(&p->ten_a.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);
+	ret2 = can_driver_filter_add_param_tbl(&p->enc_a.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);
 	if (ret2 != 0) return -996;	// Failed
 	
 	/* Find command CAN id for this function in table. (__paramflash0a supplied by .ld file) */
@@ -196,59 +189,13 @@ static float encoder_a_scalereading(struct TENSIONFUNCTION* p)
 
 	lltmp = cic[0][0].llout_save;
 	ntmp1 = lltmp/(1<<22);
-	ntmp1 += p->ten_a.ad.offset * 4;
+	ntmp1 += p->enc_a.ad.offset * 4;
 	scaled1 = ntmp1;
-	scaled1 *= p->ten_a.ad.scale;
+	scaled1 *= p->enc_a.ad.scale;
 	return scaled1;
 }
 #endif
-/* **************************************************************************************
- * double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n); 
- * @brief	: Convert integer IIR filtered value to offset & scaled double
- * @param	: p = pointer to struct with "everything" for this AD7799
- * @return	: offset & scaled
- * ************************************************************************************** */
-double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n)
-{
-	double d;
-	double s;
-	double dcal;
 
-	/* Scale filter Z^-1 accumulator. */
-	int32_t tmp = p->iir_filtered[n].z / p->iir_filtered[n].pprm->scale;
-	
-	/* Apply offset. */
-	tmp += p->ten_a.ad.offset;
-	
-	/* Convert to double and scale. */
-	d = tmp; 		// Convert scaled, filtered int to double
-	s = p->ten_a.ad.scale; 	// Convert float to double
-	dcal = d * s;		// Calibrated reading
-	p->dcalib_lgr = dcal;	// Save calibrated last good reading
-	p->fcalib_lgr = p->dcalib_lgr; // Save float version for CAN bus
-
-	/* Set up status byte for reading. */
-	p->status_byte = STATUS_TENSION_BIT_NONEW; // Show no new readings
-	
-	/* New readings flag. */
-	if (p->readingsct != p->readingsct_lastpoll)
-	{ // Here, there was a new reading since last poll
-		p->status_byte = 0;	// Turn (all) flags off
-	}
-
-	/* Check reading against limits. */
-	if (dcal > p->ten_a.limit_hi)
-	{
-		p->status_byte |= STATUS_TENSION_BIT_EXCEEDHI;
-		return dcal;
-	}
-	if (dcal < p->ten_a.limit_lo)
-	{
-		p->status_byte |= STATUS_TENSION_BIT_EXCEEDLO;
-		return dcal;
-	}
-	return dcal;		// Return scaled value
-}
 /* ######################################################################################
  * int encoder_a_functionS_poll(struct CANRCVBUF* pcan, struct ENCODERAFUNCTION* p);
  * @brief	: Handle incoming CAN msgs ### under interrupt ###
@@ -271,7 +218,7 @@ int encoder_a_functionS_poll(struct CANRCVBUF* pcan, struct ENCODERAFUNCTION* p)
 	}ui; ui.ui = 0; // (initialize to get rid of ui.ft warning)
 
 	/* Check if this instance is used. */
-	if ((p->ten_a.useme & 1) != 1) return 0;
+	if ((p->enc_a.useme & 1) != 1) return 0;
 
 	/* Check for need to send  heart-beat. */
 	 if ( ( (int)tim3_ten2_ticks - (int)p->hb_t) > 0  )	// Time to send heart-beat?
@@ -281,7 +228,7 @@ int encoder_a_functionS_poll(struct CANRCVBUF* pcan, struct ENCODERAFUNCTION* p)
 		
 		/* Send heartbeat and compute next hearbeat time count. */
 		//      Args:  CAN id, status of reading, reading pointer instance pointer
-		send_can_msg(p->ten_a.cid_heartbeat, p->status_byte, &ui.ui, p); 
+		send_can_msg(p->enc_a.cid_heartbeat, p->status_byte, &ui.ui, p); 
 		ret = 1;
 	}
 
@@ -289,16 +236,16 @@ int encoder_a_functionS_poll(struct CANRCVBUF* pcan, struct ENCODERAFUNCTION* p)
 	if (pcan == NULL) return ret;
 
 	/* Check for group poll, and send msg if it is for us. */
-//$	if (pcan->id == p->ten_a.cid_ten_poll) // Correct ID?
-//if (pcan->id == p->ten_a.cid_gps_sync) // ##### TEST #########
+//$	if (pcan->id == p->enc_a.cid_ten_poll) // Correct ID?
+//if (pcan->id == p->enc_a.cid_gps_sync) // ##### TEST #########
 if (pcan->id == 0x00400000) // ##### TEST #########
 	{ // Here, group poll msg.  Check if poll and function bits are for us
-//$		if ( ((pcan->cd.uc[0] & p->ten_a.p_pollbit) != 0) && \
-		     ((pcan->cd.uc[1] & p->ten_a.f_pollbit) != 0) )
+//$		if ( ((pcan->cd.uc[0] & p->enc_a.p_pollbit) != 0) && \
+		     ((pcan->cd.uc[1] & p->enc_a.f_pollbit) != 0) )
 		{ // Here, yes.  Send our precious msg.
 			/* Send encoder msg and re-compute next hearbeat time count. */
 			//      Args:  CAN id, status of reading, reading pointer instance pointer
-			send_can_msg(p->ten_a.cid_ten_msg, p->status_byte, &ui.ui, p); 
+			send_can_msg(p->enc_a.cid_ten_msg, p->status_byte, &ui.ui, p); 
 			return 1;
 		}
 	}

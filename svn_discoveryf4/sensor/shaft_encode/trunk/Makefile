@@ -17,6 +17,7 @@ SRCS += CAN_error_msgs.c
 SRCS += Default_Handler.c
 SRCS += encoder_timers.c
 SRCS += recursive_variance_flt.c
+SRCS += CAN_poll_loop.c
 
 ###################################################
 

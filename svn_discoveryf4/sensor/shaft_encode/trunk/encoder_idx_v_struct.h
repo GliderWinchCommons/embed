@@ -45,21 +45,22 @@ INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','SHEAVE_H_CANID_HW_FILT8'    ,'CANID_
 // Naming convention--"cid" - CAN ID
  struct ENCODERALC
  {
-	uint32_t size;			// Number of items in struct
- 	uint32_t crc;			// crc-32 placed by loader
-	uint32_t version;		// struct version number
-	uint32_t hbct;			// Heartbeat ct: ticks between sending msgs
-	uint32_t ctperrev;		// Encoder count per revolution
-	float	distperrev;		// Distance per revolution
-	uint32_t cid_heartbeat;		// CANID-Heartbeat msg
-	uint32_t cid_poll_msg;		// CANID-Fully calibrated encoder msg
-	uint32_t cid_poll_r;		// CANID-Response to poll (??)
+	uint32_t size;			// 0 Number of items in struct
+ 	uint32_t crc;			// 1 crc-32 placed by loader
+	uint32_t version;		// 2 struct version number
+	uint32_t hbct;			// 3 Heartbeat ct: time (ms) between msgs
+	uint32_t ctperrev;		// 4 Number of counts per revolution
+	float	distperrev;		// 5 Distance per revolution (meters)
+	uint32_t cid_heartbeat;		// 6 CANID-Heartbeat raw (int64_t) running encoder count
+	uint32_t cid_poll_msg;		// 7 CANID-Fully calibrated encoder msg
+	uint32_t cid_poll;		// 8 CANID-Response to poll (??)
+	uint32_t cid_poll_r;		// 9 CANID-Response to poll (??)
 	// CAN ID's for setting up hw filter
-	uint32_t cid_hb_timesync;	// CANID-GPS time sync msg polls encoders
-	uint32_t cid_msg_time_poll;	//
-	uint32_t cid_tst_enc_a;		// 
-	uint32_t cid_cmd_hi;		// CANID-Command incoming/interrogation
-	uint32_t code_CAN_filt[4];	// Remaining unassigned in list (CANID_DUMMY)
+	uint32_t cid_hb_timesync;	//10 CANID-GPS time sync msg polls encoders
+	uint32_t cid_msg_time_poll;	//11
+	uint32_t cid_tst_enc_a;		//12 
+	uint32_t cid_cmd_hi;		//13 CANID-Command incoming/interrogation
+	uint32_t code_CAN_filt[4];	//14 Remaining unassigned in list (CANID_DUMMY)
  };
  
 /* **************************************************************************************/

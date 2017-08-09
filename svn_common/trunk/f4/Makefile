@@ -85,6 +85,7 @@ OBJS	+= can_msg_reset.o
 OBJS	+= register_clear.o
 OBJS	+= queue_dbl.o
 OBJS	+= running_average.o
+OBJS	+= can_hub.o
 
 # Be silent per default, but 'make V=1' will show all compiler calls.
 ifneq ($(V),1)

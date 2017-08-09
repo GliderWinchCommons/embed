@@ -47,7 +47,7 @@ TODO
 #include "USB_PC_gateway.h"
 #include "libopencm3/stm32/systick.h"
 //#include "CAN_test_msgs.h"
-//#include "CAN_error_msgs.h"
+#include "CAN_error_msgs.h"
 #include "canwinch_setup_F4_discovery.h"
 #include "can_msg_reset.h"
 #include "DTW_counter.h"
@@ -55,6 +55,7 @@ TODO
 #include "encoder_timers.h"
 #include "running_average.h"
 #include "ledf4.h"
+#include "lltoflt.h"
 
 
 #ifndef NULL 
@@ -289,46 +290,9 @@ xprintf (UXPRT,"\n\r");
 xprintf (UXPRT,"Flash size: %dK\n\r",(*(unsigned int*)0x1FFF7A22)&0xffff);
 
 
-/* Testing of floating pt. */
-volatile int idelay = 90000;
-while (idelay-- > 0);
-
-volatile float a = .14159265;
-volatile float x;
-volatile unsigned int f0 = DTWTIME;
-x = a * 12.7 + 10.1;
-volatile unsigned int f1 = DTWTIME;
-xprintf (UXPRT, "fp test: %10.6f",(double)x);
-volatile unsigned int f2 = DTWTIME;
-xprintf (UXPRT, "  dur0 (tick): %d  dur1 (usec): %d\n\r",(f1-f0),(f2-f1)/168);
-
-idelay = 90000;
-while (idelay-- > 0);
-
-f0 = DTWTIME;
-x = atanf(a);
-f1 = DTWTIME;
-xprintf (UXPRT, "atanf test: %10.6f",(double)x);
-f2 = DTWTIME;
-xprintf (UXPRT, "  dur0 (tick): %d  dur1 (usec): %d\n\r",(f1-f0),(f2-f1)/168);
-
-f0 = DTWTIME;
-volatile double aa = .1415926535897932;
-double xx = atan(aa);
-f1 = DTWTIME;
-xprintf (UXPRT, "atan  test: %10.6f",xx);
-f2 = DTWTIME;
-xprintf (UXPRT, "  dur0 (tick): %d  dur1 (usec): %d\n\r",(f1-f0),(f2-f1)/168);
-
-f0 = DTWTIME;
-volatile long double aaa = .1415926535897932;
-long double xxx = atanl(aaa);
-f1 = DTWTIME;
-xprintf (UXPRT, "atanl test: %10.6f",xxx);
-f2 = DTWTIME;
-xprintf (UXPRT, "  dur0 (tick): %d  dur1 (usec): %d\n\r",(f1-f0),(f2-f1)/168);
 
 /* Test double to float using inline asm */
+#ifdef TEST_LLTOFLT_W_INLINE_ASM
 extern float lltoflt(long long x);
 extern void encoder_speed(struct ENCODERCOMPUTE *p);
 long long llw = 5000000000000000;
@@ -346,10 +310,10 @@ xprintf(UXPRT,"@@@ %15.8e\n\r",dtmp3);
 
 double dtmp2 = lltoflt(llw);
 xprintf(UXPRT,"### %15.8e\n\r", dtmp2 );
+#endif
 
-
-/* --------------------- Timer setup ----------------------------------------------------------------- */
-	encoder_timers_init(0x00200000);
+/* --------------------- Timer and Encoder setup ----------------------------------------------------------------- */
+	encoder_timers_init(0x00200000); // Pass reset CAN id to routine
 
 /* --------------------- CAN setup ------------------------------------------------------------------- */
 	/*  Pin usage for CAN1 on DiscoveryF4--
@@ -375,7 +339,7 @@ xprintf(UXPRT,"### %15.8e\n\r", dtmp2 );
 	can_driver_enable_interrupts();	// Enable CAN interrupts
 	xprintf(UXPRT,"CAN interrupts enabled\n\r");
 /* --------------------- Initialize the time for the test msg generation ------------------------------ */
-	CAN_test_msg_init();
+//	CAN_test_msg_init();
 
 /* --------------------- Monitoring incoming CAN ids  ------------------------------------------------- */
 
@@ -393,7 +357,7 @@ xprintf(UXPRT,"### %15.8e\n\r", dtmp2 );
 	pctogateway.mode_link = MODE_LINK;
 	pctogateway1.mode_link = MODE_LINK;
 #ifdef ENCODERAFUNCTIONSETUPSTUFF
-/* ---------------- Encoder A function ---------------------------------------------------------------- */
+/* ---------------- Encoder functions ---------------------------------------------------------------- */
 	ret = encoder_a_functionS_init_all();
 	if (ret <= 0)
 	{
@@ -581,6 +545,8 @@ else
 //printmsg(pc1r0, 0);
 			can_driver_toss0(pctl1); // Release buffer block, fifo0 linked list
 		}
+	/* Done with a pass of this endless loop: trigger CAN poll */
+		CAN_poll_loop_trigger();
 
 	}
 	return 0;	

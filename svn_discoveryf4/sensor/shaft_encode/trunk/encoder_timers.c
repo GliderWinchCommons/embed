@@ -16,7 +16,7 @@ Encoder #2 --
 
 TIM3 --
  CH1 - Output capture: 1/64th sec synchronized ticks
- CH2 
+ CH2 - Output capture: 1/2 ms polling ticks
  CH3 - Input capture #1A
  CH4 - Input capture #2A
 
@@ -72,6 +72,8 @@ static uint32_t interval_ct;	// Counter of intervals
 /* (dtw_can - dtw_can_prev) not in the following limits is considered bogus */
 #define INTERVAL_DTW_HI (DTW_64TH + DTW_64TH/(INTERVAL_CT+1))
 #define INTERVAL_DTW_LO (DTW_64TH - DTW_64TH/(INTERVAL_CT+1))
+
+#define OCTICKSFOR1MS	42000	// OC counter ticks for 1/2 ms polling
 
 void can_msg_check(void* pctl, struct CAN_POOLBLOCK* pblk);
 
@@ -242,7 +244,8 @@ int encoder_timers_init(uint32_t canid)
 	NVICISER(NVIC_TIM3_IRQ);			// Enable interrupt controller for TIM3
 	
 	/* Enable TIM3 interrupts */
-#define INTERRUPTFLAGS	0X1B
+//#define INTERRUPTFLAGS	0X1B	// Flags for CH4,3,1,and OV
+#define INTERRUPTFLAGS	0X1F	// Flags for CH4,3,2,1,and OV
 	TIM3_DIER = INTERRUPTFLAGS;	// Enable TIM3 flags
 
 	/* Control register 1 */
@@ -405,7 +408,15 @@ unsigned int debugirq2;
 void TIM3_IRQHandler(void)
 {
 	volatile uint32_t temp = DTWTIME;// Save DTW 32b sys counter (if time sync of OC implemented)
-	uint16_t usSR = TIM3_SR;	// Get current flags
+	uint16_t usSR = TIM3_SR;	// Get flags at this instant in time
+
+	/* OC timing TIM3_CH2 (1/2 ms CAN msg polling trigger) */
+	if ((usSR & 0x04) != 0)
+	{ // Here OC flag is on
+		TIM3_SR = ~0x04;	// Reset flag
+		TIM3_CCR2 += OCTICKSFOR1MS;	// Next OC for 1/2 ms
+		NVICISPR(NVIC_I2C1_ER_IRQ);	// Set pending (lower priority) interrupt
+	}
 	
 	if ((usSR & 0x1) != 0)
 	{ // Here, overflow flag
@@ -418,7 +429,7 @@ void TIM3_IRQHandler(void)
 	
 #ifdef IC_TO_IC_TIME_W_BIG_BUFFER // define in .h file so 'main' sees it too
 if(enr_test_ctB < ENCTESTBUFFSIZE)
-{
+{ // Here, available space remains
    encoder_get_reading(&enr_testB[enr_test_ctB], 0);
    enr_test_ctB += 1;
 }
@@ -478,7 +489,7 @@ if(enr_test_ct < ENCTESTBUFFSIZE)
 		TIM3_CCR1 += INTERVAL_TICKS;	// Compute next OC time call goes here
 //TIM3_CCR1 += 56534; // Close to synchronous to test motor speed
 
-// #### NOTE: Currently no syncing of OC to CAN time msgs #####ifdef CIRCULARBUFF_64PERSEC_OC_TIMED_READINGS
+// #### NOTE: Currently no syncing of OC to CAN time msgs #####
 
 		/* End of 1/64th sec tick */
 		interval_ct += 1;
@@ -497,6 +508,7 @@ if (penr_test64_put >= penr_test64_end) penr_test64_put = penr_test64_begin;
 
 		}
 	}
+
 	return;
 }
 /******************************************************************************

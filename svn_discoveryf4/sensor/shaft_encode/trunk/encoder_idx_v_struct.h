@@ -11,7 +11,6 @@ These structs serve all 'Encoder_a" function types
 
 #include <stdint.h>
 #include "common_can.h"
-#include "iir_filter_l.h"
 
 #ifndef __ENCODER_IDX_V_STRUCT
 #define __ENCODER_IDX_V_STRUCT

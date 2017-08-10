@@ -56,6 +56,7 @@ TODO
 #include "running_average.h"
 #include "ledf4.h"
 #include "lltoflt.h"
+#include "CAN_poll_loop.h"
 
 
 #ifndef NULL 
@@ -356,6 +357,8 @@ xprintf(UXPRT,"### %15.8e\n\r", dtmp2 );
 	/* Set modes for routines that receive and send CAN msgs */
 	pctogateway.mode_link = MODE_LINK;
 	pctogateway1.mode_link = MODE_LINK;
+
+//#define ENCODERAFUNCTIONSETUPSTUFF
 #ifdef ENCODERAFUNCTIONSETUPSTUFF
 /* ---------------- Encoder functions ---------------------------------------------------------------- */
 	ret = encoder_a_functionS_init_all();

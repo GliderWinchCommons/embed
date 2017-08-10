@@ -95,70 +95,15 @@ p->cid_poll 	   	= ptbl[ENCODER_POLL];		// CANID-Response to poll (??)
 p->cid_poll_r   	= ptbl[ENCODER_POLL_R];		// CANID-Response to poll (??)
 	// CAN ID's for setting up hw filter
 p->cid_hb_timesync   	= ptbl[SHEAVE_H_CANID_HW_FILT1];// CANID-GPS time sync msg polls encoders
-p->cid_msg_time_pol   	= ptbl[SHEAVE_H_CANID_HW_FILT2];//
+p->cid_msg_time_poll   	= ptbl[SHEAVE_H_CANID_HW_FILT2];//
 p->cid_tst_enc_a   	= ptbl[SHEAVE_H_CANID_HW_FILT3];// 
 p->cid_cmd_hi   	= ptbl[SHEAVE_H_CANID_HW_FILT4];// CANID-Command incoming/interrogation
-p->hw_CAN_filt[0]   	= ptbl[SHEAVE_H_CANID_HW_FILT5];// Remaining unassigned in list (CANID_DUMMY)
-p->hw_CAN_filt[1]   	= ptbl[SHEAVE_H_CANID_HW_FILT6];// Remaining unassigned in list (CANID_DUMMY)
-p->hw_CAN_filt[2]   	= ptbl[SHEAVE_H_CANID_HW_FILT7];// Remaining unassigned in list (CANID_DUMMY)
-p->hw_CAN_filt[3]   	= ptbl[SHEAVE_H_CANID_HW_FILT8];// Remaining unassigned in list (CANID_DUMMY)
+p->code_CAN_filt[0]   	= ptbl[SHEAVE_H_CANID_HW_FILT5];// Remaining unassigned in list (CANID_DUMMY)
+p->code_CAN_filt[1]   	= ptbl[SHEAVE_H_CANID_HW_FILT6];// Remaining unassigned in list (CANID_DUMMY)
+p->code_CAN_filt[2]   	= ptbl[SHEAVE_H_CANID_HW_FILT7];// Remaining unassigned in list (CANID_DUMMY)
+p->code_CAN_filt[3]   	= ptbl[SHEAVE_H_CANID_HW_FILT8];// Remaining unassigned in list (CANID_DUMMY)
 
-
-
-
-
-
-p->ad.offset       = (int)ptbl[TENSION_a_AD7799_1_OFFSET];	  /*  3 Tension: AD7799 offset */
-u.ui = ptbl[TENSION_a_AD7799_1_SCALE]; 		p->ad.scale        = u.f;/*  4 Tension: AD7799 #1 Scale (convert to kgf) */
-u.ui = ptbl[TENSION_a_THERM1_CONST_B]; 		p->ad.tp[0].B      = u.f;/*  5 Tension: Thermistor1 param: constant B */
-u.ui = ptbl[TENSION_a_THERM1_R_SERIES];		p->ad.tp[0].RS     = u.f;/*  6 Tension: Thermistor1 param: Series resistor, fixed (K ohms) */
-u.ui = ptbl[TENSION_a_THERM1_R_ROOMTMP];	p->ad.tp[0].R0     = u.f;/*  7 Tension: Thermistor1 param: Thermistor room temp resistance (K ohms) */
-u.ui = ptbl[TENSION_a_THERM1_REF_TEMP]; 	p->ad.tp[0].TREF   = u.f;/*  8 Tension: Thermistor1 param: Reference temp for thermistor */
-u.ui = ptbl[TENSION_a_THERM1_TEMP_OFFSET]; 	p->ad.tp[0].offset = u.f;/*  9 Tension: Thermistor1 param: Thermistor temp offset correction (deg C) */
-u.ui = ptbl[TENSION_a_THERM1_TEMP_SCALE];	p->ad.tp[0].scale  = u.f;/* 10 Tension: Thermistor1 param: Thermistor temp scale correction */
-u.ui = ptbl[TENSION_a_THERM2_CONST_B]; 		p->ad.tp[1].B      = u.f;/* 11 Tension: Thermistor2 param: constant B */
-u.ui = ptbl[TENSION_a_THERM2_R_SERIES]; 	p->ad.tp[1].RS     = u.f;/* 12 Tension: Thermistor2 param: Series resistor, fixed (K ohms) */
-u.ui = ptbl[TENSION_a_THERM2_R_ROOMTMP]; 	p->ad.tp[1].R0     = u.f;/* 13 Tension: Thermistor2 param: Thermistor room temp resistance (K ohms) */
-u.ui = ptbl[TENSION_a_THERM2_REF_TEMP];		p->ad.tp[1].TREF   = u.f;/* 14 Tension: Thermistor2 param: Thermistor temp offset correction (deg C) */
-u.ui = ptbl[TENSION_a_THERM2_TEMP_OFFSET]; 	p->ad.tp[1].offset = u.f;/* 15 Tension: Thermistor2 param: Thermistor temp scale correction (deg C) */
-u.ui = ptbl[TENSION_a_THERM2_TEMP_SCALE]; 	p->ad.tp[1].scale  = u.f; /* 16 Tension: Thermistor2 param: Thermistor temp scale correction */
-u.ui = ptbl[TENSION_a_THERM1_COEF_0]; 	p->ad.comp_t1[0] = u.f;   /* 17 Tension: Thermistor1 param: Load-Cell polynomial coefficient 0 (offset) */
-u.ui = ptbl[TENSION_a_THERM1_COEF_1];	p->ad.comp_t1[1] = u.f;	 /* 18 Tension: Thermistor1 param: Load-Cell polynomial coefficient 1 (scale) */
-u.ui = ptbl[TENSION_a_THERM1_COEF_2];	p->ad.comp_t1[2] = u.f;  /* 19 Tension: Thermistor1 param: Load-Cell polynomial coefficient 2 (x^2) */
-u.ui = ptbl[TENSION_a_THERM1_COEF_3];	p->ad.comp_t1[3] = u.f;  /* 20 Tension: Thermistor1 param: Load-Cell polynomial coefficient 3 (x^3) */
-u.ui = ptbl[TENSION_a_THERM2_COEF_0];	p->ad.comp_t2[0] = u.f;	 /* 21 Tension: Thermistor2 param: Load-Cell polynomial coefficient 0 (offset) */
-u.ui = ptbl[TENSION_a_THERM2_COEF_1];	p->ad.comp_t2[1] = u.f;	 /* 22 Tension: Thermistor2 param: Load-Cell polynomial coefficient 1 (scale) */
-u.ui = ptbl[TENSION_a_THERM2_COEF_2];	p->ad.comp_t2[2] = u.f;	 /* 23 Tension: Thermistor2 param: Load-Cell polynomial coefficient 2 (x^2) */
-u.ui = ptbl[TENSION_a_THERM2_COEF_3];	p->ad.comp_t2[3] = u.f;	 /* 24 Tension: Thermistor2 param: Load-Cell polynomial coefficient 3 (x^3) */
-p->hbct            = ptbl[TENSION_a_HEARTBEAT_CT]; 		 /* 25 Tension: hbct: Heart-Beat Count of time ticks between autonomous msgs */
-p->drum            = ptbl[TENSION_a_DRUM_NUMBER]; 		 /* 26 Tension: drum: Drum system number for this function instance */
-p->f_pollbit       = ptbl[TENSION_a_DRUM_FUNCTION_BIT]; 	 /* 27 Tension: bit: f_pollbit: Drum system poll 1st byte bit for function instance */
-p->p_pollbit       = ptbl[TENSION_a_DRUM_POLL_BIT]; 		 /* 28 Tension: bit: p_pollbit: Drum system poll 2nd byte bit for this type of function */
-p->cid_ten_msg     = ptbl[TENSION_a_CANPRM_TENSION]; 		 /* 29 Tension: CANID: cid_ten_msg:  canid msg Tension */
-p->cid_ten_poll    = ptbl[TENSION_a_MSG_TIME_POLL]; 		 /* 30 Tension: CANID: cid_ten_msg:  canid MC: Time msg/Group polling */
-p->cid_gps_sync    = ptbl[TENSION_a_TIMESYNC]; 			 /* 31 Tension: CANID: cid_gps_sync: canid time: GPS time sync distribution */
-p->cid_heartbeat   = ptbl[TENSION_a_HEARTBEAT]; 		 /* 32 Tension: CANID: Heartbeat msg */
-p->cid_tst_ten_a   = ptbl[TENSION_a_CANIDTEST]; 		 /* 33 Tension: CANID: Test */
-p->iir[0].k        = ptbl[TENSION_a_IIR_POLL_K]; 		 /* 34 Tension: Divisor for IIR filter: polled msg */
-p->iir[0].scale    = ptbl[TENSION_a_IIR_POLL_SCALE]; 		 /* 35 Tension: Scale for IIR filter: polled msg */
-p->iir[1].k        = ptbl[TENSION_a_IIR_HB_K]; 			 /* 36 Tension: Divisor for IIR filter: heart-beat */
-p->iir[1].scale    = ptbl[TENSION_a_IIR_HB_SCALE]; 	 	 /* 37 Tension: Scale for IIR filter: heart-beat */
-p->useme           = ptbl[TENSION_a_USEME]; 			 /* 38 Tension: Bits for using this instance */
-p->iir_z_recal.k    = ptbl[TENSION_a_IIR_Z_RECAL_K]; 		 /* 39 Tension: IIR Filter factor: divisor sets time constant: zero recalibration */
-p->iir_z_recal.scale= ptbl[TENSION_a_IIR_Z_RECAL_SCALE]; 	 /* 40 Tension: IIR Filter scale : upscaling (due to integer math): zero recalibration */
-p->z_recal_ct      = ptbl[TENSION_a_Z_RECAL_CT];		 /* 41 Tension: ADC conversion counts between zero recalibrations */
-u.ui = ptbl[TENSION_a_LIMIT_HI];	p->limit_hi = u.f;	 /* 42 Tension: Exceeding this limit (+) means invalid reading */
-u.ui = ptbl[TENSION_a_LIMIT_LO];	p->limit_lo = u.f;	 /* 43 Tension: Exceeding this limit (-) means invalid reading */
-p->code_CAN_filt[0] = ptbl[TENSION_a_CANID_HW_FILT1];		 /* 44 Tension: CAN ID 1 for setting up CAN hardware filter */
-p->code_CAN_filt[1] = ptbl[TENSION_a_CANID_HW_FILT2];		 /* 45 Tension: CAN ID 2 for setting up CAN hardware filter */
-p->code_CAN_filt[2] = ptbl[TENSION_a_CANID_HW_FILT3];		 /* 46 Tension: CAN ID 3 for setting up CAN hardware filter */
-p->code_CAN_filt[3] = ptbl[TENSION_a_CANID_HW_FILT4];		 /* 47 Tension: CAN ID 4 for setting up CAN hardware filter */
-p->code_CAN_filt[4] = ptbl[TENSION_a_CANID_HW_FILT5];		 /* 48 Tension: CAN ID 5 for setting up CAN hardware filter */
-p->code_CAN_filt[5] = ptbl[TENSION_a_CANID_HW_FILT6];		 /* 49 Tension: CAN ID 6 for setting up CAN hardware filter */
-p->code_CAN_filt[6] = ptbl[TENSION_a_CANID_HW_FILT7];		 /* 50 Tension: CAN ID 7 for setting up CAN hardware filter */
-p->code_CAN_filt[7] = ptbl[TENSION_a_CANID_HW_FILT8];		 /* 51 Tension: CAN ID 8 for setting up CAN hardware filter */
-
-return PARAM_LIST_CT_ENCODER_a;
+return PARAM_LIST_CT_SHEAVE_H;
 }
 
 

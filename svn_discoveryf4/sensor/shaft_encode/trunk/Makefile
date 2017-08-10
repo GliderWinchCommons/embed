@@ -18,6 +18,8 @@ SRCS += Default_Handler.c
 SRCS += encoder_timers.c
 SRCS += recursive_variance_flt.c
 SRCS += CAN_poll_loop.c
+SRCS += encoder_a_printf.c
+SRCS += encoder_idx_v_struct.c
 
 ###################################################
 
@@ -85,6 +87,7 @@ CFLAGS += -I$(LIBCOMMONALL)
 CFLAGS += -I$(LIBF4D)/lib/libdiscoveryf4
 CFLAGS += -I$(LIBF4D)/lib/libmiscstm32f4 
 CFLAGS += -I$(LIBF4D)/lib/libusartstm32f4
+CFLAGS += -I$(LIBF4D)/lib/libopencm3/stm32/
 CFLAGS += -I$(LIBF4D)/lib
 CFLAGS += -I$(LIBSVNCOMMON)
 

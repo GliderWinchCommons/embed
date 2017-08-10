@@ -159,10 +159,10 @@ INSERT INTO CANID VALUES ('CANID_SE2H_ADC2_HistA',	'D0800044', 'SHAFT_LOWERSHV',
 INSERT INTO CANID VALUES ('CANID_SE2H_ADC2_HistB',	'D0800054', 'SHAFT_LOWERSHV', 	'UNDEF','Shaft encoder: Lower sheave:SE2: ADC2 HistogramB tx: bin number, rx: send bin count');
 INSERT INTO CANID VALUES ('CANID_SE2H_ADC3_ADC2_RD',	'D0800064', 'SHAFT_LOWERSHV', 	'UNDEF','Shaft encoder: Lower sheave:SE2: ADC3 ADC2 readings readout');
 INSERT INTO CANID VALUES ('CANID_SE2H_ADC3_HistA',	'D0800024', 'SHAFT_LOWERSHV', 	'UNDEF','Shaft encoder: Lower sheave:SE2: ADC3 HistogramA tx: request count, switch buffers. rx: send count');
-INSERT INTO CANID VALUES ('CANID_SE2H_ADC3_HistB',	'D0800034', 'SHAFT_LOWERSHV', 	'UNDEF','Shaft encoder: Lower sheave:E2: ADC3 HistogramB tx: bin number, rx: send bin count');
+INSERT INTO CANID VALUES ('CANID_SE2H_ADC3_HistB',	'D0800034', 'SHAFT_LOWERSHV', 	'UNDEF','Shaft encoder: Lower sheave:SE2: ADC3 HistogramB tx: bin number, rx: send bin count');
 INSERT INTO CANID VALUES ('CANID_SE2H_COUNTERnSPEED',	'30800000', 'SHAFT_LOWERSHV', 	'UNDEF','Shaft encoder: Lower sheave:SE2: (Lower sheave) Count and speed');
-INSERT INTO CANID VALUES ('CANID_SE2H_ERROR1',		'D0800014', 'SHAFT_LOWERSHV', 	'UNDEF','Shaft encoder: Lower sheave:SE2: error1');
-INSERT INTO CANID VALUES ('CANID_SE2H_ERROR2',		'D0800074', 'SHAFT_LOWERSHV', 	'UNDEF','Shaft encoder: Lower sheave:SE2: error2');
+INSERT INTO CANID VALUES ('CANID_SE2H_ERR_1',		'D0800014', 'SHAFT_LOWERSHV', 	'UNDEF','Shaft encoder: Lower sheave:SE2: error1');
+INSERT INTO CANID VALUES ('CANID_SE2H_ERR_2',		'D0800074', 'SHAFT_LOWERSHV', 	'UNDEF','Shaft encoder: Lower sheave:SE2: error2');
 INSERT INTO CANID VALUES ('CANID_CMD_LOWERSHVI',	'D0800000', 'SHAFT_LOWERSHV', 	'UNDEF','Shaft encoder: Lower sheave:SE2: I Command CAN: send commands to subsystem');
 INSERT INTO CANID VALUES ('CANID_CMD_LOWERSHVR',	'D0800004', 'SHAFT_LOWERSHV', 	'UNDEF','Shaft encoder: Lower sheave:SE2: R Command CAN: send commands to subsystem');
 
@@ -172,8 +172,8 @@ INSERT INTO CANID VALUES ('CANID_SE3H_ADC3_ADC2_RD',	'D0A00064', 'SHAFT_UPPERSHV
 INSERT INTO CANID VALUES ('CANID_SE3H_ADC3_HistA',	'D0A00024', 'SHAFT_UPPERSHV', 	'UNDEF','Shaft encoder: Upper sheave:SE3: ADC3 HistogramA tx: request count, switch buffers. rx: send count');
 INSERT INTO CANID VALUES ('CANID_SE3H_ADC3_HistB',	'D0A00034', 'SHAFT_UPPERSHV', 	'UNDEF','Shaft encoder: Upper sheave:SE3: ADC3 HistogramB tx: bin number, rx: send bin count');
 INSERT INTO CANID VALUES ('CANID_SE3H_COUNTERnSPEED',	'30A00000', 'SHAFT_UPPERSHV', 	'UNDEF','Shaft encoder: Upper sheave:SE3: (upper sheave) Count and Speed');
-INSERT INTO CANID VALUES ('CANID_SE3H_ERROR1',		'D0A00014', 'SHAFT_UPPERSHV', 	'UNDEF','Shaft encoder: Upper sheave:SE3: error1');
-INSERT INTO CANID VALUES ('CANID_SE3H_ERROR2',		'D0A00004', 'SHAFT_UPPERSHV', 	'UNDEF','Shaft encoder: Upper sheave:SE3: error2');
+INSERT INTO CANID VALUES ('CANID_SE3H_ERR_1',		'D0A00014', 'SHAFT_UPPERSHV', 	'UNDEF','Shaft encoder: Upper sheave:SE3: error1');
+INSERT INTO CANID VALUES ('CANID_SE3H_ERR_2',		'D0A00004', 'SHAFT_UPPERSHV', 	'UNDEF','Shaft encoder: Upper sheave:SE3: error2');
 INSERT INTO CANID VALUES ('CANID_CMD_UPPERSHVI',	'D0600000', 'SHAFT_UPPERSHV', 	'UNDEF','Shaft encoder: Upper sheave:SE3: I Command CAN: send commands to subsystem');
 INSERT INTO CANID VALUES ('CANID_CMD_UPPERSHVR',	'D0600004', 'SHAFT_UPPERSHV', 	'UNDEF','Shaft encoder: Upper sheave:SE3: R Command CAN: send commands to subsystem');
 
@@ -185,25 +185,25 @@ INSERT INTO CANID VALUES ('CANID_SE4H_ADC3_HistB',	'D0400034', 'DRIVE_SHAFT', 	'
 INSERT INTO CANID VALUES ('CANID_CMD_DRIVE_SHAFTI',	'D0C00000', 'DRIVE_SHAFT', 	'UNDEF','Drive shaft: I Command CAN: send commands to subsystem');
 INSERT INTO CANID VALUES ('CANID_CMD_DRIVE_SHAFTR',	'D0C00004', 'DRIVE_SHAFT', 	'UNDEF','Drive shaft: R Command CAN: send commands to subsystem');
 INSERT INTO CANID VALUES ('CANID_SE4H_COUNTERnSPEED',	'30400000', 'DRIVE_SHAFT', 	'UNDEF','Drive shaft: (drive shaft) count and speed');
-INSERT INTO CANID VALUES ('CANID_SE4H_ERROR1',		'D0400014', 'DRIVE_SHAFT',	'UNDEF','Drive shaft: [2]elapsed_ticks_no_adcticks<2000 ct  [3]cic not in sync');
-INSERT INTO CANID VALUES ('CANID_SE4H_ERROR2',		'D0400004', 'DRIVE_SHAFT', 	'UNDEF','Drive shaft: [0]encode_state er ct [1]adctick_diff<2000 ct');
+INSERT INTO CANID VALUES ('CANID_SE4H_ERR_1',		'D0400014', 'DRIVE_SHAFT',	'UNDEF','Drive shaft: [2]elapsed_ticks_no_adcticks<2000 ct  [3]cic not in sync');
+INSERT INTO CANID VALUES ('CANID_SE4H_ERR_2',		'D0400004', 'DRIVE_SHAFT', 	'UNDEF','Drive shaft: [0]encode_state er ct [1]adctick_diff<2000 ct');
 
 -- Discovery F4 sheave shaft_encoder.c, two high resolution rotary encoders
 INSERT INTO CANID VALUES ('CANID_CMD_UPPER1_HI',	'D0E00000', 'SHEAVE_UP_H', 	'UNDEF'  ,'F4 shaft_encoder: Upper sheave hi-res: I Command CAN: send commands to subsystem');
 INSERT INTO CANID VALUES ('CANID_CMD_UPPER1_HR',	'D0E00004', 'SHEAVE_UP_H', 	'UNDEF'  ,'F4 shaft_encoder: Upper sheave hi-res: R Command CAN: send commands to subsystem');
-INSERT INTO CANID VALUES ('CANID_MSG_UPPER1_H_RAW'	'D1000000', 'SHEAVE_UP_H', 	'U32_U32','F4 shaft_encoder: hi-res: msg--upper raw count and delta time');
-INSERT INTO CANID VALUES ('CANID_MSG_UPPER1_H_CAL'	'D1200000', 'SHEAVE_UP_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: msg--upper calibrated--distance and speed');
-INSERT INTO CANID VALUES ('CANID_HB_UPPER1_H_RAW'	'D1E00000', 'SHEAVE_UP_H', 	'U32_U32','F4 shaft_encoder: hi-res: heartbeat--upper raw count and delta time');
-INSERT INTO CANID VALUES ('CANID_HB_UPPER1_H_CAL'	'D2000000', 'SHEAVE_UP_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: heartbeat--upper calibrated--distance and speed');
-INSERT INTO CANID VALUES ('CANID_TST_SHEAVE_1UP'	'D2000004', 'SHEAVE_UP_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: testing poll');
+INSERT INTO CANID VALUES ('CANID_MSG_UPPER1_H_RAW',	'D1000000', 'SHEAVE_UP_H', 	'U32_U32','F4 shaft_encoder: hi-res: msg--upper raw count and delta time');
+INSERT INTO CANID VALUES ('CANID_MSG_UPPER1_H_CAL',	'D1200000', 'SHEAVE_UP_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: msg--upper calibrated--distance and speed');
+INSERT INTO CANID VALUES ('CANID_HB_UPPER1_H_RAW',	'D1E00000', 'SHEAVE_UP_H', 	'U32_U32','F4 shaft_encoder: hi-res: heartbeat--upper raw count and delta time');
+INSERT INTO CANID VALUES ('CANID_HB_UPPER1_H_CAL',	'D2000000', 'SHEAVE_UP_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: heartbeat--upper calibrated--distance and speed');
+INSERT INTO CANID VALUES ('CANID_TST_SHEAVE_1UP',	'D2000004', 'SHEAVE_UP_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: testing poll UP');
 
 INSERT INTO CANID VALUES ('CANID_CMD_LOWER1_HI',	'D1400000', 'SHEAVE_LO_H', 	'UNDEF'  ,'F4 shaft_encoder: Lower sheave hi-res: I Command CAN: send commands to subsystem');
 INSERT INTO CANID VALUES ('CANID_CMD_LOWER1_HR',	'D1600004', 'SHEAVE_LO_H', 	'UNDEF'  ,'F4 shaft_encoder: Lower sheave hi-res: R Command CAN: send commands to subsystem');
-INSERT INTO CANID VALUES ('CANID_MSG_LOWER1_H_RAW'	'D2400000', 'SHEAVE_LO_H', 	'U32_U32','F4 shaft_encoder: hi-res: msg--lower raw count and delta time');
-INSERT INTO CANID VALUES ('CANID_MSG_LOWER1_H_CAL'	'D1A00000', 'SHEAVE_LO_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: msg--lower calibrated--distance and speed');
-INSERT INTO CANID VALUES ('CANID_HB_LOWER1_H_RAW'	'D1800000', 'SHEAVE_LO_H', 	'U32_U32','F4 shaft_encoder: hi-res: heartbeat--lower raw count and delta time');
-INSERT INTO CANID VALUES ('CANID_HB_LOWER1_H_CAL'	'D1C00000', 'SHEAVE_LO_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: heartbeat--lower calibrated--distance and speed');
-INSERT INTO CANID VALUES ('CANID_TST_SHEAVE_1LO'	'D2200004', 'SHEAVE_UP_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: testing poll');
+INSERT INTO CANID VALUES ('CANID_MSG_LOWER1_H_RAW',	'D2400000', 'SHEAVE_LO_H', 	'U32_U32','F4 shaft_encoder: hi-res: msg--lower raw count and delta time');
+INSERT INTO CANID VALUES ('CANID_MSG_LOWER1_H_CAL',	'D1A00000', 'SHEAVE_LO_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: msg--lower calibrated--distance and speed');
+INSERT INTO CANID VALUES ('CANID_HB_LOWER1_H_RAW',	'D1800000', 'SHEAVE_LO_H', 	'U32_U32','F4 shaft_encoder: hi-res: heartbeat--lower raw count and delta time');
+INSERT INTO CANID VALUES ('CANID_HB_LOWER1_H_CAL',	'D1C00000', 'SHEAVE_LO_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: heartbeat--lower calibrated--distance and speed');
+INSERT INTO CANID VALUES ('CANID_TST_SHEAVE_1LO',	'D2200004', 'SHEAVE_UP_H', 	'FF_FF'  ,'F4 shaft_encoder: hi-res: testing poll LO');
 
 INSERT INTO CANID VALUES ('CANID_TILT_ALARM',		'04600000', 'TILT_SENSE', 	'UNDEF','Tilt: alarm: Vector angle exceeds limit');
 INSERT INTO CANID VALUES ('CANID_TILT_ANGLE',		'42E00000', 'TILT_SENSE', 	'UNDEF','Tilt: Calibrated angles (X & Y)');

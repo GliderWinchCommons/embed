@@ -22,7 +22,7 @@
 struct ENCODERAFUNCTION
 {
 	/* The following is the sram copy of the fixed (upper flash) parameters */
-	struct ENCODERLC enc_a;		// Flash table copied to sram struct
+	struct ENCODERALC enc_a;	// Flash table copied to sram struct
 	/* The following are working/computed values */
 	struct ENCODERCOMPUTE enc;	// Current readings for this encoder
 	struct CANHUB* phub_encoder;	// Pointer: CAN hub buffer
@@ -55,7 +55,7 @@ int encoder_a_functionS_poll(struct CANRCVBUF* pcan, struct ENCODERAFUNCTION* p)
 
 
 /* Holds parameters and associated computed values and readings for each instance. */
-extern struct ENCODERAFUNCTION ten_f[NUMENCODERAFUNCTIONS];
+extern struct ENCODERAFUNCTION enc_f[NUMENCODERAFUNCTIONS];
 
 #endif 
 

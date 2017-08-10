@@ -56,7 +56,7 @@ INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','ENCODER_POLL_R'	  	,'CANID_POLLR_ENC
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','SHEAVE_H_CANID_HW_FILT1'    ,'CANID_HB_TIMESYNC',	'SHEAVE_H',	'Encoder_f4_1up: 10 CANID 1 added to CAN hardware filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','SHEAVE_H_CANID_HW_FILT2'    ,'CANID_MSG_TIME_POLL',	'SHEAVE_H',	'Encoder_f4_1up: 11 CANID 2 added to CAN hardware filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','SHEAVE_H_CANID_HW_FILT3'    ,'CANID_TST_SHEAVE_1UP','SHEAVE_H',	'Encoder_f4_1up: 12 CANID 3 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','SHEAVE_H_CANID_HW_FILT4'    ,'CANID_CMD_UPPER1_HI'	'SHEAVE_H',	'Encoder_f4_1up: 13 CANID 4 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','SHEAVE_H_CANID_HW_FILT4'    ,'CANID_CMD_UPPER1_HI',	'SHEAVE_H',	'Encoder_f4_1up: 13 CANID 4 added to CAN hardware filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','SHEAVE_H_CANID_HW_FILT5'    ,'CANID_DUMMY', 	'SHEAVE_H',	'Encoder_f4_1up: 14 CANID 5 added to CAN hardware filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','SHEAVE_H_CANID_HW_FILT6'    ,'CANID_DUMMY',  	'SHEAVE_H',	'Encoder_f4_1up: 15 CANID 6 added to CAN hardware filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','SHEAVE_H_CANID_HW_FILT7'    ,'CANID_DUMMY',	  	'SHEAVE_H',	'Encoder_f4_1up: 16 CANID 7 added to CAN hardware filter to allow incoming msg');
@@ -70,7 +70,7 @@ INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','ENCODER_HEARTBEAT_CT'	,'250',			'SHE
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','ENCODER_CT_PER_REV'		,'720',			'SHEAVE_H',	'Encoder_f4_1lo: 4 Number of counts per revolution');
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','ENCODER_DIST_PER_REV'	,'0.558575174',		'SHEAVE_H',	'Encoder_f4_1lo: 5 Distance per revolution (meters)');
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','ENCODER_HEARTBEAT_MSG'	,'CANID_HB_LOWER1_H_RAW','SHEAVE_H', 	'Encoder_f4_1lo: 6 CANID: Heartbeat sends raw (long long) running encoder count');
-INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','ENCODER_POLL_MSG'		,'CANID_MSG_LOWER1_H_CAL','SHEAVE_H', 	'Encoder_f4_1up: 7 CANID: hi-res: msg--upper calibrated--distance and speed');
+INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','ENCODER_POLL_MSG'		,'CANID_MSG_LOWER1_H_CAL','SHEAVE_H', 	'Encoder_f4_1lo: 7 CANID: hi-res: msg--lower calibrated--distance and speed');
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','ENCODER_POLL'	    	,'CANID_POLL_ENCODER',	'SHEAVE_H',  	'Encoder_f4_1lo: 8 CANID: Poll with time sync msg');
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','ENCODER_POLL_R'	  	,'CANID_POLLR_ENCODER_1','SHEAVE_H',	'Encoder_f4_1lo: 9 CANID: Response to POLL');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
@@ -256,18 +256,7 @@ INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_IIR_POLL_K'        , '04'
 INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_IIR_POLL_SCALE'    , '128',	'TENSION_a',  	'Tension_a21: 35 Filter scale : upscaling (due to integer math): for polled msg');
 INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_IIR_HB_K'          , '512',	'TENSION_a',  	'Tension_a21: 36 IIR Filter factor: divisor sets time constant: reading for heart-beat msg');
 INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_IIR_HB_SCALE'      , '128',	'TENSION_a',  	'Tension_a21: 37 Filter scale : upscaling (due to integer math): for heart-beat  msg');
--- TENSION_a_IIR_USEME should be the same for all functions in the same unit.  The bit tells the program if this function instance is to be used as the program may support more
--- instances of the function than the particular hardware provides, e.g. only one AD7799.
--- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_CANID_HW_FILT1'    ,'CANID_HB_TIMESYNC',		'TENSION_a',	'Tension_a21: 44 CANID 1 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_CANID_HW_FILT2'    ,'CANID_MSG_TIME_POLL',	'TENSION_a',	'Tension_a21: 45 CANID 2 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_CANID_HW_FILT3'    ,'CANID_TST_TENSION_a21',	'TENSION_a',	'Tension_a21: 46 CANID 3 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_CANID_HW_FILT4'    ,'CANID_CMD_TENSION_a21I',  	'TENSION_a',	'Tension_a21: 47 CANID 4 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_CANID_HW_FILT5'    ,'CANID_DUMMY', 	  	'TENSION_a',	'Tension_a21: 48 CANID 5 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_CANID_HW_FILT6'    ,'CANID_DUMMY',  		'TENSION_a',	'Tension_a21: 49 CANID 6 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_CANID_HW_FILT7'    ,'CANID_DUMMY',	  	'TENSION_a',	'Tension_a21: 50 CANID 7 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_CANID_HW_FILT8'    ,'CANID_DUMMY',	  	'TENSION_a',	'Tension_a21: 51 CANID 8 added to CAN hardware filter to allow incoming msg');
--- TENSION_a_IIR_USEME should be the same for all functions in the same unit.  The bit tells the program if this function instance is to be used as the program may support more
+
 -- instances of the function than the particular hardware provides, e.g. only one AD7799.
 INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_USEME'    	 , '3',		'TENSION_a',  	'Tension_a: 38 skip or use this function switch');
 -- Internal zero recalibration.  New readings are filtered and used for current conversions.

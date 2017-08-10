@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2017-02-28 16:19:45.311
+// 2017-08-09 23:17:38.479
 
-#define CANID_COUNT 179
+#define CANID_COUNT 194
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -90,10 +90,10 @@
 #define  CANID_SE2H_ADC2_HistB    0xD0800054  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: ADC2 HistogramB tx: bin number, rx: send bin count
 #define  CANID_SE2H_ADC3_ADC2_RD  0xD0800064  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: ADC3 ADC2 readings readout
 #define  CANID_SE2H_ADC3_HistA    0xD0800024  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: ADC3 HistogramA tx: request count, switch buffers. rx: send count
-#define  CANID_SE2H_ADC3_HistB    0xD0800034  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:E2: ADC3 HistogramB tx: bin number, rx: send bin count
+#define  CANID_SE2H_ADC3_HistB    0xD0800034  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: ADC3 HistogramB tx: bin number, rx: send bin count
 #define  CANID_SE2H_COUNTERnSPEED 0x30800000  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: (Lower sheave) Count and speed
-#define  CANID_SE2H_ERROR1        0xD0800014  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: error1
-#define  CANID_SE2H_ERROR2        0xD0800074  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: error2
+#define  CANID_SE2H_ERR_1         0xD0800014  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: error1
+#define  CANID_SE2H_ERR_2         0xD0800074  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: error2
 #define  CANID_CMD_LOWERSHVI      0xD0800000  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: I Command CAN: send commands to subsystem
 #define  CANID_CMD_LOWERSHVR      0xD0800004  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: R Command CAN: send commands to subsystem
 #define  CANID_SE3H_ADC2_HistA    0xD0A00044  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: ADC2 HistogramA tx: request count, switch buffers; rx send count
@@ -102,8 +102,8 @@
 #define  CANID_SE3H_ADC3_HistA    0xD0A00024  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: ADC3 HistogramA tx: request count, switch buffers. rx: send count
 #define  CANID_SE3H_ADC3_HistB    0xD0A00034  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: ADC3 HistogramB tx: bin number, rx: send bin count
 #define  CANID_SE3H_COUNTERnSPEED 0x30A00000  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: (upper sheave) Count and Speed
-#define  CANID_SE3H_ERROR1        0xD0A00014  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: error1
-#define  CANID_SE3H_ERROR2        0xD0A00004  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: error2
+#define  CANID_SE3H_ERR_1         0xD0A00014  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: error1
+#define  CANID_SE3H_ERR_2         0xD0A00004  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: error2
 #define  CANID_CMD_UPPERSHVI      0xD0600000  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: I Command CAN: send commands to subsystem
 #define  CANID_CMD_UPPERSHVR      0xD0600004  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: R Command CAN: send commands to subsystem
 #define  CANID_SE4H_ADC2_HistA    0xD0400044  // DRIVE_SHAFT    : Drive shaft: ADC2 HistogramA tx: request count, switch buffers; rx send count
@@ -114,8 +114,22 @@
 #define  CANID_CMD_DRIVE_SHAFTI   0xD0C00000  // DRIVE_SHAFT    : Drive shaft: I Command CAN: send commands to subsystem
 #define  CANID_CMD_DRIVE_SHAFTR   0xD0C00004  // DRIVE_SHAFT    : Drive shaft: R Command CAN: send commands to subsystem
 #define  CANID_SE4H_COUNTERnSPEED 0x30400000  // DRIVE_SHAFT    : Drive shaft: (drive shaft) count and speed
-#define  CANID_SE4H_ERROR1        0xD0400014  // DRIVE_SHAFT    : Drive shaft: [2]elapsed_ticks_no_adcticks<2000 ct  [3]cic not in sync
-#define  CANID_SE4H_ERROR2        0xD0400004  // DRIVE_SHAFT    : Drive shaft: [0]encode_state er ct [1]adctick_diff<2000 ct
+#define  CANID_SE4H_ERR_1         0xD0400014  // DRIVE_SHAFT    : Drive shaft: [2]elapsed_ticks_no_adcticks<2000 ct  [3]cic not in sync
+#define  CANID_SE4H_ERR_2         0xD0400004  // DRIVE_SHAFT    : Drive shaft: [0]encode_state er ct [1]adctick_diff<2000 ct
+#define  CANID_CMD_UPPER1_HI      0xD0E00000  // SHEAVE_UP_H    : F4 shaft_encoder: Upper sheave hi-res: I Command CAN: send commands to subsystem
+#define  CANID_CMD_UPPER1_HR      0xD0E00004  // SHEAVE_UP_H    : F4 shaft_encoder: Upper sheave hi-res: R Command CAN: send commands to subsystem
+#define  CANID_MSG_UPPER1_H_RAW   0xD1000000  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: msg--upper raw count and delta time
+#define  CANID_MSG_UPPER1_H_CAL   0xD1200000  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: msg--upper calibrated--distance and speed
+#define  CANID_HB_UPPER1_H_RAW    0xD1E00000  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: heartbeat--upper raw count and delta time
+#define  CANID_HB_UPPER1_H_CAL    0xD2000000  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: heartbeat--upper calibrated--distance and speed
+#define  CANID_TST_SHEAVE_1UP     0xD2000004  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: testing poll UP
+#define  CANID_CMD_LOWER1_HI      0xD1400000  // SHEAVE_LO_H    : F4 shaft_encoder: Lower sheave hi-res: I Command CAN: send commands to subsystem
+#define  CANID_CMD_LOWER1_HR      0xD1600004  // SHEAVE_LO_H    : F4 shaft_encoder: Lower sheave hi-res: R Command CAN: send commands to subsystem
+#define  CANID_MSG_LOWER1_H_RAW   0xD2400000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: msg--lower raw count and delta time
+#define  CANID_MSG_LOWER1_H_CAL   0xD1A00000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: msg--lower calibrated--distance and speed
+#define  CANID_HB_LOWER1_H_RAW    0xD1800000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: heartbeat--lower raw count and delta time
+#define  CANID_HB_LOWER1_H_CAL    0xD1C00000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: heartbeat--lower calibrated--distance and speed
+#define  CANID_TST_SHEAVE_1LO     0xD2200004  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: testing poll LO
 #define  CANID_TILT_ALARM         0x04600000  // TILT_SENSE     : Tilt: alarm: Vector angle exceeds limit
 #define  CANID_TILT_ANGLE         0x42E00000  // TILT_SENSE     : Tilt: Calibrated angles (X & Y)
 #define  CANID_TILT_XYZ           0x42800000  // TILT_SENSE     : Tilt: Calibrated to angle: x,y,z tilt readings
@@ -178,6 +192,7 @@
 #define  CANID_UNIT_1B            0x03E00000  // UNIT_1B        : Sensor board: CAW experiments
 #define  CANID_UNIT_1C            0x04200000  // UNIT_1C        : Sensor board: DEH spare 1
 #define  CANID_UNIT_1D            0x04400000  // UNIT_1D        : Sensor board: DEH spare 2
+#define  CANID_UNIT_1E            0x04800000  // UNIT_1E        : DiscoveryF4 shaft encoder unit 1
 #define  CANID_UNIT_99            0xFFFFFF14  // UNIT_99        : Dummy for missing CAN IDs
 #define  CANID_DUMMY              0xFFFFFFFC  // UNIT_NU        : Dummy ID: Lowest priority possible (Not Used)
 #define  CANID_MSG_DUMMY          0xFFFFFF16  // ANY            : Dummy ID: Polled Msg dummy
@@ -268,7 +283,27 @@
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
 
-#define PARAM_LIST_COUNT 176	// TOTAL COUNT OF PARAMETER LIST
+#define PARAM_LIST_COUNT 193	// TOTAL COUNT OF PARAMETER LIST
+
+#define  ENCODER_LIST_CRC        	1         // Encoder_f4_1: crc: CRC for tension list         
+#define  ENCODER_LIST_VERSION    	2         // Encoder_f4_1: version: Version number for Tension List
+#define  ENCODER_HEARTBEAT_CT    	3         // Encoder_f4_1: Heartbeat count of time (ms) between msgs
+#define  ENCODER_CT_PER_REV      	4         // Encoder_f4_1: Number of counts per revolution   
+#define  ENCODER_DIST_PER_REV    	5         // Encoder_f4_1: Distance per revolution (meters)  
+#define  ENCODER_HEARTBEAT_MSG   	6         // Encoder_f4_1: Heartbeat sends raw (long long) running encoder count
+#define  ENCODER_POLL_MSG        	7         // Encoder_f4_1: CANID: hi-res: msg--upper calibrated--distance and speed
+#define  ENCODER_POLL            	8         // Encoder_f4_1: CANID: Poll with time sync msg    
+#define  ENCODER_POLL_R          	9         // Encoder_f4_1: CANID: Response to POLL           
+#define  SHEAVE_H_CANID_HW_FILT1 	10        // Encoder_f4_1: CANID 1 added to CAN hardware filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT2 	11        // Encoder_f4_1: CANID 2 added to CAN hardware filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT3 	12        // Encoder_f4_1: CANID 3 added to CAN hardware filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT4 	13        // Encoder_f4_1: CANID 4 added to CAN hardware filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT5 	14        // Encoder_f4_1: CANID 5 added to CAN hardware filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT6 	15        // Encoder_f4_1: CANID 6 added to CAN hardware filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT7 	16        // Encoder_f4_1: CANID 7 added to CAN hardware filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT8 	17        // Encoder_f4_1: CANID 8 added to CAN hardware filter to allow incoming msg
+
+#define PARAM_LIST_CT_SHEAVE_H	17	// Count of same FUNCTION_TYPE in preceding list
 
 #define  CANSENDER_LIST_CRC      	1         // Cansender: CRC                                  
 #define  CANSENDER_LIST_VERSION  	2         // Cansender: Version number                       
@@ -529,7 +564,7 @@
 #define  USEME_TENSION_BIT_7     	0x40      // TENSION             useme: spare 0x40                               
 #define  USEME_TENSION_BIT_8     	0x80      // TENSION             useme: spare 0x80                               
 
-#define FUNCTION_TYPE_COUNT 14
+#define FUNCTION_TYPE_COUNT 16
 #define  FUNCTION_TYPE_SHAFT_ENCODER           	1         // Sensor, shaft: Drive shaft encoder              
 #define  FUNCTION_TYPE_ENGINE_SENSOR           	2         // Sensor, engine: rpm, manifold pressure, throttle setting, temperature
 #define  FUNCTION_TYPE_TENSION_a               	3         // Tension_a: Tension AD7799 #1                    
@@ -544,6 +579,8 @@
 #define  FUNCTION_TYPE_GPS                     	12        // GPS                                             
 #define  FUNCTION_TYPE_LOGGER                  	13        // Logger                                          
 #define  FUNCTION_TYPE_CANSENDER               	14        // Cansender                                       
+#define  FUNCTION_TYPE_SHEAVE_UP_H             	15        // Uppersheave (TIM2 encoder)                      
+#define  FUNCTION_TYPE_SHEAVE_LO_H             	16        // Lowersheave (TIM5 encoder)                      
 
 #define READINGS_BOARD_COUNT 15
 #define  PROG_TENSION_READINGS_BOARD_NUM_AD7799	1         // Number of AD7799 that successfully initialized  
@@ -562,6 +599,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 518  */
+/* TOTAL COUNT OF #defines = 552  */
 /* Test 2016/06/12 */
 

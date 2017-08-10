@@ -1,4 +1,4 @@
-// 2017-01-14 16:01:17.239
+// 2017-08-09 23:17:40.745
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -12,6 +12,8 @@
 #define LOGGER_1_PARAM_SIZE 4
 #define LOGGER_2_PARAM_SIZE 4
 #define MCL_PARAM_SIZE 22
+#define SHEAVE_1LO_PARAM_SIZE 17
+#define SHEAVE_1UP_PARAM_SIZE 17
 #define TENSION_a11_PARAM_SIZE 51
 #define TENSION_a12_PARAM_SIZE 51
 #define TENSION_a21_PARAM_SIZE 51
@@ -150,6 +152,54 @@ const uint32_t paramval[] = {
  0x42820000 , /*  20 65.0                11  mcl: parachute tension taper: parachute taper speed (M/S): Master Controller Launch parameter*/
  0x42A00000 , /*  21 80.0                11  mcl: parachute tension taper: max parachute cable speed (M/S): Master Controller Launch parameter*/
  0x3F8CCCCD , /*  22 1.1                 11  mcl: parachute tension taper: constant k5: Master Controller Launch parameter   */
+};
+#endif
+
+// =====================================================================
+#ifdef SHEAVE_1LO	// Include following parameters?
+const uint32_t paramval[] = {
+ SHEAVE_1LO_PARAM_SIZE,	/* Number of param entries that follow */
+ 0x00000000 , /*   1 0                    6  Encoder_f4_1lo: 1 CRC                                                           */
+ 0x00000001 , /*   2 1                    5  Encoder_f4_1lo: 2 Version number                                                */
+ 0x000000FA , /*   3 250                  6  Encoder_f4_1lo: 3 Heartbeat count of time (ms) between msgs                     */
+ 0x000002D0 , /*   4 720                  6  Encoder_f4_1lo: 4 Number of counts per revolution                               */
+ 0x3F0EFEC8 , /*   5 0.558575174         11  Encoder_f4_1lo: 5 Distance per revolution (meters)                              */
+ 0xD1800000 , /*   6 CANID_HB_LOWER1_H_RAW  17  Encoder_f4_1lo: 6 CANID: Heartbeat sends raw (long long) running encoder count  */
+ 0xD1A00000 , /*   7 CANID_MSG_LOWER1_H_CAL  17  Encoder_f4_1lo: 7 CANID: hi-res: msg--lower calibrated--distance and speed      */
+ 0x## CAN ID NOT FOUND ## , /*   8 CANID_POLL_ENCODER  17  Encoder_f4_1lo: 8 CANID: Poll with time sync msg                                */
+ 0x## CAN ID NOT FOUND ## , /*   9 CANID_POLLR_ENCODER_1  17  Encoder_f4_1lo: 9 CANID: Response to POLL                                       */
+ 0x00400000 , /*  10 CANID_HB_TIMESYNC   17  Encoder_f4_1lo: 10 CANID 1 added to CAN hardware filter to allow incoming msg   */
+ 0x20000000 , /*  11 CANID_MSG_TIME_POLL  17  Encoder_f4_1lo: 11 CANID 2 added to CAN hardware filter to allow incoming msg   */
+ 0xD2200004 , /*  12 CANID_TST_SHEAVE_1LO  17  Encoder_f4_1lo: 12 CANID 3 added to CAN hardware filter to allow incoming msg   */
+ 0xD1400000 , /*  13 CANID_CMD_LOWER1_HI  17  Encoder_f4_1lo: 13 CANID 4 added to CAN hardware filter to allow incoming msg   */
+ 0xFFFFFFFC , /*  14 CANID_DUMMY         17  Encoder_f4_1lo: 14 CANID 5 added to CAN hardware filter to allow incoming msg   */
+ 0xFFFFFFFC , /*  15 CANID_DUMMY         17  Encoder_f4_1lo: 15 CANID 6 added to CAN hardware filter to allow incoming msg   */
+ 0xFFFFFFFC , /*  16 CANID_DUMMY         17  Encoder_f4_1lo: 16 CANID 7 added to CAN hardware filter to allow incoming msg   */
+ 0xFFFFFFFC , /*  17 CANID_DUMMY         17  Encoder_f4_1lo: 17 CANID 8 added to CAN hardware filter to allow incoming msg   */
+};
+#endif
+
+// =====================================================================
+#ifdef SHEAVE_1UP	// Include following parameters?
+const uint32_t paramval[] = {
+ SHEAVE_1UP_PARAM_SIZE,	/* Number of param entries that follow */
+ 0x00000000 , /*   1 0                    6  Encoder_f4_1up: 1 CRC                                                           */
+ 0x00000001 , /*   2 1                    5  Encoder_f4_1up: 2 Version number                                                */
+ 0x000000FA , /*   3 250                  6  Encoder_f4_1up: 3 Heartbeat count of time (ms) between msgs                     */
+ 0x000002D0 , /*   4 720                  6  Encoder_f4_1up: 4 Number of counts per revolution                               */
+ 0x3F0EFEC8 , /*   5 0.558575174         11  Encoder_f4_1up: 5 Distance per revolution (meters)                              */
+ 0xD1E00000 , /*   6 CANID_HB_UPPER1_H_RAW  17  Encoder_f4_1up: 6 CANID: Heartbeat sends raw (long long) running encoder count  */
+ 0xD1200000 , /*   7 CANID_MSG_UPPER1_H_CAL  17  Encoder_f4_1up: 7 CANID: hi-res: msg--upper calibrated--distance and speed      */
+ 0x## CAN ID NOT FOUND ## , /*   8 CANID_POLL_ENCODER  17  Encoder_f4_1up: 8 CANID: Poll with time sync msg                                */
+ 0x## CAN ID NOT FOUND ## , /*   9 CANID_POLLR_ENCODER_1  17  Encoder_f4_1up: 9 CANID: Response to POLL                                       */
+ 0x00400000 , /*  10 CANID_HB_TIMESYNC   17  Encoder_f4_1up: 10 CANID 1 added to CAN hardware filter to allow incoming msg   */
+ 0x20000000 , /*  11 CANID_MSG_TIME_POLL  17  Encoder_f4_1up: 11 CANID 2 added to CAN hardware filter to allow incoming msg   */
+ 0xD2000004 , /*  12 CANID_TST_SHEAVE_1UP  17  Encoder_f4_1up: 12 CANID 3 added to CAN hardware filter to allow incoming msg   */
+ 0xD0E00000 , /*  13 CANID_CMD_UPPER1_HI  17  Encoder_f4_1up: 13 CANID 4 added to CAN hardware filter to allow incoming msg   */
+ 0xFFFFFFFC , /*  14 CANID_DUMMY         17  Encoder_f4_1up: 14 CANID 5 added to CAN hardware filter to allow incoming msg   */
+ 0xFFFFFFFC , /*  15 CANID_DUMMY         17  Encoder_f4_1up: 15 CANID 6 added to CAN hardware filter to allow incoming msg   */
+ 0xFFFFFFFC , /*  16 CANID_DUMMY         17  Encoder_f4_1up: 16 CANID 7 added to CAN hardware filter to allow incoming msg   */
+ 0xFFFFFFFC , /*  17 CANID_DUMMY         17  Encoder_f4_1up: 17 CANID 8 added to CAN hardware filter to allow incoming msg   */
 };
 #endif
 
@@ -436,7 +486,7 @@ const uint32_t paramval[] = {
  0x463B8000 , /*  45 12000.0             11  Yogurt_1: 45 Control loop: Proportional coefficient                             */
  0x40C00000 , /*  46 6.0                 11  Yogurt_1: 46 Control loop: Integral coefficient                                 */
  0x486A6000 , /*  47 240.0E3             11  Yogurt_1: 47 Control loop: Derivative coefficient                               */
- 0xd9000000 ,/*  48 CANID_CMD_YOGURT_1  17  Yogurt_1: 48 CANID: cid_yog_cmd: Yogurt maker parameters                        */
+ 0x## CAN ID NOT FOUND ## , /*  48 CANID_CMD_YOGURT_1  17  Yogurt_1: 48 CANID: cid_yog_cmd: Yogurt maker parameters                        */
  0x29400000 , /*  49 CANID_MSG_YOGURT_1  17  Yogurt_1: 49 CANID: cid_yog_msg: Yogurt maker msgs                              */
  0x29600000 , /*  50 CANID_HB_YOGURT_1   17  Yogurt_1: 50 CANID: cid_yog_hb: Yogurt maker heart-beats                        */
  0x3C23D70A , /*  51 0.0100              11  Yogurt_1: 51  Control, stored heat constant Pasteur phase                       */

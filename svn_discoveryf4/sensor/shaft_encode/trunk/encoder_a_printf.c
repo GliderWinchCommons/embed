@@ -7,6 +7,9 @@
 #include "encoder_a_printf.h"
 #include "../../../sw_discoveryf4/trunk/lib/libusartstm32f4/bsp_uart.h"
 
+#define UXPRT	3	// Uart number for 'xprintf' messages
+#include "xprintf.h"
+
 /* **************************************************************************************
  * void encoder_a_printf(struct ENCODERALC* penc);
  * @brief	: Print the values
@@ -45,8 +48,8 @@ xprintf(UXPRT,"%2d	%d	%s\n\r",   i++, (unsigned int)penc->ctperrev,        "  4 
 xprintf(UXPRT,"%2d	%12.4f	%s\n\r",   i++,       (double)penc->distperrev,      "  5 Distance per revolution (meters)");
 xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_heartbeat,   "  6 CANID-Heartbeat raw (int64_t) running encoder count");
 xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_poll_msg,    "  7 CANID-Fully calibrated encoder msg");
-xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_poll,        "  8 CANID-Response to poll (??)");
-xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_poll_r,      "  9 CANID-Response to poll (??)");
+xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_poll,        "  8 CANID-Response to poll ");
+xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_poll_r,      "  9 CANID-Response to poll ");
 xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_hb_timesync, " 10 CANID-GPS time sync msg polls encoders");
 xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_msg_time_poll," 11");
 xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_tst_enc_a,   " 12 ");

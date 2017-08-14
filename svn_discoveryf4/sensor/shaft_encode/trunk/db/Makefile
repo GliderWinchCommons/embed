@@ -1,40 +1,18 @@
 # Sources
 
 # Name of the .c file with 'main' as well as output file name
-NAME	= shaft_encode
+NAME	= encoder_tables_all
 
 # Linker file
-LDFILE	=stm32_flash.ld
+# Note: ENTRY in .ld file is omitted so it skips looking for label
+LDFILE = can_unit.ld
 
 # Current directory
 CURDIR=.
 SRCS =
-SRCS += startup_stm32f4xx.s
-#SRCS += vector.c
-SRCS += $(NAME).c syscalls.c 
-SRCS += CAN_test_msgs.c
-SRCS += CAN_error_msgs.c
-SRCS += Default_Handler.c
-SRCS += encoder_timers.c
-SRCS += recursive_variance_flt.c
-SRCS += CAN_poll_loop.c
-SRCS += encoder_a_printf.c
-SRCS += encoder_idx_v_struct.c
-SRCS += encoder_a_functionS.c
-SRCS += can_filter_print_f4.c
-
-###################################################
-
-# Check for valid float argument
-# NOTE that you have to run make clean after
-# changing these as hardfloat and softfloat are not
-# binary compatible
-
-ifneq ($(FLOAT_TYPE), hard)
-ifneq ($(FLOAT_TYPE), soft)
-override FLOAT_TYPE = soft
-endif
-endif
+SRCS += encoder_lo_param.c
+SRCS += encoder_hi_param.c
+SRCS += unit_cmd_canid.c
 
 ###################################################
 # Prefix the name for the particular toolchain
@@ -46,9 +24,9 @@ OBJCOPY	=$(PREFIX)objcopy
 SIZE	=$(PREFIX)size
 OBJDUMP	=$(PREFIX)objdump
 
-
-CFLAGS  = -std=gnu99 -g -Os -Wall
+CFLAGS  = -std=gnu99 -g -Os -Wall -Wextra
 CFLAGS += -mlittle-endian -mthumb -mthumb-interwork -nostartfiles -mcpu=cortex-m4
+CFLAGS +=  -fno-common -Wstrict-prototypes 
 CFLAGS += -mfp16-format=alternative
 
 ifeq ($(FLOAT_TYPE), hard)
@@ -60,58 +38,27 @@ endif
 
 ###################################################
 
-# Directory path--includes for .h and .c files common to all routines
-LIBCOMMONALL      = $(CURDIR)/../../../common_all/trunk
-
 # Navigation to libraries specific to the f4 and discoveryf4
-LIBF4D		= $(CURDIR)/../../../sw_discoveryf4/trunk
-
-# Routes to USB 
-LIBUSB		= $(LIBF4D)/STM32F4_USB_CDC
+LIBF4D		= $(CURDIR)/../../../../sw_discoveryf4/trunk
 
 # Library of common to all processors
-LIBSVNCOMMON	= $(CURDIR)/../../../../svn_common/trunk
-
-# Includes--ST USB
-CFLAGS += -I$(LIBUSB)/inc
-CFLAGS += -I$(LIBUSB)/inc/StdPeriph/inc
-CFLAGS += -I$(LIBUSB)/lib/StdPeriph/inc
-CFLAGS += -I$(LIBUSB)/lib/USB_OTG/inc
-CFLAGS += -I$(LIBUSB)/inc/USB_Device/Core/inc
-CFLAGS += -I$(LIBUSB)/inc/USB_Device/Class/cdc/inc
-CFLAGS += -I$(LIBUSB)/lib/Core/stm32
-CFLAGS += -I$(LIBUSB)/lib/Core/cmsis
-CFLAGS += -I$(LIBUSB)/lib/USB_Device/Class/cdc/inc
-CFLAGS += -I$(LIBUSB)/lib/USB_Device/Core/inc/
+LIBSVNCOMMON	= $(CURDIR)/../../../../../svn_common/trunk
 
 # Includes--our stuff
-CFLAGS += -I$(LIBCOMMONALL)
-CFLAGS += -I$(LIBF4D)/lib/libdiscoveryf4
-CFLAGS += -I$(LIBF4D)/lib/libmiscstm32f4 
-CFLAGS += -I$(LIBF4D)/lib/libusartstm32f4
-CFLAGS += -I$(LIBF4D)/lib/libopencm3/stm32/
-CFLAGS += -I$(LIBF4D)/lib
 CFLAGS += -I$(LIBSVNCOMMON)
+CFLAGS += -I$(LIBSVNCOMMON)/db
+CFLAGS += -I../$(CURDIR)
 
-# Library paths--ST USB
-LIBPATHS  = -L$(LIBUSB)
-LIBPATHS += -L$(LIBUSB)/lib/StdPeriph
-LIBPATHS += -L$(LIBUSB)/lib/USB_Device/Core
-LIBPATHS += -L$(LIBUSB)/lib/USB_Device/Class/cdc
-LIBPATHS += -L$(LIBUSB)/lib/USB_OTG
 
 # Library paths--our stuff
 LIBPATHS += -L$(LIBF4D)/lib/libdiscoveryf4
 LIBPATHS += -L$(LIBF4D)/lib/libmiscstm32f4 
-LIBPATHS += -L$(LIBCOMMONALL)/stm32
 LIBPATHS += -L$(LIBF4D)/lib/libusartstm32f4
 LIBPATHS += -L$(LIBSVNCOMMON)/f4
 
 # Libraries to link
-#   USB
-LIBS 	 = -lm -lusbf4 -lstdperiph -lusbdevcdc -lusbcore -lusbdevcore  -lusbf4  -lstdperiph
 #   our stuff
-LIBS	+= -ldiscoveryf4 -lmiscstm32f4 -lusartstm32f4 -lcommon_allf4  -ldiscoveryf4
+#LIBS	+= -ldiscoveryf4 -lmiscstm32f4 -lusartstm32f4 -lcommon_allf4  -ldiscoveryf4
 
 LDFLAGS	 = -T$(LDFILE)
 
@@ -134,7 +81,7 @@ all: proj
 proj: 	$(NAME).elf
 
 $(NAME).elf: $(SRCS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LIBPATHS) $(LIBS) $(LDFLAGS) -Wl,-Map=$(NAME).map
+	$(CC) $(CFLAGS)  $^ -o $@ $(LIBPATHS) $(LIBS) $(LDFLAGS) -Wl,-Map=$(NAME).map
 	$(OBJCOPY) -O ihex   $(NAME).elf $(NAME).hex
 	$(OBJCOPY) -O binary $(NAME).elf $(NAME).bin
 	$(OBJCOPY) -O srec   $(NAME).elf $(NAME).srec

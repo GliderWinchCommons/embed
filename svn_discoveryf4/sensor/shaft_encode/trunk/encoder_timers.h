@@ -60,6 +60,7 @@ extern uint32_t encode_oc_ticks;	// 1/64sec tick flag
 
 /* Count rare occurences of 'encoder_get_reading' loop hit by interrupt */
 extern unsigned long encoder_get_reading_loop_cnt;
+extern uint32_t encoder_timers_poll_ctr;	// Tick count
 
 /* Test: store readings each IC  */
 //#define IC_TO_IC_TIME_W_BIG_BUFFER  // Uncomment this statement to enable
@@ -67,6 +68,7 @@ extern unsigned long encoder_get_reading_loop_cnt;
 #define ENCTESTBUFFSIZE 1600
 extern struct ENCODERREADING enr_test[ENCTESTBUFFSIZE];
 extern unsigned int enr_test_ct;
+
 #endif
 
 /* Test: store readings for 2nd encoder (unit=1) each OC timed 1/64th sec */

@@ -13,10 +13,8 @@
 //#include "tim3_ten2.h"
 #include "../../../../svn_common/trunk/common_highflash.h"
 #include "encoder_a_functionS.h"
-#include "temp_calc_param.h"
-#include "p1_initialization.h"
 #include "can_driver_filter.h"
-#include "cmd_code_dispatch.h"
+//#include "cmd_code_dispatch.h"
 
 #define ENCAQUEUESIZE	3	// Queue size for passing values between levels
 
@@ -29,7 +27,7 @@ extern void* __paramflash1;	// High flash address of 1st parameter table (.ld de
 extern void* __paramflash2;	// High flash address of 2nd parameter table (.ld defined)
 
 /* Holds parameters and associated computed values and readings for each instance. */
-struct ENCODERAFUNCTION enc_f[NUMTENSIONFUNCTIONS];
+struct ENCODERAFUNCTION enc_f[NUMENCODERAFUNCTIONS];
 
 const uint32_t* pparamflash[NUMENCODERAFUNCTIONS] = { \
  (uint32_t*)&__paramflash1,
@@ -41,18 +39,18 @@ struct TENSIONLC* plc[NUMENCODERAFUNCTIONS];
 
 /* Highflash command CAN id table lookup mapping. */
 const uint32_t myfunctype[NUMENCODERAFUNCTIONS] = { \
- FUNCTION_TYPE_ENCODERA_1,
- FUNCTION_TYPE_ENCODERA_2 ,
+ FUNCTION_TYPE_SHEAVE_UP_H,
+ FUNCTION_TYPE_SHEAVE_LO_H
 };
 /* **************************************************************************************
- * static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct TENSIONFUNCTION* p); 
+ * static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct ENCODERAFUNCTION* p); 
  * @brief	: Setup CAN msg with reading
  * @param	: canid = CAN ID
  * @param	: status = status of reading
  * @param	: pv = pointer to a 4 byte value (little Endian) to be sent
  * @param	: p = pointer to a bunch of things for this function instance
  * ************************************************************************************** */
-static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct TENSIONFUNCTION* p)
+static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct ENCODERAFUNCTION* p)
 {
 	struct CANRCVBUF can;
 	can.id = canid;
@@ -63,8 +61,8 @@ static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct TE
 	can.cd.uc[3] = (*pv >> 16);
 	can.cd.uc[4] = (*pv >> 24);
 	can_hub_send(&can, p->phub_encoder);// Send CAN msg to 'can_hub'
-	p->hbct_ticks = (p->enc_a.hbct * tim3_ten2_rate) / 1000; // Convert ms to timer ticks
-	p->hb_t = tim3_ten2_ticks + p->hbct_ticks;	 // Reset heart-beat time duration each time msg sent
+	p->hbct_ticks = (p->enc_a.hbct * 2); // Convert ms to timer ticks
+	p->hb_t = encoder_timers_poll_ctr + p->hbct_ticks;	 // Reset heart-beat time duration each time msg sent
 	return;
 }
 
@@ -87,7 +85,7 @@ static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct TE
  * @return	: Same as above
  * ************************************************************************************** */
 //  Declaration
-static int encoder_a_functionS_init(int n, struct TENSIONFUNCTION* p );
+static int encoder_a_functionS_init(int n, struct ENCODERAFUNCTION* p );
 
 /* *************************************************** */
 /* Init all instances of encoder_a_function supported. */
@@ -98,7 +96,7 @@ int encoder_a_functionS_init_all(void)
 	int ret;
 
 	/* Do the initialization mess for each instance possible with this program/board */
-	for (i = 0; i < NUMTENSIONFUNCTIONS; i++)
+	for (i = 0; i < NUMENCODERAFUNCTIONS; i++)
 	{
 		ret = encoder_a_functionS_init(i, &enc_f[i]);
 		if (ret < 0) return ret;
@@ -127,12 +125,12 @@ static int encoder_a_functionS_init(int n, struct ENCODERAFUNCTION* p )
 
 	/* Setup mask for checking if this function responds to a poll msg. */
 	// Combine so the polling doesn't have to do two tests
-	p->poll_mask = (p->enc_a.p_pollbit << 8) || (p->enc_a.f_pollbit & 0xff);
+//	p->poll_mask = (p->enc_a.p_pollbit << 8) || (p->enc_a.f_pollbit & 0xff);
 
 	/* First heartbeat time */
 	// Convert heartbeat time (ms) to timer ticks (recompute for online update)
-	p->hbct_ticks = (p->enc_a.hbct * tim3_ten2_rate) / 1000;
-	p->hb_t = tim3_ten2_ticks + p->hbct_ticks;	
+	p->hbct_ticks = (p->enc_a.hbct * 2);
+	p->hb_t = encoder_timers_poll_ctr + p->hbct_ticks; // Next timer for hb	
 
 	/* Add this function (encoder_a) to the "hub-server" msg distribution. */
 	p->phub_encoder = can_hub_add_func();	// Set up port/connection to can_hub
@@ -181,7 +179,7 @@ static int encoder_a_functionS_init(int n, struct ENCODERAFUNCTION* p )
  * return	: float with value
  * ************************************************************************************** */
 #ifdef USECICCALIBRATIONSEQUENCE
-static float encoder_a_scalereading(struct TENSIONFUNCTION* p)
+static float encoder_a_scalereading(struct ENCODERAFUNCTION* p)
 {
 	int ntmp1;
 	long long lltmp;
@@ -218,13 +216,13 @@ int encoder_a_functionS_poll(struct CANRCVBUF* pcan, struct ENCODERAFUNCTION* p)
 	}ui; ui.ui = 0; // (initialize to get rid of ui.ft warning)
 
 	/* Check if this instance is used. */
-	if ((p->enc_a.useme & 1) != 1) return 0;
+//	if ((p->enc_a.useme & 1) != 1) return 0;
 
 	/* Check for need to send  heart-beat. */
-	 if ( ( (int)tim3_ten2_ticks - (int)p->hb_t) > 0  )	// Time to send heart-beat?
+	 if ( ( (int)encoder_timers_poll_ctr - (int)p->hb_t) > 0  )	// Time to send heart-beat?
 	{ // Here, yes.
-		iir_filtered_calib(p, 1);	// Slow (long time constant) filter the reading
-		ui.ft = p->fcalib_lgr;		// Float version of calibrated last good reading
+//		iir_filtered_calib(p, 1);	// Slow (long time constant) filter the reading
+//		ui.ft = p->fcalib_lgr;		// Float version of calibrated last good reading
 		
 		/* Send heartbeat and compute next hearbeat time count. */
 		//      Args:  CAN id, status of reading, reading pointer instance pointer
@@ -240,12 +238,13 @@ int encoder_a_functionS_poll(struct CANRCVBUF* pcan, struct ENCODERAFUNCTION* p)
 //if (pcan->id == p->enc_a.cid_gps_sync) // ##### TEST #########
 if (pcan->id == 0x00400000) // ##### TEST #########
 	{ // Here, group poll msg.  Check if poll and function bits are for us
-//$		if ( ((pcan->cd.uc[0] & p->enc_a.p_pollbit) != 0) && \
+/*		if ( ((pcan->cd.uc[0] & p->enc_a.p_pollbit) != 0) && \
 		     ((pcan->cd.uc[1] & p->enc_a.f_pollbit) != 0) )
+*/
 		{ // Here, yes.  Send our precious msg.
 			/* Send encoder msg and re-compute next hearbeat time count. */
 			//      Args:  CAN id, status of reading, reading pointer instance pointer
-			send_can_msg(p->enc_a.cid_ten_msg, p->status_byte, &ui.ui, p); 
+			send_can_msg(p->enc_a.cid_msg_time_poll, p->status_byte, &ui.ui, p); 
 			return 1;
 		}
 	}
@@ -253,7 +252,7 @@ if (pcan->id == 0x00400000) // ##### TEST #########
 	/* Check for encodera function command. */
 	if (pcan->id == *p->pcanid_cmd_func_i)
 	{ // Here, we have a command msg for this function instance. 
-		cmd_code_dispatch(pcan, p); // Handle and send as necessary
+//		cmd_code_dispatch(pcan, p); // Handle and send as necessary
 		return 0;	// No msgs passed to other ports
 	}
 	return ret;

@@ -57,6 +57,10 @@ TODO
 #include "ledf4.h"
 #include "lltoflt.h"
 #include "CAN_poll_loop.h"
+#include "../../../../svn_common/trunk/common_highflash.h"
+#include "encoder_a_functionS.h"
+#include "encoder_a_printf.h"
+#include "can_filter_print_f4.h"
 
 
 #ifndef NULL 
@@ -124,15 +128,13 @@ NOTE: PLL48CK must be 48 MHz for the USB
 */
 
 /* Easy way for other routines to access via 'extern'*/
-struct CAN_CTLBLOCK* pctl1;	// CAN1 control block pointer
-struct CAN_CTLBLOCK* pctl2;	// CAN2 control block pointer
+struct CAN_CTLBLOCK* pctl0;	// CAN1 control block pointer
+struct CAN_CTLBLOCK* pctl1;	// CAN2 control block pointer
 
-static struct PCTOGATEWAY pctogateway; 	// CAN->PC
-static struct PCTOGATEWAY pctogateway1; // PC->CAN
 //static struct CANRCVBUF canrcvbuf;
 //
-static struct CANRCVBUF* 	pc1r0;	// Pointer to CAN1 buffer for incoming CAN msgs, low priority
-static struct CANRCVBUF*	pc1r1;	// Pointer to CAN1 buffer for incoming CAN msgs, high priority
+struct CANRCVBUF* 	pc1r0;	// Pointer to CAN1 buffer for incoming CAN msgs, low priority
+struct CANRCVBUF*	pc1r1;	// Pointer to CAN1 buffer for incoming CAN msgs, high priority
 
 //static struct CANRCVBUF* ptest_pc;	// Test gateway->PC
 //static struct CANRCVBUF* ptest_can;	// Test gateway->CAN bus
@@ -197,6 +199,7 @@ And now for the main routine
 int main(void)
 {
 	int tmp;
+	int ret;
 //u32 xctr = 1;
 //u32 yctr = 0;
 //u32 zctr = 0;
@@ -290,7 +293,29 @@ xprintf (UXPRT,"\n\r");
 
 xprintf (UXPRT,"Flash size: %dK\n\r",(*(unsigned int*)0x1FFF7A22)&0xffff);
 
-
+/* ---------------- Some test, monitoring, debug info ----------------------------------------------- */
+	extern void* __paramflash0a;
+	struct FLASHH2* pcanidtbl = (struct FLASHH2*)&__paramflash0a;
+	xprintf (UXPRT,"FLASHH2 Address: %08X\n\r",(unsigned int)pcanidtbl);
+	xprintf (UXPRT,"  CAN unit code: %08X\n\r",(int)pcanidtbl->unit_code);
+	xprintf (UXPRT,"  Size of table: %d\n\r",(int)pcanidtbl->size);
+	xprintf (UXPRT," # func  CMD CANID\n\r");
+	u32 ii;
+	u32 jj = pcanidtbl->size;
+	if (jj > 16) jj = 16;
+	for (ii = 0; ii < jj; ii++)
+	{
+		xprintf (UXPRT,"%2d %4d  %08X\n\r",(int)ii, (int)pcanidtbl->slot[ii].func, (int)pcanidtbl->slot[ii].canid);
+	}
+	printf("\n\r");
+/* --------------------- Get Loader CAN ID -------------------------------------------------------------- */
+	/* Pick up the unique CAN ID stored when the loader was flashed. */
+	struct FUNC_CANID* pfunc = (struct FUNC_CANID*)&__paramflash0a;
+//	u32 canid_ldr = *(u32*)((u32)((u8*)*(u32*)0x08000004 + 7 + 0));	// First table entry = can id
+	u32 canid_ldr = pfunc[0].func;
+	xprintf (UXPRT,"CANID_LDR  : 0x%08X\n\r", (unsigned int)canid_ldr );
+	xprintf (UXPRT,"TBL SIZE   : %d\n\r",(unsigned int)pfunc[0].canid);
+/* ------------------------------------------------------------------------------------------------------ */
 
 /* Test double to float using inline asm */
 #ifdef TEST_LLTOFLT_W_INLINE_ASM
@@ -313,9 +338,6 @@ double dtmp2 = lltoflt(llw);
 xprintf(UXPRT,"### %15.8e\n\r", dtmp2 );
 #endif
 
-/* --------------------- Timer and Encoder setup ----------------------------------------------------------------- */
-	encoder_timers_init(0x00200000); // Pass reset CAN id to routine
-
 /* --------------------- CAN setup ------------------------------------------------------------------- */
 	/*  Pin usage for CAN1 on DiscoveryF4--
 	PD01 CAN1  Tx LQFP 82 Header P2|33 WHT
@@ -323,42 +345,31 @@ xprintf(UXPRT,"### %15.8e\n\r", dtmp2 );
 	GRN  (MCP2551 RS pin) Grounded for high speed
 	*/
 	/* Setup CAN registers and initialize routine */
-	pctl1 =  canwinch_setup_F4_discovery(&msginit1, 1);	// Number msg bufferblocks, CAN1
+	pctl0 =  canwinch_setup_F4_discovery(&msginit1, 1);	// Number msg bufferblocks, CAN1
 
 	/* Check if initialization was successful. */
-	if (pctl1 == NULL)
+	if (pctl0 == NULL)
 	{
 		xprintf(UXPRT,"CAN1 init failed: NULL ptr\n\r");
 		panic_leds(6); while (1==1);	// Flash panic display with code 6
 	}
-	if (pctl1->ret < 0)
+	if (pctl0->ret < 0)
 	{
-		xprintf(UXPRT,"CAN1 init failed: return code = %d\n\r",pctl1->ret);
+		xprintf(UXPRT,"CAN1 init failed: return code = %d\n\r",pctl0->ret);
 		panic_leds(6); while (1==1);	// Flash panic display with code 6
 	}
 	xprintf(UXPRT,"CAN1 initialized OK@ baudrate %d\n\r",CANWINCH_BAUDRATE);
 	can_driver_enable_interrupts();	// Enable CAN interrupts
 	xprintf(UXPRT,"CAN interrupts enabled\n\r");
-/* --------------------- Initialize the time for the test msg generation ------------------------------ */
-//	CAN_test_msg_init();
 
 /* --------------------- Monitoring incoming CAN ids  ------------------------------------------------- */
-
-	can_msg_reset_init(pctl1, 0xffe00000);	// Specify CAN ID for this unit for msg caused RESET
-
+	can_msg_reset_init(pctl0, 0xffe00000);	// Specify CAN ID for this unit for msg caused RESET
 
 /* --------------------- Hardware is ready, so do program-specific startup ---------------------------- */
 #define FLASHCOUNT 21000000;	// LED flash
 //u32	t_led = DTWTIME + FLASHCOUNT; // Set initial time
 
-	PC_msg_initg(&pctogateway);	// Initialize struct for CAN message from PC
-	PC_msg_initg(&pctogateway1);	// Initialize struct for CAN message from PC
-
-	/* Set modes for routines that receive and send CAN msgs */
-	pctogateway.mode_link = MODE_LINK;
-	pctogateway1.mode_link = MODE_LINK;
-
-//#define ENCODERAFUNCTIONSETUPSTUFF
+#define ENCODERAFUNCTIONSETUPSTUFF
 #ifdef ENCODERAFUNCTIONSETUPSTUFF
 /* ---------------- Encoder functions ---------------------------------------------------------------- */
 	ret = encoder_a_functionS_init_all();
@@ -367,25 +378,27 @@ xprintf(UXPRT,"### %15.8e\n\r", dtmp2 );
 		printf("encoder_a_functionS: table size mismatch count: %d\n\r", ret); 
 		while(1==1);
 	}
-	xprintf(UXPRT,"tension_a_functionS: table size : %d\n\r", ret);USART1_txint_send();
+	xprintf(UXPRT,"encoder_a_functionS: table size : %d\n\r", ret);
 
 /* ----------------- CAN filter registers ------------------------------------------------------------- */
-	can_filter_print(14);	// Print the CAN filter registers
+	can_filter_print_f4(14);	// Print the CAN filter registers
 /* ----------------- Debug parameters ----------------------------------------------------------------- */
-for (i = 0; i < NUMTENSIONFUNCTIONS; i++)
+for (i = 0; i < NUMENCODERAFUNCTIONS; i++)
 {
 	xprintf(UXPRT,"\n\rENCODER #%1d values\n\r",i+1);
-	tension_a_printf(&enc_f[i].enc_a);	// Print parameters
+	encoder_a_printf(&enc_f[i].enc_a);	// Print parameters
 }
 /* ------------------------ CAN msg loop (runs under interrupt) --------------------------------------- */
-int ret;
 	ret = CAN_poll_loop_init();
 	if (ret != 0)
 	{ // Here the init failed (e.g. malloc)
-		xprintf(UXPRT,"CAN_poll_loop_init: failed %d\n\r",ret);USART1_txint_send(); 
+		xprintf(UXPRT,"CAN_poll_loop_init: failed %d\n\r",ret);
 		while (1==1);		
 	}
 #endif
+/* --------------------- Timer and Encoder setup ----------------------------------------------------------------- */
+	encoder_timers_init(0x00200000); // Pass reset CAN id to routine
+
 /* ---------------- When CAN interrupts are enabled reception of msgs begins! ------------------------ */
 	can_driver_enable_interrupts();	// Enable CAN interrupts
 
@@ -533,20 +546,20 @@ else
 		if (((int)(DTWTIME - t_hb)) > 0) // Has the time expired?
 		{ // Here, yes.
 			t_hb += hb_inc; 			// Set next toggle time
-			tmp = CAN_gateway_send(pctl1, &can_hb);	// Add to xmit buffer (if OK)
+			tmp = CAN_gateway_send(pctl0, &can_hb);	// Add to xmit buffer (if OK)
 			Errors_CAN_gateway_send(tmp);		// Count any error returns
 		}
 		/* ================= CAN1 --> ? ================================================================= */
-		while ( (pc1r1 = can_driver_peek1(pctl1)) != 0)	// Did we receive a HIGH PRIORITY CAN BUS msg?
+		while ( (pc1r1 = can_driver_peek1(pctl0)) != 0)	// Did we receive a HIGH PRIORITY CAN BUS msg?
 		{ // Here yes.  Retrieve it from the CAN buffer and save it in our vast mainline storage buffer ;)
 //printmsg(pc1r1, 1);
-			can_driver_toss1(pctl1); // Release buffer block, fifo1 linked list
+			can_driver_toss1(pctl0); // Release buffer block, fifo1 linked list
 		}
 
-		while ( (pc1r0 = can_driver_peek0(pctl1)) != 0)		// Did we receive a LESS-THAN-HIGH-PRIORITY CAN BUS msg?
+		while ( (pc1r0 = can_driver_peek0(pctl0)) != 0)		// Did we receive a LESS-THAN-HIGH-PRIORITY CAN BUS msg?
 		{ // Here yes.  Retrieve it from the CAN buffer and save it in our vast mainline storage buffer
 //printmsg(pc1r0, 0);
-			can_driver_toss0(pctl1); // Release buffer block, fifo0 linked list
+			can_driver_toss0(pctl0); // Release buffer block, fifo0 linked list
 		}
 	/* Done with a pass of this endless loop: trigger CAN poll */
 		CAN_poll_loop_trigger();

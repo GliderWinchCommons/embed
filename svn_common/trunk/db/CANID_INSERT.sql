@@ -247,6 +247,7 @@ INSERT INTO CANID VALUES ('CANID_CMD_YOGURT_1R',	'29800004', 'YOGURT_1',	'UNDEF'
 INSERT INTO CANID VALUES ('CANID_MSG_YOGURT_1',		'29400000', 'YOGURT_1',	'UNDEF','Yogurt: YOGURT_1: Yogurt maker msgs');
 INSERT INTO CANID VALUES ('CANID_HB_YOGURT_1',		'29600000', 'YOGURT_1',	'UNDEF','Yogurt: YOGURT_1: Heart-beats');
 
+--                         CANID_NAME                    CANID_HEX   CANID_TYPE    CAN_MSG_FMT     DESCRIPTION
 INSERT INTO CANID VALUES ('CANID_UNIT_2',		'04000000', 'UNIT_2', 	'U8','Sensor unit: Drive shaft encoder');
 INSERT INTO CANID VALUES ('CANID_UNIT_3',		'03800000', 'UNIT_3', 	'U8','Sensor unit: Engine');
 INSERT INTO CANID VALUES ('CANID_UNIT_4',		'03A00000', 'UNIT_4', 	'U8','Sensor unit: Lower sheave shaft encoder');

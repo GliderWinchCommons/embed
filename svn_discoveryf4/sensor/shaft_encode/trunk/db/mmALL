@@ -1,0 +1,11 @@
+#!/bin/bash
+# 08/13/2017
+# Compile and load two encoders and command canid tables
+#
+echo
+echo "###### Make tables for BOTH sheaves and CMD "
+make -f Makefile clean
+make -f Makefile
+make -f Makefile flash
+
+

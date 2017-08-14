@@ -1,4 +1,4 @@
-// 2017-08-09 23:17:40.745
+// 2017-08-13 20:49:32.257
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -23,7 +23,7 @@
 
 // =====================================================================
 #ifdef CABLE_ANGLE_1	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval00[] = {
  CABLE_ANGLE_1_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6    1 Cable_angle_1: CRC for Cable angle list                                     */
  0x00000001 , /*   2 1                    5    2 Cable_angle_1: Version number for cable angle List                          */
@@ -48,7 +48,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef CANSENDER_1	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval01[] = {
  CANSENDER_1_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Cansender_1: 1 CRC                                                              */
  0x00000001 , /*   2 1                    5  Cansender_1: 2 Version number                                                   */
@@ -61,7 +61,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef CANSENDER_2	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval02[] = {
  CANSENDER_2_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Cansender_2: 1 CRC                                                              */
  0x00000001 , /*   2 1                    5  Cansender_2: 2 Version number                                                   */
@@ -74,7 +74,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef GPS_1	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval03[] = {
  GPS_1_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  GPS_1: 1 CRC                                                                    */
  0x00000001 , /*   2 1                    5  GPS_1: 2 Version number                                                         */
@@ -90,7 +90,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef GPS_2	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval04[] = {
  GPS_2_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  GPS_2: 1 CRC                                                                    */
  0x00000001 , /*   2 1                    5  GPS_2: 2 Version number                                                         */
@@ -106,7 +106,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef LOGGER_1	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval05[] = {
  LOGGER_1_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Logger_1: 1 CRC                                                                 */
  0x00000001 , /*   2 1                    5  Logger_1: 2 Version number                                                      */
@@ -117,7 +117,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef LOGGER_2	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval06[] = {
  LOGGER_2_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Logger_2: 1 CRC                                                                 */
  0x00000001 , /*   2 1                    5  Logger_2: 2 Version number                                                      */
@@ -128,7 +128,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef MCL	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval07[] = {
  MCL_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  mcl: crc: CRC: Master Controller Launch parameters                              */
  0x00000001 , /*   2 1                    5  mcl: version: Master Controller Launch parameters                               */
@@ -157,7 +157,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef SHEAVE_1LO	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval08[] = {
  SHEAVE_1LO_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Encoder_f4_1lo: 1 CRC                                                           */
  0x00000001 , /*   2 1                    5  Encoder_f4_1lo: 2 Version number                                                */
@@ -166,8 +166,8 @@ const uint32_t paramval[] = {
  0x3F0EFEC8 , /*   5 0.558575174         11  Encoder_f4_1lo: 5 Distance per revolution (meters)                              */
  0xD1800000 , /*   6 CANID_HB_LOWER1_H_RAW  17  Encoder_f4_1lo: 6 CANID: Heartbeat sends raw (long long) running encoder count  */
  0xD1A00000 , /*   7 CANID_MSG_LOWER1_H_CAL  17  Encoder_f4_1lo: 7 CANID: hi-res: msg--lower calibrated--distance and speed      */
- 0x## CAN ID NOT FOUND ## , /*   8 CANID_POLL_ENCODER  17  Encoder_f4_1lo: 8 CANID: Poll with time sync msg                                */
- 0x## CAN ID NOT FOUND ## , /*   9 CANID_POLLR_ENCODER_1  17  Encoder_f4_1lo: 9 CANID: Response to POLL                                       */
+ 0xFFFFFFFC , /*   8 CANID_DUMMY         17  Encoder_f4_1lo: 8 CANID: Poll with time sync msg                                */
+ 0xFFFFFFFC , /*   9 CANID_DUMMY         17  Encoder_f4_1lo: 9 CANID: Response to POLL                                       */
  0x00400000 , /*  10 CANID_HB_TIMESYNC   17  Encoder_f4_1lo: 10 CANID 1 added to CAN hardware filter to allow incoming msg   */
  0x20000000 , /*  11 CANID_MSG_TIME_POLL  17  Encoder_f4_1lo: 11 CANID 2 added to CAN hardware filter to allow incoming msg   */
  0xD2200004 , /*  12 CANID_TST_SHEAVE_1LO  17  Encoder_f4_1lo: 12 CANID 3 added to CAN hardware filter to allow incoming msg   */
@@ -181,7 +181,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef SHEAVE_1UP	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval09[] = {
  SHEAVE_1UP_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Encoder_f4_1up: 1 CRC                                                           */
  0x00000001 , /*   2 1                    5  Encoder_f4_1up: 2 Version number                                                */
@@ -190,8 +190,8 @@ const uint32_t paramval[] = {
  0x3F0EFEC8 , /*   5 0.558575174         11  Encoder_f4_1up: 5 Distance per revolution (meters)                              */
  0xD1E00000 , /*   6 CANID_HB_UPPER1_H_RAW  17  Encoder_f4_1up: 6 CANID: Heartbeat sends raw (long long) running encoder count  */
  0xD1200000 , /*   7 CANID_MSG_UPPER1_H_CAL  17  Encoder_f4_1up: 7 CANID: hi-res: msg--upper calibrated--distance and speed      */
- 0x## CAN ID NOT FOUND ## , /*   8 CANID_POLL_ENCODER  17  Encoder_f4_1up: 8 CANID: Poll with time sync msg                                */
- 0x## CAN ID NOT FOUND ## , /*   9 CANID_POLLR_ENCODER_1  17  Encoder_f4_1up: 9 CANID: Response to POLL                                       */
+ 0xFFFFFFFC , /*   8 CANID_DUMMY         17  Encoder_f4_1up: 8 CANID: Poll with time sync msg                                */
+ 0xFFFFFFFC , /*   9 CANID_DUMMY         17  Encoder_f4_1up: 9 CANID: Response to POLL                                       */
  0x00400000 , /*  10 CANID_HB_TIMESYNC   17  Encoder_f4_1up: 10 CANID 1 added to CAN hardware filter to allow incoming msg   */
  0x20000000 , /*  11 CANID_MSG_TIME_POLL  17  Encoder_f4_1up: 11 CANID 2 added to CAN hardware filter to allow incoming msg   */
  0xD2000004 , /*  12 CANID_TST_SHEAVE_1UP  17  Encoder_f4_1up: 12 CANID 3 added to CAN hardware filter to allow incoming msg   */
@@ -205,7 +205,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef TENSION_a11	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval10[] = {
  TENSION_a11_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a11: 1 CRC for tension list                                             */
  0x00000001 , /*   2 1                    5  Tension_a11: 2 Version number for Tension List                                  */
@@ -263,7 +263,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef TENSION_a12	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval11[] = {
  TENSION_a12_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a12:   1 CRC for tension list                                           */
  0x00000001 , /*   2 1                    5  Tension_a12:   2 Version number for Tension List                                */
@@ -321,7 +321,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef TENSION_a21	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval12[] = {
  TENSION_a21_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a21:   1 CRC for tension list                                           */
  0x00000001 , /*   2 1                    5  Tension_a21:   2 Version number for Tension List                                */
@@ -379,7 +379,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef TENSION_a22	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval13[] = {
  TENSION_a22_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a22:   1 CRC for tension list                                           */
  0x00000001 , /*   2 1                    5  Tension_a22:   2 Version number for Tension List                                */
@@ -437,7 +437,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef YOGURT_1	// Include following parameters?
-const uint32_t paramval[] = {
+const uint32_t paramval14[] = {
  YOGURT_1_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Yogurt_1:  1 CRC for this list                                                  */
  0x00000001 , /*   2 1                    5  Yogurt_1:  2 Version number for Tension List                                    */
@@ -514,7 +514,9 @@ const uint32_t paramval[] = {
 
 #define CAN_UNIT_1A_CMDID_TABLE_SIZE 4	// Cansender_1: R Sensor board test
 
-#define CAN_UNIT_1B_CMDID_TABLE_SIZE 2	// Sensor, engine: R rpm, manifold pressure, throttle setting, temperature
+#define CAN_UNIT_1B_CMDID_TABLE_SIZE 2	// Shaft encoder_a1: R lower
+
+#define CAN_UNIT_1E_CMDID_TABLE_SIZE 4	// Sensor, engine: R rpm, manifold pressure, throttle setting, temperature
 
 #define CAN_UNIT_3_CMDID_TABLE_SIZE 2	// Logger_1: R 
 
@@ -525,7 +527,7 @@ const uint32_t paramval[] = {
 
 // =====================================================================
 #ifdef CAN_UNIT_11	// a #define is used to select the following
-const struct FUNC_CANID func_canid[] = {
+const struct FUNC_CANID func_canid00[] = {
 {   0x02200000, CAN_UNIT_11_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1003,  0x## CAN ID NOT FOUND ## }, /*   1 CAN_UNIT_11          CANID_CMD_TENSION_0R	 Tension_a: R 1 AD7799 VE POD Test (hence X) 0*/
 {   3,  0x## CAN ID NOT FOUND ## }, /*   2 CAN_UNIT_11          CANID_CMD_TENSION_0I	 Tension_a: I 1 AD7799 VE POD Test (hence X) 0*/
@@ -534,7 +536,7 @@ const struct FUNC_CANID func_canid[] = {
 
 // =====================================================================
 #ifdef CAN_UNIT_12	// a #define is used to select the following
-const struct FUNC_CANID func_canid[] = {
+const struct FUNC_CANID func_canid01[] = {
 {   0x02400000, CAN_UNIT_12_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1004,  0x05E0000C }, /*   1 CAN_UNIT_12          CANID_CMD_TENSION_a21R	 Tension_a2: R 2 AD7799 VE POD Test (hence X) 1*/
 {   4,  0x05E00004 }, /*   2 CAN_UNIT_12          CANID_CMD_TENSION_a21I	 Tension_a2: I 2 AD7799 VE POD Test (hence X) 1*/
@@ -545,7 +547,7 @@ const struct FUNC_CANID func_canid[] = {
 
 // =====================================================================
 #ifdef CAN_UNIT_13	// a #define is used to select the following
-const struct FUNC_CANID func_canid[] = {
+const struct FUNC_CANID func_canid02[] = {
 {   0x02600000, CAN_UNIT_13_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1011,  0x29800004 }, /*   1 CAN_UNIT_13          CANID_CMD_YOGURT_1R	 Yogurt_1: R Ver 1 of maker    */
 {  11,  0x29800000 }, /*   2 CAN_UNIT_13          CANID_CMD_YOGURT_1I	 Yogurt_1: I Ver 1 of maker    */
@@ -554,7 +556,7 @@ const struct FUNC_CANID func_canid[] = {
 
 // =====================================================================
 #ifdef CAN_UNIT_14	// a #define is used to select the following
-const struct FUNC_CANID func_canid[] = {
+const struct FUNC_CANID func_canid03[] = {
 {   0x02E00000, CAN_UNIT_14_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1003,  0xF800804C }, /*   1 CAN_UNIT_14          CANID_CMD_TENSION_a1YR	 Tension_a:  R 1 AD7799 VE POD Test (hence X) 2*/
 {   3,  0xF800004C }, /*   2 CAN_UNIT_14          CANID_CMD_TENSION_a1YI	 Tension_a:  I 1 AD7799 VE POD Test (hence X) 2*/
@@ -563,7 +565,7 @@ const struct FUNC_CANID func_canid[] = {
 
 // =====================================================================
 #ifdef CAN_UNIT_15	// a #define is used to select the following
-const struct FUNC_CANID func_canid[] = {
+const struct FUNC_CANID func_canid04[] = {
 {   0x02A00000, CAN_UNIT_15_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1004,  0xF800806C }, /*   1 CAN_UNIT_15          CANID_CMD_TENSION_a22R	 Tension_a2: R 2 AD7799 VE POD Test (hence X) 3*/
 {   4,  0xF800006C }, /*   2 CAN_UNIT_15          CANID_CMD_TENSION_a22I	 Tension_a2: I 2 AD7799 VE POD Test (hence X) 3*/
@@ -574,7 +576,7 @@ const struct FUNC_CANID func_canid[] = {
 
 // =====================================================================
 #ifdef CAN_UNIT_16	// a #define is used to select the following
-const struct FUNC_CANID func_canid[] = {
+const struct FUNC_CANID func_canid05[] = {
 {   0x02C00000, CAN_UNIT_16_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1004,  0xF800808C }, /*   1 CAN_UNIT_16          CANID_CMD_TENSION_a2GR	 Tension_a2: R 2 AD7799 VE POD GSM 1*/
 {   4,  0xF800008C }, /*   2 CAN_UNIT_16          CANID_CMD_TENSION_a2GI	 Tension_a2: I 2 AD7799 VE POD GSM 1*/
@@ -585,7 +587,7 @@ const struct FUNC_CANID func_canid[] = {
 
 // =====================================================================
 #ifdef CAN_UNIT_1A	// a #define is used to select the following
-const struct FUNC_CANID func_canid[] = {
+const struct FUNC_CANID func_canid06[] = {
 {   0x03600000, CAN_UNIT_1A_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1013,  0xD1C0006C }, /*   1 CAN_UNIT_1A          CANID_CMD_LOGGER_2R	 Logger_2: R                   */
 {  13,  0xD1C00064 }, /*   2 CAN_UNIT_1A          CANID_CMD_LOGGER_2I	 Logger_2: I                   */
@@ -596,7 +598,7 @@ const struct FUNC_CANID func_canid[] = {
 
 // =====================================================================
 #ifdef CAN_UNIT_1B	// a #define is used to select the following
-const struct FUNC_CANID func_canid[] = {
+const struct FUNC_CANID func_canid07[] = {
 {   0x03E00000, CAN_UNIT_1B_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1014,  0xA0200004 }, /*   1 CAN_UNIT_1B          CANID_CMD_CANSENDER_1R	 Cansender_1: R Sensor board test*/
 {  14,  0xA0200000 }, /*   2 CAN_UNIT_1B          CANID_CMD_CANSENDER_1I	 Cansender_1: I Sensor board test*/
@@ -604,8 +606,19 @@ const struct FUNC_CANID func_canid[] = {
 #endif
 
 // =====================================================================
+#ifdef CAN_UNIT_1E	// a #define is used to select the following
+const struct FUNC_CANID func_canid08[] = {
+{   0x04800000, CAN_UNIT_1E_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
+{1016,  0xD1600004 }, /*   1 CAN_UNIT_1E          CANID_CMD_LOWER1_HR	 Shaft encoder_a1: R lower     */
+{  16,  0xD1400000 }, /*   2 CAN_UNIT_1E          CANID_CMD_LOWER1_HI	 Shaft encoder_a1: I lower     */
+{1015,  0xD0E00004 }, /*   3 CAN_UNIT_1E          CANID_CMD_UPPER1_HR	 Shaft encoder_a1: R upper     */
+{  15,  0xD0E00000 }, /*   4 CAN_UNIT_1E          CANID_CMD_UPPER1_HI	 Shaft encoder_a1: I upper     */
+};
+#endif
+
+// =====================================================================
 #ifdef CAN_UNIT_3	// a #define is used to select the following
-const struct FUNC_CANID func_canid[] = {
+const struct FUNC_CANID func_canid09[] = {
 {   0x03800000, CAN_UNIT_3_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1002,  0x8060000C }, /*   1 CAN_UNIT_3           CANID_CMD_ENGINE_SENSORR	 Sensor, engine: R rpm, manifold pressure, throttle setting, temperature*/
 {   2,  0x80600000 }, /*   2 CAN_UNIT_3           CANID_CMD_ENGINE_SENSORI	 Sensor, engine: I rpm, manifold pressure, throttle setting, temperature*/
@@ -614,7 +627,7 @@ const struct FUNC_CANID func_canid[] = {
 
 // =====================================================================
 #ifdef CAN_UNIT_E	// a #define is used to select the following
-const struct FUNC_CANID func_canid[] = {
+const struct FUNC_CANID func_canid10[] = {
 {   0x01C0000C, CAN_UNIT_E_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1013,  0xD1C0005C }, /*   1 CAN_UNIT_E           CANID_CMD_LOGGER_1R	 Logger_1: R                   */
 {  13,  0xD1C00054 }, /*   2 CAN_UNIT_E           CANID_CMD_LOGGER_1I	 Logger_1: I                   */
@@ -625,7 +638,7 @@ const struct FUNC_CANID func_canid[] = {
 
 // =====================================================================
 #ifdef CAN_UNIT_F	// a #define is used to select the following
-const struct FUNC_CANID func_canid[] = {
+const struct FUNC_CANID func_canid11[] = {
 {   0x01E0000C, CAN_UNIT_F_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1005,  0x0620000C }, /*   1 CAN_UNIT_F           CANID_CMD_CABLE_ANGLE_1R	 Cable angle: R AD7799 #2 drum #1*/
 {   5,  0x06200000 }, /*   2 CAN_UNIT_F           CANID_CMD_CABLE_ANGLE_1I	 Cable angle: I AD7799 #2 drum #1*/

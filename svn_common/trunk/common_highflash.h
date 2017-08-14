@@ -4,10 +4,12 @@
 * Board              : 
 * Description        : Fixed area in high flash for application calibrations
 *******************************************************************************/
-#ifndef __SVN_COMMON_HIGHFLASH0
-#define __SVN_COMMON_HIGHFLASH0
+#ifndef __SVN_COMMON_HIGHFLASH1
+#define __SVN_COMMON_HIGHFLASH1
 
 #include "common_can.h"
+#include <stdint.h>
+
 
 /* 
    Obsolete
@@ -49,9 +51,9 @@ struct FUNC_CANID
 
 struct CRCBLOCK
 {
-	u32 pstart;	// Start address
-	u32 count;	// Byte count
-	u32 crc;	// CRC-32 expected
+	uint32_t pstart;	// Start address
+	uint32_t count;	// Byte count
+	uint32_t crc;	// CRC-32 expected
 };
 
 #define NUMCANIDS	16	// Max number of CAN IDs
@@ -59,17 +61,17 @@ struct CRCBLOCK
 
 struct CRCPROG
 {
-	u32 crc;		// CRC-32 on this struct
-	u32 version;		// Version number
-	u32 numprogsegs;	// Number of program segments
+	uint32_t crc;		// CRC-32 on this struct
+	uint32_t version;		// Version number
+	uint32_t numprogsegs;	// Number of program segments
 	struct CRCBLOCK crcblk[NUMPROGSEGS]; // Prog segments to check CRC
 };
 
 /* Use the following to get size, and address relative positioning. */
 struct HIGHFLASHH	// APP CAN ID and program CRC checks
 {
-	u32	crc;		// CRC-32 on this struct
-	u32	version;	// Version
+	uint32_t	crc;		// CRC-32 on this struct
+	uint32_t	version;	// Version
 	/* One instance of each struct comprises the high flash layout. */
 	struct FUNC_CANID func_canid[NUMCANIDS];	// Application CAN ID's
 	struct	CRCPROG 	crcprog;
@@ -78,17 +80,17 @@ struct HIGHFLASHH	// APP CAN ID and program CRC checks
 #define NUMBEROF4BYTSLOTS (0x0C00 - 8)
 struct HIGHFLASHP	// Generic calibration and parameters
 {
-	u32	crc;		// CRC-32 on this struct
-	u32	version;	// Version
-	u32 x[NUMBEROF4BYTSLOTS];
+	uint32_t	crc;		// CRC-32 on this struct
+	uint32_t	version;	// Version
+	uint32_t x[NUMBEROF4BYTSLOTS];
 };
 
 /* A version 2 of the table layout. */
 #define NUMCANIDS2	16	// Max number of CAN IDs
 struct FLASHH2	// Command CAN ID table, top reserved flash section
 {
-	u32	unit_code;		// CAN unit (node) code 
-	u32	size;			// Number of entries that follow
+	uint32_t	unit_code;		// CAN unit (node) code 
+	uint32_t	size;			// Number of entries that follow
   struct FUNC_CANID slot[NUMCANIDS2];	// Application CAN ID's
 };
 
@@ -115,11 +117,11 @@ struct HIGHFLASHPAIRS
 
 /*******************************************************************************/
 /* These are obsolete, the the symbols may still lurk.**************************/
-struct APPCANID*   gc_hiflash_appcanid(u32 version);
-struct CRCPROG*    gc_hiflash_crcprog(u32 version);
-struct BOARDCALIB* gc_hiflash_boardcalib(u32 version);
-struct APPPARAM*   gc_hiflash_appparam(u32 version);
-struct HIGHFLASHLAYOUT* gc_hiflash_highflash(u32 version);
+struct APPCANID*   gc_hiflash_appcanid(uint32_t version);
+struct CRCPROG*    gc_hiflash_crcprog(uint32_t version);
+struct BOARDCALIB* gc_hiflash_boardcalib(uint32_t version);
+struct APPPARAM*   gc_hiflash_appparam(uint32_t version);
+struct HIGHFLASHLAYOUT* gc_hiflash_highflash(uint32_t version);
 /* @brief 	: Check crc and return pointer to struct
  * @param	: version = version number expected
  * @return	: NULL = crc failed or version did not match, otherwise pointer 

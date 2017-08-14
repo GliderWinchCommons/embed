@@ -90,6 +90,7 @@ uint64_t dtw_can_dur_ave; // SCALED by << DTWAVE_SCALE
 uint32_t en_interval_reset;	// Running count of interval jam resets
 
 uint32_t encode_oc_ticks;	// 1/64sec tick flag
+uint32_t encoder_timers_poll_ctr;	// Tick count
 
 /* **************************************************************************************
  * static void led(uint32_t lednum);
@@ -416,6 +417,7 @@ void TIM3_IRQHandler(void)
 		TIM3_SR = ~0x04;	// Reset flag
 		TIM3_CCR2 += OCTICKSFOR1MS;	// Next OC for 1/2 ms
 		NVICISPR(NVIC_I2C1_ER_IRQ);	// Set pending (lower priority) interrupt
+		encoder_timers_poll_ctr += 1;	// Tick count
 	}
 	
 	if ((usSR & 0x1) != 0)

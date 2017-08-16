@@ -371,8 +371,6 @@ debugA += 1;
  *		: -1 = Buffer overrun (no free slots for the new msg)
  *		: -2 = Bogus CAN id rejected
  ******************************************************************************/
-
-
 int can_driver_put(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF *pcan, u8 maxretryct, u8 bits)
 {
 	volatile struct CAN_POOLBLOCK* pnew;

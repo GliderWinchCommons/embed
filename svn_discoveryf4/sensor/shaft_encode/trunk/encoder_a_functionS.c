@@ -10,11 +10,10 @@
 #include "DTW_counter.h"
 #include "encoder_idx_v_struct.h"
 #include "db/gen_db.h"
-//#include "tim3_ten2.h"
 #include "../../../../svn_common/trunk/common_highflash.h"
 #include "encoder_a_functionS.h"
+#include "encoder_timers.h"
 #include "can_driver_filter.h"
-//#include "cmd_code_dispatch.h"
 
 #define ENCAQUEUESIZE	3	// Queue size for passing values between levels
 
@@ -35,12 +34,18 @@ const uint32_t* pparamflash[NUMENCODERAFUNCTIONS] = { \
 };
 
 /* Base pointer adjustment for idx->struct table. */
-struct TENSIONLC* plc[NUMENCODERAFUNCTIONS];
+struct ENCODERALC* plc[NUMENCODERAFUNCTIONS];
 
 /* Highflash command CAN id table lookup mapping. */
 const uint32_t myfunctype[NUMENCODERAFUNCTIONS] = { \
  FUNCTION_TYPE_SHEAVE_UP_H,
  FUNCTION_TYPE_SHEAVE_LO_H
+};
+
+union FTINT	// Union for sending float as 4 byte uint32_t
+{
+	uint32_t ui;
+	float ft;
 };
 /* **************************************************************************************
  * static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct ENCODERAFUNCTION* p); 
@@ -50,19 +55,35 @@ const uint32_t myfunctype[NUMENCODERAFUNCTIONS] = { \
  * @param	: pv = pointer to a 4 byte value (little Endian) to be sent
  * @param	: p = pointer to a bunch of things for this function instance
  * ************************************************************************************** */
-static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct ENCODERAFUNCTION* p)
+static void send_can_msg(struct ENCODERAFUNCTION* p)
 {
 	struct CANRCVBUF can;
-	can.id = canid;
-	can.dlc = 5;			// Set return msg payload count
-	can.cd.uc[0] = status;
-	can.cd.uc[1] = (*pv >>  0);	// Add 4 byte value to payload
-	can.cd.uc[2] = (*pv >>  8);
-	can.cd.uc[3] = (*pv >> 16);
-	can.cd.uc[4] = (*pv >> 24);
+	union FTINT uf;
+
+	encoder_get_all(&p->enc,p->unit); // Get readings and speed computation
+	can.id = p->enc_a.cid_poll_msg; // CAN ID
+	can.dlc = 8;			// DLC: Set return msg payload count
+	can.cd.ui[0] = p->enc.enr.n;		// Encoder counts
+	uf.ft = (p->enc.r * p->enc_a.distperrev); // Apply calibration to speed
+	can.cd.ui[1] = uf.ui;		// 
 	can_hub_send(&can, p->phub_encoder);// Send CAN msg to 'can_hub'
-	p->hbct_ticks = (p->enc_a.hbct * 2); // Convert ms to timer ticks
-	p->hb_t = encoder_timers_poll_ctr + p->hbct_ticks;	 // Reset heart-beat time duration each time msg sent
+	return;
+}
+/* **************************************************************************************
+ * static void send_can_msg_hb(struct ENCODERAFUNCTION* p); 
+ * @brief	: Setup CAN msg for heartbeat (raw long long of encoder count)
+ * @param	: p = pointer to a bunch of things for this function instance
+ * ************************************************************************************** */
+static void send_can_msg_hb(struct ENCODERAFUNCTION* p)
+{
+	struct CANRCVBUF can;
+	can.id = p->enc_a.cid_heartbeat;	// Msg CAN ID
+	can.dlc = 4;				// Msg payload count
+	encoder_get_all(&p->enc,p->unit); 	// Get current encoder reading
+	can.cd.si[0] = p->enc.enr.n;		// Copy encoder counter to payload
+	can_hub_send(&can, p->phub_encoder);	// Send CAN msg to 'can_hub' for distribution
+	p->hbct_ticks = (p->enc_a.hbct * 2); 	// Convert ms to timer ticks
+	p->hb_t = encoder_timers_poll_ctr + p->hbct_ticks; // Reset heart-beat time duration each time msg sent
 	return;
 }
 
@@ -115,6 +136,9 @@ static int encoder_a_functionS_init(int n, struct ENCODERAFUNCTION* p )
 	int ret;
 	int ret2;
 	u32 i;
+
+	/* Unit number is used by others */
+	p->unit = n;
 
 	/* Set pointer to table in highflash.  Base address provided by .ld file */
 // TODO routine to find latest updated table in this flash section
@@ -209,11 +233,7 @@ int encoder_a_functionS_poll(struct CANRCVBUF* pcan, struct ENCODERAFUNCTION* p)
 {
 	int ret = 0;
 
-	union FTINT	// Union for sending float as 4 byte uint32_t
-	{
-		uint32_t ui;
-		float ft;
-	}ui; ui.ui = 0; // (initialize to get rid of ui.ft warning)
+
 
 	/* Check if this instance is used. */
 //	if ((p->enc_a.useme & 1) != 1) return 0;
@@ -224,9 +244,9 @@ int encoder_a_functionS_poll(struct CANRCVBUF* pcan, struct ENCODERAFUNCTION* p)
 //		iir_filtered_calib(p, 1);	// Slow (long time constant) filter the reading
 //		ui.ft = p->fcalib_lgr;		// Float version of calibrated last good reading
 		
-		/* Send heartbeat and compute next hearbeat time count. */
+		/* Send heartbeat and compute next heartbeat time count. */
 		//      Args:  CAN id, status of reading, reading pointer instance pointer
-		send_can_msg(p->enc_a.cid_heartbeat, p->status_byte, &ui.ui, p); 
+		send_can_msg_hb(p); 
 		ret = 1;
 	}
 
@@ -244,7 +264,7 @@ if (pcan->id == 0x00400000) // ##### TEST #########
 		{ // Here, yes.  Send our precious msg.
 			/* Send encoder msg and re-compute next hearbeat time count. */
 			//      Args:  CAN id, status of reading, reading pointer instance pointer
-			send_can_msg(p->enc_a.cid_msg_time_poll, p->status_byte, &ui.ui, p); 
+			send_can_msg(p); 
 			return 1;
 		}
 	}

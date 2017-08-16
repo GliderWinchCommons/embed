@@ -238,8 +238,8 @@ int encoder_timers_init(uint32_t canid)
 
 	/* Set and enable interrupt controller for TIM3 interrupt (timing) */
 
-#define TIM3_PRIORITY NVIC_CAN_RX1_IRQ_PRIORITY //   Set TIM3 priority same as CAN RX1 (time msg)
-//#define TIM3_PRIORITY 0x30	// Timer priority
+//#define TIM3_PRIORITY NVIC_CAN_RX1_IRQ_PRIORITY //   Set TIM3 priority same as CAN RX1 (time msg)
+#define TIM3_PRIORITY 0x40	// Timer priority
 
 	NVICIPR (NVIC_TIM3_IRQ, TIM3_PRIORITY );	// Set interrupt priority
 	NVICISER(NVIC_TIM3_IRQ);			// Enable interrupt controller for TIM3
@@ -326,8 +326,8 @@ void encoder_get_all(struct ENCODERCOMPUTE *p, uint16_t unit)
    ###################################################################################### */
 void can_msg_check(void* pctl, struct CAN_POOLBLOCK* pblk)
 {
-// NOTE: CAN and TIM3 are at same interrupt priority
 
+return; // ### DEBUG
 	/* Only deal with timing CAN msgs */
 	if (pblk->can.id != canid_tim) return; // Return: Not a time sync msg
 
@@ -403,9 +403,6 @@ static void IC_ov(volatile struct ENCODERREADING *p,  uint32_t ccr, uint32_t enc
 	return;
 }
 /* ===================================================================================== */
-unsigned int debugirq1;
-unsigned int debugirq2;
-
 void TIM3_IRQHandler(void)
 {
 	volatile uint32_t temp = DTWTIME;// Save DTW 32b sys counter (if time sync of OC implemented)
@@ -439,7 +436,6 @@ if(enr_test_ctB < ENCTESTBUFFSIZE)
 		}
 		if ((usSR & 0x10) != 0)
 		{ // CH4 Input Capture flag w overflow flag
-debugirq1+= 1;
 
 			IC_ov(&enr_wrk[1], TIM3_CCR4,TIM5_CNT);// CH4
 
@@ -470,7 +466,6 @@ if(enr_test_ctB < ENCTESTBUFFSIZE)
 		}
 		if ((usSR & 0x10) != 0)
 		{ // CH4 Input Capture flag 
-debugirq2+= 1;
 			IC_only(&enr_wrk[1], TIM3_CCR4,TIM5_CNT);// CH4
 
 #ifdef IC_TO_IC_TIME_W_BIG_BUFFER

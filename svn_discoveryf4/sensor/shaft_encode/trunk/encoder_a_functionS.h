@@ -31,7 +31,8 @@ struct ENCODERAFUNCTION
 	uint32_t* pcanid_cmd_func_i;	// Pointer into high flash for command can id (incoming)
 	uint32_t* pcanid_cmd_func_r;	// Pointer into high flash for command can id (response)
 	uint32_t hb_t;			// tim3 tick counter for next heart-beat CAN msg
-	uint32_t hbct_ticks;		// enc_a.hbct (ms) converted to timer ticks
+	uint32_t hbct_ticks;		// enc_a.hbct (ms) converted to timer tick
+	uint8_t unit;			// Encoder unit number: 0 or 1
 	uint8_t status_byte;		// Reading status byte
 	double	dcalib_lgr;		// (double) Calibrated, last good reading
 	float	fcalib_lgr;		// (float) calibrated last good reading

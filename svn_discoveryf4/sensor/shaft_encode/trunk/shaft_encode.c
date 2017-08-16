@@ -106,11 +106,7 @@ const struct CAN_INIT msginit2 = { \
 /* ------------- Each node on the CAN bus gets a unit number --------------------- */
 //#define IAMUNITNUMBER	CAN_UNITID_GATE2	// PC<->CAN bus gateway
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& */
-/* ######################### GATEWAY HEARTBEAT CAN ID ############################ */
-static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY1}; // See CANID_INSERT.sql
-//static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY2}; // See CANID_INSERT.sql
-//static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY3}; // See CANID_INSERT.sql
-/* ############################################################################### */
+
 /* %%%%%%%%%%%%% Board hardware setup %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 #define SETUP_CAN1	// Include code for setup of CAN1
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%encoder_timers.h%%%%%%%%%%% */
@@ -170,35 +166,13 @@ static void printmsg(struct CANRCVBUF* p, int sw)
 	return;
 }
 #endif
-/* **************************************************************************************
- * static int CAN_gateway_send(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF* pg);
- * @brief	: Setup CAN message for sending
- * @param	: pg = Pointer to message buffer (see common_can.h)
- * @return	: 0 = OK; -1 = dlc greater than 8; -2 = illegal extended address
- * ************************************************************************************** */
-static int CAN_gateway_send(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF* pg)
-{
-	/* Check number of bytes in payload and limit to 8. */
-	if ((pg->dlc & 0x0f) > 8) 
-		return -1;	// Payload ct too big
-	
-	/* Check if an illegal id combination */
-	if ( ((pg->id & 0x001ffff9) != 0) && ((pg->id & 0x04) == 0) ) 
-	{ // Here, in the additional 18 extended id bits one or more are on, but IDE flag is for standard id (11 bits)
-		return -2; // Illegal id
-	}
-
-	/* Add msg to CAN outgoing buffer. */
-	return can_driver_put(pctl, pg, 8, 0);
-}
-
 
 /*#################################################################################################
 And now for the main routine 
   #################################################################################################*/
 int main(void)
 {
-	int tmp;
+//	int tmp;
 	int ret;
 //u32 xctr = 1;
 //u32 yctr = 0;
@@ -365,12 +339,6 @@ xprintf(UXPRT,"### %15.8e\n\r", dtmp2 );
 /* --------------------- Monitoring incoming CAN ids  ------------------------------------------------- */
 	can_msg_reset_init(pctl0, 0xffe00000);	// Specify CAN ID for this unit for msg caused RESET
 
-/* --------------------- Hardware is ready, so do program-specific startup ---------------------------- */
-#define FLASHCOUNT 21000000;	// LED flash
-//u32	t_led = DTWTIME + FLASHCOUNT; // Set initial time
-
-#define ENCODERAFUNCTIONSETUPSTUFF
-#ifdef ENCODERAFUNCTIONSETUPSTUFF
 /* ---------------- Encoder functions ---------------------------------------------------------------- */
 	ret = encoder_a_functionS_init_all();
 	if (ret <= 0)
@@ -379,15 +347,14 @@ xprintf(UXPRT,"### %15.8e\n\r", dtmp2 );
 		while(1==1);
 	}
 	xprintf(UXPRT,"encoder_a_functionS: table size : %d\n\r", ret);
-
-/* ----------------- CAN filter registers ------------------------------------------------------------- */
-	can_filter_print_f4(14);	// Print the CAN filter registers
 /* ----------------- Debug parameters ----------------------------------------------------------------- */
 for (i = 0; i < NUMENCODERAFUNCTIONS; i++)
 {
 	xprintf(UXPRT,"\n\rENCODER #%1d values\n\r",i+1);
 	encoder_a_printf(&enc_f[i].enc_a);	// Print parameters
 }
+/* ----------------- CAN filter registers ------------------------------------------------------------- */
+	can_filter_print_f4(14);	// Print the CAN filter registers
 /* ------------------------ CAN msg loop (runs under interrupt) --------------------------------------- */
 	ret = CAN_poll_loop_init();
 	if (ret != 0)
@@ -395,7 +362,6 @@ for (i = 0; i < NUMENCODERAFUNCTIONS; i++)
 		xprintf(UXPRT,"CAN_poll_loop_init: failed %d\n\r",ret);
 		while (1==1);		
 	}
-#endif
 /* --------------------- Timer and Encoder setup ----------------------------------------------------------------- */
 	encoder_timers_init(0x00200000); // Pass reset CAN id to routine
 
@@ -403,9 +369,8 @@ for (i = 0; i < NUMENCODERAFUNCTIONS; i++)
 	can_driver_enable_interrupts();	// Enable CAN interrupts
 
 /* Test disable/enable global interrupts */
-__asm__ volatile ("CPSID I");
-
-__asm__ volatile ("CPSIE I");
+//__asm__ volatile ("CPSID I");
+//__asm__ volatile ("CPSIE I");
 
 t_cmdn = DTWTIME + 168000000; // Set initial time
 u32 hb_inc = DELAYHEARTBEAT * (sysclk_freq/64);
@@ -423,8 +388,6 @@ float enc_cal[2] = {84E6/(720/60), (84E6/(720/60))}; // Rev per min
 #define FEETPERPULSE	2.54527182E-03
 #define METERSPERPULSE	7.75798852E-04
 
-
-
 double dtmp;
 
 /* --------------------- Endless Polling Loop ----------------------------------------------- */
@@ -439,12 +402,12 @@ double dtmp;
 */
 		/* Have LEDs follow encoder phase signals */
 		encoder_leds();
-//#ifdef NOTBUFFERSAVETEST
+
 		/* Check that the TIM3 OC is timing correctly (yes, and it didn't!) */
 		if (encode_oc_ticks != encode_oc_ticks_prev)
 		{ // Here, 1/64th sec tick incremented the flag
 			encode_oc_ticks_prev = encode_oc_ticks;
-			if ((encode_oc_ticks & 0x0f) == 0)
+			if ((encode_oc_ticks & 0x01f) == 0)
 			{ // Here, end of one second 
 				xprintf(UXPRT,"\n\rTIM3_OC: %5d ",(int)encode_oc_ticks>>6);
 				for (i = 0; i < 2; i++) // Do both encoders
@@ -455,10 +418,6 @@ double dtmp;
 //					enc_main[i].enr_prev = enc_main[i].enr; // Update '_prev' for next time
 				}
 
-extern unsigned int debugirq1; // Count of IC flag with overflow
-extern unsigned int debugirq2; // Count of IC flag only
-
-xprintf(UXPRT," %3d %8d",debugirq1,debugirq2);
 
 // Amount of cable-out converted to meters
 double dtmp3 = (lltoflt(enc_main[1].enr.n))*METERSPERPULSE;
@@ -542,25 +501,6 @@ else
 
 #endif
 
-		/* Send heart-beat periodically. */
-		if (((int)(DTWTIME - t_hb)) > 0) // Has the time expired?
-		{ // Here, yes.
-			t_hb += hb_inc; 			// Set next toggle time
-			tmp = CAN_gateway_send(pctl0, &can_hb);	// Add to xmit buffer (if OK)
-			Errors_CAN_gateway_send(tmp);		// Count any error returns
-		}
-		/* ================= CAN1 --> ? ================================================================= */
-		while ( (pc1r1 = can_driver_peek1(pctl0)) != 0)	// Did we receive a HIGH PRIORITY CAN BUS msg?
-		{ // Here yes.  Retrieve it from the CAN buffer and save it in our vast mainline storage buffer ;)
-//printmsg(pc1r1, 1);
-			can_driver_toss1(pctl0); // Release buffer block, fifo1 linked list
-		}
-
-		while ( (pc1r0 = can_driver_peek0(pctl0)) != 0)		// Did we receive a LESS-THAN-HIGH-PRIORITY CAN BUS msg?
-		{ // Here yes.  Retrieve it from the CAN buffer and save it in our vast mainline storage buffer
-//printmsg(pc1r0, 0);
-			can_driver_toss0(pctl0); // Release buffer block, fifo0 linked list
-		}
 	/* Done with a pass of this endless loop: trigger CAN poll */
 		CAN_poll_loop_trigger();
 

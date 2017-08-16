@@ -273,8 +273,8 @@ g_pfnVectors:
    .weak I2C1_EV_IRQHandler
    .thumb_set I2C1_EV_IRQHandler,Default_Handler40
 
-   .weak I2C1_ER_IRQHandler
-   .thumb_set I2C1_ER_IRQHandler,Default_Handler41
+#   .weak I2C1_ER_IRQHandler
+#   .thumb_set I2C1_ER_IRQHandler,Default_Handler41
 
    .weak I2C2_EV_IRQHandler
    .thumb_set I2C2_EV_IRQHandler,Default_Handler42

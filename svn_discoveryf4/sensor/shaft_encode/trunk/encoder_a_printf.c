@@ -51,8 +51,8 @@ xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_poll_msg,    "  
 xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_poll,        "  8 CANID-Response to poll ");
 xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_poll_r,      "  9 CANID-Response to poll ");
 xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_hb_timesync, " 10 CANID-GPS time sync msg polls encoders");
-xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_msg_time_poll," 11");
-xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_tst_enc_a,   " 12 ");
+xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_msg_time_poll," 11 CANID-cid_msg_time_poll");
+xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_tst_enc_a,   " 12 CANID-cid_tst_enc_a");
 xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->cid_cmd_hi,      " 13 CANID-Command incoming/interrogation");
 xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->code_CAN_filt[0]," 14 Remaining unassigned in list (CANID_DUMMY)");
 xprintf(UXPRT,"%2d	%08X	%s\n\r",   i++, (unsigned int)penc->code_CAN_filt[1]," 15 Remaining unassigned in list (CANID_DUMMY)");

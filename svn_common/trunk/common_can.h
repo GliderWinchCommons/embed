@@ -482,6 +482,7 @@ union CANDATA	// Unionize for easier cooperation amongst types
 {
 	unsigned long long ull;
 	signed long long   sll;
+        double             dbl;
 	u32 	   ui[2];
 	u16 	   us[4];
 	u8 	   uc[8];
@@ -489,6 +490,7 @@ union CANDATA	// Unionize for easier cooperation amongst types
 	s32        si[2];
 	s16        ss[4];
 	s8         sc[8];
+	float	    f[2];
 };
 struct CANRCVBUF		// Combine CAN msg ID and data fields
 { //                               offset  name:     verbose desciption

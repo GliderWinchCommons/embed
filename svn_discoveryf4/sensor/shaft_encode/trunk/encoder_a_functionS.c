@@ -14,6 +14,7 @@
 #include "encoder_a_functionS.h"
 #include "encoder_timers.h"
 #include "can_driver_filter.h"
+#include "clockspecifysetup.h"
 
 #define ENCAQUEUESIZE	3	// Queue size for passing values between levels
 
@@ -42,30 +43,28 @@ const uint32_t myfunctype[NUMENCODERAFUNCTIONS] = { \
  FUNCTION_TYPE_SHEAVE_LO_H
 };
 
-union FTINT	// Union for sending float as 4 byte uint32_t
-{
-	uint32_t ui;
-	float ft;
-};
 /* **************************************************************************************
- * static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct ENCODERAFUNCTION* p); 
- * @brief	: Setup CAN msg with reading
- * @param	: canid = CAN ID
- * @param	: status = status of reading
- * @param	: pv = pointer to a 4 byte value (little Endian) to be sent
- * @param	: p = pointer to a bunch of things for this function instance
+ * static void send_can_msg(struct ENCODERAFUNCTION* p); 
+ * @brief	: Setup CAN msg with payload of calibrated distance|speed readings in floats
+ * @param	: p = pointer to everything for this encoder function instance
  * ************************************************************************************** */
 static void send_can_msg(struct ENCODERAFUNCTION* p)
 {
 	struct CANRCVBUF can;
-	union FTINT uf;
+	float ftmp;
 
-	encoder_get_all(&p->enc,p->unit); // Get readings and speed computation
 	can.id = p->enc_a.cid_poll_msg; // CAN ID
 	can.dlc = 8;			// DLC: Set return msg payload count
-	can.cd.ui[0] = p->enc.enr.n;		// Encoder counts
-	uf.ft = (p->enc.r * p->enc_a.distperrev); // Apply calibration to speed
-	can.cd.ui[1] = uf.ui;		// 
+
+	/* First 4 bytes of payload = (float) Distance (meters) */
+	encoder_get_all(&p->enc,p->unit); // Get readings and speed computation
+	can.cd.f[0]  = (float)p->enc.enr.n;	// Encoder counts 
+	ftmp   = p->enc_a.ctperrev;	// Int to Float counts per revolution
+	ftmp   = p->enc_a.distperrev/ftmp; // Distance/rev / counts/rev
+	can.cd.f[0] *= ftmp;		// Cable-out = Count * distance/count
+
+	/* Second 4 bytes of payload = (float) speed (meters/sec) */
+	can.cd.f[1] = p->enc.r * p->meterspersec; // Scale speed to meters/sec 
 	can_hub_send(&can, p->phub_encoder);// Send CAN msg to 'can_hub'
 	return;
 }
@@ -155,6 +154,10 @@ static int encoder_a_functionS_init(int n, struct ENCODERAFUNCTION* p )
 	// Convert heartbeat time (ms) to timer ticks (recompute for online update)
 	p->hbct_ticks = (p->enc_a.hbct * 2);
 	p->hb_t = encoder_timers_poll_ctr + p->hbct_ticks; // Next timer for hb	
+
+	/* Compenent for scaling for converting computed speed of ticks/sec to meters/sec */
+	p->tickspercount = (float)pclk1_freq /  (float)p->enc_a.ctperrev;
+	p->meterspersec = p->enc_a.distperrev * p->tickspercount;
 
 	/* Add this function (encoder_a) to the "hub-server" msg distribution. */
 	p->phub_encoder = can_hub_add_func();	// Set up port/connection to can_hub

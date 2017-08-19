@@ -63,7 +63,7 @@ extern unsigned long encoder_get_reading_loop_cnt;
 extern uint32_t encoder_timers_poll_ctr;	// Tick count
 
 /* Test: store readings each IC  */
-//#define IC_TO_IC_TIME_W_BIG_BUFFER  // Uncomment this statement to enable
+#define IC_TO_IC_TIME_W_BIG_BUFFER  // Uncomment this statement to enable
 #ifdef IC_TO_IC_TIME_W_BIG_BUFFER
 #define ENCTESTBUFFSIZE 1600
 extern struct ENCODERREADING enr_test[ENCTESTBUFFSIZE];
@@ -72,7 +72,7 @@ extern unsigned int enr_test_ct;
 #endif
 
 /* Test: store readings for 2nd encoder (unit=1) each OC timed 1/64th sec */
-#define CIRCULARBUFF_64PERSEC_OC_TIMED_READINGS  // Uncomment this statement to enable
+//#define CIRCULARBUFF_64PERSEC_OC_TIMED_READINGS  // Uncomment this statement to enable
 
 #ifdef CIRCULARBUFF_64PERSEC_OC_TIMED_READINGS
 #define ENCTESTVARBUFFSIZE 64
@@ -81,6 +81,26 @@ struct ENCODERREADING* encoder_getOC64(void);
 /* @brief	: Get 1/64 second "n" and "t" if available
  * @return	: pointer: null = no new data; pointer to struct with new data
 *******************************************************************************/
+#endif
+
+/* Test: induction motor drive encoder to determine encoder error calibration */
+//#define IMDRIVECALIBRATION	// Uncomment to enable test code
+#ifdef  IMDRIVECALIBRATION
+#define IMCALTESTSEGMENTS  360	// Number of encoder segments
+#define IMCALTESTBUFFSIZE  IMCALTESTSEGMENTS	// Size equals number of encoder segments
+#define IMCANTESTREVCTMAX  (3670*10)		// Number of revolutions in the test
+#define IMCALTESTCOUNTDOWN 	(360*60*5)	// Count down delay
+extern uint64_t imcalacum[IMCALTESTBUFFSIZE];	// Accumulators for each segment slot
+extern uint32_t im_idx;		 // Next available 
+extern uint32_t im_rev; 	 // Count of revolutions
+extern uint64_t imcaltime_prev; // Previous IC time
+extern uint64_t imcaltime_begin;// Start of data storing
+extern uint64_t imcaltime_end;	 // End time of data storing
+extern int im_otosw;		 // Number of ICs before start
+extern uint64_t im_tmp;	 // Use 'extern' for debugging
+
+
+
 #endif
 
 

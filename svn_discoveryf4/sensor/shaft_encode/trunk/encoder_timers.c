@@ -361,6 +361,22 @@ struct ENCODERREADING *penr_test64_begin = &enr_test64[0];
 struct ENCODERREADING *penr_test64_end = &enr_test64[ENCTESTVARBUFFSIZE];
 #endif
 
+#ifdef  IMDRIVECALIBRATION
+static void imtest_put(void);
+uint64_t imcalacum[IMCALTESTBUFFSIZE];	// Accumulators for each segment slot
+uint32_t im_idx;	// Next available 
+uint32_t im_rev; // Count of revolutions
+uint64_t imcaltime_prev; // Previous IC time
+uint64_t im_tmp;
+int im_otosw = IMCALTESTCOUNTDOWN;	// Number of ICs before start
+struct ENCODERREADING imr;
+uint64_t imcaltime_begin;
+uint64_t imcaltime_end;
+
+
+#endif
+
+
 /* ===================================================================================== */
 /* static void IC_only(struct ENCODERREADING *p, uint32_t ccr,  uint32_t enccr)
  * @brief  : Input capture flag only for CH3 or CH4
@@ -446,6 +462,10 @@ if(enr_test_ct < ENCTESTBUFFSIZE)
    enr_test_ct += 1;
 }
 #endif
+
+#ifdef  IMDRIVECALIBRATION
+imtest_put();
+#endif
 		}		
 	}
 	else
@@ -474,6 +494,10 @@ if(enr_test_ct < ENCTESTBUFFSIZE)
    encoder_get_reading(&enr_test[enr_test_ct], 1);
    enr_test_ct += 1;
 }
+#endif
+
+#ifdef  IMDRIVECALIBRATION
+imtest_put();
 #endif
 
 		}
@@ -522,6 +546,61 @@ struct ENCODERREADING* encoder_getOC64(void)
 	penr_test64_get += 1;
 	if (penr_test64_get >= penr_test64_end) penr_test64_get = penr_test64_begin;
 	return p;
+}
+#endif
+
+/******************************************************************************
+ * static void imtest_put(void);
+ * @brief	: Induction motor test: Average time between ICs by segment index in an array
+*******************************************************************************/
+/*
+  Accumulate input capture time between encoder segements by encoder segment, after
+startup.  Startup delays until IC time is reasonable for a 3600 rpm induction motor,
+whicha allows it to come up to speed, and after coming up to speed delays via a
+countdown counter.
+
+ When the specified number of revolutions has taken place the storing stops.  'main'
+sees the im_otosw as -1, indicating the storing is complete.  After outputting the
+data 'main' clears the accumulator array and resets the im_otosw for another round
+of storing.
+
+*/
+#ifdef  IMDRIVECALIBRATION
+static void imtest_put(void)
+{
+ 	if (im_otosw >= 0) // Skip everything when test complete
+ 	{ // Here, not in stopped mode (i.e. stopped = -1)
+   		encoder_get_reading(&imr, 1); // Get latest reading
+   		im_tmp = imr.t.ll - imcaltime_prev; // Time between ICs
+		imcaltime_prev = imr.t.ll;
+   		if (im_otosw > 0) // Countdown in progress?
+   		{ // Be sure motor up to speed before starting test
+    			if ((im_tmp < 4500) && (im_tmp > 3500))
+    			{ // Duration reasonable, now give it some more time
+     				im_otosw -= 1; // Count down
+     				if (im_otosw > 0) 
+					return; // Return: more countdowns needed
+     				imcaltime_begin = imr.t.ll; // Save start time
+    			}
+			else
+			{
+				return;
+			}
+   		}
+   		// Here, test has started
+   		imcalacum[im_idx] += im_tmp; // Accumulate time between ICs
+   		im_idx += 1; 	// Next segment
+   		if (im_idx >= IMCALTESTBUFFSIZE) // End of a revolution?
+   		{ // Here, yes.  Cycle back, or end test
+    			im_idx = 0;	// Reset to beginning of array
+    			im_rev += 1;	// Encoder revolution counts
+    			if (im_rev >= IMCANTESTREVCTMAX) // End averaging?
+    			{ // Time to stop collecting data
+      				im_otosw = -1; // Stopped mode
+      				imcaltime_end = imr.t.ll; // Save end time
+    			}
+   		}
+ 	}
 }
 #endif
 

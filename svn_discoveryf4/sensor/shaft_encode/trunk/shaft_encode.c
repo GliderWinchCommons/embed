@@ -448,9 +448,13 @@ if (vartmp > 0)
 
 double dr1 = vmean; // Convert for printf
 double dr2 = stdfin;
-xprintf(UXPRT," %10.2f %10.3f",dr1,dr2);
+xprintf(UXPRT," x%10.2f std%10.3f",dr1,dr2);
 enc_test64_n = 0; // Reset count for next round
 enc_test64_sum = 0; // Reset sum for mean
+#endif
+
+#ifdef  IMDRIVECALIBRATION
+xprintf(UXPRT," rev%4d %lld", im_rev, im_tmp);
 #endif
 
 			}
@@ -500,6 +504,38 @@ else
 }
 
 #endif
+
+#ifdef  IMDRIVECALIBRATION
+
+uint64_t imtotaltime;
+double davetime;
+double dim;
+int im;
+/* Skip computation & output until test data complete */
+if (im_otosw == -1)
+{ // Here, end of data accumulation
+  // Total time of test data accumulation
+  imtotaltime = imcaltime_end - imcaltime_begin;
+  // Average time between IC's per segment
+  davetime = imtotaltime;
+  davetime /= (IMCANTESTREVCTMAX*IMCALTESTSEGMENTS);
+  xprintf(UXPRT,"\n\r##### IMTEST ####\n\rnumber of revs: %d total time: %lld avetime: %12.4f\n\r",IMCANTESTREVCTMAX,imtotaltime,davetime);
+  for (im = 0; im < IMCALTESTSEGMENTS; im++)
+  {
+	dim = imcalacum[im];
+	dim = dim / IMCANTESTREVCTMAX;
+	xprintf(UXPRT,"%3d %15.5f\n\r",im, dim);
+	imcalacum[im] = 0;
+  }
+  xprintf(UXPRT,"##### IMTEST END ####\n\r");
+  im_idx = 0; //jic
+  im_rev = 0;
+  im_otosw = IMCALTESTCOUNTDOWN; // This starts data saving again
+}
+
+#endif
+
+// =============End of test stuff ==========================
 
 	/* Done with a pass of this endless loop: trigger CAN poll */
 		CAN_poll_loop_trigger();

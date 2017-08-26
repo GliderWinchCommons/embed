@@ -226,7 +226,9 @@ int encoder_timers_init(uint32_t canid)
 	/* TIM3 CH4 & CH3 input capture. */
 	// CC4 channel is configured as input, IC4 is mapped on TI4
 	// CC3 channel is configured as input, IC3 is mapped on TI3
-	TIM3_CCMR2 = (0X01<<8) | (0X01<<0);
+	TIM3_CCMR2  = (0X01<< 8) | (0X01<<0);
+	TIM3_CCMR2 |= (0x03<<12) | (0x03<<4); // Filter input
+	
 
 	/* Enable capture on TIM3 CH4, CH3. */
 //	TIM3_CCER = (0X0B<<12) | (0X0B<<8); // Both edges
@@ -363,11 +365,14 @@ struct ENCODERREADING *penr_test64_end = &enr_test64[ENCTESTVARBUFFSIZE];
 
 #ifdef  IMDRIVECALIBRATION
 static void imtest_put(void);
-uint64_t imcalacum[IMCALTESTBUFFSIZE];	// Accumulators for each segment slot
-uint32_t im_idx;	// Next available 
+uint64_t imcalacum[2][IMCALTESTBUFFSIZE];	// Accumulators for each segment slot
+uint32_t im_idx_str;	// Buff being stored (first index)
+uint32_t im_idx_i;	// Next available interrupt (low ord index) 
 uint32_t im_rev; // Count of revolutions
 uint64_t imcaltime_prev; // Previous IC time
 uint64_t im_tmp;
+uint32_t im_n_prev;
+uint32_t im_n_er;	// Ct times IC had a count that was not 2
 int im_otosw = IMCALTESTCOUNTDOWN;	// Number of ICs before start
 struct ENCODERREADING imr;
 uint64_t imcaltime_begin;
@@ -393,6 +398,7 @@ static void IC_only(volatile struct ENCODERREADING *p, uint32_t ccr,  uint32_t e
 	p->t.ui[1] = ovcnt.ui[1];	// Extended time of upper 32 bits of long long
 
 	p->n = enccr;	// Save latest encoder from encoder timer
+p->icn +=1 ; // Count input captures
 	return;
 }
 /* ===================================================================================== */
@@ -416,6 +422,7 @@ static void IC_ov(volatile struct ENCODERREADING *p,  uint32_t ccr, uint32_t enc
 		p->t.ull-= 0x10000;	// decrement the already incremented high order 48 bits 0f the *input capture time*
 	}
 	p->n = enccr;	// Save latest encoder count from encoder timer
+p->icn +=1 ; // Count input captures
 	return;
 }
 /* ===================================================================================== */
@@ -588,15 +595,18 @@ static void imtest_put(void)
 			}
    		}
    		// Here, test has started
-   		imcalacum[im_idx] += im_tmp; // Accumulate time between ICs
-   		im_idx += 1; 	// Next segment
-   		if (im_idx >= IMCALTESTBUFFSIZE) // End of a revolution?
+		if ((im_n_prev - imr.n) != 2) im_n_er += 1;
+		im_n_prev = imr.n;
+   		imcalacum[im_idx_str][im_idx_i] += im_tmp; // Accumulate time between ICs
+   		im_idx_i += 1; 	// Next encoder segment is array position
+   		if (im_idx_i >= IMCALTESTBUFFSIZE) // End of a revolution?
    		{ // Here, yes.  Cycle back, or end test
-    			im_idx = 0;	// Reset to beginning of array
+    			im_idx_i = 0;	// Reset to beginning of array
     			im_rev += 1;	// Encoder revolution counts
     			if (im_rev >= IMCANTESTREVCTMAX) // End averaging?
     			{ // Time to stop collecting data
-      				im_otosw = -1; // Stopped mode
+				im_rev = 0;
+				im_idx_str = (im_idx_str ^ 1);
       				imcaltime_end = imr.t.ll; // Save end time
     			}
    		}

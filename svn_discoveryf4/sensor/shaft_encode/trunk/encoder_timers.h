@@ -22,6 +22,7 @@ struct ENCODERREADING
 {
 	union TIMCAPTURE64 t;	// TIM3 latest extended time
 	int32_t n;		// Encoder Count (latest)
+int32_t icn; // DEBUG: input capture counter
 };
 
 struct ENCODERCOMPUTE
@@ -63,7 +64,8 @@ extern unsigned long encoder_get_reading_loop_cnt;
 extern uint32_t encoder_timers_poll_ctr;	// Tick count
 
 /* Test: store readings each IC  */
-#define IC_TO_IC_TIME_W_BIG_BUFFER  // Uncomment this statement to enable
+//#define IC_TO_IC_TIME_W_BIG_BUFFER  // Uncomment this statement to enable
+
 #ifdef IC_TO_IC_TIME_W_BIG_BUFFER
 #define ENCTESTBUFFSIZE 1600
 extern struct ENCODERREADING enr_test[ENCTESTBUFFSIZE];
@@ -84,25 +86,39 @@ struct ENCODERREADING* encoder_getOC64(void);
 #endif
 
 /* Test: induction motor drive encoder to determine encoder error calibration */
+/*
+The time between the current input capture (IC) and the previous one is accumulated in
+an array each IC.  After a specified number number of rotations the arrays are switched.
+The array with the test just completed is dumped with a 'xprintf' in the main, 
+'shaft_encoder.c' and the array is zero'ed.
+
+The instantaneous speed of the induction motor driving the encoder test varies as
+the stator vector rotates.  The rotor has a small slip so the array position slowly
+shifts with respect to the stator.  After a large number of rotations the variations
+in the instantaneous speed of the rotor has been averaged out, leaving the calibration
+for the encoder, by segment number.  Note, however, the encoders do not have a
+zero channel so each time the program is started the calibration will be have an
+arbitrary start point.
+*/
 //#define IMDRIVECALIBRATION	// Uncomment to enable test code
+
 #ifdef  IMDRIVECALIBRATION
 #define IMCALTESTSEGMENTS  360	// Number of encoder segments
 #define IMCALTESTBUFFSIZE  IMCALTESTSEGMENTS	// Size equals number of encoder segments
-#define IMCANTESTREVCTMAX  (3670*10)		// Number of revolutions in the test
-#define IMCALTESTCOUNTDOWN 	(360*60*5)	// Count down delay
-extern uint64_t imcalacum[IMCALTESTBUFFSIZE];	// Accumulators for each segment slot
-extern uint32_t im_idx;		 // Next available 
-extern uint32_t im_rev; 	 // Count of revolutions
+#define IMCANTESTREVCTMAX  (3570*10)		// Number of revolutions in the test
+#define IMCALTESTCOUNTDOWN 	(360*60*1)	// Count down delay
+extern uint64_t imcalacum[2][IMCALTESTBUFFSIZE];	// Accumulators for each segment slot
+extern uint32_t im_idx_str;	// Buff being stored (first index)
+extern uint32_t im_idx_i;	// Next available interrupt (low ord index) 
+extern uint32_t im_rev; 	 // Count of revolutions before switching buffers
 extern uint64_t imcaltime_prev; // Previous IC time
 extern uint64_t imcaltime_begin;// Start of data storing
 extern uint64_t imcaltime_end;	 // End time of data storing
 extern int im_otosw;		 // Number of ICs before start
 extern uint64_t im_tmp;	 // Use 'extern' for debugging
-
-
-
+extern uint32_t im_n_prev;
+extern uint32_t im_n_er;	// Ct times IC had a count that was not 2
 #endif
-
 
 #endif 
 

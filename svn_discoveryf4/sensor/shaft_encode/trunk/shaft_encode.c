@@ -61,6 +61,7 @@ TODO
 #include "encoder_a_functionS.h"
 #include "encoder_a_printf.h"
 #include "can_filter_print_f4.h"
+#include "can_driver_filter.h"
 
 
 #ifndef NULL 
@@ -339,6 +340,24 @@ xprintf(UXPRT,"### %15.8e\n\r", dtmp2 );
 /* --------------------- Monitoring incoming CAN ids  ------------------------------------------------- */
 	can_msg_reset_init(pctl0, 0xffe00000);	// Specify CAN ID for this unit for msg caused RESET
 
+/* ----------- Go through table and load "command can id" into CAN hardware filter. ------------------- */
+	//                     (CAN1, even, bank 2)
+	can_driver_filter_setbanknum(0, 0, 2);
+	jj = pcanidtbl->size;
+	if (jj > 16) jj = 16;	// Check for bogus size
+	u32 id;
+	for (ii = 0; ii < jj; ii++) 
+	{
+		id = pcanidtbl->slot[ii].canid;
+		//  Add one 32b CAN id (     CAN1, CAN ID, FIFO)
+		ret = can_driver_filter_add_one_32b_id(0,id,0);
+		if (ret < 0)
+		{
+			xprintf(UXPRT,"FLASHH CAN id table load failed: %d\n\r",ret);
+			while (1==1);
+		}
+	}
+
 /* ---------------- Encoder functions ---------------------------------------------------------------- */
 	ret = encoder_a_functionS_init_all();
 	if (ret <= 0)
@@ -454,7 +473,8 @@ enc_test64_sum = 0; // Reset sum for mean
 #endif
 
 #ifdef  IMDRIVECALIBRATION
-xprintf(UXPRT," rev%4d %lld", im_rev, im_tmp);
+xprintf(UXPRT," rev%4d %lld er2: %d", im_rev, im_tmp, im_n_er);
+xprintf(UXPRT," icn: %d",&enc_main[1].enr.icn -  &enc_main[1].enr.n);
 #endif
 
 			}
@@ -506,31 +526,31 @@ else
 #endif
 
 #ifdef  IMDRIVECALIBRATION
-
+static uint32_t im_idx_str_prev;
 uint64_t imtotaltime;
 double davetime;
 double dim;
 int im;
-/* Skip computation & output until test data complete */
-if (im_otosw == -1)
-{ // Here, end of data accumulation
+int imx;
+/* Skip computation & output until buffer complete */
+if (im_idx_str != im_idx_str_prev) // Did interrupt routine change buffers?
+{ // Here, end of a buffer of accumulation
+  im_idx_str_prev = im_idx_str; // Update previous
   // Total time of test data accumulation
   imtotaltime = imcaltime_end - imcaltime_begin;
   // Average time between IC's per segment
   davetime = imtotaltime;
   davetime /= (IMCANTESTREVCTMAX*IMCALTESTSEGMENTS);
-  xprintf(UXPRT,"\n\r##### IMTEST ####\n\rnumber of revs: %d total time: %lld avetime: %12.4f\n\r",IMCANTESTREVCTMAX,imtotaltime,davetime);
-  for (im = 0; im < IMCALTESTSEGMENTS; im++)
+  imx = im_idx_str_prev ^ 1; // Get buffer index for buffer interrupt routine not using
+  xprintf(UXPRT,"\n\r##### IMTEST ####\n\rnumber of revs: %d total time: %lld avetime: %12.4f buff: %d 2er: %d\n\r",IMCANTESTREVCTMAX,imtotaltime,davetime, imx, im_n_er);
+  for (im = 0; im < IMCALTESTSEGMENTS; im++) // List buffer
   {
-	dim = imcalacum[im];
+	dim = imcalacum[imx][im];
 	dim = dim / IMCANTESTREVCTMAX;
 	xprintf(UXPRT,"%3d %15.5f\n\r",im, dim);
-	imcalacum[im] = 0;
+	imcalacum[imx][im] = 0;
   }
   xprintf(UXPRT,"##### IMTEST END ####\n\r");
-  im_idx = 0; //jic
-  im_rev = 0;
-  im_otosw = IMCALTESTCOUNTDOWN; // This starts data saving again
 }
 
 #endif

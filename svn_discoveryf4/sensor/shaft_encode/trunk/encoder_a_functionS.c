@@ -57,15 +57,15 @@ static void send_can_msg(struct ENCODERAFUNCTION* p)
 	can.dlc = 8;			// DLC: Set return msg payload count
 
 	/* First 4 bytes of payload = (float) Distance (meters) */
-	encoder_get_all(&p->enc,p->unit); // Get readings and speed computation
-	can.cd.f[0]  = (float)p->enc.enr.n;	// Encoder counts 
-	ftmp   = p->enc_a.ctperrev;	// Int to Float counts per revolution
-	ftmp   = p->enc_a.distperrev/ftmp; // Distance/rev / counts/rev
-	can.cd.f[0] *= ftmp;		// Cable-out = Count * distance/count
+	encoder_get_all(&p->enc,p->unit); 	// Get readings and speed computation
+	can.cd.f[0]  = (float)p->enc.enr.n;	// Encoder counts in first float slot
+	ftmp   = p->enc_a.ctperrev;		// Int to Float counts per revolution
+	ftmp   = p->enc_a.distperrev/ftmp; 	// Distance/rev / counts/rev
+	can.cd.f[0] *= ftmp;			// Cable-out = Count * distance/count
 
 	/* Second 4 bytes of payload = (float) speed (meters/sec) */
 	can.cd.f[1] = p->enc.r * p->meterspersec; // Scale speed to meters/sec 
-	can_hub_send(&can, p->phub_encoder);// Send CAN msg to 'can_hub'
+	can_hub_send(&can, p->phub_encoder);	// Send CAN msg to 'can_hub'
 	return;
 }
 /* **************************************************************************************
@@ -257,19 +257,12 @@ int encoder_a_functionS_poll(struct CANRCVBUF* pcan, struct ENCODERAFUNCTION* p)
 	if (pcan == NULL) return ret;
 
 	/* Check for group poll, and send msg if it is for us. */
-//$	if (pcan->id == p->enc_a.cid_ten_poll) // Correct ID?
-//if (pcan->id == p->enc_a.cid_gps_sync) // ##### TEST #########
-if (pcan->id == 0x00400000) // ##### TEST #########
-	{ // Here, group poll msg.  Check if poll and function bits are for us
-/*		if ( ((pcan->cd.uc[0] & p->enc_a.p_pollbit) != 0) && \
-		     ((pcan->cd.uc[1] & p->enc_a.f_pollbit) != 0) )
-*/
-		{ // Here, yes.  Send our precious msg.
-			/* Send encoder msg and re-compute next hearbeat time count. */
-			//      Args:  CAN id, status of reading, reading pointer instance pointer
-			send_can_msg(p); 
-			return 1;
-		}
+	if (pcan->id == p->enc_a.cid_hb_timesync) // Correct ID?
+//# TEST if (pcan->id == 0x00400000) // ##### TEST #########
+	{ // Here, yes.  Send our precious msg.
+		/* Send encoder msg and re-compute next hearbeat time count. */
+		send_can_msg(p); // calibrated distance|speed readings in floats 
+		return 1;
 	}
 	
 	/* Check for encodera function command. */

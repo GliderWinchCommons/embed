@@ -133,8 +133,6 @@ $(NAME): $(OBJS) $(LDSCRIPT)
 	$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)
 
 clean:
-
-clean:
 	rm -f *.o
 	rm -f $(NAME).elf
 	rm -f $(NAME).hex

@@ -37,7 +37,7 @@ make clean
 #
 # VC version--
 export LDRAPPLD=ldrapp_VE.ld
-export TENSIONNAME=tension_VE
+export TENSIONNAME=cansender_VE
 make
 make flash
 

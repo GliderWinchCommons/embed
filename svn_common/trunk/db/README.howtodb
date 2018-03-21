@@ -66,7 +66,7 @@ PARAM_VAL_INSERT.sql would be assigned a different name (which would be in the C
 This a bit more complicated as it affect the program as well as the database.
 
 a.  Add the parameter to
-PARAM_LIST.sql
+  'PARAM_LIST.sql'
 using the other entries as a template.
 
 Note: PRIMARY KEY(FUNCTION_TYPE,PARAM_NAME) in the CREATE file says that the combination of

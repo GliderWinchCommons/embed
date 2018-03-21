@@ -736,7 +736,7 @@ int bsp_uart_int_init_number(u32 uartnumber, u32 baud, u32 rxbuffsize, u32 txbuf
 }
 /*******************************************************************************
  * int bsp_uart_int_init(u32 iuart, u32 baud, u32 rxbuffsize, u32 txbuffsize,  u32 uart_int_priority, u8 block, u8 nstop);
- * @brief	: Initialize USART/UART for DMA transfers
+ * @brief	: Initialize USART/UART for char by char interrupt transfers
  * @param	: iuart: pointer to UART base, e.g. 'USART1'
  * @param	: baud: name says it all, e.g. '921600'
  * @param	: rxbuffsize: number of bytes in a circular rx buffer

@@ -1,6 +1,5 @@
-/******************** (C) COPYRIGHT 2013 **************************************
+/******************************************************************************
 * File Name          : adcsensor_eng.h
-* Author             : deh
 * Date First Issued  : 06/24/2013
 * Board              : RxT6
 * Description        : ADC routines for f103 sensor--engine configuration
@@ -58,8 +57,6 @@ extern u32 cic_sync_err[NUMBERADCCHANNELS_SE];	// CIC sync errors
 extern long	adc_temperature;		// Thermistor filter/decimate to 2/sec
 extern int	adc_temp_flag;			// Signal main new filtered reading ready
 extern int	adc_calib_temp;			// Temperature in deg C 
-
-
 
 extern void 	(*systickHIpriority3_ptr)(void);	// SYSTICK handler (very high priority)
 extern void 	(*systickLOpriority3_ptr)(void);	// SYSTICK handler (low high priority) continuation--1/2048th

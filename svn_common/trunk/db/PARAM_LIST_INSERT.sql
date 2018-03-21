@@ -32,36 +32,36 @@ DELETE from PARAM_LIST;
 -- Discovery F4 shaft encoder: upper and lower fairlead sheaves
 --                              Parameter name                Code     Type  format     Function_type            Description
 INSERT INTO PARAM_LIST VALUES ('ENCODER_LIST_CRC'	     	, 1, 'TYP_U32','%08X', 	'SHEAVE_H',	'Encoder_f4_1: crc: CRC for tension list');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_LIST_VERSION'  	    	, 2, 'TYP_S32','%d', 	'SHEAVE_H',	'Encoder_f4_1: version: Version number for Tension List');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_HEARTBEAT_CT'		, 3, 'TYP_U32','%d',	'SHEAVE_H',	'Encoder_f4_1: Heartbeat count of time (ms) between msgs');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_CT_PER_REV'		, 4, 'TYP_U32','%d',	'SHEAVE_H',	'Encoder_f4_1: Number of counts per revolution');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_DIST_PER_REV'		, 5, 'TYP_FLT','%f',	'SHEAVE_H',	'Encoder_f4_1: Distance per revolution (meters)');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_HEARTBEAT_MSG'    	, 6, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: Heartbeat sends raw (long long) running encoder count');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL_MSG'	    	, 7, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: hi-res: msg--upper calibrated--distance and speed');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL'	    		, 8, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: Poll with time sync msg');
-INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL_R'	  		, 9, 'TYP_CANID','%x', 	'SHEAVE_H', 	'Encoder_f4_1: CANID: Response to POLL');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_LIST_VERSION'  	, 2, 'TYP_S32','%d', 	'SHEAVE_H',	'Encoder_f4_1: version: Version number for Tension List');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_HEARTBEAT_CT'		, 3, 'TYP_U32','%d',		'SHEAVE_H',	'Encoder_f4_1: Heartbeat count of time (ms) between msgs');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_CT_PER_REV'		, 4, 'TYP_U32','%d',		'SHEAVE_H',	'Encoder_f4_1: Number of counts per revolution');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_DIST_PER_REV'		, 5, 'TYP_FLT','%f',		'SHEAVE_H',	'Encoder_f4_1: Distance per revolution (meters)');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_HEARTBEAT_MSG'   , 6, 'TYP_CANID','%x', 	'SHEAVE_H', 'Encoder_f4_1: Heartbeat sends raw (long long) running encoder count');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL_MSG'	    	, 7, 'TYP_CANID','%x', 	'SHEAVE_H', 'Encoder_f4_1: CANID: hi-res: msg--upper calibrated--distance and speed');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL'	    		, 8, 'TYP_CANID','%x', 	'SHEAVE_H', 'Encoder_f4_1: CANID: Poll with time sync msg');
+INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL_R'	  			, 9, 'TYP_CANID','%x', 	'SHEAVE_H', 'Encoder_f4_1: CANID: Response to POLL');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
 INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT1'    ,10, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 1 added to CAN hardware filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT2'    ,11, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 2 added to CAN hardware filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT3'    ,12, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 3 added to CAN hardware filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT4'    ,13, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 4 added to CAN hardware filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT5'    ,14, 'TYP_CANID','%x', 	'SHEAVE_H',	'Encoder_f4_1: CANID 5 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT6'    ,15, 'TYP_CANID','%x',  	'SHEAVE_H',	'Encoder_f4_1: CANID 6 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT7'    ,16, 'TYP_CANID','%x',  	'SHEAVE_H',	'Encoder_f4_1: CANID 7 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT8'    ,17, 'TYP_CANID','%x',  	'SHEAVE_H',	'Encoder_f4_1: CANID 8 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT6'    ,15, 'TYP_CANID','%x',  'SHEAVE_H',	'Encoder_f4_1: CANID 6 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT7'    ,16, 'TYP_CANID','%x',  'SHEAVE_H',	'Encoder_f4_1: CANID 7 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT8'    ,17, 'TYP_CANID','%x',  'SHEAVE_H',	'Encoder_f4_1: CANID 8 added to CAN hardware filter to allow incoming msg');
 --
 -- Cansender 
 --                              Parameter name                 Code     Type  format Function_type       Description10
 INSERT INTO PARAM_LIST VALUES ('CANSENDER_LIST_CRC'	   	, 1, 'TYP_U32','%08X', 	'CANSENDER',	'Cansender: CRC ');
-INSERT INTO PARAM_LIST VALUES ('CANSENDER_LIST_VERSION'      	, 2, 'TYP_S32','%d', 	'CANSENDER',	'Cansender: Version number');
-INSERT INTO PARAM_LIST VALUES ('CANSENDER_HEARTBEAT_CT'		, 3, 'TYP_U32','%d',	'CANSENDER',	'Cansender: Heartbeat count of time (ms) between msgs');
-INSERT INTO PARAM_LIST VALUES ('CANSENDER_HEARTBEAT_MSG'    	, 4, 'TYP_CANID','%x', 	'CANSENDER',  	'Cansender: CANID: Hearbeat sends running count');
-INSERT INTO PARAM_LIST VALUES ('CANSENDER_POLL'	    		, 5, 'TYP_CANID','%x', 	'CANSENDER',  	'Cansender: CANID: Poll this cansender');
-INSERT INTO PARAM_LIST VALUES ('CANSENDER_POLL_R'	  	, 6, 'TYP_CANID','%x', 	'CANSENDER',  	'Cansender: CANID: Response to POLL');
+INSERT INTO PARAM_LIST VALUES ('CANSENDER_LIST_VERSION'     , 2, 'TYP_S32','%d', 	'CANSENDER',	'Cansender: Version number');
+INSERT INTO PARAM_LIST VALUES ('CANSENDER_HEARTBEAT_CT'		, 3, 'TYP_U32','%d',		'CANSENDER',	'Cansender: Heartbeat count of time (ms) between msgs');
+INSERT INTO PARAM_LIST VALUES ('CANSENDER_HEARTBEAT_MSG'    , 4, 'TYP_CANID','%x', 	'CANSENDER',  	'Cansender: CANID: Hearbeat sends running count');
+INSERT INTO PARAM_LIST VALUES ('CANSENDER_POLL'	    			, 5, 'TYP_CANID','%x', 	'CANSENDER',  	'Cansender: CANID: Poll this cansender');
+INSERT INTO PARAM_LIST VALUES ('CANSENDER_POLL_R'	  			, 6, 'TYP_CANID','%x', 	'CANSENDER',  	'Cansender: CANID: Response to POLL');
 --
 -- AD7799 Tension
 --                              Parameter name                Code     Type  format     Function_type            Description
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_LIST_CRC'	     ,	 1, 'TYP_U32','%08X', 	'TENSION_a',	'Tension_a: crc: CRC for tension list');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_LIST_CRC'	     ,	 1, 'TYP_U32','%08X','TENSION_a',	'Tension_a: crc: CRC for tension list');
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_LIST_VERSION'      ,	 2, 'TYP_S32','%d', 	'TENSION_a',	'Tension_a: version: Version number for Tension List');
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_AD7799_1_OFFSET'   ,	 3, 'TYP_S32','%d', 	'TENSION_a',	'Tension_a: offset: AD7799 #1 offset');
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_AD7799_1_SCALE'    ,	 4, 'TYP_FLT','%f', 	'TENSION_a',	'Tension_a: scale: AD7799 #1 Scale (convert to kgf)');
@@ -136,15 +136,15 @@ INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_USEME'   	        ,18, 'TYP_U32','%0
 --
 -- GPS
 --                              Parameter name                 Code     Type  format Function_type       Description
-INSERT INTO PARAM_LIST VALUES ('GPS_LIST_CRC'	   		, 1, 'TYP_U32','%08X', 	'GPS',		'GPS: CRC ');
-INSERT INTO PARAM_LIST VALUES ('GPS_LIST_VERSION'      		, 2, 'TYP_S32','%d', 	'GPS',		'GPS: Version number');
-INSERT INTO PARAM_LIST VALUES ('GPS_HEARTBEAT_TIME_CT'		, 3, 'TYP_U32','%d',	'GPS',		'GPS: Time (ms) between unix time msgs');
-INSERT INTO PARAM_LIST VALUES ('GPS_HEARTBEAT_LLH_CT'		, 4, 'TYP_U32','%d',	'GPS',		'GPS: Time (ms) between burst of lat lon height msgs');
-INSERT INTO PARAM_LIST VALUES ('GPS_HEARTBEAT_LLH_DELAY_CT'	, 5, 'TYP_U32','%d',	'GPS',		'GPS: Time (ms) between lat/lon and lon/ht msgs');
-INSERT INTO PARAM_LIST VALUES ('GPS_HEARTBEAT_TIME'    		, 6, 'TYP_CANID','%x', 	'GPS',  	'GPS: Heartbeat unix time');
-INSERT INTO PARAM_LIST VALUES ('GPS_HEARTBEAT_LLH'  		, 7, 'TYP_CANID','%x', 	'GPS',  	'GPS: Heartbeat (3 separate msgs) lattitude longitude height');
-INSERT INTO PARAM_LIST VALUES ('GPS_DISABLE_SYNCMSGS'		, 8, 'TYP_U32','%d',	'GPS',		'GPS: time sync msgs; 0 = enable  1 = disable');
-INSERT INTO PARAM_LIST VALUES ('GPS_TIME_SYNC_MSG'    		, 9, 'TYP_CANID','%x', 	'GPS',  	'GPS: Time sync msg');
+INSERT INTO PARAM_LIST VALUES ('GPS_LIST_CRC'	   		  , 1, 'TYP_U32'  ,'%08X',	'GPS', 'GPS: CRC ');
+INSERT INTO PARAM_LIST VALUES ('GPS_LIST_VERSION'          , 2, 'TYP_S32'  ,'%d', 	'GPS', 'GPS: Version number');
+INSERT INTO PARAM_LIST VALUES ('GPS_HEARTBEAT_TIME_CT'     , 3, 'TYP_U32'  ,'%d',	'GPS', 'GPS: Time (ms) between unix time msgs');
+INSERT INTO PARAM_LIST VALUES ('GPS_HEARTBEAT_LLH_CT'      , 4, 'TYP_U32'  ,'%d',	'GPS', 'GPS: Time (ms) between burst of lat lon height msgs');
+INSERT INTO PARAM_LIST VALUES ('GPS_HEARTBEAT_LLH_DELAY_CT', 5, 'TYP_U32'  ,'%d',	'GPS', 'GPS: Time (ms) between lat/lon and lon/ht msgs');
+INSERT INTO PARAM_LIST VALUES ('GPS_HEARTBEAT_TIME'        , 6, 'TYP_CANID','%x', 	'GPS', 'GPS: Heartbeat unix time');
+INSERT INTO PARAM_LIST VALUES ('GPS_HEARTBEAT_LLH'         , 7, 'TYP_CANID','%x', 	'GPS', 'GPS: Heartbeat (3 separate msgs) lattitude longitude height');
+INSERT INTO PARAM_LIST VALUES ('GPS_DISABLE_SYNCMSGS'      , 8, 'TYP_U32'  ,'%d',	'GPS', 'GPS: time sync msgs; 0 = enable  1 = disable');
+INSERT INTO PARAM_LIST VALUES ('GPS_TIME_SYNC_MSG'         , 9, 'TYP_CANID','%x', 	'GPS', 'GPS: Time sync msg');
 --
 -- Logger
 --                              Parameter name                 Code     Type  format Function_type       Description
@@ -154,17 +154,119 @@ INSERT INTO PARAM_LIST VALUES ('LOGGER_HEARTBEAT1_CT'		, 3, 'TYP_U32','%d',	'LOG
 INSERT INTO PARAM_LIST VALUES ('LOGGER_HEARTBEAT_MSG'    	, 4, 'TYP_CANID','%x', 	'LOGGER',  	'Logger: CANID: Hearbeat sends running count of logged msgs');
 ---
 -- Engine sensor
---                              Parameter name            Code     Type  format Function_type            Description
-INSERT INTO PARAM_LIST VALUES ('ENGINE__CRC',			 2, 'TYP_U32','%08X', 'ENGINE_SENSOR',	'Engine_sensor: CRC for cable angle list');
-INSERT INTO PARAM_LIST VALUES ('ENGINE__VERSION', 		 3, 'TYP_S32',  '%d', 'ENGINE_SENSOR',	'Engine_sensor: Version number for Cable Angle List');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_SENSOR_SEG_CT',		 4, 'TYP_U32',  '%u', 'ENGINE_SENSOR',	'Engine_sensor: Number of black (or white) segments');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_SENSOR_PRESS_OFFSET',	 5, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Manifold pressure offset');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_SENSOR_PRESS_SCALE',	 6, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Manifold pressure  scale (inch Hg)');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_THERM1_CONST_B' ,         7, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Thermistor param: constant B');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_THERM1_R_SERIES' ,        8, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Thermistor param: Series resistor, fixed (K ohms)');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_THERM1_R_ROOMTMP',        9, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Thermistor param: Thermistor room temp resistance (K ohms)');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_THERM1_REF_TEMP' ,       10, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Thermistor param: Reference temp for thermistor');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_THERM1_TEMP_OFFSET',     11, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Thermistor param: Thermistor temp offset correction (deg C)');
+
+-- Engine sensors: Mainfold pressure
+--                              Parameter name            Code  Type   format    Function_type            Description
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CRC'              , 1,'TYP_U32','%08X','ENG_MANIFOLD','Eng_manifold: CRC');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_VERSION'          , 2,'TYP_S32',  '%d','ENG_MANIFOLD','Eng_manifold: Version number');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_HEARTBEAT_TIME_CT', 3,'TYP_S32',  '%d','ENG_MANIFOLD','Eng_manifold: Time (ms) between HB msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_PRESS_OFFSET'     , 4,'TYP_FLT',  '%f','ENG_MANIFOLD','Eng_manifold: Manifold pressure offset');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_PRESS_SCALE'      , 5,'TYP_FLT',  '%f','ENG_MANIFOLD','Eng_manifold: Manifold pressure  scale (inch Hg)');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_POLL_MANFLD_R'     , 6,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID: Poll response: manifold pressure, calibrated');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_HB_MANFLD_R'       , 7,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID: Heartbeat: manifold pressure, calibrated');
+-- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT1'   , 8,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 1 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT2'   , 9,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 2 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT3'   ,10,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 3 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT4'   ,11,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 4 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT5'   ,12,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 5 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT6'   ,13,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 6 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT7'   ,14,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 7 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT8'   ,15,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 8 added to CAN hardware filter to allow incoming msg');
+
+
+-- Engine sensors: RPM
+--                              Parameter name            Code     Type   format    Function_type            Description
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CRC'              , 1, 'TYP_U32','%08X','ENG_RPM','Eng_rpm: CRC');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_VERSION'          , 2, 'TYP_S32' ,'%d','ENG_RPM','Eng_rpm: Version number');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_HEARTBEAT_TIME_CT', 3, 'TYP_S32' ,'%d','ENG_RPM','Eng_rpm: Time (ms) between HB msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_SEG_CT'           , 4, 'TYP_U32' ,'%u','ENG_RPM','Eng_rpm: Counts per revolution on engine');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_POLL_RPM_R'       , 5,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID: Poll response, rpm, calibrated');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_HB_RPM_R'         , 6,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID: Heartbeat: rpm, calibrated');
+-- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT1'   , 7,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 1 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT2'   , 8,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 2 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT3'   , 9,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 3 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT4'   ,10,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 4 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT5'   ,11,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 5 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT6'   ,12,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 6 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT7'   ,13,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 7 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT8'   ,14,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 8 added to CAN hardware filter to allow incoming msg');
+
+
+-- Engine sensors: Throttle
+--                              Parameter name            Code     Type   format    Function_type            Description
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CRC'              , 1,'TYP_U32','%08X','ENG_THROTTLE','Eng1_throttle: CRC');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_VERSION'          , 2,'TYP_S32',  '%d','ENG_THROTTLE','Eng1_throttle: Version number');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_HEARTBEAT_TIME_CT', 3,'TYP_S32',  '%d','ENG_THROTTLE','Eng1_throttle: Time (ms) between HB msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_OPENFULL'         , 4,'TYP_FLT',  '%f','ENG_THROTTLE','Eng1_throttle: ADC when throttle full open');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CLOSED'           , 5,'TYP_FLT',  '%f','ENG_THROTTLE','Eng1_throttle: ADC when throttle closed');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_POLL_THROTTLE_R'  , 6,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID: Poll response: throttle (0.0-100.0');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_HB_THROTTLE_R'    , 7,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID: Heartbeat: throttle (0.0-100.0');
+-- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT1'   , 8,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 1 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT2'   , 9,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 2 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT3'   ,10,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 3 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT4'   ,11,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 4 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT5'   ,12,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 5 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT6'   ,13,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 6 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT7'   ,14,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 7 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT8'   ,15,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 8 added to CAN hardware filter to allow incoming msg');
+
+
+-- Engine sensors: Temperature #1
+--                              Parameter name            Code     Type   format    Function_type            Description
+INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_CRC'               , 1, 'TYP_U32','%08X', 'ENG_T1',	'Eng_tem1: CRC');
+INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_VERSION'           , 2, 'TYP_S32',  '%d', 'ENG_T1',	'Eng_tem1: Version number');
+INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_HEARTBEAT_TIME_CT' , 3, 'TYP_S32',  '%d', 'ENG_T1',	'Eng_tem1: Time (ms) between HB msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_CONST_B'           , 7, 'TYP_FLT',  '%f', 'ENG_T1',	'Eng_tem1: Thermistor param: constant B');
+INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_R_SERIES'          , 8, 'TYP_FLT',  '%f', 'ENG_T1',	'Eng_tem1 Thermistor param: Series resistor, fixed (K ohms)');
+INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_R_ROOMTMP'         , 9, 'TYP_FLT',  '%f', 'ENG_T1',	'Eng_tem1 Thermistor param: Thermistor room temp resistance (K ohms)');
+INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_REF_TEMP'          ,10, 'TYP_FLT',  '%f', 'ENG_T1',	'Eng_tem1 Thermistor param: Reference temp for thermistor');
+INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_TEMP_OFFSET'       ,11, 'TYP_FLT',  '%f', 'ENG_T1',	'Eng_tem1 Thermistor param: Thermistor temp offset correction (deg C)');
+INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_TEMP_SCALE'        ,12, 'TYP_FLT',  '%f', 'ENG_T1',	'Eng_tem1 Thermistor param: Thermistor temp scale correction');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_POLL_THROTTLE_R'  , 6,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID: Poll response: throttle (0.0-100.0');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_HB_THROTTLE_R'    , 7,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID: Heartbeat: throttle (0.0-100.0');
+-- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT1'   , 8,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 1 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT2'   , 9,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 2 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT3'   ,10,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 3 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT4'   ,11,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 4 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT5'   ,12,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 5 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT6'   ,13,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 6 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT7'   ,14,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 7 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT8'   ,15,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 8 added to CAN hardware filter to allow incoming msg');
+
+
+-- Engine sensor
+--                              Parameter name            Code     Type   format    Function_type            Description
+INSERT INTO PARAM_LIST VALUES ('ENGINE__CRC'               , 1, 'TYP_U32','%08X', 'ENGINE_SENSOR',	'Engine_sensor: CRC');
+INSERT INTO PARAM_LIST VALUES ('ENGINE__VERSION'           , 2, 'TYP_S32',  '%d', 'ENGINE_SENSOR',	'Engine_sensor: Version number');
+INSERT INTO PARAM_LIST VALUES ('ENGINE__HEARTBEAT_TIME_CT' , 3, 'TYP_S32',  '%d', 'ENGINE_SENSOR',	'Engine_sensor: Time (ms) between HB msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_SENSOR_SEG_CT'      , 4, 'TYP_U32',  '%u', 'ENGINE_SENSOR',	'Engine_sensor: Counts per revolution on engine');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_SENSOR_PRESS_OFFSET', 5, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Manifold pressure offset');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_SENSOR_PRESS_SCALE' , 6, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Manifold pressure  scale (inch Hg)');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_THERM1_CONST_B'     , 7, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Thermistor param: constant B');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_THERM1_R_SERIES'    , 8, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Thermistor param: Series resistor, fixed (K ohms)');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_THERM1_R_ROOMTMP'   , 9, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Thermistor param: Thermistor room temp resistance (K ohms)');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_THERM1_REF_TEMP'    ,10, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Thermistor param: Reference temp for thermistor');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_THERM1_TEMP_OFFSET' ,11, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Thermistor param: Thermistor temp offset correction (deg C)');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_THERM1_TEMP_SCALE'  ,12, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Thermistor param: Thermistor temp scale correction');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_THROTTLE_lO'        ,13, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Throttle pot ADC reading: closed');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_THROTTLE_HI'        ,14, 'TYP_FLT',  '%f', 'ENGINE_SENSOR',	'Engine_sensor: Throttle pot ADC reading: full open');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_POLL_RPMMANFLD_R'   ,15, 'TYP_CANID','%x', 'ENGINE_SENSOR', 'Engine_sensor: CANID: Poll response: rpm:manifold, calibrated');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_POLL_TEMPTHRTL_R'   ,16, 'TYP_CANID','%x', 'ENGINE_SENSOR', 'Engine_sensor: CANID: Poll response:temperature:throttle pot, calibrated');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_HB_RPMMANFLD'       ,17, 'TYP_CANID','%x', 'ENGINE_SENSOR', 'Engine_sensor: CANID: Heartbeat: raw readings: rpm:manifold pressure');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_HB_THRMTHRTL'       ,18, 'TYP_CANID','%x', 'ENGINE_SENSOR', 'Engine_sensor: CANID: Heartbeat: raw readings: thermistor:throttle');
+-- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT1'     ,19, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 1 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT2'     ,20, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 2 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT3'     ,21, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 3 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT4'     ,22, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 4 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT5'     ,23, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 5 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT6'     ,24, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 6 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT7'     ,25, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 7 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT8'     ,26, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 8 added to CAN hardware filter to allow incoming msg');
 
 -- Yogurt maker
 --                              Parameter name            Code     Type  format Function_type            Description
@@ -260,5 +362,4 @@ INSERT INTO PARAM_LIST VALUES ('MCL_MAX_PARACHUTE_TENSION',	19,'TYP_FLT','%f', 	
 INSERT INTO PARAM_LIST VALUES ('MCL_PARACHUTE_TAPER_SPEED',	20,'TYP_FLT','%f', 	'MCL',	'mcl: parachute tension taper: parachute taper speed: Master Controller Launch parameterS ');
 INSERT INTO PARAM_LIST VALUES ('MCL_MAX_PARACHUTE_CABLE_SPEED',	21,'TYP_FLT','%f', 	'MCL',	'mcl: parachute tension taper: max parachute cable speed: Master Controller Launch parameterS ');
 INSERT INTO PARAM_LIST VALUES ('MCL_K5',			22,'TYP_FLT','%f', 	'MCL',	'mcl: parachute tension taper: constant k5: Master Controller Launch parameterS ');
-
 

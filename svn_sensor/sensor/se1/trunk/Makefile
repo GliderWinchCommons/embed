@@ -14,13 +14,13 @@
 NAME		= se1
 
 # Prefix the name for the particular toolchain
-PREFIX		= arm-none-eabi
-# The path for the commands to find the compiler, linker, et al.
-TOOLDIR 	= $(HOME)/CodeSourcery/Sourcery_G++_Lite/bin
-CC		= $(TOOLDIR)/$(PREFIX)-gcc
-LD		= $(TOOLDIR)/$(PREFIX)-ld
-OBJCOPY		= $(TOOLDIR)/$(PREFIX)-objcopy
-OBJDUMP		= $(TOOLDIR)/$(PREFIX)-objdump
+PREFIX		= arm-none-eabi-
+
+CC	=$(PREFIX)gcc
+LD	=$(PREFIX)ld
+OBJCOPY	=$(PREFIX)objcopy
+SIZE	=$(PREFIX)size
+OBJDUMP	=$(PREFIX)objdump
 
 # Current directory
 SRCDIR=.

@@ -1,4 +1,4 @@
--- READINGS_LIST_INSERT.sql  Defines the readings by type of function.
+-- READINGS_LIST_INSERT.sql  Defines the readings by *type* of function.
 -- 04/11/2015
 --
 -- READINGS_NAME (Unique name for value to be xmitted)
@@ -52,4 +52,6 @@ INSERT INTO READINGS_LIST VALUES ('TENSION_READ_IIR_OFFSET_SCL'	,25, 'TYP_U32' ,
 INSERT INTO READINGS_LIST VALUES ('TENSION_READ_IIR_Z_RECAl_W_K',26, 'TYP_U32' ,'%u', 	 'TENSION_a', 'Tension: READING: IIR filter for zeroing: parameter for setting time constant');
 INSERT INTO READINGS_LIST VALUES ('TENSION_READ_IIR_Z_RECAl_W_SCL',27, 'TYP_U32' ,'%u',  'TENSION_a', 'Tension: READING: IIR filter for zeroing: Scaling to improve spare bits with integer math');
 
+--                                    Reading name              Code   Type     format Function_type   Description16
+INSERT INTO READINGS_LIST VALUES ('ENCODER_READ_INPUTCAPTURE_CT', 1, 'TYP_U32' ,'%u',    'SHEAVE_UP_H',  'Encoder: READING: TIM3 input capture count');
 

@@ -1,6 +1,5 @@
-/******************** (C) COPYRIGHT 2013 **************************************
+/******************************************************************************
 * File Name          : adcsensor_eng.c
-* Hackeroos          : deh
 * Date First Issued  : 06/24/2013
 * Board              : RxT6
 * Description        : ADC routines for f103 sensor--engine configuration
@@ -48,7 +47,7 @@ increments so that cic filter readings are then loaded into a CAN message the me
 #include "canwinch_pod_common_systick2048.h"
 #include "rpmsensor.h"
 #include "CANascii.h"
-#include "../../../../svn_common/trunk/db/can_db.h"
+#include "../../../../svn_common/trunk/db/gen_db.h"
 #include "canmsg_send_pay_type.h"
 
 /* ADC usage

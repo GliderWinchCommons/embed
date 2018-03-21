@@ -5,20 +5,20 @@ NAME		= $(TENSIONNAME)
 SRCNAME		= cansender
 
 # Prefix the name for the particular toolchain
-PREFIX		= arm-none-eabi-
+PREFIX		= arm-none-eabi
 
-CC	=$(PREFIX)gcc
-LD	=$(PREFIX)ld
-OBJCOPY	=$(PREFIX)objcopy
-SIZE	=$(PREFIX)size
-OBJDUMP	=$(PREFIX)objdump
+#CC	=$(PREFIX)gcc
+#LD	=$(PREFIX)ld
+#OBJCOPY	=$(PREFIX)objcopy
+#SIZE	=$(PREFIX)size
+#OBJDUMP	=$(PREFIX)objdump
 
 # The path for the commands to find the compiler, linker, et al.
-#TOOLDIR 	= $(HOME)/CodeSourcery/Sourcery_G++_Lite/bin
-#CC		= $(TOOLDIR)/$(PREFIX)-gcc
-#LD		= $(TOOLDIR)/$(PREFIX)-ld
-#OBJCOPY		= $(TOOLDIR)/$(PREFIX)-objcopy
-#OBJDUMP		= $(TOOLDIR)/$(PREFIX)-objdump
+TOOLDIR 	= $(ARM_PREFIX)/bin
+CC		= $(TOOLDIR)/$(PREFIX)-gcc
+LD		= $(TOOLDIR)/$(PREFIX)-ld
+OBJCOPY		= $(TOOLDIR)/$(PREFIX)-objcopy
+OBJDUMP		= $(TOOLDIR)/$(PREFIX)-objdump
 
 # Current directory
 SRCDIR=.
@@ -59,8 +59,10 @@ LIBF4D	  = $(CURDIR)/../../../../sw_discoveryf4/trunk
 # Library directory path--compile and stuff
 #LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
 #LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
-LGCC	= /opt/launchpad/gcc-arm-none-eabi-4_9-2015q2/lib/gcc/arm-none-eabi/4.9.3/armv7-m
-LOTHER	= /opt/launchpad/gcc-arm-none-eabi-4_9-2015q2/arm-none-eabi/lib/armv7-m
+#LGCC	= $(HOME)/launchpad/gcc-arm-none-eabi-5_4-2016q3/lib/gcc/arm-none-eabi/5.4.1/armv7-m
+LGCC	= $(ARM_PREFIX_GCCLIB)
+#LOTHER	= $(HOME)/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m
+LOTHER	= $(ARM_PREFIX)/arm-none-eabi/lib/armv7-m
 
 # Compiler directories for .h files
 CFLAGS	+= -I$(LIBDEVICEF103SE) 
@@ -113,9 +115,9 @@ OBJS	+= can_driver_errors_printf.o
 
 
 # Paths for openocd and automatic flashing
-OPENOCD_BASE	= /usr/local
-OPENOCD		= $(OPENOCD_BASE)/bin/openocd
-OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/share/openocd/scripts
+OPENOCD_BASE	= /usr/share
+OPENOCD		= /usr/bin/openocd
+OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
 OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
 
 OPENOCD_BOARD	= $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg

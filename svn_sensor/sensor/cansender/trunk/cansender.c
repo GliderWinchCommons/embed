@@ -242,7 +242,7 @@ setbuf(stdout, NULL);
 	USART1_rxinttxint_init(115200,32,2,96,4); // Initialize USART and setup control blocks and pointers
 
 	/* Announce who we are */
-	USART1_txint_puts("\n\rCANSENDER 09-09-2016\n\r");USART1_txint_send();
+	USART1_txint_puts("\n\r>>>>>> CANSENDER 11-28-2017 <<<<<<<<\n\r");USART1_txint_send();
 
 	/* Display things so's to entertain the hapless op */
 	printf ("  hclk_freq (MHz) : %9u\n\r",  hclk_freq/1000000);

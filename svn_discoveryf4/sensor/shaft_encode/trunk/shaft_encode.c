@@ -373,7 +373,7 @@ for (i = 0; i < NUMENCODERAFUNCTIONS; i++)
 	encoder_a_printf(&enc_f[i].enc_a);	// Print parameters
 }
 /* ----------------- CAN filter registers ------------------------------------------------------------- */
-	can_filter_print_f4(14);	// Print the CAN filter registers
+	can_filter_print_f4(17);	// Print the CAN filter registers
 /* ------------------------ CAN msg loop (runs under interrupt) --------------------------------------- */
 	ret = CAN_poll_loop_init();
 	if (ret != 0)

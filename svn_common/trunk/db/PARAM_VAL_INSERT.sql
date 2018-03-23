@@ -50,8 +50,8 @@ INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_VERSION'          ,'1',  
 INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_HEARTBEAT_TIME_CT', 1000,   'ENG_MANIFOLD','Eng1_manifold: Time (ms) between HB msg');
 INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_PRESS_OFFSET'     ,-0.5,    'ENG_MANIFOLD','Eng1_manifold: Manifold pressure offset');
 INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_PRESS_SCALE'      , 103.6,  'ENG_MANIFOLD','Eng1_manifold: Manifold pressure  scale (inch Hg)');
-INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENGINE_POLL_MANFLD_R','CANID_MSG_ENG1_MANFLD','ENG_MANIFOLD','Eng1_manifold: CANID: Poll response: manifold pressure, calibrated');
-INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENGINE_HB_MANFLD_R'  ,'CANID_HB_ENG1_MANFLD' ,'ENG_MANIFOLD','Eng1_manifold: CANID: Heartbeat: manifold pressure, calibrated');
+INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_POLL_MANFLD_R','CANID_MSG_ENG1_MANFLD','ENG_MANIFOLD','Eng1_manifold: CANID: Poll response: manifold pressure, calibrated');
+INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_HB_MANFLD_R'  ,'CANID_HB_ENG1_MANFLD' ,'ENG_MANIFOLD','Eng1_manifold: CANID: Heartbeat: manifold pressure, calibrated');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
 INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_CANID_HW_FILT1','CANID_HB_TIMESYNC'     ,'ENG_MANIFOLD','EPS_1: CANID 1: GPS time sync distribution msg');
 INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_CANID_HW_FILT2','CANID_MSG_TIME_POLL'   ,'ENG_MANIFOLD','MC: CANID 2:Time msg/Group polling');
@@ -66,11 +66,12 @@ INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_CANID_HW_FILT8','CANID_DU
 -- ENGINE_RPM: Instance 1 = ENG1_RPM
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL               FUNCTION_TYPE      DESCRIPTION11
 -- The CAN hw filter will be setFOR the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_MAN__CRC'             ,'0',     'ENG_RPM','Eng1_rpm: CRC');
-INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_MAN_VERSION'          ,'1',     'ENG_RPM','Eng1_rpm: Version number');
-INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_MAN_HEARTBEAT_TIME_CT', 1000,   'ENG_RPM','Eng1_rpm: Time (ms) between HB msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENGINE_POLL_RPM_R','CANID_MSG_ENG1_RPM','ENG_RPM','Eng1_rpm: CANID: rpm, calibrated');
-INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENGINE_HB_RPM_R'  ,'CANID_HB_ENG1_RPM' ,'ENG_RPM','Eng1_rpm: CANID: Heartbeat: rpm, calibrated');
+INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM__CRC'             ,'0',     'ENG_RPM','Eng1_rpm: CRC');
+INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_VERSION'          ,'1',     'ENG_RPM','Eng1_rpm: Version number');
+INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_HEARTBEAT_TIME_CT', 1000,   'ENG_RPM','Eng1_rpm: Time (ms) between HB msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_SEG_CT'           , 8,      'ENG_RPM','Eng1_rpm: Number of counts per revolution');
+INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_POLL_RPM_R','CANID_MSG_ENG1_RPM','ENG_RPM','Eng1_rpm: CANID: rpm, calibrated');
+INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_HB_RPM_R'  ,'CANID_HB_ENG1_RPM' ,'ENG_RPM','Eng1_rpm: CANID: Heartbeat: rpm, calibrated');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
 INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_CANID_HW_FILT1','CANID_HB_TIMESYNC'     ,'ENG_RPM','EPS_1: CANID: GPS time sync distribution msg');
 INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_CANID_HW_FILT2','CANID_MSG_TIME_POLL'   ,'ENG_RPM','MC: CANID:Time msg/Group polling');
@@ -84,46 +85,46 @@ INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_CANID_HW_FILT8','CANID_DUMMY',
 -- ENGINE_THROTTLE: Instance 1 = ENG1_THROTTLE
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL               FUNCTION_TYPE      DESCRIPTION11
 -- The CAN hw filter will be setFOR the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_MAN__CRC'             ,'0',     'ENG_THROTTLE','Eng1_throttle:: CRC');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_MAN_VERSION'          ,'1',     'ENG_THROTTLE','Eng1_throttle:: Version number');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_MAN_HEARTBEAT_TIME_CT', 1000,   'ENG_THROTTLE','Eng1_throttle:: Time (ms) between HB msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_OPENFULL'         , 1200,   'ENG_THROTTLE','Eng1_throttle:: ADC when throttle full open');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_HB_THROTTLE_R'    , 4200,   'ENG_THROTTLE','Eng1_throttle:: ADC when throttle closed');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENGINE_POLL_MANFLD_R','CANID_MSG_ENG1_THROTTLE','ENG_THROTTLE','Eng1_throttle:: CANID: Poll response: throttle (0.0-100.0');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENGINE_HB_MANFLD_R'  ,'CANID_HB_ENG1_THROTTLE' ,'ENG_THROTTLE','Eng1_throttle:: CANID: Heartbeat: throttle (0.0-100.0');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR__CRC'             ,'0',     'ENG_THROTTLE', 'Eng1_throttle:: CRC');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR_VERSION'          ,'1',     'ENG_THROTTLE', 'Eng1_throttle:: Version number');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR_HEARTBEAT_TIME_CT', 1000,   'ENG_THROTTLE', 'Eng1_throttle:: Time (ms) between HB msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR_OPENFULL'         , 4200,   'ENG_THROTTLE', 'Eng1_throttle:: ADC when throttle full open');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR_CLOSED'           ,  500,   'ENG_THROTTLE', 'Eng1_throttle:: ADC when throttle closed');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR_POLL_THROTTLE_R','CANID_MSG_ENG1_THROTTLE','ENG_THROTTLE','Eng1_throttle:: CANID: Poll response: throttle (0.0-100.0)');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR_HB_THROTTLE_R'  ,'CANID_HB_ENG1_THROTTLE' ,'ENG_THROTTLE','Eng1_throttle:: CANID: Heartbeat: throttle (0.0-100.0)');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_MAN_CANID_HW_FILT1','CANID_HB_TIMESYNC'     ,'ENG_THROTTLE','EPS_1: CANID 1: GPS time sync distribution msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_MAN_CANID_HW_FILT2','CANID_MSG_TIME_POLL'   ,'ENG_THROTTLE','MC: CANID 2:Time msg/Group polling');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_MAN_CANID_HW_FILT3','CANID_CMD_ENG1_THROTTLEI','ENG_THROTTLE','Eng1_throttle:: CANID 3: command');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_MAN_CANID_HW_FILT5','CANID_DUMMY', 'ENG_THROTTLE','Eng1_throttle:: CANID 4 add CAN hw filter for incoming msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_MAN_CANID_HW_FILT5','CANID_DUMMY', 'ENG_THROTTLE','Eng1_throttle:: CANID 5 add CAN hw filter for incoming msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_MAN_CANID_HW_FILT6','CANID_DUMMY', 'ENG_THROTTLE','Eng1_throttle:: CANID 6 add CAN hw filter for incoming msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_MAN_CANID_HW_FILT7','CANID_DUMMY', 'ENG_THROTTLE','Eng1_throttle:: CANID 7 add CAN hw filter for incoming msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_MAN_CANID_HW_FILT8','CANID_DUMMY', 'ENG_THROTTLE','Eng1_throttle:: CANID 8 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR_CANID_HW_FILT1','CANID_HB_TIMESYNC'       ,'ENG_THROTTLE','EPS_1: CANID 1: GPS time sync distribution msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR_CANID_HW_FILT2','CANID_MSG_TIME_POLL'     ,'ENG_THROTTLE','MC: CANID 2:Time msg/Group polling');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR_CANID_HW_FILT3','CANID_CMD_ENG1_THROTTLEI','ENG_THROTTLE','Eng1_throttle:: CANID 3: command');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR_CANID_HW_FILT5','CANID_DUMMY', 'ENG_THROTTLE','Eng1_throttle:: CANID 4 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR_CANID_HW_FILT5','CANID_DUMMY', 'ENG_THROTTLE','Eng1_throttle:: CANID 5 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR_CANID_HW_FILT6','CANID_DUMMY', 'ENG_THROTTLE','Eng1_throttle:: CANID 6 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR_CANID_HW_FILT7','CANID_DUMMY', 'ENG_THROTTLE','Eng1_throttle:: CANID 7 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THR','ENG_THR_CANID_HW_FILT8','CANID_DUMMY', 'ENG_THROTTLE','Eng1_throttle:: CANID 8 add CAN hw filter for incoming msg');
 ==================================================================================================================================================================================================
 -- ENGINE_TEMPERATURE #1: Instance 1 = ENG1_T1
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL               FUNCTION_TYPE      DESCRIPTION11
 -- The CAN hw filter will be setFOR the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_TEM1_CRC'               ,'0'       ,'ENG_T1','Eng1_t1: CRC');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_TEM1_VERSION'           ,'1'       ,'ENG_T1','Eng1_t1: Version number');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_TEM1_HEARTBEAT_TIME_CT' ,'5000'    ,'ENG_T1','Eng1_t1: Time (ms) between HB msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_TEM1_CONST_B'           ,'3380'    ,'ENG_T1','Eng1_t1: Thermistor param: constant B');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_TEM1_R_SERIES'          ,'10.0'    ,'ENG_T1','Eng1_t1: Thermistor param: Series resistor, fixed (K ohms)');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_TEM1_R_ROOMTMP'         ,'10.0'    ,'ENG_T1','Eng1_t1: Thermistor param: Thermistor room temp resistance (K ohms)');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_TEM1_REF_TEMP'          ,'290.0'   ,'ENG_T1','Eng1_t1: Thermistor param: Reference temp for thermistor');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_TEM1_TEMP_OFFSET'       ,'0.0'     ,'ENG_T1','Eng1_t1: Thermistor param: Thermistor temp offset correction (deg C)');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_TEM1_TEMP_SCALE'        ,'1.0'     ,'ENG_T1','Eng1_t1: Thermistor param: Thermistor temp scale correction');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_THR_POLL_TEM1_R'    ,'CANID_MSG_ENG1_T1','ENG_T1','Eng1_t1: CANID: Poll response: throttle (0.0-100.0');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_THR_HB_THROTTLE_R'  ,'CANID_HB_ENG1_T1' ,'ENG_T1','Eng1_t1: CANID: Heartbeat: throttle (0.0-100.0');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CRC'               ,'0'       ,'ENG_T1','Eng1_t1: CRC');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_VERSION'           ,'1'       ,'ENG_T1','Eng1_t1: Version number');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_HEARTBEAT_TIME_CT' ,'5000'    ,'ENG_T1','Eng1_t1: Time (ms) between HB msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CONST_B'           ,'3380'    ,'ENG_T1','Eng1_t1: Thermistor param: constant B');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_R_SERIES'          ,'10.0'    ,'ENG_T1','Eng1_t1: Thermistor param: Series resistor, fixed (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_R_ROOMTMP'         ,'10.0'    ,'ENG_T1','Eng1_t1: Thermistor param: Thermistor room temp resistance (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_REF_TEMP'          ,'290.0'   ,'ENG_T1','Eng1_t1: Thermistor param: Reference temp for thermistor');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_TEMP_OFFSET'       ,'0.0'     ,'ENG_T1','Eng1_t1: Thermistor param: Thermistor temp offset correction (deg C)');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_TEMP_SCALE'        ,'1.0'     ,'ENG_T1','Eng1_t1: Thermistor param: Thermistor temp scale correction');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_POLL_TEM1_R'    ,'CANID_MSG_ENG1_T1','ENG_T1','Eng1_t1: CANID: Poll response: CANID: Poll response: temperature #1 (deg C)');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_HB_THROTTLE_R'  ,'CANID_HB_ENG1_T1' ,'ENG_T1','Eng1_t1: CANID: Heartbeat: CANID: Heartbeat: temperature #1 (deg C)');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_THR_CANID_HW_FILT1' ,'CANID_HB_TIMESYNC'  ,'ENG_T1','Eng1_t1: CANID 1 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_THR_CANID_HW_FILT2' ,'CANID_MSG_TIME_POLL','ENG_T1','Eng1_t1: CANID 2 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_THR_CANID_HW_FILT3' ,'CANID_CMD_ENG1_T1I' ,'ENG_T1','Eng1_t1: CANID 3 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_THR_CANID_HW_FILT4' ,'CANID_DUMMY','ENG_T1','Eng1_t1: CANID 4 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_THR_CANID_HW_FILT5' ,'CANID_DUMMY','ENG_T1','Eng1_t1: CANID 5 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_THR_CANID_HW_FILT6' ,'CANID_DUMMY','ENG_T1','Eng1_t1: CANID 6 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_THR_CANID_HW_FILT7' ,'CANID_DUMMY','ENG_T1','Eng1_t1: CANID 7 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_THR_CANID_HW_FILT8' ,'CANID_DUMMY','ENG_T1','Eng1_t1: CANID 8 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CANID_HW_FILT1' ,'CANID_HB_TIMESYNC'  ,'ENG_T1','Eng1_t1: CANID 1 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CANID_HW_FILT2' ,'CANID_MSG_TIME_POLL','ENG_T1','Eng1_t1: CANID 2 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CANID_HW_FILT3' ,'CANID_CMD_ENG1_T1I' ,'ENG_T1','Eng1_t1: CANID 3 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CANID_HW_FILT4' ,'CANID_DUMMY','ENG_T1','Eng1_t1: CANID 4 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CANID_HW_FILT5' ,'CANID_DUMMY','ENG_T1','Eng1_t1: CANID 5 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CANID_HW_FILT6' ,'CANID_DUMMY','ENG_T1','Eng1_t1: CANID 6 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CANID_HW_FILT7' ,'CANID_DUMMY','ENG_T1','Eng1_t1: CANID 7 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CANID_HW_FILT8' ,'CANID_DUMMY','ENG_T1','Eng1_t1: CANID 8 added to CAN hardware filter to allow incoming msg');
 ==================================================================================================================================================================================================
 -- ENGINE_SENSOR1
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL               FUNCTION_TYPE      DESCRIPTION11

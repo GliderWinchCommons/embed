@@ -41,14 +41,14 @@ INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL_MSG'	    	, 7, 'TYP_CANID','%x', 	'
 INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL'	    		, 8, 'TYP_CANID','%x', 	'SHEAVE_H', 'Encoder_f4_1: CANID: Poll with time sync msg');
 INSERT INTO PARAM_LIST VALUES ('ENCODER_POLL_R'	  			, 9, 'TYP_CANID','%x', 	'SHEAVE_H', 'Encoder_f4_1: CANID: Response to POLL');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT1'    ,10, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 1 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT2'    ,11, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 2 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT3'    ,12, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 3 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT4'    ,13, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 4 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT5'    ,14, 'TYP_CANID','%x', 	'SHEAVE_H',	'Encoder_f4_1: CANID 5 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT6'    ,15, 'TYP_CANID','%x',  'SHEAVE_H',	'Encoder_f4_1: CANID 6 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT7'    ,16, 'TYP_CANID','%x',  'SHEAVE_H',	'Encoder_f4_1: CANID 7 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT8'    ,17, 'TYP_CANID','%x',  'SHEAVE_H',	'Encoder_f4_1: CANID 8 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT1'    ,10, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 1 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT2'    ,11, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 2 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT3'    ,12, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 3 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT4'    ,13, 'TYP_CANID','%x',	'SHEAVE_H',	'Encoder_f4_1: CANID 4 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT5'    ,14, 'TYP_CANID','%x', 	'SHEAVE_H',	'Encoder_f4_1: CANID 5 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT6'    ,15, 'TYP_CANID','%x',  'SHEAVE_H',	'Encoder_f4_1: CANID 6 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT7'    ,16, 'TYP_CANID','%x',  'SHEAVE_H',	'Encoder_f4_1: CANID 7 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT8'    ,17, 'TYP_CANID','%x',  'SHEAVE_H',	'Encoder_f4_1: CANID 8 added to CAN hw filter to allow incoming msg');
 --
 -- Cansender 
 --                              Parameter name                 Code     Type  format Function_type       Description10
@@ -77,14 +77,14 @@ INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM2_R_ROOMTMP'  ,	13, 'TYP_FLT','%f
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM2_REF_TEMP'   ,	14, 'TYP_FLT','%f', 	'TENSION_a',	'Tension_a: Thermistor2 param: TREF: Reference temp for thermistor');
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM2_TEMP_OFFSET',	15, 'TYP_FLT','%f', 	'TENSION_a',	'Tension_a: Thermistor2 param: offset: hermistor temp offset correction (deg C)');
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM2_TEMP_SCALE' ,	16, 'TYP_FLT','%f', 	'TENSION_a',	'Tension_a: Thermistor2 param: scale: Thermistor temp scale correction');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM1_COEF_0'     ,	17, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor1 param: comp_t1[0]: Load-Cell polynomial coefficient 0 (offset)');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM1_COEF_1'     ,	18, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor1 param: comp_t1[1]: Load-Cell polynomial coefficient 1 (scale)');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM1_COEF_2'     ,	19, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor1 param: comp_t1[2]: Load-Cell polynomial coefficient 2 (x^2)');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM1_COEF_3'     ,	20, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor1 param: comp_t1[3]: Load-Cell polynomial coefficient 3 (x^3)');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM2_COEF_0'     ,	21, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor2 param: comp_t2[0]: Load-Cell polynomial coefficient 0 (offset)');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM2_COEF_1'     ,	22, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor2 param: comp_t2[1]: Load-Cell polynomial coefficient 1 (scale)');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM2_COEF_2'     ,	23, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor2 param: comp_t2[2]: Load-Cell polynomial coefficient 2 (x^2)');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM2_COEF_3'     ,	24, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor2 param: comp_t2[3]: Load-Cell polynomial coefficient 3 (x^3)');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM1_COEF_0'     ,	17, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor1 param: comp_t1[0]: Load-Cell polynomial coeff 0 (offset)');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM1_COEF_1'     ,	18, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor1 param: comp_t1[1]: Load-Cell polynomial coeff 1 (scale)');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM1_COEF_2'     ,	19, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor1 param: comp_t1[2]: Load-Cell polynomial coeff 2 (x^2)');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM1_COEF_3'     ,	20, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor1 param: comp_t1[3]: Load-Cell polynomial coeff 3 (x^3)');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM2_COEF_0'     ,	21, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor2 param: comp_t2[0]: Load-Cell polynomial coeff 0 (offset)');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM2_COEF_1'     ,	22, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor2 param: comp_t2[1]: Load-Cell polynomial coeff 1 (scale)');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM2_COEF_2'     ,	23, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor2 param: comp_t2[2]: Load-Cell polynomial coeff 2 (x^2)');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_THERM2_COEF_3'     ,	24, 'TYP_FLT','%f',	'TENSION_a',	'Tension_a: Thermistor2 param: comp_t2[3]: Load-Cell polynomial coeff 3 (x^3)');
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_HEARTBEAT_CT'      ,	25, 'TYP_U32','%u', 	'TENSION_a',	'Tension_a: hbct: Heart-Beat Count of time (milliseconds) between autonomous msgs');
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_DRUM_NUMBER'       ,	26, 'TYP_U32','%u', 	'TENSION_a',	'Tension_a: drum: Drum system number for this function instance');
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_DRUM_FUNCTION_BIT' ,	27, 'TYP_U32','%02x', 	'TENSION_a',	'Tension_a: f_pollbit: Drum system poll 1st payload byte bit for drum # (function instance)');
@@ -105,13 +105,13 @@ INSERT INTO PARAM_LIST VALUES ('TENSION_a_Z_RECAL_CT'        ,	41, 'TYP_U32','%u
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_LIMIT_HI'          ,	42, 'TYP_FLT','%f',  	'TENSION_a',  	'Tension_a: Exceeding this calibrated limit (+) means invalid reading');
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_LIMIT_LO'          ,	43, 'TYP_FLT','%f', 	'TENSION_a',  	'Tension_a: Exceeding this calibrated limit (-) means invalid reading');
 INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT1'    ,	44, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID1 parameter in this list for CAN hardware filter to allow');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT2'    ,	45, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID2 CANID parameter in this list for CAN hardware filter to allow');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT3'    ,	46, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID3 CANID parameter in this list for CAN hardware filter to allow');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT4'    ,	47, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID4 CANID parameter in this list for CAN hardware filter to allow');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT5'    ,	48, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID5 CANID parameter in this list for CAN hardware filter to allow');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT6'    ,	49, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID6 CANID parameter in this list for CAN hardware filter to allow');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT7'    ,	50, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID7 CANID parameter in this list for CAN hardware filter to allow');
-INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT8'    ,	51, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID8 CANID parameter in this list for CAN hardware filter to allow');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT2'    ,	45, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID2 CANID parameter in this list for CAN hw filter to allow');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT3'    ,	46, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID3 CANID parameter in this list for CAN hw filter to allow');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT4'    ,	47, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID4 CANID parameter in this list for CAN hw filter to allow');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT5'    ,	48, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID5 CANID parameter in this list for CAN hw filter to allow');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT6'    ,	49, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID6 CANID parameter in this list for CAN hw filter to allow');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT7'    ,	50, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID7 CANID parameter in this list for CAN hw filter to allow');
+INSERT INTO PARAM_LIST VALUES ('TENSION_a_CANID_HW_FILT8'    ,	51, 'TYP_CANID','%x',  	'TENSION_a',  	'Tension_a: CANID8 CANID parameter in this list for CAN hw filter to allow');
 --
 -- Cable angle 
 --                              Parameter name                 Code     Type  format Function_type                   Description
@@ -124,10 +124,10 @@ INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_DRUM_POLL_BIT'      , 6, 'TYP_U32','
 INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_MIN_TENSION'	, 7, 'TYP_FLT','%0.3f',	'CABLE_ANGLE',	'Cable Angle: Minimum tension required (units to match)');
 INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_RATE_CT'		, 8, 'TYP_U32','%u',   	'CABLE_ANGLE',	'Cable Angle: Rate count: Number of tension readings between cable angle msgs');
 INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_ALARM_REPEAT'	, 9, 'TYP_U32','%u',   	'CABLE_ANGLE',	'Cable Angle: Number of times alarm msg is repeated');
-INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_CALIB_COEF_0'	,10, 'TYP_FLT','%f',   	'CABLE_ANGLE',	'Cable Angle: Cable angle polynomial coefficient 0');
-INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_CALIB_COEF_1'	,11, 'TYP_FLT','%f',   	'CABLE_ANGLE',	'Cable Angle: Cable angle polynomial coefficient 1');
-INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_CALIB_COEF_2'	,12, 'TYP_FLT','%f',   	'CABLE_ANGLE',	'Cable Angle: Cable angle polynomial coefficient 2');
-INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_CALIB_COEF_3'	,13, 'TYP_FLT','%f',   	'CABLE_ANGLE',	'Cable Angle: Cable angle polynomial coefficient 3');
+INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_CALIB_COEF_0'	,10, 'TYP_FLT','%f',   	'CABLE_ANGLE',	'Cable Angle: Cable angle polynomial coeff 0');
+INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_CALIB_COEF_1'	,11, 'TYP_FLT','%f',   	'CABLE_ANGLE',	'Cable Angle: Cable angle polynomial coeff 1');
+INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_CALIB_COEF_2'	,12, 'TYP_FLT','%f',   	'CABLE_ANGLE',	'Cable Angle: Cable angle polynomial coeff 2');
+INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_CALIB_COEF_3'	,13, 'TYP_FLT','%f',   	'CABLE_ANGLE',	'Cable Angle: Cable angle polynomial coeff 3');
 INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_CANPRM_TENSION'     ,14, 'TYP_CANID','%x',  'CABLE_ANGLE',  'Cable Angle: CANID: can msg tension for sheave load-pin');
 INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_MSG_TIME_POLL'      ,15, 'TYP_CANID','%x', 	'CABLE_ANGLE',  'Cable Angle: CANID: cid_ten_poll: canid MC: Time msg/Group polling');
 INSERT INTO PARAM_LIST VALUES ('CABLE_ANGLE_TIMESYNC'           ,16, 'TYP_CANID','%x',  'CABLE_ANGLE',  'Cable Angle: CANID: cid_gps_sync: canid time: GPS time sync distribution');
@@ -153,8 +153,6 @@ INSERT INTO PARAM_LIST VALUES ('LOGGER_LIST_VERSION'      	, 2, 'TYP_S32','%d', 
 INSERT INTO PARAM_LIST VALUES ('LOGGER_HEARTBEAT1_CT'		, 3, 'TYP_U32','%d',	'LOGGER',	'Logger: Heartbeat count of time (ms) between msgs');
 INSERT INTO PARAM_LIST VALUES ('LOGGER_HEARTBEAT_MSG'    	, 4, 'TYP_CANID','%x', 	'LOGGER',  	'Logger: CANID: Hearbeat sends running count of logged msgs');
 ---
--- Engine sensor
-
 -- Engine sensors: Mainfold pressure
 --                              Parameter name            Code  Type   format    Function_type            Description
 INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CRC'              , 1,'TYP_U32','%08X','ENG_MANIFOLD','Eng_manifold: CRC');
@@ -162,18 +160,17 @@ INSERT INTO PARAM_LIST VALUES ('ENG_MAN_VERSION'          , 2,'TYP_S32',  '%d','
 INSERT INTO PARAM_LIST VALUES ('ENG_MAN_HEARTBEAT_TIME_CT', 3,'TYP_S32',  '%d','ENG_MANIFOLD','Eng_manifold: Time (ms) between HB msg');
 INSERT INTO PARAM_LIST VALUES ('ENG_MAN_PRESS_OFFSET'     , 4,'TYP_FLT',  '%f','ENG_MANIFOLD','Eng_manifold: Manifold pressure offset');
 INSERT INTO PARAM_LIST VALUES ('ENG_MAN_PRESS_SCALE'      , 5,'TYP_FLT',  '%f','ENG_MANIFOLD','Eng_manifold: Manifold pressure  scale (inch Hg)');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_POLL_MANFLD_R'     , 6,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID: Poll response: manifold pressure, calibrated');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_HB_MANFLD_R'       , 7,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID: Heartbeat: manifold pressure, calibrated');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_POLL_MANFLD_R'    , 6,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID: Poll response: manifold pressure, calibrated');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_HB_MANFLD_R'      , 7,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID: Heartbeat: manifold pressure, calibrated');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT1'   , 8,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 1 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT2'   , 9,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 2 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT3'   ,10,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 3 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT4'   ,11,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 4 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT5'   ,12,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 5 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT6'   ,13,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 6 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT7'   ,14,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 7 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT8'   ,15,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 8 added to CAN hardware filter to allow incoming msg');
-
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT1'   , 8,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 1 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT2'   , 9,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 2 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT3'   ,10,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 3 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT4'   ,11,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 4 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT5'   ,12,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 5 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT6'   ,13,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 6 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT7'   ,14,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 7 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_MAN_CANID_HW_FILT8'   ,15,'TYP_CANID','%x','ENG_MANIFOLD','Eng_manifold: CANID 8 added to CAN hw filter to allow incoming msg');
 
 -- Engine sensors: RPM
 --                              Parameter name            Code     Type   format    Function_type            Description
@@ -184,61 +181,59 @@ INSERT INTO PARAM_LIST VALUES ('ENG_RPM_SEG_CT'           , 4, 'TYP_U32' ,'%u','
 INSERT INTO PARAM_LIST VALUES ('ENG_RPM_POLL_RPM_R'       , 5,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID: Poll response, rpm, calibrated');
 INSERT INTO PARAM_LIST VALUES ('ENG_RPM_HB_RPM_R'         , 6,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID: Heartbeat: rpm, calibrated');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT1'   , 7,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 1 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT2'   , 8,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 2 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT3'   , 9,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 3 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT4'   ,10,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 4 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT5'   ,11,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 5 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT6'   ,12,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 6 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT7'   ,13,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 7 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT8'   ,14,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 8 added to CAN hardware filter to allow incoming msg');
-
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT1'   , 7,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 1 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT2'   , 8,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 2 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT3'   , 9,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 3 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT4'   ,10,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 4 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT5'   ,11,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 5 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT6'   ,12,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 6 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT7'   ,13,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 7 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_RPM_CANID_HW_FILT8'   ,14,'TYP_CANID','%x','ENG_RPM','Eng_rpm: CANID 8 added to CAN hw filter to allow incoming msg');
 
 -- Engine sensors: Throttle
 --                              Parameter name            Code     Type   format    Function_type            Description
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CRC'              , 1,'TYP_U32','%08X','ENG_THROTTLE','Eng1_throttle: CRC');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_VERSION'          , 2,'TYP_S32',  '%d','ENG_THROTTLE','Eng1_throttle: Version number');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_HEARTBEAT_TIME_CT', 3,'TYP_S32',  '%d','ENG_THROTTLE','Eng1_throttle: Time (ms) between HB msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_OPENFULL'         , 4,'TYP_FLT',  '%f','ENG_THROTTLE','Eng1_throttle: ADC when throttle full open');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CLOSED'           , 5,'TYP_FLT',  '%f','ENG_THROTTLE','Eng1_throttle: ADC when throttle closed');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_POLL_THROTTLE_R'  , 6,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID: Poll response: throttle (0.0-100.0');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_HB_THROTTLE_R'    , 7,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID: Heartbeat: throttle (0.0-100.0');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CRC'              , 1,'TYP_U32','%08X','ENG_THROTTLE','Eng_throttle: CRC');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_VERSION'          , 2,'TYP_S32',  '%d','ENG_THROTTLE','Eng_throttle: Version number');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_HEARTBEAT_TIME_CT', 3,'TYP_S32',  '%d','ENG_THROTTLE','Eng_throttle: Time (ms) between HB msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_OPENFULL'         , 4,'TYP_FLT',  '%f','ENG_THROTTLE','Eng_throttle: ADC when throttle full open');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CLOSED'           , 5,'TYP_FLT',  '%f','ENG_THROTTLE','Eng_throttle: ADC when throttle closed');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_POLL_THROTTLE_R'  , 6,'TYP_CANID','%x','ENG_THROTTLE','Eng_throttle: CANID: Poll response: throttle (0.0-100.0)');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_HB_THROTTLE_R'    , 7,'TYP_CANID','%x','ENG_THROTTLE','Eng_throttle: CANID: Heartbeat: throttle (0.0-100.0)');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT1'   , 8,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 1 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT2'   , 9,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 2 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT3'   ,10,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 3 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT4'   ,11,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 4 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT5'   ,12,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 5 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT6'   ,13,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 6 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT7'   ,14,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 7 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT8'   ,15,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 8 added to CAN hardware filter to allow incoming msg');
-
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT1'   , 8,'TYP_CANID','%x','ENG_THROTTLE','Eng_throttle: CANID 1 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT2'   , 9,'TYP_CANID','%x','ENG_THROTTLE','Eng_throttle: CANID 2 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT3'   ,10,'TYP_CANID','%x','ENG_THROTTLE','Eng_throttle: CANID 3 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT4'   ,11,'TYP_CANID','%x','ENG_THROTTLE','Eng_throttle: CANID 4 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT5'   ,12,'TYP_CANID','%x','ENG_THROTTLE','Eng_throttle: CANID 5 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT6'   ,13,'TYP_CANID','%x','ENG_THROTTLE','Eng_throttle: CANID 6 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT7'   ,14,'TYP_CANID','%x','ENG_THROTTLE','Eng_throttle: CANID 7 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT8'   ,15,'TYP_CANID','%x','ENG_THROTTLE','Eng_throttle: CANID 8 added to CAN hw filter to allow incoming msg');
 
 -- Engine sensors: Temperature #1
 --                              Parameter name            Code     Type   format    Function_type            Description
-INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_CRC'               , 1, 'TYP_U32','%08X', 'ENG_T1',	'Eng_tem1: CRC');
-INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_VERSION'           , 2, 'TYP_S32',  '%d', 'ENG_T1',	'Eng_tem1: Version number');
-INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_HEARTBEAT_TIME_CT' , 3, 'TYP_S32',  '%d', 'ENG_T1',	'Eng_tem1: Time (ms) between HB msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_CONST_B'           , 7, 'TYP_FLT',  '%f', 'ENG_T1',	'Eng_tem1: Thermistor param: constant B');
-INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_R_SERIES'          , 8, 'TYP_FLT',  '%f', 'ENG_T1',	'Eng_tem1 Thermistor param: Series resistor, fixed (K ohms)');
-INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_R_ROOMTMP'         , 9, 'TYP_FLT',  '%f', 'ENG_T1',	'Eng_tem1 Thermistor param: Thermistor room temp resistance (K ohms)');
-INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_REF_TEMP'          ,10, 'TYP_FLT',  '%f', 'ENG_T1',	'Eng_tem1 Thermistor param: Reference temp for thermistor');
-INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_TEMP_OFFSET'       ,11, 'TYP_FLT',  '%f', 'ENG_T1',	'Eng_tem1 Thermistor param: Thermistor temp offset correction (deg C)');
-INSERT INTO PARAM_LIST VALUES ('ENG_TEM1_TEMP_SCALE'        ,12, 'TYP_FLT',  '%f', 'ENG_T1',	'Eng_tem1 Thermistor param: Thermistor temp scale correction');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_POLL_THROTTLE_R'  , 6,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID: Poll response: throttle (0.0-100.0');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_HB_THROTTLE_R'    , 7,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID: Heartbeat: throttle (0.0-100.0');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_CRC'              , 1,'TYP_U32','%08X', 'ENG_T1',	'Eng_t1: CRC');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_VERSION'          , 2,'TYP_S32',  '%d', 'ENG_T1',	'Eng_t1: Version number');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_HEARTBEAT_TIME_CT', 3,'TYP_S32',  '%d', 'ENG_T1',	'Eng_t1: Time (ms) between HB msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_CONST_B'          , 4,'TYP_FLT',  '%f', 'ENG_T1',	'Eng_t1: Thermistor param: constant B');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_R_SERIES'         , 5,'TYP_FLT',  '%f', 'ENG_T1',	'Eng_t1: Thermistor param: Series resistor, fixed (K ohms)');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_R_ROOMTMP'        , 6,'TYP_FLT',  '%f', 'ENG_T1',	'Eng_t1: Thermistor param: Thermistor room temp resistance (K ohms)');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_REF_TEMP'         , 7,'TYP_FLT',  '%f', 'ENG_T1',	'Eng_t1: Thermistor param: Reference temp for thermistor');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_TEMP_OFFSET'      , 8,'TYP_FLT',  '%f', 'ENG_T1',	'Eng_t1: Thermistor param: Thermistor temp offset correction (deg C)');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_TEMP_SCALE'       , 9,'TYP_FLT',  '%f', 'ENG_T1',	'Eng_t1: Thermistor param: Thermistor temp scale correction');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_POLL_T1_R'        ,10,'TYP_CANID','%x','ENG_T1','Eng_t1: CANID: Poll response: temperature #1 (deg C)');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_HB_T1_R'          ,11,'TYP_CANID','%x','ENG_T1','Eng_t1: CANID: Heartbeat: temperature #1 (deg C)');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT1'   , 8,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 1 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT2'   , 9,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 2 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT3'   ,10,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 3 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT4'   ,11,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 4 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT5'   ,12,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 5 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT6'   ,13,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 6 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT7'   ,14,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 7 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT8'   ,15,'TYP_CANID','%x','ENG_THROTTLE','Eng1_throttle: CANID 8 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_CANID_HW_FILT1'   ,12,'TYP_CANID','%x','ENG_T1','Eng_t1: CANID 1 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_CANID_HW_FILT2'   ,13,'TYP_CANID','%x','ENG_T1','Eng_t1: CANID 2 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_CANID_HW_FILT3'   ,14,'TYP_CANID','%x','ENG_T1','Eng_t1: CANID 3 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_CANID_HW_FILT4'   ,15,'TYP_CANID','%x','ENG_T1','Eng_t1: CANID 4 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_CANID_HW_FILT5'   ,16,'TYP_CANID','%x','ENG_T1','Eng_t1: CANID 5 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_CANID_HW_FILT6'   ,17,'TYP_CANID','%x','ENG_T1','Eng_t1: CANID 6 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_CANID_HW_FILT7'   ,18,'TYP_CANID','%x','ENG_T1','Eng_t1: CANID 7 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_CANID_HW_FILT8'   ,19,'TYP_CANID','%x','ENG_T1','Eng_t1: CANID 8 added to CAN hw filter to allow incoming msg');
 
 
--- Engine sensor
+-- Engine sensors: combined
 --                              Parameter name            Code     Type   format    Function_type            Description
 INSERT INTO PARAM_LIST VALUES ('ENGINE__CRC'               , 1, 'TYP_U32','%08X', 'ENGINE_SENSOR',	'Engine_sensor: CRC');
 INSERT INTO PARAM_LIST VALUES ('ENGINE__VERSION'           , 2, 'TYP_S32',  '%d', 'ENGINE_SENSOR',	'Engine_sensor: Version number');
@@ -259,14 +254,14 @@ INSERT INTO PARAM_LIST VALUES ('ENGINE_POLL_TEMPTHRTL_R'   ,16, 'TYP_CANID','%x'
 INSERT INTO PARAM_LIST VALUES ('ENGINE_HB_RPMMANFLD'       ,17, 'TYP_CANID','%x', 'ENGINE_SENSOR', 'Engine_sensor: CANID: Heartbeat: raw readings: rpm:manifold pressure');
 INSERT INTO PARAM_LIST VALUES ('ENGINE_HB_THRMTHRTL'       ,18, 'TYP_CANID','%x', 'ENGINE_SENSOR', 'Engine_sensor: CANID: Heartbeat: raw readings: thermistor:throttle');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT1'     ,19, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 1 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT2'     ,20, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 2 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT3'     ,21, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 3 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT4'     ,22, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 4 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT5'     ,23, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 5 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT6'     ,24, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 6 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT7'     ,25, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 7 added to CAN hardware filter to allow incoming msg');
-INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT8'     ,26, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 8 added to CAN hardware filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT1'     ,19, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 1 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT2'     ,20, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 2 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT3'     ,21, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 3 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT4'     ,22, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 4 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT5'     ,23, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 5 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT6'     ,24, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 6 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT7'     ,25, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 7 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('ENGINE_CANID_HW_FILT8'     ,26, 'TYP_CANID','%x', 'ENGINE_SENSOR',	'Engine_sensor: CANID 8 added to CAN hw filter to allow incoming msg');
 
 -- Yogurt maker
 --                              Parameter name            Code     Type  format Function_type            Description
@@ -277,37 +272,37 @@ INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM1_CONST_B'    , 3, 'TYP_FLT','%f',
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM1_R_SERIES'   , 4, 'TYP_FLT','%f','YOGURT_1',	'Yogurt: Thermistor1 param: RS: Series resistor, fixed (K ohms)');
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM1_R_ROOMTMP'  , 5, 'TYP_FLT','%f','YOGURT_1',	'Yogurt: Thermistor1 param: R0: Thermistor room temp resistance (K ohms)');
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM1_REF_TEMP'   , 6, 'TYP_FLT','%f','YOGURT_1',	'Yogurt: Thermistor1 param: TREF: Reference temp for thermistor');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM1_COEF_0',    7, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor1 param: poly[0]:  polynomial coefficient 0 (offset)');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM1_COEF_1',    8, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor1 param: poly[1]:  polynomial coefficient 1 (scale)');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM1_COEF_2',    9, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor1 param: poly[2]:  polynomial coefficient 2 (x^2)');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM1_COEF_3',   10, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor1 param: poly[3]:  polynomial coefficient 3 (x^3)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM1_COEF_0',    7, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor1 param: poly[0]:  polynomial coeff 0 (offset)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM1_COEF_1',    8, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor1 param: poly[1]:  polynomial coeff 1 (scale)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM1_COEF_2',    9, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor1 param: poly[2]:  polynomial coeff 2 (x^2)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM1_COEF_3',   10, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor1 param: poly[3]:  polynomial coeff 3 (x^3)');
 
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM2_CONST_B'    ,11, 'TYP_FLT','%f','YOGURT_1',	'Yogurt: Thermistor2 param: B: constant B');
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM2_R_SERIES'   ,12, 'TYP_FLT','%f','YOGURT_1',	'Yogurt: Thermistor2 param: RS: Series resistor, fixed (K ohms)');
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM2_R_ROOMTMP'  ,13, 'TYP_FLT','%f','YOGURT_1',	'Yogurt: Thermistor2 param: R0: Thermistor room temp resistance (K ohms)');
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM2_REF_TEMP'   ,14, 'TYP_FLT','%f','YOGURT_1',	'Yogurt: Thermistor2 param: TREF: Reference temp for thermistor');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM2_COEF_0',   15, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor2 param: poly[0]:  polynomial coefficient 0 (offset)');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM2_COEF_1',   16, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor2 param: poly[1]:  polynomial coefficient 1 (scale)');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM2_COEF_2',   17, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor2 param: poly[2]:  polynomial coefficient 2 (x^2)');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM2_COEF_3',   18, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor2 param: poly[3]:  polynomial coefficient 3 (x^3)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM2_COEF_0',   15, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor2 param: poly[0]:  polynomial coeff 0 (offset)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM2_COEF_1',   16, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor2 param: poly[1]:  polynomial coeff 1 (scale)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM2_COEF_2',   17, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor2 param: poly[2]:  polynomial coeff 2 (x^2)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM2_COEF_3',   18, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor2 param: poly[3]:  polynomial coeff 3 (x^3)');
 
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM3_CONST_B'   ,19, 'TYP_FLT','%f', 'YOGURT_1',	'Yogurt: Thermistor3 param: B: constant B');
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM3_R_SERIES'  ,20, 'TYP_FLT','%f', 'YOGURT_1',	'Yogurt: Thermistor3 param: RS: Series resistor, fixed (K ohms)');
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM3_R_ROOMTMP' ,21, 'TYP_FLT','%f', 'YOGURT_1',	'Yogurt: Thermistor3 param: R0: Thermistor room temp resistance (K ohms)');
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM3_REF_TEMP'  ,22, 'TYP_FLT','%f', 'YOGURT_1',	'Yogurt: Thermistor3 param: TREF: Reference temp for thermistor');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM3_COEF_0',   23, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor3 param: poly[0]:  polynomial coefficient 0 (offset)');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM3_COEF_1',   24, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor3 param: poly[1]:  polynomial coefficient 1 (scale)');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM3_COEF_2',   25, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor3 param: poly[2]:  polynomial coefficient 2 (x^2)');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM3_COEF_3',   26, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor3 param: poly[3]:  polynomial coefficient 3 (x^3)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM3_COEF_0',   23, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor3 param: poly[0]:  polynomial coeff 0 (offset)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM3_COEF_1',   24, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor3 param: poly[1]:  polynomial coeff 1 (scale)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM3_COEF_2',   25, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor3 param: poly[2]:  polynomial coeff 2 (x^2)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM3_COEF_3',   26, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor3 param: poly[3]:  polynomial coeff 3 (x^3)');
 
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM4_CONST_B'   ,27, 'TYP_FLT','%f', 'YOGURT_1',	'Yogurt: Thermistor4 param: B: constant B');
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM4_R_SERIES'  ,28, 'TYP_FLT','%f', 'YOGURT_1',	'Yogurt: Thermistor4 param: RS: Series resistor, fixed (K ohms)');
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM4_R_ROOMTMP' ,29, 'TYP_FLT','%f', 'YOGURT_1',	'Yogurt: Thermistor4 param: R0: Thermistor room temp resistance (K ohms)');
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM4_REF_TEMP'  ,30, 'TYP_FLT','%f', 'YOGURT_1',	'Yogurt: Thermistor4 param: TREF: Reference temp for thermistor');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM4_COEF_0',   31, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor4 param: poly[0]:  polynomial coefficient 0 (offset)');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM4_COEF_1',   32, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor4 param: poly[1]:  polynomial coefficient 1 (scale)');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM4_COEF_2',   33, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor4 param: poly[2]:  polynomial coefficient 2 (x^2)');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM4_COEF_3',   34, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor4 param: poly[3]:  polynomial coefficient 3 (x^3)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM4_COEF_0',   31, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor4 param: poly[0]:  polynomial coeff 0 (offset)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM4_COEF_1',   32, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor4 param: poly[1]:  polynomial coeff 1 (scale)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM4_COEF_2',   33, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor4 param: poly[2]:  polynomial coeff 2 (x^2)');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_THERM4_COEF_3',   34, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Thermistor4 param: poly[3]:  polynomial coeff 3 (x^3)');
 
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_CTLTEMP_HEAT_PAST',   35, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Pasteur: Control set-point temperature (deg F) heat to this temp');
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_CTLTEMP_DUR_PAST',    36, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Pasteur: Time duration at temp (hours.frac_hours)');
@@ -323,9 +318,9 @@ INSERT INTO PARAM_LIST VALUES ('YOGURT_1_CTL_THERM_AIRIN',	43, 'TYP_U32','%d', 	
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_CTL_THERM_AIROUT',	44, 'TYP_U32','%d', 	'YOGURT_1',	'Yogurt: Thermistor number for air coming out of holes (0 - 3)');
 
 
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_CTL_THERM_LOOP_P',	45, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Control loop: Proportional coefficient');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_CTL_THERM_LOOP_I',	46, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Control loop: Integral coefficient');
-INSERT INTO PARAM_LIST VALUES ('YOGURT_1_CTL_THERM_LOOP_D',	47, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Control loop: Derivative coefficient');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_CTL_THERM_LOOP_P',	45, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Control loop: Proportional coeff');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_CTL_THERM_LOOP_I',	46, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Control loop: Integral coeff');
+INSERT INTO PARAM_LIST VALUES ('YOGURT_1_CTL_THERM_LOOP_D',	47, 'TYP_FLT','%f', 	'YOGURT_1',	'Yogurt: Control loop: Derivative coeff');
 
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_CMD'      ,48,'TYP_CANID','%x', 'YOGURT_1',  	'Yogurt: CANID: cid_yog_cmd: Yogurt maker parameters');
 INSERT INTO PARAM_LIST VALUES ('YOGURT_1_MSG'      ,49,'TYP_CANID','%x', 'YOGURT_1',  	'Yogurt: CANID: cid_yog_msg: Yogurt maker msgs');

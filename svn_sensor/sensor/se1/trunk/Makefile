@@ -47,8 +47,8 @@ LIBCOMMONALL    = $(SRCDIR)/../../../common_all/trunk
 LIBSVNCOMMON	= $(SRCDIR)/../../../../svn_common/trunk
 
 # Library directory path--compile and stuff
-LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
-LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
+LGCC =     $(HOME)/launchpad/gcc-arm-none-eabi-5_4-2016q3/lib/gcc/arm-none-eabi/5.4.1/armv7-m
+LOTHER      = $(HOME)/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m
 
 # Compiler flags -Os = no optimization, -Os = minimum space, -O3 = fastest
 CFLAGS   = -Os -g -Wall -Wextra
@@ -88,6 +88,8 @@ OBJS	+= newlib_support.o
 OBJS	+= adcsensor_eng.o 
 OBJS	+= rpmsensor.o
 OBJS	+= temp_calc.o
+OBJS  += engine_idx_v_struct.o
+OBJS  += engine_function.o
 
 
 # Paths for openocd and automatic flashing

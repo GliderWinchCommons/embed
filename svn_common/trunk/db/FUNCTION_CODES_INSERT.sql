@@ -72,8 +72,8 @@ INSERT INTO FUNCTION_CODES VALUES ('SHEAVE_1UP'		,'SHEAVE_UP_H','UNIT_1E',	25,	'
 INSERT INTO FUNCTION_CODES VALUES ('SHEAVE_1LO'		,'SHEAVE_LO_H','UNIT_1E',	26,	'Shaft encoder f4: unit 1 lower sheave' );
 
 INSERT INTO FUNCTION_CODES VALUES ('ENG1_MANIFOLD' ,'ENG_MANIFOLD','UNIT_3',	27,	'Sensor, engine: manifold pressure' );
-INSERT INTO FUNCTION_CODES VALUES ('ENG1_RPM'      ,'ENG_RPM',	    'UNIT_3',	28,	'Sensor, engine: rpm,' );
-INSERT INTO FUNCTION_CODES VALUES ('ENG1_THROTTLE' ,'ENG_THROTTLE','UNIT_3',	29,	'Sensor, engine: rpm,' );
+INSERT INTO FUNCTION_CODES VALUES ('ENG1_RPM'      ,'ENG_RPM',	    'UNIT_3',	28,	'Sensor, engine: rpm' );
+INSERT INTO FUNCTION_CODES VALUES ('ENG1_THROTTLE' ,'ENG_THROTTLE','UNIT_3',	29,	'Sensor, engine: throttle' );
 INSERT INTO FUNCTION_CODES VALUES ('ENG1_T1'       ,'ENG_T1',	    'UNIT_3',	30,	'Sensor, engine: temperature 1' );
 INSERT INTO FUNCTION_CODES VALUES ('ENG1_T2'       ,'ENG_T2',	    'UNIT_3',	31,	'Sensor, engine: temperature 2' );
 

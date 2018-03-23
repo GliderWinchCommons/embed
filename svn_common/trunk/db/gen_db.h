@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2017-08-13 20:49:30.132
+// 2018-03-22 23:10:40.248
 
-#define CANID_COUNT 194
+#define CANID_COUNT 210
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -45,12 +45,28 @@
 #define  CANID_CMD_CABLE_ANGLE_1R 0x0620000C  // CABLE_ANGLE_1  : Cable_Angle1: R [0] command code, [1]-[8] depends on code
 #define  CANID_MSG_CABLE_ANGLE_1  0x3A000000  // CABLE_ANGLE_1  : Cable_Angle1: for drum #1
 #define  CANID_MSG_CABLE_ANGLE_1_ALARM 0x2B000000  // CABLE_ANGLE_1  : Cable_Angle1: unreliable for drum #1
-#define  CANID_CMD_ENGINE_SENSORI 0x80600000  // ENGINE_SENSOR  : Engine: code: I [0] command code, [1]-[8] depends on code
-#define  CANID_CMD_ENGINE_SENSORR 0x8060000C  // ENGINE_SENSOR  : Engine: code: R [0] command code, [1]-[8] depends on code
-#define  CANID_HB_ENG_RPMMANIFOLD 0x40600000  // ENGINE_SENSOR  : Engine: rpm:manifold pressure
-#define  CANID_HB_ENG_TEMP        0x70600000  // ENGINE_SENSOR  : Engine: thermistor converted to temp
-#define  CANID_HB_ENG_THERMTHROTL 0x60600000  // ENGINE_SENSOR  : Engine: thermistor:throttle pot
-#define  CANID_HB_ENG_THROTTLE    0x50600000  // ENGINE_SENSOR  : Engine: throttle
+#define  CANID_CMD_ENG1_I         0x80600000  // ENGINE_SENSOR  : Engine: code: I [0] command code, [1]-[8] depends on code
+#define  CANID_CMD_ENG1_R         0x80800000  // ENGINE_SENSOR  : Engine: code: R [0] command code, [1]-[8] depends on code
+#define  CANID_MSG_ENG1_RPMMANFLD_R 0x40600000  // ENGINE_SENSOR  : Engine: rpm:manifold pressure
+#define  CANID_MSG_ENG1_TEMPTHRTL_R 0x60600000  // ENGINE_SENSOR  : Engine: temperature:throttle pot, calibrated
+#define  CANID_HB_ENG1_RPMMANFLD  0x4060000C  // ENGINE_SENSOR  : Engine: raw readings: rpm:manifold pressure
+#define  CANID_HB_ENG1_THRMTHRTL  0x6060000C  // ENGINE_SENSOR  : Engine: raw readings: thermistor:throttle
+#define  CANID_CMD_ENG1_MANFLDI   0x80A00000  // ENG_MANIFOLD   : Eng1_manfld: code: I [0] command code, [1]-[8] depends on code
+#define  CANID_CMD_ENG1_MANFLDR   0x80E00000  // ENG_MANIFOLD   : Eng1_manfld: R [0] command code, [1]-[8] depends on code
+#define  CANID_MSG_ENG1_MANFLD    0x40800000  // ENG_MANIFOLD   : Eng1_manfld: manifold pressure
+#define  CANID_HB_ENG1_MANFLD     0x82200000  // ENG_MANIFOLD   : Eng1_manfld: Heartbeat manifold pressure calibrated
+#define  CANID_CMD_ENG1_RPMI      0x81200000  // ENG_RPM        : Eng1_rpm: cmd code: I [0] command code, [1]-[8] depends on code
+#define  CANID_CMD_ENG1_RPMR      0x81400000  // ENG_RPM        : Eng1_rpm: cmd code: R [0] command code, [1]-[8] depends on code
+#define  CANID_MSG_ENG1_RPM       0x40A00000  // ENG_RPM        : Eng1_rpm: RPM calibrated
+#define  CANID_HB_ENG1_RPM        0x82600000  // ENG_RPM        : Eng1_rpm: Heartbeat rpm calibrated
+#define  CANID_CMD_ENG1_THROTTLEI 0x81600000  // ENG_THROTTLE   : Eng1_throttle: cmd code: I [0] command code, [1]-[8] depends on code
+#define  CANID_CMD_ENG1_THROTTLER 0x81800000  // ENG_THROTTLE   : Eng1_throttle: cmd code: R [0] command code, [1]-[8] depends on code
+#define  CANID_MSG_ENG1_THROTTLE  0x40E00000  // ENG_THROTTLE   : Eng1_throttle: Throttle calibrated
+#define  CANID_HB_ENG1_THROTTLE   0x82400000  // ENG_THROTTLE   : Eng1_throttle: Heartbeat throttle calibrated
+#define  CANID_CMD_ENG1_T1I       0x81A00000  // ENG_T1         : Eng1_t1: cmd code: I [0] command code, [1]-[8] depends on code
+#define  CANID_CMD_ENG1_T1R       0x81E00000  // ENG_T1         : Eng1_t1: cmd code: R [0] command code, [1]-[8] depends on code
+#define  CANID_MSG_ENG1_T1        0x41200000  // ENG_T1         : Eng1_t1: Temperature #1 calibrated
+#define  CANID_HB_ENG1_T1         0x82800000  // ENG_T1         : Eng1_t1: Heartbeat temperature #1 calibrated
 #define  CANID_HB_FIX_HT_TYP_NSAT 0xB1C00000  // GPS            : GPS: fix: heigth:type fix:number sats
 #define  CANID_HB_FIX_LATLON      0xA1C00000  // GPS            : GPS: fix: lattitude:longitude
 #define  CANID_HB_LG_ER1          0xD1C00004  // GPS            : GPS: 1st code  CANID-UNITID_CO_OLI GPS checksum error
@@ -117,14 +133,14 @@
 #define  CANID_SE4H_ERR_1         0xD0400014  // DRIVE_SHAFT    : Drive shaft: [2]elapsed_ticks_no_adcticks<2000 ct  [3]cic not in sync
 #define  CANID_SE4H_ERR_2         0xD0400004  // DRIVE_SHAFT    : Drive shaft: [0]encode_state er ct [1]adctick_diff<2000 ct
 #define  CANID_CMD_UPPER1_HI      0xD0E00000  // SHEAVE_UP_H    : F4 shaft_encoder: Upper sheave hi-res: I Command CAN: send commands to subsystem
-#define  CANID_CMD_UPPER1_HR      0xD0E00004  // SHEAVE_UP_H    : F4 shaft_encoder: Upper sheave hi-res: R Command CAN: send commands to subsystem
+#define  CANID_CMD_UPPER1_HR      0xD0E00004  // SHEAVE_UP_H    : F4 shaft_encoder: Upper sheave hi-res: R Command CAN: subsystem responds
 #define  CANID_MSG_UPPER1_H_RAW   0xD1000000  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: msg--upper raw count and delta time
 #define  CANID_MSG_UPPER1_H_CAL   0xD1200000  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: msg--upper calibrated--distance and speed
 #define  CANID_HB_UPPER1_H_RAW    0xD1E00000  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: heartbeat--upper raw count and delta time
 #define  CANID_HB_UPPER1_H_CAL    0xD2000000  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: heartbeat--upper calibrated--distance and speed
 #define  CANID_TST_SHEAVE_1UP     0xD2000004  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: testing poll UP
 #define  CANID_CMD_LOWER1_HI      0xD1400000  // SHEAVE_LO_H    : F4 shaft_encoder: Lower sheave hi-res: I Command CAN: send commands to subsystem
-#define  CANID_CMD_LOWER1_HR      0xD1600004  // SHEAVE_LO_H    : F4 shaft_encoder: Lower sheave hi-res: R Command CAN: send commands to subsystem
+#define  CANID_CMD_LOWER1_HR      0xD1600004  // SHEAVE_LO_H    : F4 shaft_encoder: Lower sheave hi-res: R Command CAN: subsystem responds
 #define  CANID_MSG_LOWER1_H_RAW   0xD2400000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: msg--lower raw count and delta time
 #define  CANID_MSG_LOWER1_H_CAL   0xD1A00000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: msg--lower calibrated--distance and speed
 #define  CANID_HB_LOWER1_H_RAW    0xD1800000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: heartbeat--lower raw count and delta time
@@ -283,7 +299,7 @@
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
 
-#define PARAM_LIST_COUNT 193	// TOTAL COUNT OF PARAMETER LIST
+#define PARAM_LIST_COUNT 272	// TOTAL COUNT OF PARAMETER LIST
 
 #define  ENCODER_LIST_CRC        	1         // Encoder_f4_1: crc: CRC for tension list         
 #define  ENCODER_LIST_VERSION    	2         // Encoder_f4_1: version: Version number for Tension List
@@ -294,14 +310,14 @@
 #define  ENCODER_POLL_MSG        	7         // Encoder_f4_1: CANID: hi-res: msg--upper calibrated--distance and speed
 #define  ENCODER_POLL            	8         // Encoder_f4_1: CANID: Poll with time sync msg    
 #define  ENCODER_POLL_R          	9         // Encoder_f4_1: CANID: Response to POLL           
-#define  SHEAVE_H_CANID_HW_FILT1 	10        // Encoder_f4_1: CANID 1 added to CAN hardware filter to allow incoming msg
-#define  SHEAVE_H_CANID_HW_FILT2 	11        // Encoder_f4_1: CANID 2 added to CAN hardware filter to allow incoming msg
-#define  SHEAVE_H_CANID_HW_FILT3 	12        // Encoder_f4_1: CANID 3 added to CAN hardware filter to allow incoming msg
-#define  SHEAVE_H_CANID_HW_FILT4 	13        // Encoder_f4_1: CANID 4 added to CAN hardware filter to allow incoming msg
-#define  SHEAVE_H_CANID_HW_FILT5 	14        // Encoder_f4_1: CANID 5 added to CAN hardware filter to allow incoming msg
-#define  SHEAVE_H_CANID_HW_FILT6 	15        // Encoder_f4_1: CANID 6 added to CAN hardware filter to allow incoming msg
-#define  SHEAVE_H_CANID_HW_FILT7 	16        // Encoder_f4_1: CANID 7 added to CAN hardware filter to allow incoming msg
-#define  SHEAVE_H_CANID_HW_FILT8 	17        // Encoder_f4_1: CANID 8 added to CAN hardware filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT1 	10        // Encoder_f4_1: CANID 1 added to CAN hw filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT2 	11        // Encoder_f4_1: CANID 2 added to CAN hw filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT3 	12        // Encoder_f4_1: CANID 3 added to CAN hw filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT4 	13        // Encoder_f4_1: CANID 4 added to CAN hw filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT5 	14        // Encoder_f4_1: CANID 5 added to CAN hw filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT6 	15        // Encoder_f4_1: CANID 6 added to CAN hw filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT7 	16        // Encoder_f4_1: CANID 7 added to CAN hw filter to allow incoming msg
+#define  SHEAVE_H_CANID_HW_FILT8 	17        // Encoder_f4_1: CANID 8 added to CAN hw filter to allow incoming msg
 
 #define PARAM_LIST_CT_SHEAVE_H	17	// Count of same FUNCTION_TYPE in preceding list
 
@@ -330,14 +346,14 @@
 #define  TENSION_a_THERM2_REF_TEMP	14        // Tension_a: Thermistor2 param: TREF: Reference temp for thermistor
 #define  TENSION_a_THERM2_TEMP_OFFSET	15        // Tension_a: Thermistor2 param: offset: hermistor temp offset correction (deg C)
 #define  TENSION_a_THERM2_TEMP_SCALE	16        // Tension_a: Thermistor2 param: scale: Thermistor temp scale correction
-#define  TENSION_a_THERM1_COEF_0 	17        // Tension_a: Thermistor1 param: comp_t1[0]: Load-Cell polynomial coefficient 0 (offset)
-#define  TENSION_a_THERM1_COEF_1 	18        // Tension_a: Thermistor1 param: comp_t1[1]: Load-Cell polynomial coefficient 1 (scale)
-#define  TENSION_a_THERM1_COEF_2 	19        // Tension_a: Thermistor1 param: comp_t1[2]: Load-Cell polynomial coefficient 2 (x^2)
-#define  TENSION_a_THERM1_COEF_3 	20        // Tension_a: Thermistor1 param: comp_t1[3]: Load-Cell polynomial coefficient 3 (x^3)
-#define  TENSION_a_THERM2_COEF_0 	21        // Tension_a: Thermistor2 param: comp_t2[0]: Load-Cell polynomial coefficient 0 (offset)
-#define  TENSION_a_THERM2_COEF_1 	22        // Tension_a: Thermistor2 param: comp_t2[1]: Load-Cell polynomial coefficient 1 (scale)
-#define  TENSION_a_THERM2_COEF_2 	23        // Tension_a: Thermistor2 param: comp_t2[2]: Load-Cell polynomial coefficient 2 (x^2)
-#define  TENSION_a_THERM2_COEF_3 	24        // Tension_a: Thermistor2 param: comp_t2[3]: Load-Cell polynomial coefficient 3 (x^3)
+#define  TENSION_a_THERM1_COEF_0 	17        // Tension_a: Thermistor1 param: comp_t1[0]: Load-Cell polynomial coeff 0 (offset)
+#define  TENSION_a_THERM1_COEF_1 	18        // Tension_a: Thermistor1 param: comp_t1[1]: Load-Cell polynomial coeff 1 (scale)
+#define  TENSION_a_THERM1_COEF_2 	19        // Tension_a: Thermistor1 param: comp_t1[2]: Load-Cell polynomial coeff 2 (x^2)
+#define  TENSION_a_THERM1_COEF_3 	20        // Tension_a: Thermistor1 param: comp_t1[3]: Load-Cell polynomial coeff 3 (x^3)
+#define  TENSION_a_THERM2_COEF_0 	21        // Tension_a: Thermistor2 param: comp_t2[0]: Load-Cell polynomial coeff 0 (offset)
+#define  TENSION_a_THERM2_COEF_1 	22        // Tension_a: Thermistor2 param: comp_t2[1]: Load-Cell polynomial coeff 1 (scale)
+#define  TENSION_a_THERM2_COEF_2 	23        // Tension_a: Thermistor2 param: comp_t2[2]: Load-Cell polynomial coeff 2 (x^2)
+#define  TENSION_a_THERM2_COEF_3 	24        // Tension_a: Thermistor2 param: comp_t2[3]: Load-Cell polynomial coeff 3 (x^3)
 #define  TENSION_a_HEARTBEAT_CT  	25        // Tension_a: hbct: Heart-Beat Count of time (milliseconds) between autonomous msgs
 #define  TENSION_a_DRUM_NUMBER   	26        // Tension_a: drum: Drum system number for this function instance
 #define  TENSION_a_DRUM_FUNCTION_BIT	27        // Tension_a: f_pollbit: Drum system poll 1st payload byte bit for drum # (function instance)
@@ -358,13 +374,13 @@
 #define  TENSION_a_LIMIT_HI      	42        // Tension_a: Exceeding this calibrated limit (+) means invalid reading
 #define  TENSION_a_LIMIT_LO      	43        // Tension_a: Exceeding this calibrated limit (-) means invalid reading
 #define  TENSION_a_CANID_HW_FILT1	44        // Tension_a: CANID1 parameter in this list for CAN hardware filter to allow
-#define  TENSION_a_CANID_HW_FILT2	45        // Tension_a: CANID2 CANID parameter in this list for CAN hardware filter to allow
-#define  TENSION_a_CANID_HW_FILT3	46        // Tension_a: CANID3 CANID parameter in this list for CAN hardware filter to allow
-#define  TENSION_a_CANID_HW_FILT4	47        // Tension_a: CANID4 CANID parameter in this list for CAN hardware filter to allow
-#define  TENSION_a_CANID_HW_FILT5	48        // Tension_a: CANID5 CANID parameter in this list for CAN hardware filter to allow
-#define  TENSION_a_CANID_HW_FILT6	49        // Tension_a: CANID6 CANID parameter in this list for CAN hardware filter to allow
-#define  TENSION_a_CANID_HW_FILT7	50        // Tension_a: CANID7 CANID parameter in this list for CAN hardware filter to allow
-#define  TENSION_a_CANID_HW_FILT8	51        // Tension_a: CANID8 CANID parameter in this list for CAN hardware filter to allow
+#define  TENSION_a_CANID_HW_FILT2	45        // Tension_a: CANID2 CANID parameter in this list for CAN hw filter to allow
+#define  TENSION_a_CANID_HW_FILT3	46        // Tension_a: CANID3 CANID parameter in this list for CAN hw filter to allow
+#define  TENSION_a_CANID_HW_FILT4	47        // Tension_a: CANID4 CANID parameter in this list for CAN hw filter to allow
+#define  TENSION_a_CANID_HW_FILT5	48        // Tension_a: CANID5 CANID parameter in this list for CAN hw filter to allow
+#define  TENSION_a_CANID_HW_FILT6	49        // Tension_a: CANID6 CANID parameter in this list for CAN hw filter to allow
+#define  TENSION_a_CANID_HW_FILT7	50        // Tension_a: CANID7 CANID parameter in this list for CAN hw filter to allow
+#define  TENSION_a_CANID_HW_FILT8	51        // Tension_a: CANID8 CANID parameter in this list for CAN hw filter to allow
 
 #define PARAM_LIST_CT_TENSION_a	51	// Count of same FUNCTION_TYPE in preceding list
 
@@ -377,10 +393,10 @@
 #define  CABLE_ANGLE_MIN_TENSION 	7         // Cable Angle: Minimum tension required (units to match)
 #define  CABLE_ANGLE_RATE_CT     	8         // Cable Angle: Rate count: Number of tension readings between cable angle msgs
 #define  CABLE_ANGLE_ALARM_REPEAT	9         // Cable Angle: Number of times alarm msg is repeated
-#define  CABLE_ANGLE_CALIB_COEF_0	10        // Cable Angle: Cable angle polynomial coefficient 0
-#define  CABLE_ANGLE_CALIB_COEF_1	11        // Cable Angle: Cable angle polynomial coefficient 1
-#define  CABLE_ANGLE_CALIB_COEF_2	12        // Cable Angle: Cable angle polynomial coefficient 2
-#define  CABLE_ANGLE_CALIB_COEF_3	13        // Cable Angle: Cable angle polynomial coefficient 3
+#define  CABLE_ANGLE_CALIB_COEF_0	10        // Cable Angle: Cable angle polynomial coeff 0     
+#define  CABLE_ANGLE_CALIB_COEF_1	11        // Cable Angle: Cable angle polynomial coeff 1     
+#define  CABLE_ANGLE_CALIB_COEF_2	12        // Cable Angle: Cable angle polynomial coeff 2     
+#define  CABLE_ANGLE_CALIB_COEF_3	13        // Cable Angle: Cable angle polynomial coeff 3     
 #define  CABLE_ANGLE_CANPRM_TENSION	14        // Cable Angle: CANID: can msg tension for sheave load-pin
 #define  CABLE_ANGLE_MSG_TIME_POLL	15        // Cable Angle: CANID: cid_ten_poll: canid MC: Time msg/Group polling
 #define  CABLE_ANGLE_TIMESYNC    	16        // Cable Angle: CANID: cid_gps_sync: canid time: GPS time sync distribution
@@ -408,9 +424,85 @@
 
 #define PARAM_LIST_CT_LOGGER	4	// Count of same FUNCTION_TYPE in preceding list
 
-#define  ENGINE__CRC             	2         // Engine_sensor: CRC for cable angle list         
-#define  ENGINE__VERSION         	3         // Engine_sensor: Version number for Cable Angle List
-#define  ENGINE_SENSOR_SEG_CT    	4         // Engine_sensor: Number of black (or white) segments
+#define  ENG_MAN_CRC             	1         // Eng_manifold: CRC                               
+#define  ENG_MAN_VERSION         	2         // Eng_manifold: Version number                    
+#define  ENG_MAN_HEARTBEAT_TIME_CT	3         // Eng_manifold: Time (ms) between HB msg          
+#define  ENG_MAN_PRESS_OFFSET    	4         // Eng_manifold: Manifold pressure offset          
+#define  ENG_MAN_PRESS_SCALE     	5         // Eng_manifold: Manifold pressure  scale (inch Hg)
+#define  ENG_MAN_POLL_MANFLD_R   	6         // Eng_manifold: CANID: Poll response: manifold pressure, calibrated
+#define  ENG_MAN_HB_MANFLD_R     	7         // Eng_manifold: CANID: Heartbeat: manifold pressure, calibrated
+#define  ENG_MAN_CANID_HW_FILT1  	8         // Eng_manifold: CANID 1 added to CAN hw filter to allow incoming msg
+#define  ENG_MAN_CANID_HW_FILT2  	9         // Eng_manifold: CANID 2 added to CAN hw filter to allow incoming msg
+#define  ENG_MAN_CANID_HW_FILT3  	10        // Eng_manifold: CANID 3 added to CAN hw filter to allow incoming msg
+#define  ENG_MAN_CANID_HW_FILT4  	11        // Eng_manifold: CANID 4 added to CAN hw filter to allow incoming msg
+#define  ENG_MAN_CANID_HW_FILT5  	12        // Eng_manifold: CANID 5 added to CAN hw filter to allow incoming msg
+#define  ENG_MAN_CANID_HW_FILT6  	13        // Eng_manifold: CANID 6 added to CAN hw filter to allow incoming msg
+#define  ENG_MAN_CANID_HW_FILT7  	14        // Eng_manifold: CANID 7 added to CAN hw filter to allow incoming msg
+#define  ENG_MAN_CANID_HW_FILT8  	15        // Eng_manifold: CANID 8 added to CAN hw filter to allow incoming msg
+
+#define PARAM_LIST_CT_ENG_MANIFOLD	15	// Count of same FUNCTION_TYPE in preceding list
+
+#define  ENG_RPM_CRC             	1         // Eng_rpm: CRC                                    
+#define  ENG_RPM_VERSION         	2         // Eng_rpm: Version number                         
+#define  ENG_RPM_HEARTBEAT_TIME_CT	3         // Eng_rpm: Time (ms) between HB msg               
+#define  ENG_RPM_SEG_CT          	4         // Eng_rpm: Counts per revolution on engine        
+#define  ENG_RPM_POLL_RPM_R      	5         // Eng_rpm: CANID: Poll response, rpm, calibrated  
+#define  ENG_RPM_HB_RPM_R        	6         // Eng_rpm: CANID: Heartbeat: rpm, calibrated      
+#define  ENG_RPM_CANID_HW_FILT1  	7         // Eng_rpm: CANID 1 added to CAN hw filter to allow incoming msg
+#define  ENG_RPM_CANID_HW_FILT2  	8         // Eng_rpm: CANID 2 added to CAN hw filter to allow incoming msg
+#define  ENG_RPM_CANID_HW_FILT3  	9         // Eng_rpm: CANID 3 added to CAN hw filter to allow incoming msg
+#define  ENG_RPM_CANID_HW_FILT4  	10        // Eng_rpm: CANID 4 added to CAN hw filter to allow incoming msg
+#define  ENG_RPM_CANID_HW_FILT5  	11        // Eng_rpm: CANID 5 added to CAN hw filter to allow incoming msg
+#define  ENG_RPM_CANID_HW_FILT6  	12        // Eng_rpm: CANID 6 added to CAN hw filter to allow incoming msg
+#define  ENG_RPM_CANID_HW_FILT7  	13        // Eng_rpm: CANID 7 added to CAN hw filter to allow incoming msg
+#define  ENG_RPM_CANID_HW_FILT8  	14        // Eng_rpm: CANID 8 added to CAN hw filter to allow incoming msg
+
+#define PARAM_LIST_CT_ENG_RPM	14	// Count of same FUNCTION_TYPE in preceding list
+
+#define  ENG_THR_CRC             	1         // Eng_throttle: CRC                               
+#define  ENG_THR_VERSION         	2         // Eng_throttle: Version number                    
+#define  ENG_THR_HEARTBEAT_TIME_CT	3         // Eng_throttle: Time (ms) between HB msg          
+#define  ENG_THR_OPENFULL        	4         // Eng_throttle: ADC when throttle full open       
+#define  ENG_THR_CLOSED          	5         // Eng_throttle: ADC when throttle closed          
+#define  ENG_THR_POLL_THROTTLE_R 	6         // Eng_throttle: CANID: Poll response: throttle (0.0-100.0)
+#define  ENG_THR_HB_THROTTLE_R   	7         // Eng_throttle: CANID: Heartbeat: throttle (0.0-100.0)
+#define  ENG_THR_CANID_HW_FILT1  	8         // Eng_throttle: CANID 1 added to CAN hw filter to allow incoming msg
+#define  ENG_THR_CANID_HW_FILT2  	9         // Eng_throttle: CANID 2 added to CAN hw filter to allow incoming msg
+#define  ENG_THR_CANID_HW_FILT3  	10        // Eng_throttle: CANID 3 added to CAN hw filter to allow incoming msg
+#define  ENG_THR_CANID_HW_FILT4  	11        // Eng_throttle: CANID 4 added to CAN hw filter to allow incoming msg
+#define  ENG_THR_CANID_HW_FILT5  	12        // Eng_throttle: CANID 5 added to CAN hw filter to allow incoming msg
+#define  ENG_THR_CANID_HW_FILT6  	13        // Eng_throttle: CANID 6 added to CAN hw filter to allow incoming msg
+#define  ENG_THR_CANID_HW_FILT7  	14        // Eng_throttle: CANID 7 added to CAN hw filter to allow incoming msg
+#define  ENG_THR_CANID_HW_FILT8  	15        // Eng_throttle: CANID 8 added to CAN hw filter to allow incoming msg
+
+#define PARAM_LIST_CT_ENG_THROTTLE	15	// Count of same FUNCTION_TYPE in preceding list
+
+#define  ENG_T1_CRC              	1         // Eng_t1: CRC                                     
+#define  ENG_T1_VERSION          	2         // Eng_t1: Version number                          
+#define  ENG_T1_HEARTBEAT_TIME_CT	3         // Eng_t1: Time (ms) between HB msg                
+#define  ENG_T1_CONST_B          	4         // Eng_t1: Thermistor param: constant B            
+#define  ENG_T1_R_SERIES         	5         // Eng_t1: Thermistor param: Series resistor, fixed (K ohms)
+#define  ENG_T1_R_ROOMTMP        	6         // Eng_t1: Thermistor param: Thermistor room temp resistance (K ohms)
+#define  ENG_T1_REF_TEMP         	7         // Eng_t1: Thermistor param: Reference temp for thermistor
+#define  ENG_T1_TEMP_OFFSET      	8         // Eng_t1: Thermistor param: Thermistor temp offset correction (deg C)
+#define  ENG_T1_TEMP_SCALE       	9         // Eng_t1: Thermistor param: Thermistor temp scale correction
+#define  ENG_T1_POLL_T1_R        	10        // Eng_t1: CANID: Poll response: temperature #1 (deg C)
+#define  ENG_T1_HB_T1_R          	11        // Eng_t1: CANID: Heartbeat: temperature #1 (deg C)
+#define  ENG_T1_CANID_HW_FILT1   	12        // Eng_t1: CANID 1 added to CAN hw filter to allow incoming msg
+#define  ENG_T1_CANID_HW_FILT2   	13        // Eng_t1: CANID 2 added to CAN hw filter to allow incoming msg
+#define  ENG_T1_CANID_HW_FILT3   	14        // Eng_t1: CANID 3 added to CAN hw filter to allow incoming msg
+#define  ENG_T1_CANID_HW_FILT4   	15        // Eng_t1: CANID 4 added to CAN hw filter to allow incoming msg
+#define  ENG_T1_CANID_HW_FILT5   	16        // Eng_t1: CANID 5 added to CAN hw filter to allow incoming msg
+#define  ENG_T1_CANID_HW_FILT6   	17        // Eng_t1: CANID 6 added to CAN hw filter to allow incoming msg
+#define  ENG_T1_CANID_HW_FILT7   	18        // Eng_t1: CANID 7 added to CAN hw filter to allow incoming msg
+#define  ENG_T1_CANID_HW_FILT8   	19        // Eng_t1: CANID 8 added to CAN hw filter to allow incoming msg
+
+#define PARAM_LIST_CT_ENG_T1	19	// Count of same FUNCTION_TYPE in preceding list
+
+#define  ENGINE__CRC             	1         // Engine_sensor: CRC                              
+#define  ENGINE__VERSION         	2         // Engine_sensor: Version number                   
+#define  ENGINE__HEARTBEAT_TIME_CT	3         // Engine_sensor: Time (ms) between HB msg         
+#define  ENGINE_SENSOR_SEG_CT    	4         // Engine_sensor: Counts per revolution on engine  
 #define  ENGINE_SENSOR_PRESS_OFFSET	5         // Engine_sensor: Manifold pressure offset         
 #define  ENGINE_SENSOR_PRESS_SCALE	6         // Engine_sensor: Manifold pressure  scale (inch Hg)
 #define  ENGINE_THERM1_CONST_B   	7         // Engine_sensor: Thermistor param: constant B     
@@ -418,8 +510,23 @@
 #define  ENGINE_THERM1_R_ROOMTMP 	9         // Engine_sensor: Thermistor param: Thermistor room temp resistance (K ohms)
 #define  ENGINE_THERM1_REF_TEMP  	10        // Engine_sensor: Thermistor param: Reference temp for thermistor
 #define  ENGINE_THERM1_TEMP_OFFSET	11        // Engine_sensor: Thermistor param: Thermistor temp offset correction (deg C)
+#define  ENGINE_THERM1_TEMP_SCALE	12        // Engine_sensor: Thermistor param: Thermistor temp scale correction
+#define  ENGINE_THROTTLE_lO      	13        // Engine_sensor: Throttle pot ADC reading: closed 
+#define  ENGINE_THROTTLE_HI      	14        // Engine_sensor: Throttle pot ADC reading: full open
+#define  ENGINE_POLL_RPMMANFLD_R 	15        // Engine_sensor: CANID: Poll response: rpm:manifold, calibrated
+#define  ENGINE_POLL_TEMPTHRTL_R 	16        // Engine_sensor: CANID: Poll response:temperature:throttle pot, calibrated
+#define  ENGINE_HB_RPMMANFLD     	17        // Engine_sensor: CANID: Heartbeat: raw readings: rpm:manifold pressure
+#define  ENGINE_HB_THRMTHRTL     	18        // Engine_sensor: CANID: Heartbeat: raw readings: thermistor:throttle
+#define  ENGINE_CANID_HW_FILT1   	19        // Engine_sensor: CANID 1 added to CAN hw filter to allow incoming msg
+#define  ENGINE_CANID_HW_FILT2   	20        // Engine_sensor: CANID 2 added to CAN hw filter to allow incoming msg
+#define  ENGINE_CANID_HW_FILT3   	21        // Engine_sensor: CANID 3 added to CAN hw filter to allow incoming msg
+#define  ENGINE_CANID_HW_FILT4   	22        // Engine_sensor: CANID 4 added to CAN hw filter to allow incoming msg
+#define  ENGINE_CANID_HW_FILT5   	23        // Engine_sensor: CANID 5 added to CAN hw filter to allow incoming msg
+#define  ENGINE_CANID_HW_FILT6   	24        // Engine_sensor: CANID 6 added to CAN hw filter to allow incoming msg
+#define  ENGINE_CANID_HW_FILT7   	25        // Engine_sensor: CANID 7 added to CAN hw filter to allow incoming msg
+#define  ENGINE_CANID_HW_FILT8   	26        // Engine_sensor: CANID 8 added to CAN hw filter to allow incoming msg
 
-#define PARAM_LIST_CT_ENGINE_SENSOR	10	// Count of same FUNCTION_TYPE in preceding list
+#define PARAM_LIST_CT_ENGINE_SENSOR	26	// Count of same FUNCTION_TYPE in preceding list
 
 #define  YOGURT_1_LIST_CRC       	1         // Yogurt: crc: CRC for this list                  
 #define  YOGURT_1_LIST_VERSION   	2         // Yogurt: version: Version number yogurt          
@@ -427,34 +534,34 @@
 #define  YOGURT_1_THERM1_R_SERIES	4         // Yogurt: Thermistor1 param: RS: Series resistor, fixed (K ohms)
 #define  YOGURT_1_THERM1_R_ROOMTMP	5         // Yogurt: Thermistor1 param: R0: Thermistor room temp resistance (K ohms)
 #define  YOGURT_1_THERM1_REF_TEMP	6         // Yogurt: Thermistor1 param: TREF: Reference temp for thermistor
-#define  YOGURT_1_THERM1_COEF_0  	7         // Yogurt: Thermistor1 param: poly[0]:  polynomial coefficient 0 (offset)
-#define  YOGURT_1_THERM1_COEF_1  	8         // Yogurt: Thermistor1 param: poly[1]:  polynomial coefficient 1 (scale)
-#define  YOGURT_1_THERM1_COEF_2  	9         // Yogurt: Thermistor1 param: poly[2]:  polynomial coefficient 2 (x^2)
-#define  YOGURT_1_THERM1_COEF_3  	10        // Yogurt: Thermistor1 param: poly[3]:  polynomial coefficient 3 (x^3)
+#define  YOGURT_1_THERM1_COEF_0  	7         // Yogurt: Thermistor1 param: poly[0]:  polynomial coeff 0 (offset)
+#define  YOGURT_1_THERM1_COEF_1  	8         // Yogurt: Thermistor1 param: poly[1]:  polynomial coeff 1 (scale)
+#define  YOGURT_1_THERM1_COEF_2  	9         // Yogurt: Thermistor1 param: poly[2]:  polynomial coeff 2 (x^2)
+#define  YOGURT_1_THERM1_COEF_3  	10        // Yogurt: Thermistor1 param: poly[3]:  polynomial coeff 3 (x^3)
 #define  YOGURT_1_THERM2_CONST_B 	11        // Yogurt: Thermistor2 param: B: constant B        
 #define  YOGURT_1_THERM2_R_SERIES	12        // Yogurt: Thermistor2 param: RS: Series resistor, fixed (K ohms)
 #define  YOGURT_1_THERM2_R_ROOMTMP	13        // Yogurt: Thermistor2 param: R0: Thermistor room temp resistance (K ohms)
 #define  YOGURT_1_THERM2_REF_TEMP	14        // Yogurt: Thermistor2 param: TREF: Reference temp for thermistor
-#define  YOGURT_1_THERM2_COEF_0  	15        // Yogurt: Thermistor2 param: poly[0]:  polynomial coefficient 0 (offset)
-#define  YOGURT_1_THERM2_COEF_1  	16        // Yogurt: Thermistor2 param: poly[1]:  polynomial coefficient 1 (scale)
-#define  YOGURT_1_THERM2_COEF_2  	17        // Yogurt: Thermistor2 param: poly[2]:  polynomial coefficient 2 (x^2)
-#define  YOGURT_1_THERM2_COEF_3  	18        // Yogurt: Thermistor2 param: poly[3]:  polynomial coefficient 3 (x^3)
+#define  YOGURT_1_THERM2_COEF_0  	15        // Yogurt: Thermistor2 param: poly[0]:  polynomial coeff 0 (offset)
+#define  YOGURT_1_THERM2_COEF_1  	16        // Yogurt: Thermistor2 param: poly[1]:  polynomial coeff 1 (scale)
+#define  YOGURT_1_THERM2_COEF_2  	17        // Yogurt: Thermistor2 param: poly[2]:  polynomial coeff 2 (x^2)
+#define  YOGURT_1_THERM2_COEF_3  	18        // Yogurt: Thermistor2 param: poly[3]:  polynomial coeff 3 (x^3)
 #define  YOGURT_1_THERM3_CONST_B 	19        // Yogurt: Thermistor3 param: B: constant B        
 #define  YOGURT_1_THERM3_R_SERIES	20        // Yogurt: Thermistor3 param: RS: Series resistor, fixed (K ohms)
 #define  YOGURT_1_THERM3_R_ROOMTMP	21        // Yogurt: Thermistor3 param: R0: Thermistor room temp resistance (K ohms)
 #define  YOGURT_1_THERM3_REF_TEMP	22        // Yogurt: Thermistor3 param: TREF: Reference temp for thermistor
-#define  YOGURT_1_THERM3_COEF_0  	23        // Yogurt: Thermistor3 param: poly[0]:  polynomial coefficient 0 (offset)
-#define  YOGURT_1_THERM3_COEF_1  	24        // Yogurt: Thermistor3 param: poly[1]:  polynomial coefficient 1 (scale)
-#define  YOGURT_1_THERM3_COEF_2  	25        // Yogurt: Thermistor3 param: poly[2]:  polynomial coefficient 2 (x^2)
-#define  YOGURT_1_THERM3_COEF_3  	26        // Yogurt: Thermistor3 param: poly[3]:  polynomial coefficient 3 (x^3)
+#define  YOGURT_1_THERM3_COEF_0  	23        // Yogurt: Thermistor3 param: poly[0]:  polynomial coeff 0 (offset)
+#define  YOGURT_1_THERM3_COEF_1  	24        // Yogurt: Thermistor3 param: poly[1]:  polynomial coeff 1 (scale)
+#define  YOGURT_1_THERM3_COEF_2  	25        // Yogurt: Thermistor3 param: poly[2]:  polynomial coeff 2 (x^2)
+#define  YOGURT_1_THERM3_COEF_3  	26        // Yogurt: Thermistor3 param: poly[3]:  polynomial coeff 3 (x^3)
 #define  YOGURT_1_THERM4_CONST_B 	27        // Yogurt: Thermistor4 param: B: constant B        
 #define  YOGURT_1_THERM4_R_SERIES	28        // Yogurt: Thermistor4 param: RS: Series resistor, fixed (K ohms)
 #define  YOGURT_1_THERM4_R_ROOMTMP	29        // Yogurt: Thermistor4 param: R0: Thermistor room temp resistance (K ohms)
 #define  YOGURT_1_THERM4_REF_TEMP	30        // Yogurt: Thermistor4 param: TREF: Reference temp for thermistor
-#define  YOGURT_1_THERM4_COEF_0  	31        // Yogurt: Thermistor4 param: poly[0]:  polynomial coefficient 0 (offset)
-#define  YOGURT_1_THERM4_COEF_1  	32        // Yogurt: Thermistor4 param: poly[1]:  polynomial coefficient 1 (scale)
-#define  YOGURT_1_THERM4_COEF_2  	33        // Yogurt: Thermistor4 param: poly[2]:  polynomial coefficient 2 (x^2)
-#define  YOGURT_1_THERM4_COEF_3  	34        // Yogurt: Thermistor4 param: poly[3]:  polynomial coefficient 3 (x^3)
+#define  YOGURT_1_THERM4_COEF_0  	31        // Yogurt: Thermistor4 param: poly[0]:  polynomial coeff 0 (offset)
+#define  YOGURT_1_THERM4_COEF_1  	32        // Yogurt: Thermistor4 param: poly[1]:  polynomial coeff 1 (scale)
+#define  YOGURT_1_THERM4_COEF_2  	33        // Yogurt: Thermistor4 param: poly[2]:  polynomial coeff 2 (x^2)
+#define  YOGURT_1_THERM4_COEF_3  	34        // Yogurt: Thermistor4 param: poly[3]:  polynomial coeff 3 (x^3)
 #define  YOGURT_1_CTLTEMP_HEAT_PAST	35        // Yogurt: Pasteur: Control set-point temperature (deg F) heat to this temp
 #define  YOGURT_1_CTLTEMP_DUR_PAST	36        // Yogurt: Pasteur: Time duration at temp (hours.frac_hours)
 #define  YOGURT_1_CTLTEMP_COOL_PAST	37        // Yogurt: Pasteur: Control end-point temperature (deg F) cool to this temp
@@ -465,9 +572,9 @@
 #define  YOGURT_1_CTL_THERM_POT  	42        // Yogurt: Thermistor number for center of pot temp (0 - 3)
 #define  YOGURT_1_CTL_THERM_AIRIN	43        // Yogurt: Thermistor number for air inlet to fan temp (0 - 3)
 #define  YOGURT_1_CTL_THERM_AIROUT	44        // Yogurt: Thermistor number for air coming out of holes (0 - 3)
-#define  YOGURT_1_CTL_THERM_LOOP_P	45        // Yogurt: Control loop: Proportional coefficient  
-#define  YOGURT_1_CTL_THERM_LOOP_I	46        // Yogurt: Control loop: Integral coefficient      
-#define  YOGURT_1_CTL_THERM_LOOP_D	47        // Yogurt: Control loop: Derivative coefficient    
+#define  YOGURT_1_CTL_THERM_LOOP_P	45        // Yogurt: Control loop: Proportional coeff        
+#define  YOGURT_1_CTL_THERM_LOOP_I	46        // Yogurt: Control loop: Integral coeff            
+#define  YOGURT_1_CTL_THERM_LOOP_D	47        // Yogurt: Control loop: Derivative coeff          
 #define  YOGURT_1_CMD            	48        // Yogurt: CANID: cid_yog_cmd: Yogurt maker parameters
 #define  YOGURT_1_MSG            	49        // Yogurt: CANID: cid_yog_msg: Yogurt maker msgs   
 #define  YOGURT_1_HB             	50        // Yogurt: CANID: cid_yog_hb: Yogurt maker heart-beats
@@ -506,7 +613,7 @@
 #define PARAM_LIST_CT_MCL	22	// Count of same FUNCTION_TYPE in preceding list
 
 
-#define READINGS_LIST_COUNT 26
+#define READINGS_LIST_COUNT 27
 #define  TENSION_READ_FILTADC_THERM1	1         // Tension: READING: double thrm[0]; Filtered ADC for Thermistor on AD7799
 #define  TENSION_READ_FILTADC_THERM2	2         // Tension: READING: double thrm[1]; Filtered ADC for Thermistor external
 #define  TENSION_READ_FORMCAL_THERM1	4         // Tension: READING: double degX[0]; Formula computed thrm for Thermistor on AD7799
@@ -533,6 +640,7 @@
 #define  TENSION_READ_IIR_OFFSET_SCL	25        // Tension: READING: IIR filter for offsets: Scaling to improve spare bits with integer math
 #define  TENSION_READ_IIR_Z_RECAl_W_K	26        // Tension: READING: IIR filter for zeroing: parameter for setting time constant
 #define  TENSION_READ_IIR_Z_RECAl_W_SCL	27        // Tension: READING: IIR filter for zeroing: Scaling to improve spare bits with integer math
+#define  ENCODER_READ_INPUTCAPTURE_CT	1         // Encoder: READING: TIM3 input capture count      
 
 #define FUNC_BIT_PARAM_COUNT 28
 #define  POLL_FUNC_BIT_TENSION   	0x1       // TENSION             Function bit: 2nd byte of poll msg: TENSION     
@@ -564,7 +672,7 @@
 #define  USEME_TENSION_BIT_7     	0x40      // TENSION             useme: spare 0x40                               
 #define  USEME_TENSION_BIT_8     	0x80      // TENSION             useme: spare 0x80                               
 
-#define FUNCTION_TYPE_COUNT 16
+#define FUNCTION_TYPE_COUNT 21
 #define  FUNCTION_TYPE_SHAFT_ENCODER           	1         // Sensor, shaft: Drive shaft encoder              
 #define  FUNCTION_TYPE_ENGINE_SENSOR           	2         // Sensor, engine: rpm, manifold pressure, throttle setting, temperature
 #define  FUNCTION_TYPE_TENSION_a               	3         // Tension_a: Tension AD7799 #1                    
@@ -581,6 +689,11 @@
 #define  FUNCTION_TYPE_CANSENDER               	14        // Cansender                                       
 #define  FUNCTION_TYPE_SHEAVE_UP_H             	15        // Uppersheave (TIM2 encoder)                      
 #define  FUNCTION_TYPE_SHEAVE_LO_H             	16        // Lowersheave (TIM5 encoder)                      
+#define  FUNCTION_TYPE_ENG_MANIFOLD            	17        // Sensor, engine: manifold pressure               
+#define  FUNCTION_TYPE_ENG_RPM                 	18        // Sensor, engine: rpm                             
+#define  FUNCTION_TYPE_ENG_THROTTLE            	19        // Sensor, engine: throttle                        
+#define  FUNCTION_TYPE_ENG_T1                  	20        // Sensor, engine: temperature 1                   
+#define  FUNCTION_TYPE_ENG_T2                  	21        // Sensor, engine: temperature 2                   
 
 #define READINGS_BOARD_COUNT 15
 #define  PROG_TENSION_READINGS_BOARD_NUM_AD7799	1         // Number of AD7799 that successfully initialized  
@@ -599,6 +712,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 552  */
+/* TOTAL COUNT OF #defines = 653  */
 /* Test 2016/06/12 */
 

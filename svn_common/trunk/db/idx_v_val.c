@@ -1,4 +1,4 @@
-// 2017-08-13 20:49:32.257
+// 2018-03-22 23:10:42.15
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -7,6 +7,11 @@
 #define CABLE_ANGLE_1_PARAM_SIZE 18
 #define CANSENDER_1_PARAM_SIZE 6
 #define CANSENDER_2_PARAM_SIZE 6
+#define ENG1_MANIFOLD_PARAM_SIZE 15
+#define ENG1_RPM_PARAM_SIZE 14
+#define ENG1_T1_PARAM_SIZE 17
+#define ENG1_THR_PARAM_SIZE 15
+#define ENGINE_SENSOR1_PARAM_SIZE 14
 #define GPS_1_PARAM_SIZE 9
 #define GPS_2_PARAM_SIZE 9
 #define LOGGER_1_PARAM_SIZE 4
@@ -28,16 +33,16 @@ const uint32_t paramval00[] = {
  0x00000000 , /*   1 0                    6    1 Cable_angle_1: CRC for Cable angle list                                     */
  0x00000001 , /*   2 1                    5    2 Cable_angle_1: Version number for cable angle List                          */
  0x00002000 , /*   3 8192                 6    3 Cable Angle_1: Heart-Beat: Count of time ticks between autonomous msgs      */
- 0x00000001 , /*   4 1                    6    4 Cable angle_1: Drum system number for this function instance                */
- 0x00000001 , /*   5 1                    6    5 Cable angle_1: f_pollbit: Drum system poll 1st payload byte bit for drum #  */
- 0x00000000 , /*   6 0                    6    6 Cable angle_1: p_pollbit: Drum system poll 2nd payload byte bit for this type of function*/
+ 0x00000001 , /*   4 1                    6    4 Cable angle_1: Drum sys number for this function instance                   */
+ 0x00000001 , /*   5 1                    6    5 Cable angle_1: f_pollbit: Drum sys poll 1st payload byte bit for drum #     */
+ 0x00000000 , /*   6 0                    6    6 Cable angle_1: p_pollbit: Drum sys poll 2nd payload byte bit for this type of function*/
  0x42C83333 , /*   7 100.1               11    7 Cable Angle_1: Minimum tension required (units to match)                    */
  0x00000002 , /*   8 2                    6    8 Cable Angle_1: Rate count: Number of tension readings between cable angle msgs*/
  0x00000009 , /*   9 9                    6    9 Cable Angle_1: Number of times alarm msg is repeated                        */
- 0x00000000 , /*  10 0.0                 11   10 Cable Angle_1: Cable angle polynomial coefficient 0                         */
- 0x3F800000 , /*  11 1.0                 11   11 Cable Angle_1: Cable angle polynomial coefficient 1                         */
- 0x00000000 , /*  12 0.0                 11   12 Cable Angle_1: Cable angle polynomial coefficient 2                         */
- 0x00000000 , /*  13 0.0                 11   13 Cable Angle_1: Cable angle polynomial coefficient 3                         */
+ 0x00000000 , /*  10 0.0                 11   10 Cable Angle_1: Cable angle polynomial coeff 0                               */
+ 0x3F800000 , /*  11 1.0                 11   11 Cable Angle_1: Cable angle polynomial coeff 1                               */
+ 0x00000000 , /*  12 0.0                 11   12 Cable Angle_1: Cable angle polynomial coeff 2                               */
+ 0x00000000 , /*  13 0.0                 11   13 Cable Angle_1: Cable angle polynomial coeff 3                               */
  0x38200000 , /*  14 CANID_MSG_TENSION_a21  17   14 Cable angle_1: CANID: can msg tension from sheave load-pin                  */
  0x20000000 , /*  15 CANID_MSG_TIME_POLL  17   15 Cable angle_1: CANID: MC: Time msg/Group polling                            */
  0x00400000 , /*  16 CANID_HB_TIMESYNC   17   16 Cable angle_1: CANID: GPS time sync distribution msg                        */
@@ -73,8 +78,118 @@ const uint32_t paramval02[] = {
 #endif
 
 // =====================================================================
-#ifdef GPS_1	// Include following parameters?
+#ifdef ENG1_MANIFOLD	// Include following parameters?
 const uint32_t paramval03[] = {
+ ENG1_MANIFOLD_PARAM_SIZE,	/* Number of param entries that follow */
+ 0x00000000 , /*   1 0                    6  Eng1_manifold: CRC                                                              */
+ 0x00000001 , /*   2 1                    5  Eng1_manifold: Version number                                                   */
+ 0x000003E8 , /*   3 1000                 5  Eng1_manifold: Time (ms) between HB msg                                         */
+ 0xBF000000 , /*   4 -0.5                11  Eng1_manifold: Manifold pressure offset                                         */
+ 0x42CF3333 , /*   5 103.6               11  Eng1_manifold: Manifold pressure  scale (inch Hg)                               */
+ 0x40800000 , /*   6 CANID_MSG_ENG1_MANFLD  17  Eng1_manifold: CANID: Poll response: manifold pressure, calibrated              */
+ 0x82200000 , /*   7 CANID_HB_ENG1_MANFLD  17  Eng1_manifold: CANID: Heartbeat: manifold pressure, calibrated                  */
+ 0x00400000 , /*   8 CANID_HB_TIMESYNC   17  EPS_1: CANID 1: GPS time sync distribution msg                                  */
+ 0x20000000 , /*   9 CANID_MSG_TIME_POLL  17  MC: CANID 2:Time msg/Group polling                                              */
+ 0x80A00000 , /*  10 CANID_CMD_ENG1_MANFLDI  17  Eng1_manifold: CANID 3: command                                                 */
+ 0xFFFFFFFC , /*  11 CANID_DUMMY         17  Eng1_manifold: CANID 4 add CAN hw filter for incoming msg                       */
+ 0xFFFFFFFC , /*  12 CANID_DUMMY         17  Eng1_manifold: CANID 5 add CAN hw filter for incoming msg                       */
+ 0xFFFFFFFC , /*  13 CANID_DUMMY         17  Eng1_manifold: CANID 6 add CAN hw filter for incoming msg                       */
+ 0xFFFFFFFC , /*  14 CANID_DUMMY         17  Eng1_manifold: CANID 7 add CAN hw filter for incoming msg                       */
+ 0xFFFFFFFC , /*  15 CANID_DUMMY         17  Eng1_manifold: CANID 8 add CAN hw filter for incoming msg                       */
+};
+#endif
+
+// =====================================================================
+#ifdef ENG1_RPM	// Include following parameters?
+const uint32_t paramval04[] = {
+ ENG1_RPM_PARAM_SIZE,	/* Number of param entries that follow */
+ 0x00000000 , /*   1 0                    6  Eng1_rpm: CRC                                                                   */
+ 0x00000001 , /*   2 1                    5  Eng1_rpm: Version number                                                        */
+ 0x000003E8 , /*   3 1000                 5  Eng1_rpm: Time (ms) between HB msg                                              */
+ 0x00000008 , /*   4 8                    6  Eng1_rpm: Number of counts per revolution                                       */
+ 0x40A00000 , /*   5 CANID_MSG_ENG1_RPM  17  Eng1_rpm: CANID: rpm, calibrated                                                */
+ 0x82600000 , /*   6 CANID_HB_ENG1_RPM   17  Eng1_rpm: CANID: Heartbeat: rpm, calibrated                                     */
+ 0x00400000 , /*   7 CANID_HB_TIMESYNC   17  EPS_1: CANID: GPS time sync distribution msg                                    */
+ 0x20000000 , /*   8 CANID_MSG_TIME_POLL  17  MC: CANID:Time msg/Group polling                                                */
+ 0x81200000 , /*   9 CANID_CMD_ENG1_RPMI  17  Eng1_rpm: CANID: command                                                        */
+ 0xFFFFFFFC , /*  10 CANID_DUMMY         17  Eng1_rpm: CANID 4 add CAN hw filter for incoming msg                            */
+ 0xFFFFFFFC , /*  11 CANID_DUMMY         17  Eng1_rpm: CANID 5 add CAN hw filter for incoming msg                            */
+ 0xFFFFFFFC , /*  12 CANID_DUMMY         17  Eng1_rpm: CANID 6 add CAN hw filter for incoming msg                            */
+ 0xFFFFFFFC , /*  13 CANID_DUMMY         17  Eng1_rpm: CANID 7 add CAN hw filter for incoming msg                            */
+ 0xFFFFFFFC , /*  14 CANID_DUMMY         17  Eng1_rpm: CANID 8 add CAN hw filter for incoming msg                            */
+};
+#endif
+
+// =====================================================================
+#ifdef ENG1_T1	// Include following parameters?
+const uint32_t paramval05[] = {
+ ENG1_T1_PARAM_SIZE,	/* Number of param entries that follow */
+ 0x00000000 , /*   1 0                    6  Eng1_t1: CRC                                                                    */
+ 0x00000001 , /*   2 1                    5  Eng1_t1: Version number                                                         */
+ 0x00001388 , /*   3 5000                 5  Eng1_t1: Time (ms) between HB msg                                               */
+ 0x45534000 , /*   4 3380                11  Eng1_t1: Thermistor param: constant B                                           */
+ 0x41200000 , /*   5 10.0                11  Eng1_t1: Thermistor param: Series resistor, fixed (K ohms)                      */
+ 0x41200000 , /*   6 10.0                11  Eng1_t1: Thermistor param: Thermistor room temp resistance (K ohms)             */
+ 0x43910000 , /*   7 290.0               11  Eng1_t1: Thermistor param: Reference temp for thermistor                        */
+ 0x00000000 , /*   8 0.0                 11  Eng1_t1: Thermistor param: Thermistor temp offset correction (deg C)            */
+ 0x3F800000 , /*   9 1.0                 11  Eng1_t1: Thermistor param: Thermistor temp scale correction                     */
+ 0x00400000 , /*  10 CANID_HB_TIMESYNC   17  Eng1_t1: CANID 1 added to CAN hardware filter to allow incoming msg             */
+ 0x20000000 , /*  11 CANID_MSG_TIME_POLL  17  Eng1_t1: CANID 2 added to CAN hardware filter to allow incoming msg             */
+ 0x81A00000 , /*  12 CANID_CMD_ENG1_T1I  17  Eng1_t1: CANID 3 added to CAN hardware filter to allow incoming msg             */
+ 0xFFFFFFFC , /*  13 CANID_DUMMY         17  Eng1_t1: CANID 4 added to CAN hardware filter to allow incoming msg             */
+ 0xFFFFFFFC , /*  14 CANID_DUMMY         17  Eng1_t1: CANID 5 added to CAN hardware filter to allow incoming msg             */
+ 0xFFFFFFFC , /*  15 CANID_DUMMY         17  Eng1_t1: CANID 6 added to CAN hardware filter to allow incoming msg             */
+ 0xFFFFFFFC , /*  16 CANID_DUMMY         17  Eng1_t1: CANID 7 added to CAN hardware filter to allow incoming msg             */
+ 0xFFFFFFFC , /*  17 CANID_DUMMY         17  Eng1_t1: CANID 8 added to CAN hardware filter to allow incoming msg             */
+};
+#endif
+
+// =====================================================================
+#ifdef ENG1_THR	// Include following parameters?
+const uint32_t paramval06[] = {
+ ENG1_THR_PARAM_SIZE,	/* Number of param entries that follow */
+ 0x00000000 , /*   1 0                    6  Eng1_throttle:: CRC                                                             */
+ 0x00000001 , /*   2 1                    5  Eng1_throttle:: Version number                                                  */
+ 0x000003E8 , /*   3 1000                 5  Eng1_throttle:: Time (ms) between HB msg                                        */
+ 0x45834000 , /*   4 4200                11  Eng1_throttle:: ADC when throttle full open                                     */
+ 0x43FA0000 , /*   5  500                11  Eng1_throttle:: ADC when throttle closed                                        */
+ 0x40E00000 , /*   6 CANID_MSG_ENG1_THROTTLE  17  Eng1_throttle:: CANID: Poll response: throttle (0.0-100.0)                      */
+ 0x82400000 , /*   7 CANID_HB_ENG1_THROTTLE  17  Eng1_throttle:: CANID: Heartbeat: throttle (0.0-100.0)                          */
+ 0x00400000 , /*   8 CANID_HB_TIMESYNC   17  EPS_1: CANID 1: GPS time sync distribution msg                                  */
+ 0x20000000 , /*   9 CANID_MSG_TIME_POLL  17  MC: CANID 2:Time msg/Group polling                                              */
+ 0x81600000 , /*  10 CANID_CMD_ENG1_THROTTLEI  17  Eng1_throttle:: CANID 3: command                                                */
+ 0xFFFFFFFC , /*  11 CANID_DUMMY         17  Eng1_throttle:: CANID 4 add CAN hw filter for incoming msg                      */
+ 0xFFFFFFFC , /*  12 CANID_DUMMY         17  Eng1_throttle:: CANID 5 add CAN hw filter for incoming msg                      */
+ 0xFFFFFFFC , /*  13 CANID_DUMMY         17  Eng1_throttle:: CANID 6 add CAN hw filter for incoming msg                      */
+ 0xFFFFFFFC , /*  14 CANID_DUMMY         17  Eng1_throttle:: CANID 7 add CAN hw filter for incoming msg                      */
+ 0xFFFFFFFC , /*  15 CANID_DUMMY         17  Eng1_throttle:: CANID 8 add CAN hw filter for incoming msg                      */
+};
+#endif
+
+// =====================================================================
+#ifdef ENGINE_SENSOR1	// Include following parameters?
+const uint32_t paramval07[] = {
+ ENGINE_SENSOR1_PARAM_SIZE,	/* Number of param entries that follow */
+ 0x00000008 , /*   1 8                    6  Eng1: Counts per revolution on engine                                           */
+ 0xBF000000 , /*   2 -0.5                11  Eng1: Manifold pressure offset                                                  */
+ 0x42CFC28F , /*   3 103.88              11  Eng1: Manifold pressure  scale (inch Hg)                                        */
+ 0x45534000 , /*   4 3380                11  Eng1: Thermistor param: constant B                                              */
+ 0x41200000 , /*   5 10.0                11  Eng1: Thermistor param: Series resistor, fixed (K ohms)                         */
+ 0x41200000 , /*   6 10.0                11  Eng1: Thermistor param: Thermistor room temp resistance (K ohms)                */
+ 0x43910000 , /*   7 290.0               11  Eng1: Thermistor param: Reference temp for thermistor                           */
+ 0x00000000 , /*   8 0.0                 11  Eng1: Thermistor param: Thermistor temp offset correction (deg C)               */
+ 0x3F800000 , /*   9 1.0                 11  Eng1: Thermistor param: Thermistor temp scale correction                        */
+ 0x43FA0000 , /*  10 500                 11  Eng1: Throttle pot ADC reading: closed                                          */
+ 0x40600000 , /*  11 CANID_MSG_ENG1_RPMMANFLD_R  17  Eng1: CANID: rpm:manifold, calibrated                                           */
+ 0x60600000 , /*  12 CANID_MSG_ENG1_TEMPTHRTL_R  17  Eng1: CANID: temperature:throttle pot, calibrated                               */
+ 0x4060000C , /*  13 CANID_HB_ENG1_RPMMANFLD  17  Eng1: CANID: raw readings: rpm:manifold pressure                                */
+ 0x6060000C , /*  14 CANID_HB_ENG1_THRMTHRTL  17  Eng1: CANID: raw readings: thermistor:throttle                                  */
+};
+#endif
+
+// =====================================================================
+#ifdef GPS_1	// Include following parameters?
+const uint32_t paramval08[] = {
  GPS_1_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  GPS_1: 1 CRC                                                                    */
  0x00000001 , /*   2 1                    5  GPS_1: 2 Version number                                                         */
@@ -90,7 +205,7 @@ const uint32_t paramval03[] = {
 
 // =====================================================================
 #ifdef GPS_2	// Include following parameters?
-const uint32_t paramval04[] = {
+const uint32_t paramval09[] = {
  GPS_2_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  GPS_2: 1 CRC                                                                    */
  0x00000001 , /*   2 1                    5  GPS_2: 2 Version number                                                         */
@@ -106,7 +221,7 @@ const uint32_t paramval04[] = {
 
 // =====================================================================
 #ifdef LOGGER_1	// Include following parameters?
-const uint32_t paramval05[] = {
+const uint32_t paramval10[] = {
  LOGGER_1_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Logger_1: 1 CRC                                                                 */
  0x00000001 , /*   2 1                    5  Logger_1: 2 Version number                                                      */
@@ -117,7 +232,7 @@ const uint32_t paramval05[] = {
 
 // =====================================================================
 #ifdef LOGGER_2	// Include following parameters?
-const uint32_t paramval06[] = {
+const uint32_t paramval11[] = {
  LOGGER_2_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Logger_2: 1 CRC                                                                 */
  0x00000001 , /*   2 1                    5  Logger_2: 2 Version number                                                      */
@@ -128,7 +243,7 @@ const uint32_t paramval06[] = {
 
 // =====================================================================
 #ifdef MCL	// Include following parameters?
-const uint32_t paramval07[] = {
+const uint32_t paramval12[] = {
  MCL_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  mcl: crc: CRC: Master Controller Launch parameters                              */
  0x00000001 , /*   2 1                    5  mcl: version: Master Controller Launch parameters                               */
@@ -137,27 +252,27 @@ const uint32_t paramval07[] = {
  0x44160000 , /*   5 600.0               11  mcl: glider mass (KG): Master Controller Launch parameters                      */
  0x441C4000 , /*   6 625                 11  mcl: @ glider weight (KG): Master Controller Launch parameters                  */
  0x44BB8000 , /*   7 1500                11  mcl: soft start timeM (MS): Master Controller Launch parameters                 */
- 0x4237CCCD , /*   8 45.95               11  mcl: soft start constant: k1: Master Controller Launch parameters               */
+ 0x4237CCCD , /*   8 45.95               11  mcl: soft start const: k1: Master Controller Launch parameters                  */
  0x40D00000 , /*   9 6.5                 11  mcl: rotation taper: cable trigger speed (/MS): Master Controller Launch parameter*/
  0x428E0000 , /*  10 71.0                11  mcl: rotation taper: max ground cable speed (M/S): Master Controller Launch parameter*/
- 0x3D978D50 , /*  11 0.074               11  mcl: rotation taper: constant k2: Master Controller Launch parameterS           */
+ 0x3D978D50 , /*  11 0.074               11  mcl: rotation taper: const k2: Master Controller Launch parameterS              */
  0x41080000 , /*  12 8.5                 11  mcl: transition to ramp: peak cable_speed_drop (M/S): Master Controller Launch parameter*/
  0x00001770 , /*  13 6000                 6  mcl: ramp taper up: ramp time (MS): Master Controller Launch parameter          */
- 0x3F800000 , /*  14 1.0                 11  mcl: ramp taper up: constant k3: Master Controller Launch parameter             */
+ 0x3F800000 , /*  14 1.0                 11  mcl: ramp taper up: const k3: Master Controller Launch parameter                */
  0x42960000 , /*  15 75                  11  mcl: end of climb taper down: taper angle trig (DEG): Master Controller Launch parameter*/
  0x451C4000 , /*  16 2500                11  mcl: end of climb taper down: taper time: Master (MS) Controller Launch parameter*/
- 0x3F800000 , /*  17 1.0                 11  mcl: end of climb taper down: constant k4: Master Controller Launch parameter   */
+ 0x3F800000 , /*  17 1.0                 11  mcl: end of climb taper down: const k4: Master Controller Launch parameter      */
  0x40200000 , /*  18 2.5                 11  mcl: end of climb taper down: release delta: Master Controller Launch parameter */
  0x42480000 , /*  19 50.0                11  mcl: parachute tension taper: max parachute tension (KGF): Master Controller Launch parameter*/
  0x42820000 , /*  20 65.0                11  mcl: parachute tension taper: parachute taper speed (M/S): Master Controller Launch parameter*/
- 0x42A00000 , /*  21 80.0                11  mcl: parachute tension taper: max parachute cable speed (M/S): Master Controller Launch parameter*/
- 0x3F8CCCCD , /*  22 1.1                 11  mcl: parachute tension taper: constant k5: Master Controller Launch parameter   */
+ 0x42A00000 , /*  21 80.0                11  mcl: parachute tension taper: max chute cable speed (M/S): Master Controller Launch param*/
+ 0x3F8CCCCD , /*  22 1.1                 11  mcl: parachute tension taper: const k5: Master Controller Launch parameter      */
 };
 #endif
 
 // =====================================================================
 #ifdef SHEAVE_1LO	// Include following parameters?
-const uint32_t paramval08[] = {
+const uint32_t paramval13[] = {
  SHEAVE_1LO_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Encoder_f4_1lo: 1 CRC                                                           */
  0x00000001 , /*   2 1                    5  Encoder_f4_1lo: 2 Version number                                                */
@@ -168,20 +283,20 @@ const uint32_t paramval08[] = {
  0xD1A00000 , /*   7 CANID_MSG_LOWER1_H_CAL  17  Encoder_f4_1lo: 7 CANID: hi-res: msg--lower calibrated--distance and speed      */
  0xFFFFFFFC , /*   8 CANID_DUMMY         17  Encoder_f4_1lo: 8 CANID: Poll with time sync msg                                */
  0xFFFFFFFC , /*   9 CANID_DUMMY         17  Encoder_f4_1lo: 9 CANID: Response to POLL                                       */
- 0x00400000 , /*  10 CANID_HB_TIMESYNC   17  Encoder_f4_1lo: 10 CANID 1 added to CAN hardware filter to allow incoming msg   */
- 0x20000000 , /*  11 CANID_MSG_TIME_POLL  17  Encoder_f4_1lo: 11 CANID 2 added to CAN hardware filter to allow incoming msg   */
- 0xD2200004 , /*  12 CANID_TST_SHEAVE_1LO  17  Encoder_f4_1lo: 12 CANID 3 added to CAN hardware filter to allow incoming msg   */
- 0xD1400000 , /*  13 CANID_CMD_LOWER1_HI  17  Encoder_f4_1lo: 13 CANID 4 added to CAN hardware filter to allow incoming msg   */
- 0xFFFFFFFC , /*  14 CANID_DUMMY         17  Encoder_f4_1lo: 14 CANID 5 added to CAN hardware filter to allow incoming msg   */
- 0xFFFFFFFC , /*  15 CANID_DUMMY         17  Encoder_f4_1lo: 15 CANID 6 added to CAN hardware filter to allow incoming msg   */
- 0xFFFFFFFC , /*  16 CANID_DUMMY         17  Encoder_f4_1lo: 16 CANID 7 added to CAN hardware filter to allow incoming msg   */
- 0xFFFFFFFC , /*  17 CANID_DUMMY         17  Encoder_f4_1lo: 17 CANID 8 added to CAN hardware filter to allow incoming msg   */
+ 0x00400000 , /*  10 CANID_HB_TIMESYNC   17  Encoder_f4_1lo: 10 CANID 1 add CAN hw filter to allow incoming msg              */
+ 0x20000000 , /*  11 CANID_MSG_TIME_POLL  17  Encoder_f4_1lo: 11 CANID 2 add CAN hw filter to allow incoming msg              */
+ 0xD2200004 , /*  12 CANID_TST_SHEAVE_1LO  17  Encoder_f4_1lo: 12 CANID 3 add CAN hw filter to allow incoming msg              */
+ 0xD1400000 , /*  13 CANID_CMD_LOWER1_HI  17  Encoder_f4_1lo: 13 CANID 4 add CAN hw filter to allow incoming msg              */
+ 0xFFFFFFFC , /*  14 CANID_DUMMY         17  Encoder_f4_1lo: 14 CANID 5 add CAN hw filter to allow incoming msg              */
+ 0xFFFFFFFC , /*  15 CANID_DUMMY         17  Encoder_f4_1lo: 15 CANID 6 add CAN hw filter to allow incoming msg              */
+ 0xFFFFFFFC , /*  16 CANID_DUMMY         17  Encoder_f4_1lo: 16 CANID 7 add CAN hw filter to allow incoming msg              */
+ 0xFFFFFFFC , /*  17 CANID_DUMMY         17  Encoder_f4_1lo: 17 CANID 8 add CAN hw filter to allow incoming msg              */
 };
 #endif
 
 // =====================================================================
 #ifdef SHEAVE_1UP	// Include following parameters?
-const uint32_t paramval09[] = {
+const uint32_t paramval14[] = {
  SHEAVE_1UP_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Encoder_f4_1up: 1 CRC                                                           */
  0x00000001 , /*   2 1                    5  Encoder_f4_1up: 2 Version number                                                */
@@ -192,57 +307,57 @@ const uint32_t paramval09[] = {
  0xD1200000 , /*   7 CANID_MSG_UPPER1_H_CAL  17  Encoder_f4_1up: 7 CANID: hi-res: msg--upper calibrated--distance and speed      */
  0xFFFFFFFC , /*   8 CANID_DUMMY         17  Encoder_f4_1up: 8 CANID: Poll with time sync msg                                */
  0xFFFFFFFC , /*   9 CANID_DUMMY         17  Encoder_f4_1up: 9 CANID: Response to POLL                                       */
- 0x00400000 , /*  10 CANID_HB_TIMESYNC   17  Encoder_f4_1up: 10 CANID 1 added to CAN hardware filter to allow incoming msg   */
- 0x20000000 , /*  11 CANID_MSG_TIME_POLL  17  Encoder_f4_1up: 11 CANID 2 added to CAN hardware filter to allow incoming msg   */
- 0xD2000004 , /*  12 CANID_TST_SHEAVE_1UP  17  Encoder_f4_1up: 12 CANID 3 added to CAN hardware filter to allow incoming msg   */
- 0xD0E00000 , /*  13 CANID_CMD_UPPER1_HI  17  Encoder_f4_1up: 13 CANID 4 added to CAN hardware filter to allow incoming msg   */
- 0xFFFFFFFC , /*  14 CANID_DUMMY         17  Encoder_f4_1up: 14 CANID 5 added to CAN hardware filter to allow incoming msg   */
- 0xFFFFFFFC , /*  15 CANID_DUMMY         17  Encoder_f4_1up: 15 CANID 6 added to CAN hardware filter to allow incoming msg   */
- 0xFFFFFFFC , /*  16 CANID_DUMMY         17  Encoder_f4_1up: 16 CANID 7 added to CAN hardware filter to allow incoming msg   */
- 0xFFFFFFFC , /*  17 CANID_DUMMY         17  Encoder_f4_1up: 17 CANID 8 added to CAN hardware filter to allow incoming msg   */
+ 0x00400000 , /*  10 CANID_HB_TIMESYNC   17  Encoder_f4_1up: 10 CANID 1 add CAN hw filter to allow incoming msg              */
+ 0x20000000 , /*  11 CANID_MSG_TIME_POLL  17  Encoder_f4_1up: 11 CANID 2 add CAN hw filter to allow incoming msg              */
+ 0xD2000004 , /*  12 CANID_TST_SHEAVE_1UP  17  Encoder_f4_1up: 12 CANID 3 add CAN hw filter to allow incoming msg              */
+ 0xD0E00000 , /*  13 CANID_CMD_UPPER1_HI  17  Encoder_f4_1up: 13 CANID 4 add CAN hw filter to allow incoming msg              */
+ 0xFFFFFFFC , /*  14 CANID_DUMMY         17  Encoder_f4_1up: 14 CANID 5 add CAN hw filter to allow incoming msg              */
+ 0xFFFFFFFC , /*  15 CANID_DUMMY         17  Encoder_f4_1up: 15 CANID 6 add CAN hw filter to allow incoming msg              */
+ 0xFFFFFFFC , /*  16 CANID_DUMMY         17  Encoder_f4_1up: 16 CANID 7 add CAN hw filter to allow incoming msg              */
+ 0xFFFFFFFC , /*  17 CANID_DUMMY         17  Encoder_f4_1up: 17 CANID 8 add CAN hw filter to allow incoming msg              */
 };
 #endif
 
 // =====================================================================
 #ifdef TENSION_a11	// Include following parameters?
-const uint32_t paramval10[] = {
+const uint32_t paramval15[] = {
  TENSION_a11_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a11: 1 CRC for tension list                                             */
  0x00000001 , /*   2 1                    5  Tension_a11: 2 Version number for Tension List                                  */
  0x0001273C , /*   3 75580                5  Tension_a11: 3 AD7799 final offset                                              */
  0x3980F990 , /*   4 0.246E-3            11  Tension_a11: 4 AD7799 final Scale (convert to kgf)                              */
- 0x45534000 , /*   5 3380.0              11  Tension_a11:  5 Thermistor1 param: constant B                                   */
+ 0x45534000 , /*   5 3380.0              11  Tension_a11:  5 Thermistor1 param: const B                                      */
  0x41200000 , /*   6 10.0                11  Tension_a11:  6 Thermistor1 param: Series resistor, fixed (K ohms)              */
  0x41200000 , /*   7 10.0                11  Tension_a11:  7 Thermistor1 param: Thermistor room temp resistance (K ohms)     */
  0x43910000 , /*   8 290.0               11  Tension_a11:  8 Thermistor1 param: Reference temp for thermistor                */
  0x00000000 , /*   9 0.0                 11  Tension_a11:  9 Thermistor1 param: Thermistor temp offset correction (deg C)    */
  0x3F800000 , /*  10 1.0                 11  Tension_a11: 10 Thermistor1 param: Thermistor temp scale correction             */
- 0x45534000 , /*  11 3380.0              11  Tension_a11: 11 Thermistor2 param: constant B                                   */
+ 0x45534000 , /*  11 3380.0              11  Tension_a11: 11 Thermistor2 param: const B                                      */
  0x41200000 , /*  12 10.0                11  Tension_a11: 12 Thermistor2 param: Series resistor, fixed (K ohms)              */
  0x41200000 , /*  13 10.0                11  Tension_a11: 13 Thermistor2 param: Thermistor room temp resistance (K ohms)     */
  0x43910000 , /*  14 290.0               11  Tension_a11: 14 Thermistor2 param: Reference temp for thermistor                */
  0x00000000 , /*  15 0.0                 11  Tension_a11: 15 Thermistor2 param: Thermistor temp offset correction (deg C)    */
  0x3F800000 , /*  16 1.0                 11  Tension_a11: 16 Thermistor2 param: Thermistor temp scale correction             */
- 0x40A00000 , /*  17 5.0                 11  Tension_a11: 17 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 0 (offset)*/
- 0x3F90A3D7 , /*  18 1.13                11  Tension_a11: 18 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 1 (scale)*/
- 0x00000000 , /*  19 0.0                 11  Tension_a11: 19 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 2 (x^2)*/
- 0x00000000 , /*  20 0.0                 11  Tension_a11: 20 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 3 (x^3)*/
- 0x40A00000 , /*  21 5.0                 11  Tension_a11: 21 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 0 (offset)*/
- 0x3F90A3D7 , /*  22 1.13                11  Tension_a11: 22 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 1 (scale)*/
- 0x00000000 , /*  23 0.0                 11  Tension_a11: 23 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 2 (x^2)*/
- 0x00000000 , /*  24 0.0                 11  Tension_a11: 24 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 3 (x^3)*/
+ 0x40A00000 , /*  17 5.0                 11  Tension_a11: 17 Thermistor1 param: Load-Cell temp comp polynomial coeff 0 (offset)*/
+ 0x3F90A3D7 , /*  18 1.13                11  Tension_a11: 18 Thermistor1 param: Load-Cell temp comp polynomial coeff 1 (scale)*/
+ 0x00000000 , /*  19 0.0                 11  Tension_a11: 19 Thermistor1 param: Load-Cell temp comp polynomial coeff 2 (x^2) */
+ 0x00000000 , /*  20 0.0                 11  Tension_a11: 20 Thermistor1 param: Load-Cell temp comp polynomial coeff 3 (x^3) */
+ 0x40A00000 , /*  21 5.0                 11  Tension_a11: 21 Thermistor2 param: Load-Cell temp comp polynomial coeff 0 (offset)*/
+ 0x3F90A3D7 , /*  22 1.13                11  Tension_a11: 22 Thermistor2 param: Load-Cell temp comp polynomial coeff 1 (scale)*/
+ 0x00000000 , /*  23 0.0                 11  Tension_a11: 23 Thermistor2 param: Load-Cell temp comp polynomial coeff 2 (x^2) */
+ 0x00000000 , /*  24 0.0                 11  Tension_a11: 24 Thermistor2 param: Load-Cell temp comp polynomial coeff 3 (x^3) */
  0x000000FA , /*  25 250                  6  Tension_a11: 25 Heart-Beat: Count of time ticks (milliseconds) between autonomous msgs*/
- 0x00000001 , /*  26 1                    6  Tension_a11: 26 Drum system number for this function instance                   */
- 0x00000001 , /*  27 1                    6  Tension_a11: 27 Drum system poll 2nd payload byte bit for this type of function */
- 0x00000001 , /*  28 1                    6  Tension_a11: 28 Drum system poll 1st payload byte bit for drum # (function instance)*/
+ 0x00000001 , /*  26 1                    6  Tension_a11: 26 Drum sys number for this function instance                      */
+ 0x00000001 , /*  27 1                    6  Tension_a11: 27 Drum sys poll 2nd payload byte bit for this type of function    */
+ 0x00000001 , /*  28 1                    6  Tension_a11: 28 Drum sys poll 1st payload byte bit for drum # (function instance)*/
  0x38000000 , /*  29 CANID_MSG_TENSION_a11  17  Tension_a11: 29 CANID: can msg tension for AD7799 #1                            */
  0x20000000 , /*  30 CANID_MSG_TIME_POLL  17  Tension_a11: 30 CANID: MC: Time msg/Group polling                               */
  0x00400000 , /*  31 CANID_HB_TIMESYNC   17  Tension_a11: 31 CANID: GPS time sync distribution msg                           */
  0xE0600000 , /*  32 CANID_HB_TENSION_a11  17  Tension_a11: 32 CANID: Heartbeat msg                                            */
  0xF800010C , /*  33 CANID_TST_TENSION_a11  17  Tension_a11: 33 Test                                                            */
- 0x00000004 , /*  34 04                   6  Tension_a11: 34 IIR Filter factor: divisor sets time constant: reading for polled msg*/
+ 0x00000004 , /*  34 04                   6  Tension_a11: 34 IIR Filter factor: divisor sets time const: reading for polled msg*/
  0x00000080 , /*  35 128                  6  Tension_a11: 35 Filter scale : upscaling (due to integer math): for polled msg  */
- 0x00000064 , /*  36 100                  6  Tension_a11: 36 IIR Filter factor: divisor sets time constant: reading for heart-beat  msg*/
+ 0x00000064 , /*  36 100                  6  Tension_a11: 36 IIR Filter factor: divisor sets time const: reading for heart-beat  msg*/
  0x00000080 , /*  37 128                  6  Tension_a11: 37 Filter scale : upscaling (due to integer math): for heart-beat  msg*/
  0x00000003 , /*  38 3                    6  Tension_a11: 38 skip or use this function swit ch                               */
  0x0000000A , /*  39 10                   6  Tension_a11: 39 IIR Filter factor: zero recalibration                           */
@@ -250,198 +365,198 @@ const uint32_t paramval10[] = {
  0x000001D6 , /*  41 470                  6  Tension_a11: 41 ADC conversion counts between zero recalibrations               */
  0x44960000 , /*  42 1200.0              11  Tension_a11: 42 Exceeding this calibrated limit (+) means invalid reading       */
  0xC42F0000 , /*  43 -700.0              11  Tension_a11: 43 Exceeding this calibrated limit (-) means invalid reading       */
- 0x00400000 , /*  44 CANID_HB_TIMESYNC   17  Tension_a11: 44 CANID 1 added to CAN hardware filter to allow incoming msg      */
- 0x20000000 , /*  45 CANID_MSG_TIME_POLL  17  Tension_a11: 45 CANID 2 added to CAN hardware filter to allow incoming msg      */
- 0xF800010C , /*  46 CANID_TST_TENSION_a11  17  Tension_a11: 46 CANID 3 added to CAN hardware filter to allow incoming msg      */
- 0x05C00004 , /*  47 CANID_CMD_TENSION_a11I  17  Tension_a11: 47 CANID 4 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  48 CANID_DUMMY         17  Tension_a11: 48 CANID 5 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  49 CANID_DUMMY         17  Tension_a11: 49 CANID 6 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  50 CANID_DUMMY         17  Tension_a11: 50 CANID 7 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  51 CANID_DUMMY         17  Tension_a11: 51 CANID 8 added to CAN hardware filter to allow incoming msg      */
+ 0x00400000 , /*  44 CANID_HB_TIMESYNC   17  Tension_a11: 44 CANID 1 add CAN hw filter to allow incoming msg                 */
+ 0x20000000 , /*  45 CANID_MSG_TIME_POLL  17  Tension_a11: 45 CANID 2 add CAN hw filter to allow incoming msg                 */
+ 0xF800010C , /*  46 CANID_TST_TENSION_a11  17  Tension_a11: 46 CANID 3 add CAN hw filter to allow incoming msg                 */
+ 0x05C00004 , /*  47 CANID_CMD_TENSION_a11I  17  Tension_a11: 47 CANID 4 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  48 CANID_DUMMY         17  Tension_a11: 48 CANID 5 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  49 CANID_DUMMY         17  Tension_a11: 49 CANID 6 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  50 CANID_DUMMY         17  Tension_a11: 50 CANID 7 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  51 CANID_DUMMY         17  Tension_a11: 51 CANID 8 add CAN hw filter to allow incoming msg                 */
 };
 #endif
 
 // =====================================================================
 #ifdef TENSION_a12	// Include following parameters?
-const uint32_t paramval11[] = {
+const uint32_t paramval16[] = {
  TENSION_a12_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a12:   1 CRC for tension list                                           */
  0x00000001 , /*   2 1                    5  Tension_a12:   2 Version number for Tension List                                */
  0x000012B5 , /*   3 4789                 5  Tension_a12:   3 AD7799 offset                                                  */
  0x3B39D2A6 , /*   4 0.283543155E-2      11  Tension_a12: AD7799 #1 Scale (convert to kgf)                                   */
- 0x45534000 , /*   5 3380.0              11  Tension_a12:  5 Thermistor1 param: constant B                                   */
+ 0x45534000 , /*   5 3380.0              11  Tension_a12:  5 Thermistor1 param: const B                                      */
  0x41200000 , /*   6 10.0                11  Tension_a12:  6 Thermistor1 param: Series resistor, fixed (K ohms)              */
  0x41200000 , /*   7 10.0                11  Tension_a12:  7 Thermistor1 param: Thermistor room temp resistance (K ohms)     */
  0x43910000 , /*   8 290.0               11  Tension_a12:  8 Thermistor1 param: Reference temp for thermistor                */
  0x00000000 , /*   9 0.0                 11  Tension_a12:  9 Thermistor1 param: Thermistor temp offset correction (deg C)    */
  0x3F800000 , /*  10 1.0                 11  Tension_a12: 10 Thermistor1 param: Thermistor temp scale correction             */
- 0x45534000 , /*  11 3380.0              11  Tension_a12: 11 Thermistor2 param: constant B                                   */
+ 0x45534000 , /*  11 3380.0              11  Tension_a12: 11 Thermistor2 param: const B                                      */
  0x41200000 , /*  12 10.0                11  Tension_a12: 12 Thermistor2 param: Series resistor, fixed (K ohms)              */
  0x41200000 , /*  13 10.0                11  Tension_a12: 13 Thermistor2 param: Thermistor room temp resistance (K ohms)     */
  0x43910000 , /*  14 290.0               11  Tension_a12: 14 Thermistor2 param: Reference temp for thermistor                */
  0x00000000 , /*  15 0.0                 11  Tension_a12: 15 Thermistor2 param: Thermistor temp offset correction (deg C)    */
  0x3F800000 , /*  16 1.0                 11  Tension_a12: 16 Thermistor2 param: Thermistor temp scale correction             */
- 0x40A00000 , /*  17 5.0                 11  Tension_a12: 17 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 0 (offset)*/
- 0x3F90A3D7 , /*  18 1.13                11  Tension_a12: 18 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 1 (scale)*/
- 0x00000000 , /*  19 0.0                 11  Tension_a12: 19 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 2 (x^2)*/
- 0x00000000 , /*  20 0.0                 11  Tension_a12: 20 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 3 (x^3)*/
- 0x40A00000 , /*  21 5.0                 11  Tension_a12: 21 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 0 (offset)*/
- 0x3F90A3D7 , /*  22 1.13                11  Tension_a12: 22 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 1 (scale)*/
- 0x00000000 , /*  23 0.0                 11  Tension_a12: 23 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 2 (x^2)*/
- 0x00000000 , /*  24 0.0                 11  Tension_a12: 24 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 3 (x^3)*/
+ 0x40A00000 , /*  17 5.0                 11  Tension_a12: 17 Thermistor1 param: Load-Cell temp comp polynomial coeff 0 (offset)*/
+ 0x3F90A3D7 , /*  18 1.13                11  Tension_a12: 18 Thermistor1 param: Load-Cell temp comp polynomial coeff 1 (scale)*/
+ 0x00000000 , /*  19 0.0                 11  Tension_a12: 19 Thermistor1 param: Load-Cell temp comp polynomial coeff 2 (x^2) */
+ 0x00000000 , /*  20 0.0                 11  Tension_a12: 20 Thermistor1 param: Load-Cell temp comp polynomial coeff 3 (x^3) */
+ 0x40A00000 , /*  21 5.0                 11  Tension_a12: 21 Thermistor2 param: Load-Cell temp comp polynomial coeff 0 (offset)*/
+ 0x3F90A3D7 , /*  22 1.13                11  Tension_a12: 22 Thermistor2 param: Load-Cell temp comp polynomial coeff 1 (scale)*/
+ 0x00000000 , /*  23 0.0                 11  Tension_a12: 23 Thermistor2 param: Load-Cell temp comp polynomial coeff 2 (x^2) */
+ 0x00000000 , /*  24 0.0                 11  Tension_a12: 24 Thermistor2 param: Load-Cell temp comp polynomial coeff 3 (x^3) */
  0x000007D0 , /*  25 2000                 6  Tension_a12: 25 Heart-Beat: Count of time ticks between autonomous msgs         */
- 0x00000002 , /*  26 2                    6  Tension_a12: 26 Drum system number for this function instance                   */
- 0x00000001 , /*  27 1                    6  Tension_a12: 27 Drum system poll 2nd payload byte bit for this type of function */
- 0x00000002 , /*  28 2                    6  Tension_a12: 28 Drum system poll 1st payload byte bit for drum # (function instance)*/
+ 0x00000002 , /*  26 2                    6  Tension_a12: 26 Drum sys number for this function instance                      */
+ 0x00000001 , /*  27 1                    6  Tension_a12: 27 Drum sys poll 2nd payload byte bit for this type of function    */
+ 0x00000002 , /*  28 2                    6  Tension_a12: 28 Drum sys poll 1st payload byte bit for drum # (function instance)*/
  0x38400000 , /*  29 CANID_MSG_TENSION_a12  17  Tension_a12: 29 CANID: can msg tension for AD7799 #2                            */
  0x20000000 , /*  30 CANID_MSG_TIME_POLL  17  Tension_a12: 30 CANID: MC: Time msg/Group polling                               */
  0x00400000 , /*  31 CANID_HB_TIMESYNC   17  Tension_a12: 31 CANID: GPS time sync distribution msg                           */
  0xE0800000 , /*  32 CANID_HB_TENSION_a12  17  Tension_a12: 32 CANID: Heartbeat msg                                            */
  0xF800020C , /*  33 CANID_TST_TENSION_a12  17  Tension_a12: 33 Test                                                            */
- 0x00000004 , /*  34 04                   6  Tension_a12: 34 IIR Filter factor: divisor sets time constant: reading for polled msg*/
- 0x00000080 , /*  35 128                  6  Tension_a12: 35 Filter scale : upscaling (due to integer math): for polled msg  */
- 0x00000200 , /*  36 512                  6  Tension_a12: 36 IIR Filter factor: divisor sets time constant: reading for heart-beat msg*/
- 0x00000080 , /*  37 128                  6  Tension_a12: 37 Filter scale : upscaling (due to integer math): for heart-beat  msg*/
+ 0x00000004 , /*  34 04                   6  Tension_a12: 34 IIR Filter factor: divisor sets time const: reading polled msg  */
+ 0x00000080 , /*  35 128                  6  Tension_a12: 35 Filter scale : upscaling (due to integer math): polled msg      */
+ 0x00000200 , /*  36 512                  6  Tension_a12: 36 IIR Filter factor: divisor sets time const: reading heart-beat msg*/
+ 0x00000080 , /*  37 128                  6  Tension_a12: 37 Filter scale : upscaling (due to integer math): heart-beat  msg */
  0x00000003 , /*  38 3                    6  Tension_a12: 38 skip or use this function switch                                */
  0x0000000A , /*  39 10                   6  Tension_a12: 39 IIR Filter factor: zero recalibration                           */
  0x00000080 , /*  40 128                  6  Tension_a12: 40 IIR Filter scale : zero recalibration                           */
  0x000001D6 , /*  41 470                  6  Tension_a12: 41 ADC conversion counts between zero recalibrations               */
  0x44960000 , /*  42 1200.0              11  Tension_a12: 42 Exceeding this calibrated limit (+) means invalid reading       */
  0xC42F0000 , /*  43 -700.0              11  Tension_a12: 43 Exceeding this calibrated limit (-) means invalid reading       */
- 0x00400000 , /*  44 CANID_HB_TIMESYNC   17  Tension_a12: 44 CANID 1 added to CAN hardware filter to allow incoming msg      */
- 0x20000000 , /*  45 CANID_MSG_TIME_POLL  17  Tension_a12: 45 CANID 2 added to CAN hardware filter to allow incoming msg      */
- 0xF800020C , /*  46 CANID_TST_TENSION_a12  17  Tension_a12: 46 CANID 3 added to CAN hardware filter to allow incoming msg      */
- 0xF800005C , /*  47 CANID_CMD_TENSION_a12I  17  Tension_a12: 47 CANID 4 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  48 CANID_DUMMY         17  Tension_a12: 48 CANID 5 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  49 CANID_DUMMY         17  Tension_a12: 49 CANID 6 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  50 CANID_DUMMY         17  Tension_a12: 50 CANID 7 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  51 CANID_DUMMY         17  Tension_a12: 51 CANID 8 added to CAN hardware filter to allow incoming msg      */
+ 0x00400000 , /*  44 CANID_HB_TIMESYNC   17  Tension_a12: 44 CANID 1 add CAN hw filter to allow incoming msg                 */
+ 0x20000000 , /*  45 CANID_MSG_TIME_POLL  17  Tension_a12: 45 CANID 2 add CAN hw filter to allow incoming msg                 */
+ 0xF800020C , /*  46 CANID_TST_TENSION_a12  17  Tension_a12: 46 CANID 3 add CAN hw filter to allow incoming msg                 */
+ 0xF800005C , /*  47 CANID_CMD_TENSION_a12I  17  Tension_a12: 47 CANID 4 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  48 CANID_DUMMY         17  Tension_a12: 48 CANID 5 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  49 CANID_DUMMY         17  Tension_a12: 49 CANID 6 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  50 CANID_DUMMY         17  Tension_a12: 50 CANID 7 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  51 CANID_DUMMY         17  Tension_a12: 51 CANID 8 add CAN hw filter to allow incoming msg                 */
 };
 #endif
 
 // =====================================================================
 #ifdef TENSION_a21	// Include following parameters?
-const uint32_t paramval12[] = {
+const uint32_t paramval17[] = {
  TENSION_a21_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a21:   1 CRC for tension list                                           */
  0x00000001 , /*   2 1                    5  Tension_a21:   2 Version number for Tension List                                */
  0x0001456E , /*   3 83310                5  Tension_a21:   3 AD7799 offset                                                  */
  0x3980F990 , /*   4 0.246E-3            11  Tension_a21: AD7799 #1 Scale (convert to kgf)                                   */
- 0x45534000 , /*   5 3380.0              11  Tension_a21:  5 Thermistor1 param: constant B                                   */
+ 0x45534000 , /*   5 3380.0              11  Tension_a21:  5 Thermistor1 param: const B                                      */
  0x41200000 , /*   6 10.0                11  Tension_a21:  6 Thermistor1 param: Series resistor, fixed (K ohms)              */
  0x41200000 , /*   7 10.0                11  Tension_a21:  7 Thermistor1 param: Thermistor room temp resistance (K ohms)     */
  0x43910000 , /*   8 290.0               11  Tension_a21:  8 Thermistor1 param: Reference temp for thermistor                */
  0x00000000 , /*   9 0.0                 11  Tension_a21:  9 Thermistor1 param: Thermistor temp offset correction (deg C)    */
  0x3F800000 , /*  10 1.0                 11  Tension_a21: 10 Thermistor1 param: Thermistor temp scale correction             */
- 0x45534000 , /*  11 3380.0              11  Tension_a21: 11 Thermistor2 param: constant B                                   */
+ 0x45534000 , /*  11 3380.0              11  Tension_a21: 11 Thermistor2 param: const B                                      */
  0x41200000 , /*  12 10.0                11  Tension_a21: 12 Thermistor2 param: Series resistor, fixed (K ohms)              */
  0x41200000 , /*  13 10.0                11  Tension_a21: 13 Thermistor2 param: Thermistor room temp resistance (K ohms)     */
  0x43910000 , /*  14 290.0               11  Tension_a21: 14 Thermistor2 param: Reference temp for thermistor                */
  0x00000000 , /*  15 0.0                 11  Tension_a21: 15 Thermistor2 param: Thermistor temp offset correction (deg C)    */
  0x3F800000 , /*  16 1.0                 11  Tension_a21: 16 Thermistor2 param: Thermistor temp scale correction             */
- 0x40A00000 , /*  17 5.0                 11  Tension_a21: 17 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 0 (offset)*/
- 0x3F90A3D7 , /*  18 1.13                11  Tension_a21: 18 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 1 (scale)*/
- 0x00000000 , /*  19 0.0                 11  Tension_a21: 19 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 2 (x^2)*/
- 0x00000000 , /*  20 0.0                 11  Tension_a21: 20 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 3 (x^3)*/
- 0x40A00000 , /*  21 5.0                 11  Tension_a21: 21 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 0 (offset)*/
- 0x3F90A3D7 , /*  22 1.13                11  Tension_a21: 22 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 1 (scale)*/
- 0x00000000 , /*  23 0.0                 11  Tension_a21: 23 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 2 (x^2)*/
- 0x00000000 , /*  24 0.0                 11  Tension_a21: 24 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 3 (x^3)*/
+ 0x40A00000 , /*  17 5.0                 11  Tension_a21: 17 Thermistor1 param: Load-Cell temp comp polynomial coeff 0 (offset)*/
+ 0x3F90A3D7 , /*  18 1.13                11  Tension_a21: 18 Thermistor1 param: Load-Cell temp comp polynomial coeff 1 (scale)*/
+ 0x00000000 , /*  19 0.0                 11  Tension_a21: 19 Thermistor1 param: Load-Cell temp comp polynomial coeff 2 (x^2) */
+ 0x00000000 , /*  20 0.0                 11  Tension_a21: 20 Thermistor1 param: Load-Cell temp comp polynomial coeff 3 (x^3) */
+ 0x40A00000 , /*  21 5.0                 11  Tension_a21: 21 Thermistor2 param: Load-Cell temp comp polynomial coeff 0 (offset)*/
+ 0x3F90A3D7 , /*  22 1.13                11  Tension_a21: 22 Thermistor2 param: Load-Cell temp comp polynomial coeff 1 (scale)*/
+ 0x00000000 , /*  23 0.0                 11  Tension_a21: 23 Thermistor2 param: Load-Cell temp comp polynomial coeff 2 (x^2) */
+ 0x00000000 , /*  24 0.0                 11  Tension_a21: 24 Thermistor2 param: Load-Cell temp comp polynomial coeff 3 (x^3) */
  0x000003E8 , /*  25 1000                 6  Tension_a21: 25 Heart-Beat: Count of time ticks (milliseconds) between autonomous msgs*/
- 0x00000001 , /*  26 1                    6  Tension_a21: 26 Drum system number for this function instance                   */
- 0x00000001 , /*  27 1                    6  Tension_a21: 27 Drum system poll 2nd payload byte bit for this type of function */
- 0x00000001 , /*  28 1                    6  Tension_a21: 28 Drum system poll 1st payload byte bit for drum # (function instance)*/
+ 0x00000001 , /*  26 1                    6  Tension_a21: 26 Drum sys number for this function instance                      */
+ 0x00000001 , /*  27 1                    6  Tension_a21: 27 Drum sys poll 2nd payload byte bit for this type of function    */
+ 0x00000001 , /*  28 1                    6  Tension_a21: 28 Drum sys poll 1st payload byte bit for drum # (function instance)*/
  0x38200000 , /*  29 CANID_MSG_TENSION_a21  17  Tension_a21: 29 CANID: can msg tension for AD7799 #2                            */
  0x20000000 , /*  30 CANID_MSG_TIME_POLL  17  Tension_a21: 30 CANID: MC: Time msg/Group polling                               */
  0x00400000 , /*  31 CANID_HB_TIMESYNC   17  Tension_a21: 31 CANID: GPS time sync distribution msg                           */
  0xE0C00000 , /*  32 CANID_HB_TENSION_a21  17  Tension_a21: 32 CANID: Heartbeat msg                                            */
  0xF800030C , /*  33 CANID_TST_TENSION_a21  17  Tension_a21: 33 Test                                                            */
- 0x00000004 , /*  34 04                   6  Tension_a21: 34 IIR Filter factor: divisor sets time constant: reading for polled msg*/
- 0x00000080 , /*  35 128                  6  Tension_a21: 35 Filter scale : upscaling (due to integer math): for polled msg  */
- 0x00000200 , /*  36 512                  6  Tension_a21: 36 IIR Filter factor: divisor sets time constant: reading for heart-beat msg*/
- 0x00000080 , /*  37 128                  6  Tension_a21: 37 Filter scale : upscaling (due to integer math): for heart-beat  msg*/
+ 0x00000004 , /*  34 04                   6  Tension_a21: 34 IIR Filter factor: divisor sets time const: reading polled msg  */
+ 0x00000080 , /*  35 128                  6  Tension_a21: 35 Filter scale : upscaling (due to integer math): polled msg      */
+ 0x00000200 , /*  36 512                  6  Tension_a21: 36 IIR Filter factor: divisor sets time const: reading heart-beat msg*/
+ 0x00000080 , /*  37 128                  6  Tension_a21: 37 Filter scale : upscaling (due to integer math): heart-beat  msg */
  0x00000003 , /*  38 3                    6  Tension_a: 38 skip or use this function switch                                  */
  0x0000000A , /*  39 10                   6  Tension_a21: 39 IIR Filter factor: zero recalibration                           */
  0x00000080 , /*  40 128                  6  Tension_a21: 40 IIR Filter scale : zero recalibration                           */
  0x000001D6 , /*  41 470                  6  Tension_a21: 41 ADC conversion counts between zero recalibrations               */
  0x44960000 , /*  42 1200.0              11  Tension_a21: 42 Exceeding this calibrated limit (+) means invalid reading       */
  0xC42F0000 , /*  43 -700.0              11  Tension_a21: 43 Exceeding this calibrated limit (-) means invalid reading       */
- 0x00400000 , /*  44 CANID_HB_TIMESYNC   17  Tension_a21: 44 CANID 1 added to CAN hardware filter to allow incoming msg      */
- 0x20000000 , /*  45 CANID_MSG_TIME_POLL  17  Tension_a21: 45 CANID 2 added to CAN hardware filter to allow incoming msg      */
- 0xF800030C , /*  46 CANID_TST_TENSION_a21  17  Tension_a21: 46 CANID 3 added to CAN hardware filter to allow incoming msg      */
- 0x05E00004 , /*  47 CANID_CMD_TENSION_a21I  17  Tension_a21: 47 CANID 4 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  48 CANID_DUMMY         17  Tension_a21: 48 CANID 5 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  49 CANID_DUMMY         17  Tension_a21: 49 CANID 6 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  50 CANID_DUMMY         17  Tension_a21: 50 CANID 7 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  51 CANID_DUMMY         17  Tension_a21: 51 CANID 8 added to CAN hardware filter to allow incoming msg      */
+ 0x00400000 , /*  44 CANID_HB_TIMESYNC   17  Tension_a21: 44 CANID 1 add CAN hw filter to allow incoming msg                 */
+ 0x20000000 , /*  45 CANID_MSG_TIME_POLL  17  Tension_a21: 45 CANID 2 add CAN hw filter to allow incoming msg                 */
+ 0xF800030C , /*  46 CANID_TST_TENSION_a21  17  Tension_a21: 46 CANID 3 add CAN hw filter to allow incoming msg                 */
+ 0x05E00004 , /*  47 CANID_CMD_TENSION_a21I  17  Tension_a21: 47 CANID 4 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  48 CANID_DUMMY         17  Tension_a21: 48 CANID 5 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  49 CANID_DUMMY         17  Tension_a21: 49 CANID 6 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  50 CANID_DUMMY         17  Tension_a21: 50 CANID 7 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  51 CANID_DUMMY         17  Tension_a21: 51 CANID 8 add CAN hw filter to allow incoming msg                 */
 };
 #endif
 
 // =====================================================================
 #ifdef TENSION_a22	// Include following parameters?
-const uint32_t paramval13[] = {
+const uint32_t paramval18[] = {
  TENSION_a22_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a22:   1 CRC for tension list                                           */
  0x00000001 , /*   2 1                    5  Tension_a22:   2 Version number for Tension List                                */
  0x000012B5 , /*   3 4789                 5  Tension_a22:   3 AD7799 offset                                                  */
  0x3B39D2A6 , /*   4 0.283543155E-2      11  Tension_a22: AD7799 #1 Scale (convert to kgf)                                   */
- 0x45534000 , /*   5 3380.0              11  Tension_a22:  5 Thermistor1 param: constant B                                   */
+ 0x45534000 , /*   5 3380.0              11  Tension_a22:  5 Thermistor1 param: const B                                      */
  0x41200000 , /*   6 10.0                11  Tension_a22:  6 Thermistor1 param: Series resistor, fixed (K ohms)              */
  0x41200000 , /*   7 10.0                11  Tension_a22:  7 Thermistor1 param: Thermistor room temp resistance (K ohms)     */
  0x43910000 , /*   8 290.0               11  Tension_a22:  8 Thermistor1 param: Reference temp for thermistor                */
  0x00000000 , /*   9 0.0                 11  Tension_a22:  9 Thermistor1 param: Thermistor temp offset correction (deg C)    */
  0x3F800000 , /*  10 1.0                 11  Tension_a22: 10 Thermistor1 param: Thermistor temp scale correction             */
- 0x45534000 , /*  11 3380.0              11  Tension_a22: 11 Thermistor2 param: constant B                                   */
+ 0x45534000 , /*  11 3380.0              11  Tension_a22: 11 Thermistor2 param: const B                                      */
  0x41200000 , /*  12 10.0                11  Tension_a22: 12 Thermistor2 param: Series resistor, fixed (K ohms)              */
  0x41200000 , /*  13 10.0                11  Tension_a22: 13 Thermistor2 param: Thermistor room temp resistance (K ohms)     */
  0x43910000 , /*  14 290.0               11  Tension_a22: 14 Thermistor2 param: Reference temp for thermistor                */
  0x00000000 , /*  15 0.0                 11  Tension_a22: 15 Thermistor2 param: Thermistor temp offset correction (deg C)    */
  0x3F800000 , /*  16 1.0                 11  Tension_a22: 16 Thermistor2 param: Thermistor temp scale correction             */
- 0x40A00000 , /*  17 5.0                 11  Tension_a22: 17 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 0 (offset)*/
- 0x3F90A3D7 , /*  18 1.13                11  Tension_a22: 18 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 1 (scale)*/
- 0x00000000 , /*  19 0.0                 11  Tension_a22: 19 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 2 (x^2)*/
- 0x00000000 , /*  20 0.0                 11  Tension_a22: 20 Thermistor1 param: Load-Cell temp compensation polynomial coefficient 3 (x^3)*/
- 0x40A00000 , /*  21 5.0                 11  Tension_a22: 21 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 0 (offset)*/
- 0x3F90A3D7 , /*  22 1.13                11  Tension_a22: 22 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 1 (scale)*/
- 0x00000000 , /*  23 0.0                 11  Tension_a22: 23 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 2 (x^2)*/
- 0x00000000 , /*  24 0.0                 11  Tension_a22: 24 Thermistor2 param: Load-Cell temp compensation polynomial coefficient 3 (x^3)*/
+ 0x40A00000 , /*  17 5.0                 11  Tension_a22: 17 Thermistor1 param: Load-Cell temp comp polynomial coeff 0 (offset)*/
+ 0x3F90A3D7 , /*  18 1.13                11  Tension_a22: 18 Thermistor1 param: Load-Cell temp comp polynomial coeff 1 (scale)*/
+ 0x00000000 , /*  19 0.0                 11  Tension_a22: 19 Thermistor1 param: Load-Cell temp comp polynomial coeff 2 (x^2) */
+ 0x00000000 , /*  20 0.0                 11  Tension_a22: 20 Thermistor1 param: Load-Cell temp comp polynomial coeff 3 (x^3) */
+ 0x40A00000 , /*  21 5.0                 11  Tension_a22: 21 Thermistor2 param: Load-Cell temp comp polynomial coeff 0 (offset)*/
+ 0x3F90A3D7 , /*  22 1.13                11  Tension_a22: 22 Thermistor2 param: Load-Cell temp comp polynomial coeff 1 (scale)*/
+ 0x00000000 , /*  23 0.0                 11  Tension_a22: 23 Thermistor2 param: Load-Cell temp comp polynomial coeff 2 (x^2) */
+ 0x00000000 , /*  24 0.0                 11  Tension_a22: 24 Thermistor2 param: Load-Cell temp comp polynomial coeff 3 (x^3) */
  0x00002000 , /*  25 8192                 6  Tension_a22: 25 Heart-Beat: Count of time ticks between autonomous msgs         */
- 0x00000002 , /*  26 2                    6  Tension_a22: 26 Drum system number for this function instance                   */
- 0x00000001 , /*  27 1                    6  Tension_a22: 27 Drum system poll 2nd payload byte bit for this type of function */
- 0x00000000 , /*  28 0                    6  Tension_a22: 28 Drum system poll 1st payload byte bit for drum # (function instance)*/
+ 0x00000002 , /*  26 2                    6  Tension_a22: 26 Drum sys number for this function instance                      */
+ 0x00000001 , /*  27 1                    6  Tension_a22: 27 Drum sys poll 2nd payload byte bit for this type of function    */
+ 0x00000000 , /*  28 0                    6  Tension_a22: 28 Drum sys poll 1st payload byte bit for drum # (function instance)*/
  0x38600000 , /*  29 CANID_MSG_TENSION_a22  17  Tension_a22: 29 CANID: can msg tension for AD7799 #2                            */
  0x20000000 , /*  30 CANID_MSG_TIME_POLL  17  Tension_a22: 30 CANID: MC: Time msg/Group polling                               */
  0x00400000 , /*  31 CANID_HB_TIMESYNC   17  Tension_a22: 31 CANID: GPS time sync distribution msg                           */
  0xE0E00000 , /*  32 CANID_HB_TENSION_a22  17  Tension_a22: 32 CANID: Heartbeat msg                                            */
  0xF800020C , /*  33 CANID_TST_TENSION_a12  17  Tension_a22: 33 Test                                                            */
- 0x00000004 , /*  34 04                   6  Tension_a22: 34 IIR Filter factor: divisor sets time constant: reading for polled msg*/
- 0x00000080 , /*  35 128                  6  Tension_a22: 35 Filter scale : upscaling (due to integer math): for polled msg  */
- 0x00000200 , /*  36 512                  6  Tension_a22: 36 IIR Filter factor: divisor sets time constant: reading for heart-beat msg*/
- 0x00000080 , /*  37 128                  6  Tension_a22: 37 Filter scale : upscaling (due to integer math): for heart-beat  msg*/
+ 0x00000004 , /*  34 04                   6  Tension_a22: 34 IIR Filter factor: divisor sets time const: reading polled msg  */
+ 0x00000080 , /*  35 128                  6  Tension_a22: 35 Filter scale : upscaling (due to integer math): polled msg      */
+ 0x00000200 , /*  36 512                  6  Tension_a22: 36 IIR Filter factor: divisor sets time const: reading heart-beat msg*/
+ 0x00000080 , /*  37 128                  6  Tension_a22: 37 Filter scale : upscaling (due to integer math): heart-beat  msg */
  0x00000003 , /*  38 3                    6  Tension_a22: 38 skip or use this function switch                                */
  0x0000000A , /*  39 10                   6  Tension_a22: 39 IIR Filter factor: zero recalibration                           */
  0x00000080 , /*  40 128                  6  Tension_a22: 40 IIR Filter scale : zero recalibration                           */
  0x000001D6 , /*  41 470                  6  Tension_a22: 41 ADC conversion counts between zero recalibrations               */
  0x44960000 , /*  42 1200.0              11  Tension_a22: 42 Exceeding this calibrated limit (+) means invalid reading       */
  0xC42F0000 , /*  43 -700.0              11  Tension_a22: 43 Exceeding this calibrated limit (-) means invalid reading       */
- 0x00400000 , /*  44 CANID_HB_TIMESYNC   17  Tension_a22: 44 CANID 1 added to CAN hardware filter to allow incoming msg      */
- 0x20000000 , /*  45 CANID_MSG_TIME_POLL  17  Tension_a22: 45 CANID 2 added to CAN hardware filter to allow incoming msg      */
- 0xF800040C , /*  46 CANID_TST_TENSION_a22  17  Tension_a22: 46 CANID 3 added to CAN hardware filter to allow incoming msg      */
- 0xF800006C , /*  47 CANID_CMD_TENSION_a22I  17  Tension_a22: 47 CANID 4 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  48 CANID_DUMMY         17  Tension_a22: 48 CANID 5 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  49 CANID_DUMMY         17  Tension_a22: 49 CANID 6 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  50 CANID_DUMMY         17  Tension_a22: 50 CANID 7 added to CAN hardware filter to allow incoming msg      */
- 0xFFFFFFFC , /*  51 CANID_DUMMY         17  Tension_a22: 51 CANID 8 added to CAN hardware filter to allow incoming msg      */
+ 0x00400000 , /*  44 CANID_HB_TIMESYNC   17  Tension_a22: 44 CANID 1 add CAN hw filter to allow incoming msg                 */
+ 0x20000000 , /*  45 CANID_MSG_TIME_POLL  17  Tension_a22: 45 CANID 2 add CAN hw filter to allow incoming msg                 */
+ 0xF800040C , /*  46 CANID_TST_TENSION_a22  17  Tension_a22: 46 CANID 3 add CAN hw filter allow incoming msg                    */
+ 0xF800006C , /*  47 CANID_CMD_TENSION_a22I  17  Tension_a22: 47 CANID 4 add CAN hw filter allow incoming msg                    */
+ 0xFFFFFFFC , /*  48 CANID_DUMMY         17  Tension_a22: 48 CANID 5 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  49 CANID_DUMMY         17  Tension_a22: 49 CANID 6 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  50 CANID_DUMMY         17  Tension_a22: 50 CANID 7 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  51 CANID_DUMMY         17  Tension_a22: 51 CANID 8 add CAN hw filter to allow incoming msg                 */
 };
 #endif
 
 // =====================================================================
 #ifdef YOGURT_1	// Include following parameters?
-const uint32_t paramval14[] = {
+const uint32_t paramval19[] = {
  YOGURT_1_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Yogurt_1:  1 CRC for this list                                                  */
  0x00000001 , /*   2 1                    5  Yogurt_1:  2 Version number for Tension List                                    */
- 0x45520000 , /*   3 3360.0              11  Yogurt_1:  3 Thermistor1 param: constant B                                      */
+ 0x45520000 , /*   3 3360.0              11  Yogurt_1:  3 Thermistor1 param: const B                                         */
  0x41200000 , /*   4 10.0                11  Yogurt_1:  4 Thermistor1 param: Series resistor, fixed (K ohms)                 */
  0x41200000 , /*   5 10.0                11  Yogurt_1:  5 Thermistor1 param: Thermistor room temp resistance (K ohms)        */
  0x43910000 , /*   6 290.0               11  Yogurt_1:  6 Thermistor1 param: Reference temp for thermistor                   */
@@ -449,7 +564,7 @@ const uint32_t paramval14[] = {
  0x3F800000 , /*   8 1.00                11  Yogurt_1:  8z Thermistor1 param: polynomial coeff 1 (scale)                     */
  0x00000000 , /*   9 0.0                 11  Yogurt_1:  9 Thermistor1 param: polynomial coeff 2 (x^2)                        */
  0x00000000 , /*  10 0.0                 11  Yogurt_1: 10 Thermistor1 param: polynomial coeff 3 (x^3)                        */
- 0x4553E000 , /*  11 3390.0              11  Yogurt_1: 11 Thermistor2 param: constant B                                      */
+ 0x4553E000 , /*  11 3390.0              11  Yogurt_1: 11 Thermistor2 param: const B                                         */
  0x41200000 , /*  12 10.0                11  Yogurt_1: 12 Thermistor2 param: Series resistor, fixed (K ohms)                 */
  0x41200000 , /*  13 10.0                11  Yogurt_1: 13 Thermistor2 param: Thermistor room temp resistance (K ohms)        */
  0x43910000 , /*  14 290.0               11  Yogurt_1: 14 Thermistor2 param: Reference temp for thermistor                   */
@@ -457,7 +572,7 @@ const uint32_t paramval14[] = {
  0x3F83D70A , /*  16 1.03                11  Yogurt_1: 16 Thermistor2 param: polynomial coeff 1 (scale)                      */
  0x00000000 , /*  17 0.0                 11  Yogurt_1: 17 Thermistor2 param: polynomial coeff 2 (x^2)                        */
  0x00000000 , /*  18 0.0                 11  Yogurt_1: 18 Thermistor2 param: polynomial coeff 3 (x^3)                        */
- 0x4550C000 , /*  19 3340.0              11  Yogurt_1: 19 Thermistor3 param: constant B                                      */
+ 0x4550C000 , /*  19 3340.0              11  Yogurt_1: 19 Thermistor3 param: const B                                         */
  0x41200000 , /*  20 10.0                11  Yogurt_1: 20 Thermistor3 param: Series resistor, fixed (K ohms)                 */
  0x41200000 , /*  21 10.0                11  Yogurt_1: 21 Thermistor3 param: Thermistor room temp resistance (K ohms)        */
  0x43910000 , /*  22 290.0               11  Yogurt_1: 22 Thermistor3 param: Reference temp for thermistor                   */
@@ -465,7 +580,7 @@ const uint32_t paramval14[] = {
  0x3F80E560 , /*  24 1.007               11  Yogurt_1: 24 Thermistor3 param: polynomial coeff 1 (scale)                      */
  0x00000000 , /*  25 0.0                 11  Yogurt_1: 25 Thermistor3 param: polynomial coeff 2 (x^2)                        */
  0x00000000 , /*  26 0.0                 11  Yogurt_1: 26 Thermistor3 param: polynomial coeff 3 (x^3)                        */
- 0x4550C000 , /*  27 3340.0              11  Yogurt_1: 27 Thermistor4 param: constant B                                      */
+ 0x4550C000 , /*  27 3340.0              11  Yogurt_1: 27 Thermistor4 param: const B                                         */
  0x41200000 , /*  28 10.0                11  Yogurt_1: 28 Thermistor4 param: Series resistor, fixed (K ohms)                 */
  0x41200000 , /*  29 10.0                11  Yogurt_1: 29 Thermistor4 param: Thermistor room temp resistance (K ohms)        */
  0x43910000 , /*  30 290.0               11  Yogurt_1: 30 Thermistor4 param: Reference temp for thermistor                   */
@@ -483,14 +598,14 @@ const uint32_t paramval14[] = {
  0x00000002 , /*  42 2                    6  Yogurt_1: 42 Thermistor number for center of pot temp (0 - 3)                   */
  0x00000000 , /*  43 0                    6  Yogurt_1: 43 Thermistor number for air inlet to fan temp (0 - 3)                */
  0x00000001 , /*  44 1                    6  Yogurt_1: 44 Thermistor number for air coming out of holes (0 - 3)              */
- 0x463B8000 , /*  45 12000.0             11  Yogurt_1: 45 Control loop: Proportional coefficient                             */
- 0x40C00000 , /*  46 6.0                 11  Yogurt_1: 46 Control loop: Integral coefficient                                 */
- 0x486A6000 , /*  47 240.0E3             11  Yogurt_1: 47 Control loop: Derivative coefficient                               */
+ 0x463B8000 , /*  45 12000.0             11  Yogurt_1: 45 Control loop: Proportional coeff                                   */
+ 0x40C00000 , /*  46 6.0                 11  Yogurt_1: 46 Control loop: Integral coeff                                       */
+ 0x486A6000 , /*  47 240.0E3             11  Yogurt_1: 47 Control loop: Derivative coeff                                     */
  0x## CAN ID NOT FOUND ## , /*  48 CANID_CMD_YOGURT_1  17  Yogurt_1: 48 CANID: cid_yog_cmd: Yogurt maker parameters                        */
  0x29400000 , /*  49 CANID_MSG_YOGURT_1  17  Yogurt_1: 49 CANID: cid_yog_msg: Yogurt maker msgs                              */
  0x29600000 , /*  50 CANID_HB_YOGURT_1   17  Yogurt_1: 50 CANID: cid_yog_hb: Yogurt maker heart-beats                        */
- 0x3C23D70A , /*  51 0.0100              11  Yogurt_1: 51  Control, stored heat constant Pasteur phase                       */
- 0x3CA3D70A , /*  52 0.0200              11  Yogurt_1: 52  Control, stored heat constant Ferment phase                       */
+ 0x3C23D70A , /*  51 0.0100              11  Yogurt_1: 51  Control, stored heat const Pasteur phase                          */
+ 0x3CA3D70A , /*  52 0.0200              11  Yogurt_1: 52  Control, stored heat const Ferment phase                          */
  0xC57A0000 , /*  53 -4000.0             11  Yogurt_1: 53  Control, integrator initialization, a of  a + b*x                 */
  0x43D90000 , /*  54 434.0               11  Yogurt_1: 54  Control, integrator initialization, b of  a + b*x                 */
  0x000000C8 , /*  55 200                  6  Yogurt_1: 55  Control, time delay for temperature stabilization, Pasteur        */
@@ -620,8 +735,8 @@ const struct FUNC_CANID func_canid08[] = {
 #ifdef CAN_UNIT_3	// a #define is used to select the following
 const struct FUNC_CANID func_canid09[] = {
 {   0x03800000, CAN_UNIT_3_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
-{1002,  0x8060000C }, /*   1 CAN_UNIT_3           CANID_CMD_ENGINE_SENSORR	 Sensor, engine: R rpm, manifold pressure, throttle setting, temperature*/
-{   2,  0x80600000 }, /*   2 CAN_UNIT_3           CANID_CMD_ENGINE_SENSORI	 Sensor, engine: I rpm, manifold pressure, throttle setting, temperature*/
+{1002,  0x## CAN ID NOT FOUND ## }, /*   1 CAN_UNIT_3           CANID_CMD_ENGINE_SENSORR	 Sensor, engine: R rpm, manifold pressure, throttle setting, temperature*/
+{   2,  0x## CAN ID NOT FOUND ## }, /*   2 CAN_UNIT_3           CANID_CMD_ENGINE_SENSORI	 Sensor, engine: I rpm, manifold pressure, throttle setting, temperature*/
 };
 #endif
 

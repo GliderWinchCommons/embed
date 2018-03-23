@@ -8,11 +8,11 @@
 #include <stdint.h>
 #include "can_hub.h"
 #include "DTW_counter.h"
-#include "tension_idx_v_struct.h"
+#include "engine_idx_v_struct.h"
 #include "db/gen_db.h"
 #include "tim3_ten2.h"
 #include "../../../../svn_common/trunk/common_highflash.h"
-#include "tension_a_functionS.h"
+#include "engine_function.h"
 #include "adcsensor_tension.h"
 #include "temp_calc_param.h"
 #include "PODpinconfig.h"
@@ -30,9 +30,11 @@ extern struct CAN_CTLBLOCK* pctl1;
 extern void* __paramflash0a;	// High flash address of command CAN id table (.ld defined)
 extern void* __paramflash1;	// High flash address of 1st parameter table (.ld defined)
 extern void* __paramflash2;	// High flash address of 2nd parameter table (.ld defined)
+extern void* __paramflash3;	// High flash address of 2nd parameter table (.ld defined)
+extern void* __paramflash4;	// High flash address of 2nd parameter table (.ld defined)
 
 /* Holds parameters and associated computed values and readings for each instance. */
-struct TENSIONFUNCTION ten_f[NUMTENSIONFUNCTIONS];
+struct TENSIONFUNCTION ten_f;
 
 const uint32_t* pparamflash[NUMTENSIONFUNCTIONS] = { \
  (uint32_t*)&__paramflash1,

@@ -11,6 +11,7 @@
 
 
 # Name of the .c file with 'main' as well as output file name
+#   mm file assigns a name based on processor memory sizes
 NAME		= se1
 
 # Prefix the name for the particular toolchain
@@ -67,11 +68,13 @@ CFLAGS	+= -Iinclude -fno-common -mcpu=cortex-m3 -mthumb -Wstrict-prototypes -fno
 AFLAGS  = -mcpu=cortex-m3 -mthumb
 
 # Linker script which has the definition of memory layout and "sections"
-#LDSCRIPT	= $(NAME).ld
-LDSCRIPT	= $(LIBCOMMONALL)/ldrapp.ld
+#LDSCRIPT	= $(VXNAME).ld
+#LDSCRIPT	= $(LIBCOMMONALL)/ldrapp.ld
+# LDRAPP is defined in the mm file to select for processor memory size
+LDSCRIPT	= $(LIBCOMMONALL)/$(LDRAPPLD)
 
 # Libraries (.a), script (.ld), (.map) for the linker
-LDFLAGS  = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles 
+LDFLAGS  = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(VXNAME).map -T$(LDSCRIPT) -nostartfiles 
 LDFLAGS	+= -L$(LIBDEVICEF103SE) 
 LDFLAGS	+= -L$(LIBPODLIB) 
 LDFLAGS	+= -L$(LIBPODDEV) 
@@ -90,6 +93,11 @@ OBJS	+= rpmsensor.o
 OBJS	+= temp_calc.o
 OBJS  += engine_idx_v_struct.o
 OBJS  += engine_function.o
+OBJS	+= fmtprint.o
+OBJS	+= CAN_poll_loop.o
+OBJS	+= can_filter_print.o
+OBJS	+= tim3_ten2.o
+
 
 
 # Paths for openocd and automatic flashing

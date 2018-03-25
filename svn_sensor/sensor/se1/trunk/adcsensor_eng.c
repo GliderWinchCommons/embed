@@ -469,11 +469,12 @@ unsigned int cicdebug0,cicdebug1;
 static u32 stk_64flgctr_prev;
 u32 cic_sync_err[NUMBERADCCHANNELS_SE];	// CIC sync errors
 
+/* Low priority post SYSTICK interrupt call, 2048 per sec.,
+   executes "rpmsensor_computerpm()", which enters this routine.  */
 static void adc_cic_filtering(void)
 {
 	int i;
 	int flag = 0;
-
 
 	/* Add the latest buffered sequence of readings to the cic filter */
 	for (i = 0; i < NUMBERADCCHANNELS_SE; i++)	
@@ -496,7 +497,6 @@ cicdebug0 += 1;
 			adc_temp_flag = 1;	// Signal main that reading is ready for computation
 		}
 	}
-
 
 	/* Was this one the 1/64th sec demarcation? 'canwinch_pod_common_systick2048.c' increments
            'stk_64flgctr' at the end of each 1/64th sec interval. */
@@ -562,7 +562,7 @@ for (i = 0; i < 5; i++)
 
 		/* Call other routines if an address is set up--64 per sec. */
 		if (systickLOpriority3X_ptr != 0)	// Having no address for the following is bad.
-			(*systickLOpriority3X_ptr)();	// Go do something
+			(*systickLOpriority3X_ptr)();	// Go do something if address was set
 	}
 
 	return;

@@ -26,6 +26,8 @@ Initial = POD6 routine.
 
 Open minicom on the PC with 115200 baud and 8N1.
 
+03/23/2018 Major revision to use database and "functions"
+
 */
 
 /* &&&&&&&&&&&&& Each node on the CAN bus gets a unit number &&&&&&&&&&&&&&&&&&&&&&&&&& */
@@ -90,8 +92,11 @@ const struct FLASHP_SE1* flashp_se1 = (struct FLASHP_SE1*)&__highflashp;
 #include "libopenstm32/usart.h"
 #include "libusartstm32/usartallproto.h"
 //#include "libmiscstm32/systick1.h"
-#include "libmiscstm32/printf.h"
+//#include "libmiscstm32/printf.h"
+
 #include "libmiscstm32/clockspecifysetup.h"
+#include "libmiscstm32/DTW_counter.h"
+#include "libsensormisc/canwinch_setup_F103_pod.h"
 
 #include "adcsensor_eng.h"
 #include "canwinch_pod_common_systick2048.h"
@@ -107,8 +112,27 @@ const struct FLASHP_SE1* flashp_se1 = (struct FLASHP_SE1*)&__highflashp;
 #include "CANascii.h"
 #include "canwinch_pod_common_systick2048_printerr.h"
 
+#include "CAN_poll_loop.h"
+#include "can_nxp_setRS.h"
+#include "can_driver.h"
+#include "can_driver_filter.h"
+#include "can_msg_reset.h"
+#include "can_gps_phasing.h"
+#include "sensor_threshold.h"
+#include "panic_leds_pod.h"
+#include "db/gen_db.h"
+#include "CAN_poll_loop.h"
+#include "../../../../svn_common/trunk/common_highflash.h"
+
+#include "fmtprint.h"
+#include "iir_filter_l.h"
+#include "can_filter_print.h"
+
 /* Error counts for monitoring. */
 extern struct CANWINCHPODCOMMONERRORS can_errors;	// A group of error counts
+
+/* Easy way for other routines to access via 'extern'*/
+struct CAN_CTLBLOCK* pctl0;
 
 /* For test with and without XTAL clocking */
 //#define NOXTAL 
@@ -264,12 +288,12 @@ void prog_checksum_loader(void)
  * ************************************************************************************** */
 // Note: the compiler will give a warning about conflicting types
 // for the built in function 'putc'.  Use ' -fno-builtin-putc' to eliminate compile warning.
-void putc ( void* p, char c)
-	{
-		p=p;	// Get rid of the unused variable compiler warning
-		CANascii_putc(c);
-		USART1_txint_putc(c);
-	}
+//void putc ( void* p, char c)
+//	{
+//		p=p;	// Get rid of the unused variable compiler warning
+//		CANascii_putc(c);
+//		USART1_txint_putc(c);
+//	}
 
 /*#################################################################################################
 And now for the main routine 
@@ -285,7 +309,8 @@ extern void relocate_vector(void);
 
 /* --------------------- Begin setting things up -------------------------------------------------- */ 
 
-	clockspecifysetup((struct CLOCKS*)&clocks);		// Get the system clock and bus clocks running
+//	clockspecifysetup((struct CLOCKS*)&clocks);		// Get the system clock and bus clocks running
+	clockspecifysetup(canwinch_setup_F103_pod_clocks() );
 
 /* ---------------------- Set up pins ------------------------------------------------------------- */
 	SENSORgpiopins_Config();	// Now, configure pins
@@ -298,7 +323,7 @@ http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0337g/BABJFFGJ.ht
 
 //[enable GPS power]
 
-	init_printf(0,putc);	// This one-time initialization is needed by the tiny printf routine
+//	init_printf(0,putc);	// This one-time initialization is needed by the tiny printf routine
 
 /* --------------------- Initialize usart --------------------------------------------------------- */
 /*	USARTx_rxinttxint_init(...,...,...,...);
@@ -317,67 +342,52 @@ http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0337g/BABJFFGJ.ht
 	if (i != 0) panic_leds(7);	// Init failed: Bomb-out flashing LEDs 7 times
 
 	/* Announce who we are */
-	USART1_txint_puts("\n\rSE1: 05-12-2015 v1\n\r");
+	USART1_txint_puts("\n\rSE1: 03-23-2018 v1\n\r");
 	USART1_txint_send();	// Start the line buffer sending
 
 	CANascii_init();	// Setup for sending printf 'putc' as CAN msgs
 
 	/* Display things for to entertain the hapless op */
-#ifdef NOXTAL
- 	printf ("NO  XTAL\n\r");
-#else
- 	printf ("YES XTAL\n\r");
-#endif
-
 	printf ("  hclk_freq (MHz) : %9u\n\r",  hclk_freq/1000000);	
 	printf (" pclk1_freq (MHz) : %9u\n\r", pclk1_freq/1000000);	
 	printf (" pclk2_freq (MHz) : %9u\n\r", pclk2_freq/1000000);	
 	printf ("sysclk_freq (MHz) : %9u\n\r",sysclk_freq/1000000);	USART1_txint_send();
 
-/* --------------------- Get Loader CAN ID ---------------------------------------------------------- */
+/* --------------------- Get Loader CAN ID -------------------------------------------------------------- */
 	/* Pick up the unique CAN ID stored when the loader was flashed. */
-	u32 canid_ldr = *(u32*)((u32)((u8*)*(u32*)0x08000004 + 7 + 0));	// First table entry = can id
-	printf(  "CANID_LDR : %08X\n\r", canid_ldr );	USART1_txint_send();	
+	struct FUNC_CANID* pfunc = (struct FUNC_CANID*)&__paramflash0a;
+//	u32 canid_ldr = *(u32*)((u32)((u8*)*(u32*)0x08000004 + 7 + 0));	// First table entry = can id
+	u32 canid_ldr = pfunc[0].func;
+	printf("CANID_LDR  : 0x%08X\n\r", (unsigned int)canid_ldr );
+	printf("TBL SIZE   : %d\n\r",(unsigned int)pfunc[0].canid);
+	USART1_txint_send();
 
-//$$$$ change
-	can_params.iamunitnumber = 0x0800000;	// Use one "base" CAN ID
+/* --------------------- CAN setup ---------------------------------------------------------------------- */
+	/* Configure and set MCP 2551 driver: RS pin (PD 11) on POD board */
+	can_nxp_setRS_sys(0,0); // (1st arg) 0 = high speed mode; 1 = standby mode (Sets yellow led on)
+	GPIO_BSRR(GPIOE) = (0xf<<LED3);	// Set bits = all four LEDs off
 
-/* --------------------- eeprom --------------------------------------------------------------------- */
-//	if ((j=rw_eeprom_init()) != 0)
-//	{
-//		printf("eeprom init failed: %i\n\r",j); USART1_txint_send();
-//	}
+	/* Initialize CAN for POD board (F103) and get control block */
+	// Set hardware filters for FIFO1 high priority ID & mask, plus FIFO1 ID for this UNIT
+	pctl0 = canwinch_setup_F103_pod(&msginit, canid_ldr); // ('can_ldr' is fifo1 reset CAN ID)
 
-/* --------------------- RPM routines (TIM4_CH4 and others) ------------------------------------------ */
-	rpmsensor_init();
+	/* Check if initialization was successful. */
+	if (pctl0 == NULL)
+	{
+		printf("CAN1 init failed: NULL ptr\n\r");USART1_txint_send(); 
+		while (1==1);
+	}
+	if (pctl0->ret < 0)
+	{ // Here, an error code was returned.
+		printf("CAN init failed: return code = %d\n\r",pctl0->ret);USART1_txint_send(); 
+		while (1==1);
+	}
 
+/* -------------------- Functions init --------------------------------------------------------------- */
+	engine_functions_init_all();
 /* --------------------- ADC setup and initialization ------------------------------------------------ */
 	adc_init_se_eng_sequence(can_params.iamunitnumber);	// Time delay + calibration, then start conversion
-
-/* --------------------- CAN setup ------------------------------------------------------------------- */
-	/* Configure CAN criver RS pin: Sensor RxT6 board = (PB 7) */
-	can_nxp_setRS_sys(0,1); // (1st arg) 0 = high speed mode; not-zero = standby mode
-
-	/* Setup CAN registers and initialize routine */
-	//  Arguments: Pointer to CAN parameter struct,  Number of msgs to buffer
-	init_ret = can_init_pod_varbuf_sys(&can_params, 129);
-
-	/* Check if initialization was successful, or timed out. */
-	if (init_ret <= 0)
-	{
-		panic_leds(6);	while (1==1);	// Six flash panic display with code 6
-	}
-	printf("\n\rcan ret ct: %d\n\r",init_ret);USART1_txint_send(); // Look at how long "exit initialization" took
-
-	/* Set filters to respond "this" unit number and time sync broadcasts */
-	can_filter_unitid_sys(canid_ldr);	// Setup msg filter banks
-
-	printf ("IAMUNITNUMBER %08x %0x\n\r",can_params.iamunitnumber,can_params.iamunitnumber >> CAN_UNITID_SHIFT);USART1_txint_send();
-
-
-
 /* --------------------- Program is ready, so do program-specific startup ---------------------------- */
-
 
 i = 0;
 
@@ -481,7 +491,6 @@ static struct CANRCVBUF *pcan;
 			t_adc += ADCCOUNT; 	// Set next time to display readings
 		}
 
-
 		/* Poll & compute calibrated temperature */
 		temp_calc(); // Floating pt computation done at mainline priority
 
@@ -491,7 +500,6 @@ static struct CANRCVBUF *pcan;
 		{ // Here.  Yes.
 			CANascii_poll(pcan);	// Check for command code from PC to enable/disable CAN ascii
 		}
-
 	}
 
 	return 0;	

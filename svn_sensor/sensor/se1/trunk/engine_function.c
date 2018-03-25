@@ -1,8 +1,8 @@
 /******************************************************************************
-* File Name          : tension_a_functionS.c
-* Date First Issued  : 05/29/2016
+* File Name          : engine_function.c
+* Date First Issued  : 03/23/2018
 * Board              : f103
-* Description        : Tension function_a for both AD7799s  Capital "S" for plural!
+* Description        : Multiple engine functions 
 *******************************************************************************/
 
 #include <stdint.h>
@@ -13,7 +13,8 @@
 #include "tim3_ten2.h"
 #include "../../../../svn_common/trunk/common_highflash.h"
 #include "engine_function.h"
-#include "adcsensor_tension.h"
+#include "rpmsensor.h"
+#include "adcsensor_eng.h"
 #include "temp_calc_param.h"
 #include "PODpinconfig.h"
 #include "poly_compute.h"
@@ -34,20 +35,24 @@ extern void* __paramflash3;	// High flash address of 2nd parameter table (.ld de
 extern void* __paramflash4;	// High flash address of 2nd parameter table (.ld defined)
 
 /* Holds parameters and associated computed values and readings for each instance. */
-struct TENSIONFUNCTION ten_f;
+struct ENG_MAN_FUNCTION eman_f;
+struct ENG_RPM_FUNCTION erpm_f;
+struct ENG_THR_FUNCTION ethr_f;
+struct ENG_T1_FUNCTION et1_f;
 
-const uint32_t* pparamflash[NUMTENSIONFUNCTIONS] = { \
- (uint32_t*)&__paramflash1,
- (uint32_t*)&__paramflash2,
+const uint32_t* pparamflash[NUMENGINEFUNCTIONS] = { \
+ (uint32_t*)&__paramflash1,	/* Manifold pressure */
+ (uint32_t*)&__paramflash2,	/* RPM               */
+ (uint32_t*)&__paramflash3,	/* Throttle          */
+ (uint32_t*)&__paramflash4,	/* Temperature #1    */
 };
 
-/* Base pointer adjustment for idx->struct table. */
-struct TENSIONLC* plc[NUMTENSIONFUNCTIONS];
-
 /* Highflash command CAN id table lookup mapping. */
-const uint32_t myfunctype[NUMTENSIONFUNCTIONS] = { \
- FUNCTION_TYPE_TENSION_a,
- FUNCTION_TYPE_TENSION_a2 ,
+const uint32_t myfunctype[NUMENGINEFUNCTIONS] = { \
+ FUNCTION_TYPE_ENG_MANIFOLD,
+ FUNCTION_TYPE_ENG_RPM,
+ FUNCTION_TYPE_ENG_THROTTLE,
+ FUNCTION_TYPE_ENG_T1,
 };
 /* **************************************************************************************
  * static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct TENSIONFUNCTION* p); 
@@ -73,86 +78,21 @@ static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct TE
 	return;
 }
 
-/* **************************************************************************************
- * int tension_a_functionS_init_all(void);
- * @brief	: Initialize all 'tension_a' functions
- * @return	:  + = table size
- *		:  0 = error
- *		:  - = -(size of struct table count)
- *		: -999 = table size for command CAN IDs unreasonablevoid
- *		: -998 = "r" command can id for this function was not found
- *		: -997 = Add CANHUB failed
- *		: -996 = Adding CAN IDs to hw filter failed
- *		: -995 = "i" command can id not found for this function
- *
- * static int tension_a_functionS_init(int n, struct TENSIONFUNCTION* p );
- * @brief	: Initialize all 'tension_a' functions
- * @param	: n = instance index
- * @param	: p = pointer to things needed for this function
- * @return	: Same as above
- * ************************************************************************************** */
-//  Declaration
-static int tension_a_functionS_init(int n, struct TENSIONFUNCTION* p );
-
-/* *************************************************** */
-/* Init all instances of tension_a_function supported. */
-/* *************************************************** */
-int tension_a_functionS_init_all(void)
-{
-	int i;
-	int ret;
-
-	/* Do the initialization mess for each instance possible with this program/board */
-	for (i = 0; i < NUMTENSIONFUNCTIONS; i++)
-	{
-		ret = tension_a_functionS_init(i, &ten_f[i]);
-		if (ret < 0) return ret;
-	}
-
-	/* Setup incoming CAN msg hardware filters for each function instance */
-	
-
-	return ret;
-}
 /* *********************************************************** */
-/* Do the initialization mess for a single tension_a function. */
+/* Initialization: generic function                            */
 /* *********************************************************** */
-static int tension_a_functionS_init(int n, struct TENSIONFUNCTION* p )
+static int function_init(uint32_t n, struct COMMONFUNCTION* p )
 {
-	int ret;
-	int ret2;
 	u32 i;
-
-	/* Set pointer to table in highflash.  Base address provided by .ld file */
-// TODO routine to find latest updated table in this flash section
-	p->pparamflash = (uint32_t*)pparamflash[n];
-
-	/* Copy table entries to struct in sram from high flash. */
-	ret = tension_idx_v_struct_copy(&p->ten_a, p->pparamflash);
-
-	/* Set pointers to struct holding the constants for iir filters. */
-	for (i = 0; i < NIIR; i++)
-	{
-		p->iir_filtered[i].pprm = &p->ten_a.iir[i]; // iir filter pointer to filter constants
-		p->iir_filtered[i].sw = 0; // Init switch causes iir routine to init upon first call
-	}
-
-	/* Setup mask for checking if this function responds to a poll msg. */
-	// Combine so the polling doesn't have to do two tests
-	p->poll_mask = (p->ten_a.p_pollbit << 8) || (p->ten_a.f_pollbit & 0xff);
 
 	/* First heartbeat time */
 	// Convert heartbeat time (ms) to timer ticks (recompute for online update)
-	p->hbct_ticks = (p->ten_a.hbct * tim3_ten2_rate) / 1000;
+	p->hbct_ticks = (p->man.hbct * tim3_ten2_rate) / 1000;
 	p->hb_t = tim3_ten2_ticks + p->hbct_ticks;	
 
-	/* Add this function (tension_a) to the "hub-server" msg distribution. */
-	p->phub_tension = can_hub_add_func();	// Set up port/connection to can_hub
-	if (p->phub_tension == NULL) return -997;	// Failed
-
-	/* Add CAN IDs to incoming msgs passed by the CAN hardware filter. */ 
-	ret2 = can_driver_filter_add_param_tbl(&p->ten_a.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);
-	if (ret2 != 0) return -996;	// Failed
+	/* Add this function to the "hub-server" msg distribution. */
+	p->phub = can_hub_add_func();	// Set up port/connection to can_hub
+	if (p->phub == NULL) return -997;	// Failed
 	
 	/* Find command CAN id for this function in table. (__paramflash0a supplied by .ld file) */
 	struct FLASHH2* p0a = (struct FLASHH2*)&__paramflash0a;
@@ -181,32 +121,88 @@ static int tension_a_functionS_init(int n, struct TENSIONFUNCTION* p )
 		if (p0a->slot[i].func == (myfunctype[n] + CMD_IR_OFFSET))
 		{
 			p->pcanid_cmd_func_r = &p0a->slot[i].canid; // Save pointer
-			return ret;
+			return 0;
 		}
 	}
 
 	return -998;	// Argh! Table size reasonable, but didn't find it.
 }
 /* **************************************************************************************
- * static float tension_a_scalereading(void);
- * @brief	: Apply offset, scale and corrections to tension_a, last reading
- * return	: float with value
+ * int engine_functions_init_all(void);
+ * @brief	: Initialize all 'engine' functions
+ * @return	:  + = table size
+ *		:  0 = error
+ *		:  - = -(size of struct table count)
+ *		: -999 = table size for command CAN IDs unreasonablevoid
+ *		: -998 = "r" command can id for this function was not found
+ *		: -997 = Add CANHUB failed
+ *		: -996 = Adding CAN IDs to hw filter failed
+ *		: -995 = "i" command can id not found for this function
+ *
+ * static int tension_a_functionS_init(int n, struct TENSIONFUNCTION* p );
+ * @brief	: Initialize all 'tension_a' functions
+ * @param	: n = instance index
+ * @param	: p = pointer to things needed for this function
+ * @return	: Same as above
  * ************************************************************************************** */
-#ifdef USECICCALIBRATIONSEQUENCE
-static float tension_a_scalereading(struct TENSIONFUNCTION* p)
+int engine_functions_init_all(void)
 {
-	int ntmp1;
-	long long lltmp;
-	float scaled1;
+	int i;
+	int ret;
 
-	lltmp = cic[0][0].llout_save;
-	ntmp1 = lltmp/(1<<22);
-	ntmp1 += p->ten_a.ad.offset * 4;
-	scaled1 = ntmp1;
-	scaled1 *= p->ten_a.ad.scale;
-	return scaled1;
+	/* Manifold function */
+	// Set pointer to table in highflash.  Base address provided by .ld file 
+	eman_f.pparamflash = (uint32_t*)&__paramflash1;	/* Manifold pressure */
+	// Copy table entries to struct in sram from high flash.
+	  ret  = engine_idx_v_struct_copy_eng_man(&eman_f.lc, eman_f.pparamflash);
+	// Add CAN IDs to incoming msgs passed by the CAN hardware filter. 
+	  ret2 = can_driver_filter_add_param_tbl(&eman_f.lc.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);
+	if (ret2 != 0) return -996;	// Failed
+	// Remainder is common to all functions
+	 ret |= function_init(&eman_f.cf);
+	if (ret < 0) return ret;
+	
+	/* RPM function */
+	// Set pointer to table in highflash.  Base address provided by .ld file 
+     erpm_f.pparamflash = (uint32_t*)&__paramflash2;	/* Manifold pressure */
+	// Copy table entries to struct in sram from high flash.
+	  ret  = engine_idx_v_struct_copy_eng_rpm(&erpm_f.lc, erpm_f.pparamflash);
+	// Add CAN IDs to incoming msgs passed by the CAN hardware filter. 
+	  ret2 = can_driver_filter_add_param_tbl(&erpm_f.lc.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);
+	if (ret2 != 0) return -996;	// Failed
+	// Remainder is common to all functions
+	  ret = function_init(&erpm_f.cf);
+	if (ret < 0) return ret;
+	// Additional rpm specific sensing initialization
+  	  rpmsensor_init();
+
+	/* Throttle function */
+	// Set pointer to table in highflash.  Base address provided by .ld file 
+	  ethr_f.pparamflash = (uint32_t*)&__paramflash3;	/* Manifold pressure */
+	// Copy table entries to struct in sram from high flash.
+	  ret  = engine_idx_v_struct_copy_eng_throttle(&ethr_f.lc, ethr_f.pparamflash);
+	// Add CAN IDs to incoming msgs passed by the CAN hardware filter. 
+	  ret2 = can_driver_filter_add_param_tbl(&ethr_f.lc.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);
+	if (ret2 != 0) return -996;	// Failed
+	// Remainder is common to all functions
+	  ret = function_init(&ethr_f.cf);
+	if (ret < 0) return ret;
+
+	/* Temperature #1 function */
+	// Set pointer to table in highflash.  Base address provided by .ld file 
+	  et1_f.pparamflash = (uint32_t*)&__paramflash4;	/* Manifold pressure */
+	// Copy table entries to struct in sram from high flash.
+	  ret  = engine_idx_v_struct_copy_eng_t1(&et1_f.lc, et1_f.pparamflash);
+	// Add CAN IDs to incoming msgs passed by the CAN hardware filter. 
+	  ret2 = can_driver_filter_add_param_tbl(&et1_f.lc.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);
+	if (ret2 != 0) return -996;	// Failed
+	// Remainder is common to all functions
+	  ret = function_init(&et1_f.cf);
+
+	return ret;
 }
-#endif
+
+
 /* **************************************************************************************
  * double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n); 
  * @brief	: Convert integer IIR filtered value to offset & scaled double

@@ -240,7 +240,6 @@ void TIM4_IRQHandler(void)
 				strTim4.ll	+= 0x10000;	// Increment the high order 48 bits
 			}
 
-
 			usTim4ch4_Flag += 1;			// Advance the flag counter to signal mailine IC occurred		
 			strTim4m = strTim4;			// Update buffered value		
 
@@ -249,7 +248,6 @@ void TIM4_IRQHandler(void)
 			temp = TIM4_SR;				// Readback register bit to be sure is cleared
 
 			break;
-	
 	}
 	return;
 }
@@ -315,6 +313,7 @@ return irpm;
 static u32 stk_64flgctr_prev;
 u32 rpm;
 
+/* Enter this is from low priority post SYSTICK interrupt call, 2048 per sec. */
 static void rpmsensor_computerpm(void)
 {
 	unsigned int ctrdiff;

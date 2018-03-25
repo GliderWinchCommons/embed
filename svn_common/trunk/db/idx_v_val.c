@@ -1,4 +1,4 @@
-// 2018-03-22 23:10:42.15
+// 2018-03-24 21:31:38.284
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -106,7 +106,7 @@ const uint32_t paramval04[] = {
  0x00000000 , /*   1 0                    6  Eng1_rpm: CRC                                                                   */
  0x00000001 , /*   2 1                    5  Eng1_rpm: Version number                                                        */
  0x000003E8 , /*   3 1000                 5  Eng1_rpm: Time (ms) between HB msg                                              */
- 0x00000008 , /*   4 8                    6  Eng1_rpm: Number of counts per revolution                                       */
+ 0x00000008 , /*   4 8                    6  Eng1_rpm: Number of counts per two revolutions                                  */
  0x40A00000 , /*   5 CANID_MSG_ENG1_RPM  17  Eng1_rpm: CANID: rpm, calibrated                                                */
  0x82600000 , /*   6 CANID_HB_ENG1_RPM   17  Eng1_rpm: CANID: Heartbeat: rpm, calibrated                                     */
  0x00400000 , /*   7 CANID_HB_TIMESYNC   17  EPS_1: CANID: GPS time sync distribution msg                                    */
@@ -601,7 +601,7 @@ const uint32_t paramval19[] = {
  0x463B8000 , /*  45 12000.0             11  Yogurt_1: 45 Control loop: Proportional coeff                                   */
  0x40C00000 , /*  46 6.0                 11  Yogurt_1: 46 Control loop: Integral coeff                                       */
  0x486A6000 , /*  47 240.0E3             11  Yogurt_1: 47 Control loop: Derivative coeff                                     */
- 0x## CAN ID NOT FOUND ## , /*  48 CANID_CMD_YOGURT_1  17  Yogurt_1: 48 CANID: cid_yog_cmd: Yogurt maker parameters                        */
+ 0x29800004 , /*  48 CANID_CMD_YOGURT_1R  17  Yogurt_1: 48 CANID: cid_yog_cmd: Yogurt maker parameters                        */
  0x29400000 , /*  49 CANID_MSG_YOGURT_1  17  Yogurt_1: 49 CANID: cid_yog_msg: Yogurt maker msgs                              */
  0x29600000 , /*  50 CANID_HB_YOGURT_1   17  Yogurt_1: 50 CANID: cid_yog_hb: Yogurt maker heart-beats                        */
  0x3C23D70A , /*  51 0.0100              11  Yogurt_1: 51  Control, stored heat const Pasteur phase                          */
@@ -631,9 +631,9 @@ const uint32_t paramval19[] = {
 
 #define CAN_UNIT_1B_CMDID_TABLE_SIZE 2	// Shaft encoder_a1: R lower
 
-#define CAN_UNIT_1E_CMDID_TABLE_SIZE 4	// Sensor, engine: R rpm, manifold pressure, throttle setting, temperature
+#define CAN_UNIT_1E_CMDID_TABLE_SIZE 4	//  Sensor, engine: R temperature #1
 
-#define CAN_UNIT_3_CMDID_TABLE_SIZE 2	// Logger_1: R 
+#define CAN_UNIT_3_CMDID_TABLE_SIZE 8	// Logger_1: R 
 
 #define CAN_UNIT_E_CMDID_TABLE_SIZE 4	// Cable angle: R AD7799 #2 drum #1
 
@@ -735,8 +735,14 @@ const struct FUNC_CANID func_canid08[] = {
 #ifdef CAN_UNIT_3	// a #define is used to select the following
 const struct FUNC_CANID func_canid09[] = {
 {   0x03800000, CAN_UNIT_3_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
-{1002,  0x## CAN ID NOT FOUND ## }, /*   1 CAN_UNIT_3           CANID_CMD_ENGINE_SENSORR	 Sensor, engine: R rpm, manifold pressure, throttle setting, temperature*/
-{   2,  0x## CAN ID NOT FOUND ## }, /*   2 CAN_UNIT_3           CANID_CMD_ENGINE_SENSORI	 Sensor, engine: I rpm, manifold pressure, throttle setting, temperature*/
+{1020,  0x81E00000 }, /*   1 CAN_UNIT_3           CANID_CMD_ENG1_T1R	  Sensor, engine: R temperature #1*/
+{  20,  0x81A00000 }, /*   2 CAN_UNIT_3           CANID_CMD_ENG1_T1I	  Sensor, engine: I temperature #1*/
+{1019,  0x81800000 }, /*   3 CAN_UNIT_3           CANID_CMD_ENG1_THROTTLER	  Sensor, engine: R throttle position*/
+{  19,  0x81600000 }, /*   4 CAN_UNIT_3           CANID_CMD_ENG1_THROTTLEI	  Sensor, engine: I throttle position*/
+{1018,  0x81400000 }, /*   5 CAN_UNIT_3           CANID_CMD_ENG1_RPMR	  Sensor, engine: R rpm        */
+{  18,  0x81200000 }, /*   6 CAN_UNIT_3           CANID_CMD_ENG1_RPMI	  Sensor, engine: I rpm        */
+{1017,  0x80E00000 }, /*   7 CAN_UNIT_3           CANID_CMD_ENG1_MANFLDR	  Sensor, engine: R manifold pressure*/
+{  17,  0x80A00000 }, /*   8 CAN_UNIT_3           CANID_CMD_ENG1_MANFLDI	  Sensor, engine: I manifold pressure*/
 };
 #endif
 

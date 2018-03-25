@@ -69,7 +69,7 @@ INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_CANID_HW_FILT8','CANID_DU
 INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_CRC'              ,'0',     'ENG_RPM','Eng1_rpm: CRC');
 INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_VERSION'          ,'1',     'ENG_RPM','Eng1_rpm: Version number');
 INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_HEARTBEAT_TIME_CT','1000',   'ENG_RPM','Eng1_rpm: Time (ms) between HB msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_SEG_CT'           ,'8',      'ENG_RPM','Eng1_rpm: Number of counts per revolution');
+INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_SEG_CT'           ,'8',      'ENG_RPM','Eng1_rpm: Number of counts per two revolutions');
 INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_POLL_RPM_R','CANID_MSG_ENG1_RPM','ENG_RPM','Eng1_rpm: CANID: rpm, calibrated');
 INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_HB_RPM_R'  ,'CANID_HB_ENG1_RPM' ,'ENG_RPM','Eng1_rpm: CANID: Heartbeat: rpm, calibrated');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
@@ -545,65 +545,65 @@ INSERT INTO PARAM_VAL VALUES ('CABLE_ANGLE_1','CABLE_ANGLE_USEME'    	         ,
 --===========================================================================================================================================================================================
 -- Yogurt maker 
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL  FUNCTION_TYPE         DESCRIPTION11
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_LIST_CRC',   	'0',	'YOGURT_1',  'Yogurt_1:  1 CRC for this list');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_LIST_VERSION',   	'1',	'YOGURT_1',  'Yogurt_1:  2 Version number for Tension List');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_LIST_CRC',              '0', 'YOGURT_1',  'Yogurt_1:  1 CRC for this list');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_LIST_VERSION',          '1', 'YOGURT_1',  'Yogurt_1:  2 Version number for Tension List');
+-- Thermistor #1
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_CONST_B',   '3360.0', 'YOGURT_1',  'Yogurt_1:  3 Thermistor1 param: const B');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_R_SERIES' ,   '10.0', 'YOGURT_1',  'Yogurt_1:  4 Thermistor1 param: Series resistor, fixed (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_R_ROOMTMP',   '10.0', 'YOGURT_1',  'Yogurt_1:  5 Thermistor1 param: Thermistor room temp resistance (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_REF_TEMP',   '290.0', 'YOGURT_1',  'Yogurt_1:  6 Thermistor1 param: Reference temp for thermistor');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_COEF_0',       '6.0', 'YOGURT_1',  'Yogurt_1:  7 Thermistor1 param: polynomial coeff 0 (offset)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_COEF_1',      '1.00', 'YOGURT_1',  'Yogurt_1:  8z Thermistor1 param: polynomial coeff 1 (scale)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_COEF_2',       '0.0', 'YOGURT_1',  'Yogurt_1:  9 Thermistor1 param: polynomial coeff 2 (x^2)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_COEF_3',       '0.0', 'YOGURT_1',  'Yogurt_1: 10 Thermistor1 param: polynomial coeff 3 (x^3)');
+-- Thermistor #2
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_CONST_B',   '3390.0', 'YOGURT_1',  'Yogurt_1: 11 Thermistor2 param: const B');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_R_SERIES',    '10.0', 'YOGURT_1',  'Yogurt_1: 12 Thermistor2 param: Series resistor, fixed (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_R_ROOMTMP',   '10.0', 'YOGURT_1',  'Yogurt_1: 13 Thermistor2 param: Thermistor room temp resistance (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_REF_TEMP',   '290.0', 'YOGURT_1',  'Yogurt_1: 14 Thermistor2 param: Reference temp for thermistor');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_COEF_0',       '5.3', 'YOGURT_1',  'Yogurt_1: 15 Thermistor2 param: polynomial coeff 0 (offset)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_COEF_1',      '1.03', 'YOGURT_1',  'Yogurt_1: 16 Thermistor2 param: polynomial coeff 1 (scale)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_COEF_2',       '0.0', 'YOGURT_1',  'Yogurt_1: 17 Thermistor2 param: polynomial coeff 2 (x^2)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_COEF_3',       '0.0', 'YOGURT_1',  'Yogurt_1: 18 Thermistor2 param: polynomial coeff 3 (x^3)');
+-- Thermistor #3
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_CONST_B',   '3340.0', 'YOGURT_1',  'Yogurt_1: 19 Thermistor3 param: const B');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_R_SERIES',    '10.0', 'YOGURT_1',  'Yogurt_1: 20 Thermistor3 param: Series resistor, fixed (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_R_ROOMTMP',   '10.0', 'YOGURT_1',  'Yogurt_1: 21 Thermistor3 param: Thermistor room temp resistance (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_REF_TEMP',   '290.0', 'YOGURT_1',  'Yogurt_1: 22 Thermistor3 param: Reference temp for thermistor');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_COEF_0',       '5.8', 'YOGURT_1',  'Yogurt_1: 23 Thermistor3 param: polynomial coeff 0 (offset)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_COEF_1',     '1.007', 'YOGURT_1',  'Yogurt_1: 24 Thermistor3 param: polynomial coeff 1 (scale)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_COEF_2',       '0.0', 'YOGURT_1',  'Yogurt_1: 25 Thermistor3 param: polynomial coeff 2 (x^2)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_COEF_3',       '0.0', 'YOGURT_1',  'Yogurt_1: 26 Thermistor3 param: polynomial coeff 3 (x^3)');
+-- Thermistor #4
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_CONST_B',   '3340.0', 'YOGURT_1',  'Yogurt_1: 27 Thermistor4 param: const B');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_R_SERIES',    '10.0', 'YOGURT_1',  'Yogurt_1: 28 Thermistor4 param: Series resistor, fixed (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_R_ROOMTMP',   '10.0', 'YOGURT_1',  'Yogurt_1: 29 Thermistor4 param: Thermistor room temp resistance (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_REF_TEMP',   '290.0', 'YOGURT_1',  'Yogurt_1: 30 Thermistor4 param: Reference temp for thermistor');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_COEF_0',       '5.2', 'YOGURT_1',  'Yogurt_1: 31 Thermistor4 param: polynomial coeff 0 (offset)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_COEF_1',      '1.04', 'YOGURT_1',  'Yogurt_1: 32 Thermistor4 param: polynomial coeff 1 (scale)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_COEF_2',       '0.0', 'YOGURT_1',  'Yogurt_1: 33 Thermistor4 param: polynomial coeff 2 (x^2)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_COEF_3',       '0.0', 'YOGURT_1',  'Yogurt_1: 34 Thermistor4 param: polynomial coeff 3 (x^3)');
 
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_CONST_B',   '3360.0',	'YOGURT_1',  'Yogurt_1:  3 Thermistor1 param: const B');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_R_SERIES' ,   '10.0',	'YOGURT_1',  'Yogurt_1:  4 Thermistor1 param: Series resistor, fixed (K ohms)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_R_ROOMTMP',   '10.0',	'YOGURT_1',  'Yogurt_1:  5 Thermistor1 param: Thermistor room temp resistance (K ohms)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_REF_TEMP',   '290.0',	'YOGURT_1',  'Yogurt_1:  6 Thermistor1 param: Reference temp for thermistor');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_COEF_0',	 '6.0', 'YOGURT_1',  'Yogurt_1:  7 Thermistor1 param: polynomial coeff 0 (offset)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_COEF_1',	'1.00', 'YOGURT_1',  'Yogurt_1:  8z Thermistor1 param: polynomial coeff 1 (scale)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_COEF_2',	 '0.0', 'YOGURT_1',  'Yogurt_1:  9 Thermistor1 param: polynomial coeff 2 (x^2)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM1_COEF_3',	 '0.0', 'YOGURT_1',  'Yogurt_1: 10 Thermistor1 param: polynomial coeff 3 (x^3)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTLTEMP_HEAT_PAST', '160.0', 'YOGURT_1',	'Yogurt_1: 35 Pasteur: Control set-point temperature (deg F) heat to this temp');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTLTEMP_DUR_PAST',    '0.5', 'YOGURT_1',	'Yogurt_1: 36 Pasteur: Time duration at temp (hours.frac_hours)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTLTEMP_COOL_PAST', '110.0', 'YOGURT_1',	'Yogurt_1: 37 Pasteur: Control end-point temperature (deg F) cool to this temp');
 
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_CONST_B',   '3390.0',	'YOGURT_1',  'Yogurt_1: 11 Thermistor2 param: const B');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_R_SERIES',    '10.0',	'YOGURT_1',  'Yogurt_1: 12 Thermistor2 param: Series resistor, fixed (K ohms)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_R_ROOMTMP',   '10.0',	'YOGURT_1',  'Yogurt_1: 13 Thermistor2 param: Thermistor room temp resistance (K ohms)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_REF_TEMP',   '290.0',	'YOGURT_1',  'Yogurt_1: 14 Thermistor2 param: Reference temp for thermistor');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_COEF_0',	 '5.3', 'YOGURT_1',  'Yogurt_1: 15 Thermistor2 param: polynomial coeff 0 (offset)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_COEF_1',	'1.03', 'YOGURT_1',  'Yogurt_1: 16 Thermistor2 param: polynomial coeff 1 (scale)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_COEF_2',	 '0.0', 'YOGURT_1',  'Yogurt_1: 17 Thermistor2 param: polynomial coeff 2 (x^2)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM2_COEF_3',	 '0.0', 'YOGURT_1',  'Yogurt_1: 18 Thermistor2 param: polynomial coeff 3 (x^3)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTLTEMP_HEAT_FERM', '110.0', 'YOGURT_1',	'Yogurt_1: 38 Ferment: Control set-point temperature (deg F) heat to this temp');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTLTEMP_DUR_FERM',   '13.0', 'YOGURT_1',	'Yogurt_1: 39 Ferment: Time duration at temp (hours.frac_hours)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTLTEMP_COOL_FERM',  '45.0', 'YOGURT_1',	'Yogurt_1: 40 Ferment: Control end-point temperature (deg F) cool to this temp');
 
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_CONST_B',   '3340.0',	'YOGURT_1',  'Yogurt_1: 19 Thermistor3 param: const B');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_R_SERIES',    '10.0',	'YOGURT_1',  'Yogurt_1: 20 Thermistor3 param: Series resistor, fixed (K ohms)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_R_ROOMTMP',   '10.0',	'YOGURT_1',  'Yogurt_1: 21 Thermistor3 param: Thermistor room temp resistance (K ohms)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_REF_TEMP',   '290.0',	'YOGURT_1',  'Yogurt_1: 22 Thermistor3 param: Reference temp for thermistor');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_COEF_0',	 '5.8', 'YOGURT_1',  'Yogurt_1: 23 Thermistor3 param: polynomial coeff 0 (offset)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_COEF_1',	'1.007', 'YOGURT_1',  'Yogurt_1: 24 Thermistor3 param: polynomial coeff 1 (scale)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_COEF_2',	 '0.0', 'YOGURT_1',  'Yogurt_1: 25 Thermistor3 param: polynomial coeff 2 (x^2)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM3_COEF_3',	 '0.0', 'YOGURT_1',  'Yogurt_1: 26 Thermistor3 param: polynomial coeff 3 (x^3)');
-
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_CONST_B',   '3340.0',	'YOGURT_1',  'Yogurt_1: 27 Thermistor4 param: const B');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_R_SERIES',    '10.0',	'YOGURT_1',  'Yogurt_1: 28 Thermistor4 param: Series resistor, fixed (K ohms)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_R_ROOMTMP',   '10.0',	'YOGURT_1',  'Yogurt_1: 29 Thermistor4 param: Thermistor room temp resistance (K ohms)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_REF_TEMP',   '290.0',	'YOGURT_1',  'Yogurt_1: 30 Thermistor4 param: Reference temp for thermistor');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_COEF_0',	 '5.2', 'YOGURT_1',  'Yogurt_1: 31 Thermistor4 param: polynomial coeff 0 (offset)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_COEF_1',	'1.04', 'YOGURT_1',  'Yogurt_1: 32 Thermistor4 param: polynomial coeff 1 (scale)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_COEF_2',	 '0.0', 'YOGURT_1',  'Yogurt_1: 33 Thermistor4 param: polynomial coeff 2 (x^2)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_THERM4_COEF_3',	 '0.0', 'YOGURT_1',  'Yogurt_1: 34 Thermistor4 param: polynomial coeff 3 (x^3)');
-
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTLTEMP_HEAT_PAST',   '160.0','YOGURT_1',	'Yogurt_1: 35 Pasteur: Control set-point temperature (deg F) heat to this temp');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTLTEMP_DUR_PAST',    '0.5','YOGURT_1',	'Yogurt_1: 36 Pasteur: Time duration at temp (hours.frac_hours)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTLTEMP_COOL_PAST',   '110.0','YOGURT_1',	'Yogurt_1: 37 Pasteur: Control end-point temperature (deg F) cool to this temp');
-
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTLTEMP_HEAT_FERM',   '110.0','YOGURT_1',	'Yogurt_1: 38 Ferment: Control set-point temperature (deg F) heat to this temp');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTLTEMP_DUR_FERM',    '13.0','YOGURT_1',	'Yogurt_1: 39 Ferment: Time duration at temp (hours.frac_hours)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTLTEMP_COOL_FERM',   '45.0','YOGURT_1',	'Yogurt_1: 40 Ferment: Control end-point temperature (deg F) cool to this temp');
-
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTL_THERM_SHELL',	'3',	'YOGURT_1',	'Yogurt_1: 41 Thermistor number for shell temp (0 - 3)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTL_THERM_POT',	'2',	'YOGURT_1',	'Yogurt_1: 42 Thermistor number for center of pot temp (0 - 3)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTL_THERM_AIRIN',	'0',	'YOGURT_1',	'Yogurt_1: 43 Thermistor number for air inlet to fan temp (0 - 3)');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTL_THERM_AIROUT',	'1',	'YOGURT_1',	'Yogurt_1: 44 Thermistor number for air coming out of holes (0 - 3)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTL_THERM_SHELL',	'3',  'YOGURT_1',	'Yogurt_1: 41 Thermistor number for shell temp (0 - 3)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTL_THERM_POT',	'2',  'YOGURT_1',	'Yogurt_1: 42 Thermistor number for center of pot temp (0 - 3)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTL_THERM_AIRIN',	'0',  'YOGURT_1',	'Yogurt_1: 43 Thermistor number for air inlet to fan temp (0 - 3)');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTL_THERM_AIROUT','1',  'YOGURT_1',	'Yogurt_1: 44 Thermistor number for air coming out of holes (0 - 3)');
 
 INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTL_THERM_LOOP_P',	'12000.0',	'YOGURT_1',	'Yogurt_1: 45 Control loop: Proportional coeff');
 INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTL_THERM_LOOP_I',	'6.0',		'YOGURT_1',	'Yogurt_1: 46 Control loop: Integral coeff');
 INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CTL_THERM_LOOP_D',	'240.0E3', 	'YOGURT_1',	'Yogurt_1: 47 Control loop: Derivative coeff');
 
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CMD','CANID_CMD_YOGURT_1',	'YOGURT_1',  'Yogurt_1: 48 CANID: cid_yog_cmd: Yogurt maker parameters');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_MSG','CANID_MSG_YOGURT_1',	'YOGURT_1',  'Yogurt_1: 49 CANID: cid_yog_msg: Yogurt maker msgs');
-INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_HB',	'CANID_HB_YOGURT_1', 	'YOGURT_1',  'Yogurt_1: 50 CANID: cid_yog_hb: Yogurt maker heart-beats');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_CMD','CANID_CMD_YOGURT_1R','YOGURT_1',  'Yogurt_1: 48 CANID: cid_yog_cmd: Yogurt maker parameters');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_MSG','CANID_MSG_YOGURT_1', 'YOGURT_1',  'Yogurt_1: 49 CANID: cid_yog_msg: Yogurt maker msgs');
+INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_HB',	'CANID_HB_YOGURT_1', 'YOGURT_1',  'Yogurt_1: 50 CANID: cid_yog_hb: Yogurt maker heart-beats');
 
 INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_HEATCONSTANT_KM_P',    '0.0100',	'YOGURT_1',	'Yogurt_1: 51  Control, stored heat const Pasteur phase');
 INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_HEATCONSTANT_KM_M',    '0.0200',	'YOGURT_1',	'Yogurt_1: 52  Control, stored heat const Ferment phase');

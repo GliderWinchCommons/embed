@@ -1,41 +1,75 @@
 /******************************************************************************
 * File Name          : engine_function.h
-* Date First Issued  : 03/16/2018
+* Date First Issued  : 03/24/2018
 * Board              : f103
-* Description        : engine manifold + rpm
+* Description        : engine manifold + rpm + throttle + temperature #1
 *******************************************************************************/
 
-#ifndef __TENSION_A_FUNCTIONS
-#define __TENSION_A_FUNCTIONS
+#ifndef __ENGINE_FUNCTIONS
+#define __ENGINE_FUNCTIONS
 
 #include <stdint.h>
 #include "common_misc.h"
 #include "../../../../svn_common/trunk/common_can.h"
-#include "tension_idx_v_struct.h"
+#include "engine_idx_v_struct.h"
 #include "ad7799_filter_ten2.h"
 #include "iir_filter_l.h"
 #include "queue_dbl.h"
 
+#define NUMENGFUNCTIONS 4	// Manifold pressure; RPM; Throttle; Temperature #1
+
 #define CMD_IR_OFFSET 1000	// Command CAN function ID table offset for "R" CAN ID
 
-/* Accumulating average (useful for determining offset). */
-struct ACCUMAVE
+/* Common to all functions */
+struct COMMONFUNCTION
 {
-	int64_t sum;		// Sum readings
-	int32_t n;		// Keep track of number of readings
-	int32_t a;		// Computed average
-	uint8_t run;		// Switch: 0 = skip; not zero = build average
-	uint8_t run_prev;	// Previous state of run
+	void* p_idx_struct;	// Pointer to table of pointers for idx->struct 
+	void* pparamflash;		// Pointer to flash area with flat array of parameters
+	uint32_t* pcanid_cmd_func_i;	// Pointer into high flash for command can id (incoming)
+	uint32_t* pcanid_cmd_func_r;	// Pointer into high flash for command can id (response)
+	uint32_t hb_t;			// tim3 tick counter for next heart-beat CAN msg
+	uint32_t hbct_ticks;		// ten_a.hbct (ms) converted to timer ticks
+	struct CANHUB* phub;	// Pointer: CAN hub buffer
 };
 
 
-/* This is the working struct for *each* ADD7799. */
-struct TENSIONFUNCTION
+/* These are the working structs for the functions */
+//
+struct ENG_MAN_FUNCTION
+{
+	struct COMMONFUNCTION cf; // Common to all functions
+	struct ENGMANLC lc;	// Flash table copied to sram struct
+	double manval;			// Filtered reading converted to double
+};
+
+struct ENG_RPM_FUNCTION
+{
+	struct COMMONFUNCTION cf; // Common to all functions
+   struct ENGRPMLC lc;
+	double rpmval;			// Filtered reading converted to double
+};
+struct ENG_THR_FUNCTION
+{
+	struct COMMONFUNCTION cf; // Common to all functions
+   struct ENGTHROTTLELC lc;
+	double manthr;			// Filtered reading converted to double
+};
+
+struct ENG_T1_FUNCTION
+{
+	struct COMMONFUNCTION cf; // Common to all functions
+   struct ENGT1LC t1;
+	double thrm;			// Filtered reading converted to double
+	double degX;			// Uncalibrated temperature for each thermistor
+};
+
+
+#ifdef ENGINEFUNCTIONISUSEDNOW
+struct ENGINEFUNCTION
 {
 	/* The following is the sram copy of the fixed (upper flash) parameters */
-	struct TENSIONLC ten_a;		// Flash table copied to sram struct
+	struct ENGINELC engine;		// Flash table copied to sram struct
 	/* The following are working/computed values */
-	struct IIRFILTERL iir_filtered[NIIR]; // IIR filters for one AD7799
 	struct CANHUB* phub_tension;	// Pointer: CAN hub buffer
 	struct ACCUMAVE ave;		// Accumulating average
 	double thrm[2];			// Filtered reading converted to double
@@ -68,15 +102,25 @@ struct TENSIONFUNCTION
 	double	dcalib_lgr;		// (double) Calibrated, last good reading
 	float	fcalib_lgr;		// (float) calibrated last good reading
 };
+#endif
 
 /* **************************************************************************************/
-int tension_a_functionS_init_all(void);
-/* @brief	: Initialize all 'tension_a' functions
+int engine_functions_init_all(void);
+/* @brief	: Initialize all 'engine' functions
  * @return	:  + = table size
  *		:  0 = error
  *		:  - = -(size of struct table count)
  *		: -999 = table size for command CAN IDs unreasonablevoid
- *		: -998 = command can id for this function was not found
+ *		: -998 = "r" command can id for this function was not found
+ *		: -997 = Add CANHUB failed
+ *		: -996 = Adding CAN IDs to hw filter failed
+ *		: -995 = "i" command can id not found for this function
+ *
+ * static int tension_a_functionS_init(int n, struct TENSIONFUNCTION* p );
+ * @brief	: Initialize all 'tension_a' functions
+ * @param	: n = instance index
+ * @param	: p = pointer to things needed for this function
+ * @return	: Same as above
  * ************************************************************************************** */
 int tension_a_functionS_poll(struct CANRCVBUF* pcan, struct TENSIONFUNCTION* p);
 /* @brief	: Handle incoming CAN msgs ### under interrupt ###

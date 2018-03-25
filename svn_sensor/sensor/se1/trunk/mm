@@ -1,4 +1,7 @@
 #!/bin/bash
+# mm - script for compile and flashing
+# 03/23/2018
+#
 echo ==================================================================================================================================================================
 cd ../../../../svn_pod/sw_stm32/trunk/devices
 make clean
@@ -20,11 +23,57 @@ make clean
 make
 cd ../../../../sensor/se1/trunk
 make clean
-make
-XA=`echo $?`
-if [ $XA -ne 0 ] ; then
-	echo "If this is because of: tmpstruct.h: No such file or directory, try ./m"
+
+
+# ### Select LD file ### for processor memory sizes
+PROCTYPE="VG"
+#PROCTYPE="VE"
+#PROCTYPE="VC"
+
+# The high flash table is defined in the .ld file.  We have three
+# types of processors: 
+#   VG -   1M|96K 
+#   VE - 512K|64K
+#   VC - 128K|20K
+#
+#   The following compiles both versions from the same .c source code,
+#     but with different high flash defines in the .ld files.
+# LDRAPP selects .ld file for processor size in svn_common/trunk/
+# VXNAME sets the name of the compiled files for that processor size
+#
+echo "select processor type:$PROCTYPE"
+if [ $PROCTYPE = "VG" ]; then
+	# VG version--
+	echo "VG version"
+	export LDRAPPLD=ldrapp_VG.ld
+	export VXNAME=engine_VG
+	make
+	make flash
 	exit
 fi
+echo "not VG"
 
+if [ $PROCTYPE = "VE" ]; then
+	# VC version--
+	echo "VE version"
+	export LDRAPPLD=ldrapp_VE.ld
+	export VXNAME=engine_VE
+	make
+	make flash
+	exit
+fi
+echo "not VE"
+
+if [ $PROCTYPE = "VC" ]; then
+	# VC version--
+	echo "VC version"
+	export LDRAPPLD=ldrapp_VC.ld
+	export VXNAME=engine_VC
+	make
+	make flash
+	exit
+fi
+echo
+echo "#### ERROR: no processor type selelcted #####"
+echo
 

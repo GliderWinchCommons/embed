@@ -1,4 +1,4 @@
-// 2018-03-24 21:31:38.284
+// 2018-03-25 20:58:42.042
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -10,7 +10,7 @@
 #define ENG1_MANIFOLD_PARAM_SIZE 15
 #define ENG1_RPM_PARAM_SIZE 14
 #define ENG1_T1_PARAM_SIZE 17
-#define ENG1_THR_PARAM_SIZE 15
+#define ENG1_THROTTLE_PARAM_SIZE 15
 #define ENGINE_SENSOR1_PARAM_SIZE 14
 #define GPS_1_PARAM_SIZE 9
 #define GPS_2_PARAM_SIZE 9
@@ -145,9 +145,9 @@ const uint32_t paramval05[] = {
 #endif
 
 // =====================================================================
-#ifdef ENG1_THR	// Include following parameters?
+#ifdef ENG1_THROTTLE	// Include following parameters?
 const uint32_t paramval06[] = {
- ENG1_THR_PARAM_SIZE,	/* Number of param entries that follow */
+ ENG1_THROTTLE_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Eng1_throttle:: CRC                                                             */
  0x00000001 , /*   2 1                    5  Eng1_throttle:: Version number                                                  */
  0x000003E8 , /*   3 1000                 5  Eng1_throttle:: Time (ms) between HB msg                                        */

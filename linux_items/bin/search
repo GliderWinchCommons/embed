@@ -1,0 +1,13 @@
+#!/bin/bash
+# 10/20/2012 CAW's search script
+# Search for string in argument $1 in files in current directory
+# '- type f' ignores directories
+# '*.c' files to search
+# '-exec fgrep -niH' search text within file (n- print line number; i-ignore case; H-print file name)
+# '$1' string argument passed in
+# ' {}'
+# '\;' escape goes into 'find' rather than 'bash'
+#
+find . -type f -name '*.c' -exec fgrep -niH $1 {} \;
+
+

@@ -1,34 +1,42 @@
 #!/bin/bash
 # 03/25/2018
-# Compile and load database parameter tables for fourth functions 
-# ./mm <table selection name first function> <...second function>,...
-# ./mm ENG1_MANIFOLD ENG1_RPM ENG_THROTTLE ENG_T1 CAN_UNIT_3
+# Compile and load database parameter tables
+# ./mm <table selection name> <compiled file name>
+# ./mm ENG1_MANIFOLD eng1_manifold
 # 
 # Specify which flash size
-export LDRAPPLD=ldrapp_VC.ld
 
 echo
-echo "########## First table ("__paramflash1") $1"
+export LDRAPPLD=ldrapp_VG.ld
+echo "LDRAPPLD is "$LDRAPPLD
+export NAME=$2
+echo "NAME is "$NAME
+echo
 make -f Makefile clean
 make -f Makefile TSELECT=-D$1 && make -f Makefile TSELECT=-D$1 flash
+exit
 
 echo
 echo "########## Second table ("__paramflash2") $2"
 make -f Makefile_b clean
+export NAME=$6
 make -f Makefile_b TSELECT=-D$2 && make -f Makefile_b TSELECT=-D$2 flash
 
 echo
 echo "########## Third table ("__paramflash3") $2"
 make -f Makefile_b clean
+export NAME=$6
 make -f Makefile_b TSELECT=-D$2 && make -f Makefile_b TSELECT=-D$3 flash
 
 echo
 echo "########## Fourth table ("__paramflash4") $2"
 make -f Makefile_b clean
+export NAME=$6
 make -f Makefile_b TSELECT=-D$2 && make -f Makefile_b TSELECT=-D$4 flash
 
 echo
 echo "########## Table with function command CAN ids $3"
 make -f Makefile_unit clean
+export NAME=$6
 make -f Makefile_unit TSELECT=-D$3 && make -f Makefile_unit TSELECT=-D$5 flash
 

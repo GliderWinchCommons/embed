@@ -1,0 +1,18 @@
+#!/bin/bash
+ARM_PREFIX="${HOME}/launchpad/gcc-arm-none-eabi-5_4-2016q3"
+export ARM_PREFIX
+PATH="$ARM_PREFIX/bin:${PATH}"
+export PATH
+#For "LGCC" in many 'Makefile's
+ARM_PREFIX_GCCLIB="${HOME}/launchpad/gcc-arm-none-eabi-5_4-2016q3/lib/gcc/arm-none-eabi/5.4.1/armv7-m"
+export ARM_PREFIX_GCCLIB
+#For "LOTHER" in many 'Makefile's
+ARM_PREFIX_OTHER="${HOME}/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m"
+export ARM_PREFIX_OTHER
+
+OPENOCD_BASE="/usr/share"
+OPENOCD="/usr/bin/openocd"
+export OPENOCD_BASE
+export OPENOCD
+
+

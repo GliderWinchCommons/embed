@@ -1,0 +1,48 @@
+README.linux_items
+03/25/2018
+
+This directory and subdirectories have items useful for
+setting up Linux.
+
+.arm_tools
+
+This exports names used in (later version) 'Makefile' for
+the paths to the launchpad (gcc) compiler and libraries.
+
+It also has the paths for 'openocd' used for flashing.
+
+.profile
+
+This routine does exports when a terminal window is opened and
+executes .arm_tools.  The routine in the original install needs
+to have changes made to add the .arm_tools.  Use this copy to
+locate the code.
+
+/bin
+
+Handy scripts:
+
+1) search -- searchs .c files for instances, e.g.
+  search canid 
+would list all instances of "canid"
+
+2) search_h -- same as above for .h files
+
+3) openocdstart
+
+open terminal window, and
+ openocdstart
+which starts the Raisonce jtag
+
+Open another window, and
+ telnet localhost 4444
+starts the debugger
+
+
+4) openocdstartf4discovery
+
+Same as above except the ST-LINK SWD is setup
+for the Discovery F4 board.
+
+
+

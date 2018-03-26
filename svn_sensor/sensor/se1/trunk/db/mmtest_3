@@ -1,6 +1,11 @@
 #!/bin/bash
 # Supply function instance name for selection of database parameters
 #  for compiling and flashing in high address flash
-./mm ENG1_MANIFOLD ENG1_RPM ENG_THROTTLE ENG_T1 CAN_UNIT_3
-cd ..
-make flash
+# ./mm <function instance name> <.c file for parameter compiling>
+./mm ENG1_MANIFOLD eng_param_man
+./mm ENG1_RPM eng_param_rpm
+./mm ENG1_THROTTLE eng_param_throttle
+./mm ENG1_T1 eng_param_t1
+./mm CAN_UNIT_3 unit_cmd_canid
+exit
+

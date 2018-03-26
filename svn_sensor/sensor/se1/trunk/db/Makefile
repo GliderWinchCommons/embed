@@ -1,18 +1,7 @@
 # Makefile - Cortex-M3, STM32F103
-# 06/06/2013
-
-
-#
-# Note: This version descends into 'libusartstm32' and executes 'make' if
-# started by the command 'make', but not when started with the command
-# 'make flash'.  
-#
-# 'make clean' descends into 'libusartstm32'
-
 
 # Name of the .c file with 'main' as well as output file name
-#   mm file assigns a name based on processor memory sizes
-NAME		= se1
+# NAME is supplied from calling script, e.g. 'eng_param_man'
 
 # Prefix the name for the particular toolchain
 PREFIX		= arm-none-eabi-
@@ -23,29 +12,52 @@ OBJCOPY	=$(PREFIX)objcopy
 SIZE	=$(PREFIX)size
 OBJDUMP	=$(PREFIX)objdump
 
+# The path for the commands to find the compiler, linker, et al.
+#TOOLDIR 	= $(HOME)/CodeSourcery/Sourcery_G++_Lite/bin
+#CC		= $(TOOLDIR)/$(PREFIX)-gcc
+#LD		= $(TOOLDIR)/$(PREFIX)-ld
+#OBJCOPY		= $(TOOLDIR)/$(PREFIX)-objcopy
+#OBJDUMP		= $(TOOLDIR)/$(PREFIX)-objdump
+
 # Current directory
 SRCDIR=.
 
+CFLAGS	 = -std=gnu99 -g -Os -Wall -Wextra
+CFLAGS	+= -mlittle-endian -mthumb -mthumb-interwork -nostartfiles
+//CFLAGS	+= -mfp16-format=alternative
+CFLAGS	+= -fno-common -mcpu=cortex-m3 -Wstrict-prototypes 
+
+override FLOAT_TYPE = soft
+
+CFLAGS += -msoft-float
+
+##CFLAGS += -DTENSION_1a
+
 # Library directory path prefix--svn_pod library
-LIBPODLIB	= $(SRCDIR)/../../../../svn_pod/sw_stm32/trunk/lib
-LIBPODDEV	= $(SRCDIR)/../../../../svn_pod/sw_stm32/trunk/devices
+LIBPODLIB	= $(SRCDIR)/../../../../../svn_pod/sw_stm32/trunk/lib
+LIBPODDEV	= $(SRCDIR)/../../../../../svn_pod/sw_stm32/trunk/devices
+
 # Library directory path--svn_pod library 
-LIBMISCSTM32	= $(LIBPODLIB)/libmiscstm32
+#LIBMISCSTM32	= $(LIBPODLIB)/libmiscstm32
 LIBOPENSTM32	= $(LIBPODLIB)/libopenstm32
 LIBUSARTSTM32	= $(LIBPODLIB)/libusartstm32
 LIBSUPPORTSTM32 = $(LIBPODLIB)/libsupportstm32
 
 # Library directory path prefix--svn_sensor, f103 library
-LIBSENSORF103	= $(SRCDIR)/../../../sw_f103/trunk/lib
+LIBSENSORF103	= $(SRCDIR)/../../../../sw_f103/trunk/lib
+
 # Library directory path--svn_sensor, f103 library
 LIBDEVICEF103SE	= $(LIBSENSORF103)/libdevicestm32
 LIBSENSORMISC	= $(LIBSENSORF103)/libsensormisc
 
 # Library directory path--local common includes
-LIBCOMMONALL    = $(SRCDIR)/../../../common_all/trunk
+LIBCOMMONALL    = $(SRCDIR)/../../../../common_all/trunk
+
 
 # Library of common to all processors
-LIBSVNCOMMON	= $(SRCDIR)/../../../../svn_common/trunk
+LIBSVNCOMMON	= $(SRCDIR)/../../../../../svn_common/trunk
+
+LIBF4D	  = $(CURDIR)/../../../../../sw_discoveryf4/trunk
 
 # Library directory path--compile and stuff
 #LGCC =     $(HOME)/launchpad/gcc-arm-none-eabi-5_4-2016q3/lib/gcc/arm-none-eabi/5.4.1/armv7-m
@@ -56,59 +68,51 @@ LGCC = $(ARM_PREFIX_GCCLIB)
 LOTHER = $(ARM_PREFIX_OTHER)
 
 
-# Compiler flags -Os = no optimization, -Os = minimum space, -O3 = fastest
-CFLAGS   = -Os -g -Wall -Wextra
-CFLAGS	+= -I$(LIBDEVICEF103SE) 
-CFLAGS	+= -I$(LIBPODLIB) 
-CFLAGS	+= -I$(LIBPODDEV) 
+# Compiler directories for .h files
+#CFLAGS	+= -I$(LIBDEVICEF103SE) 
+#CFLAGS	+= -I$(LIBPODLIB) 
+#CFLAGS	+= -I$(LIBPODDEV) 
 CFLAGS	+= -I$(LIBOPENSTM32) 
-CFLAGS	+= -I$(LIBMISCSTM32) 
-CFLAGS	+= -I$(LIBUSARTSTM32) 
+#CFLAGS	+= -I$(LIBMISCSTM32) 
+#CFLAGS	+= -I$(LIBUSARTSTM32) 
 CFLAGS	+= -I$(LIBSUPPORTSTM32) 
 CFLAGS	+= -I$(LIBSENSORMISC) 
 CFLAGS	+= -I$(LIBCOMMONALL) 
 CFLAGS	+= -I$(LIBSVNCOMMON)
-CFLAGS	+= -Iinclude -fno-common -mcpu=cortex-m3 -mthumb -Wstrict-prototypes -fno-builtin-putc
+#CFLAGS	+= -I$(LIBSVNCOMMON)/f103
+#CFLAGS	+= -I$(LIBF4D)/lib
+#CFLAGS	+= -I$(LIBSENSORF103)
 
+# Assembler 
 AFLAGS  = -mcpu=cortex-m3 -mthumb
 
 # Linker script which has the definition of memory layout and "sections"
-#LDSCRIPT	= $(VXNAME).ld
-#LDSCRIPT	= $(LIBCOMMONALL)/ldrapp.ld
-# LDRAPP is defined in the mm file to select for processor memory size
+#LDSCRIPT	= tension_a.ld
+#LDSCRIPT	= ../tension.ld
 LDSCRIPT	= $(LIBCOMMONALL)/$(LDRAPPLD)
 
+
 # Libraries (.a), script (.ld), (.map) for the linker
-LDFLAGS  = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(VXNAME).map -T$(LDSCRIPT) -nostartfiles 
-LDFLAGS	+= -L$(LIBDEVICEF103SE) 
-LDFLAGS	+= -L$(LIBPODLIB) 
-LDFLAGS	+= -L$(LIBPODDEV) 
-LDFLAGS	+= -L$(LIBMISCSTM32) 
-LDFLAGS	+= -L$(LIBUSARTSTM32) 
-LDFLAGS	+= -L$(LIBSUPPORTSTM32) 
-LDFLAGS	+= -L$(LIBSENSORMISC) 
-#LDFLAGS	+= -L$(LIBCOMMONALL)
+LDFLAGS  = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles -lc
+#LDFLAGS	+= -L$(LIBDEVICEF103SE) 
+#LDFLAGS	+= -L$(LIBPODLIB) 
+#LDFLAGS	+= -L$(LIBPODDEV) 
+#LDFLAGS	+= -L$(LIBMISCSTM32) 
+#LDFLAGS	+= -L$(LIBUSARTSTM32) 
+#LDFLAGS	+= -L$(LIBSUPPORTSTM32) 
+#LDFLAGS	+= -L$(LIBSENSORMISC) 
+#LDFLAGS	+= -L$(LIBCOMMONALL) 
 LDFLAGS	+= -L$(LIBSVNCOMMON)/f103
+LDFLAGS += -L$(LGCC)
+#LDFLAGS += -L$(LOTHER)
 
 # List of files to be compiled
-OBJS	 =  vector.o $(NAME).o 
-OBJS	+= newlib_support.o 
-OBJS	+= adcsensor_eng.o 
-OBJS	+= rpmsensor.o
-OBJS	+= temp_calc.o
-OBJS  += engine_idx_v_struct.o
-OBJS  += engine_function.o
-OBJS	+= fmtprint.o
-OBJS	+= CAN_poll_loop.o
-OBJS	+= can_filter_print.o
-OBJS	+= tim3_ten2.o
+OBJS    = $(NAME).o
+
 
 
 
 # Paths for openocd and automatic flashing
-#OPENOCD_BASE	= /usr/share
-#OPENOCD		   = /usr/bin/openocd
-#OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
 
 # The following two are 'export'ed in .arm_tools via .profile
 #OPENOCD_BASE	= /usr/share
@@ -118,9 +122,6 @@ OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
 OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
 OPENOCD_BOARD	   = $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
 
-
-OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
-OPENOCD_BOARD	   = $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
 
 # Be silent per default, but 'make V=1' will show all compiler calls.
 ifneq ($(V),1)
@@ -144,23 +145,24 @@ images: $(NAME)
 
 .c.o:
 #	$(CC)	$(CFLAGS) -S -o $@ $<
-	$(CC)	$(CFLAGS) -c -o $@ $<
+	$(CC)	$(CFLAGS) $(TSELECT)  -c -o $@ $<
 .s.o:
 	$(AS)	$(AFLAGS) -a=$*.lst	-o $@ $<
 
 
 $(NAME): $(OBJS) $(LDSCRIPT)
 	@printf "  LD      $(subst $(shell pwd)/,,$(@)) $(LFLAGS)\n"
-	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)  -lgcc  -lc -lgcc -lmiscstm32  -lcommon_all -lusartstm32 -lsensormisc -ldevicestm32 -lsensormisc -lsupportstm32 -ldevicesstm32  -lm -lc -lgcc -lcommon_all -lgcc
+	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)   -lc -lm -lgcc 
+
 clean:
 	@printf "  CLEAN   $(subst $(shell pwd)/,,$(OBJS))\n"
 	$(Q)rm -f *.o $(LIBOPENSTM32)/*.o
 	@printf "  CLEAN   $(NAME):"
 	$(Q)rm -f $(NAME)
 	@printf " .bin"
-#	$(Q)rm -f $(NAME).bin
+	$(Q)rm -f $(NAME).bin
 #	@printf " .hex"
-	$(Q)rm -f $(NAME).hex
+#	$(Q)rm -f $(NAME).hex
 	@printf " .srec"
 	$(Q)rm -f $(NAME).srec
 	@printf " .list"
@@ -172,7 +174,7 @@ clean:
 flash: images
 	@printf "  FLASH   $(NAME).srec\n"
 	@# IMPORTANT: Don't use "resume", only "reset" will work correctly!
-	$(Q)$(OPENOCD) -s $(OPENOCD_SCRIPTS) \
+	$(OPENOCD) -s $(OPENOCD_SCRIPTS) \
 		       -f $(OPENOCD_FLASHER) \
 		       -f $(OPENOCD_BOARD) \
 		       -c "init" -c "reset halt" \

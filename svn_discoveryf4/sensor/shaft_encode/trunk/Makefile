@@ -118,8 +118,10 @@ LDFLAGS	 = -T$(LDFILE)
 OBJS = $(SRCS:.c=.o)
 
 # Paths for openocd and automatic flashing
-OPENOCD_BASE	= /usr/share
-OPENOCD		= /usr/bin/openocd
+# The following two are 'export'ed in .arm_tools via .profile
+#OPENOCD_BASE	= /usr/share
+#OPENOCD		   = /usr/bin/openocd
+
 OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
 OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/stlink-v2.cfg
 OPENOCD_BOARD	= $(OPENOCD_SCRIPTS)/board/stm32f4discovery.cfg

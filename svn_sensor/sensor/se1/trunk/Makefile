@@ -37,9 +37,10 @@ LIBSUPPORTSTM32 = $(LIBPODLIB)/libsupportstm32
 
 # Library directory path prefix--svn_sensor, f103 library
 LIBSENSORF103	= $(SRCDIR)/../../../sw_f103/trunk/lib
+
 # Library directory path--svn_sensor, f103 library
 LIBDEVICEF103SE	= $(LIBSENSORF103)/libdevicestm32
-LIBSENSORMISC	= $(LIBSENSORF103)/libsensormisc
+LIBSENSORMISC	   = $(LIBSENSORF103)/libsensormisc
 
 # Library directory path--local common includes
 LIBCOMMONALL    = $(SRCDIR)/../../../common_all/trunk
@@ -55,9 +56,9 @@ LIBSVNCOMMON	= $(SRCDIR)/../../../../svn_common/trunk
 LGCC = $(ARM_PREFIX_GCCLIB)
 LOTHER = $(ARM_PREFIX_OTHER)
 
-
 # Compiler flags -Os = no optimization, -Os = minimum space, -O3 = fastest
 CFLAGS   = -Os -g -Wall -Wextra
+CFLAGS	+= -Iinclude -fno-common -mcpu=cortex-m3 -mthumb -Wstrict-prototypes -fno-builtin-putc
 CFLAGS	+= -I$(LIBDEVICEF103SE) 
 CFLAGS	+= -I$(LIBPODLIB) 
 CFLAGS	+= -I$(LIBPODDEV) 
@@ -68,7 +69,7 @@ CFLAGS	+= -I$(LIBSUPPORTSTM32)
 CFLAGS	+= -I$(LIBSENSORMISC) 
 CFLAGS	+= -I$(LIBCOMMONALL) 
 CFLAGS	+= -I$(LIBSVNCOMMON)
-CFLAGS	+= -Iinclude -fno-common -mcpu=cortex-m3 -mthumb -Wstrict-prototypes -fno-builtin-putc
+CFLAGS	+= -I$(LIBSENSORF103)
 
 AFLAGS  = -mcpu=cortex-m3 -mthumb
 
@@ -102,13 +103,11 @@ OBJS	+= fmtprint.o
 OBJS	+= CAN_poll_loop.o
 OBJS	+= can_filter_print.o
 OBJS	+= tim3_ten2.o
+OBJS	+= eng_man_printf.o
+OBJS	+= eng_rpm_printf.o
+OBJS	+= eng_thr_printf.o
+OBJS	+= eng_t1_printf.o
 
-
-
-# Paths for openocd and automatic flashing
-#OPENOCD_BASE	= /usr/share
-#OPENOCD		   = /usr/bin/openocd
-#OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
 
 # The following two are 'export'ed in .arm_tools via .profile
 #OPENOCD_BASE	= /usr/share
@@ -118,9 +117,6 @@ OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
 OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
 OPENOCD_BOARD	   = $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
 
-
-OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
-OPENOCD_BOARD	   = $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
 
 # Be silent per default, but 'make V=1' will show all compiler calls.
 ifneq ($(V),1)

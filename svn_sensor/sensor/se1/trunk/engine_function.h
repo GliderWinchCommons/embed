@@ -12,11 +12,10 @@
 #include "common_misc.h"
 #include "../../../../svn_common/trunk/common_can.h"
 #include "engine_idx_v_struct.h"
-#include "ad7799_filter_ten2.h"
 #include "iir_filter_l.h"
 #include "queue_dbl.h"
 
-#define NUMENGFUNCTIONS 4	// Manifold pressure; RPM; Throttle; Temperature #1
+#define NUMENGINEFUNCTIONS 4	// Manifold pressure; RPM; Throttle; Temperature #1
 
 #define CMD_IR_OFFSET 1000	// Command CAN function ID table offset for "R" CAN ID
 
@@ -58,7 +57,7 @@ struct ENG_THR_FUNCTION
 struct ENG_T1_FUNCTION
 {
 	struct COMMONFUNCTION cf; // Common to all functions
-   struct ENGT1LC t1;
+   struct ENGT1LC lc;
 	double thrm;			// Filtered reading converted to double
 	double degX;			// Uncalibrated temperature for each thermistor
 };
@@ -122,20 +121,22 @@ int engine_functions_init_all(void);
  * @param	: p = pointer to things needed for this function
  * @return	: Same as above
  * ************************************************************************************** */
-int tension_a_functionS_poll(struct CANRCVBUF* pcan, struct TENSIONFUNCTION* p);
+ int eng_man_poll(struct CANRCVBUF* pcan, struct ENG_MAN_FUNCTION* p);
 /* @brief	: Handle incoming CAN msgs ### under interrupt ###
  * @param	; pcan = pointer to CAN msg buffer
- * @param	: p = pointer to struct with "everything" for this instance of tension_a function
+ * @param	: p = pointer to struct with "everything" for this instance of engine manifold
  * @return	: 0 = No msgs sent; 1 = msgs were sent and loaded into can_hub buffer
  * ************************************************************************************** */
-int tension_a_functionS_temperature_poll(void);
-/* @brief	: Handler for thermistor-to-temperature conversion, and AD7799 temperature correction.
+ int eng_t1_temperature_poll(void);
+/* @brief	: Function: eng_t1, temperature #1, w  thermistor-to-temperature conversion
  * @return	: 0 = no update; 1 = temperature readings updated
  * ************************************************************************************** */
 
-
 /* Holds parameters and associated computed values and readings for each instance. */
-extern struct TENSIONFUNCTION ten_f[NUMTENSIONFUNCTIONS];
+extern struct ENG_MAN_FUNCTION eman_f;
+extern struct ENG_RPM_FUNCTION erpm_f;
+extern struct ENG_THR_FUNCTION ethr_f;
+extern struct ENG_T1_FUNCTION et1_f;
 
 #endif 
 

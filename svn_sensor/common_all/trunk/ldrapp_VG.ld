@@ -2,6 +2,7 @@ OUTPUT_FORMAT("elf32-littlearm", "elf32-bigarm",
 	      "elf32-littlearm")
 OUTPUT_ARCH(arm)
 /* Linker script for STM32F103VGT6, 1024K flash, 96K RAM */
+/* ### HOWEVER ### openocd script doesn't handle over 512K for F103 */
 
 ENTRY (Reset_Handler);
 
@@ -12,20 +13,20 @@ MEMORY
 	RAM      (RWX) : ORIGIN = 0x20000000, LENGTH = 96K
 
 	/* Flash for program (.text) */
-	FLASH    (RX)  : ORIGIN = 0x08005000, LENGTH = 1024K - 0x5000 - 0x0800 - 0x0800 - 0x0800 - 0x0800 - 0x0800 - 0x0800
+	FLASH    (RX)  : ORIGIN = 0x08005000, LENGTH = 512K - 0x5000 - 0x0800 - 0x0800 - 0x0800 - 0x0800 - 0x0800 - 0x0800
 
         /* Short tables, e.g. command CAN ids for functions, app program crc check */
-	FLASHP0a  (RX)  : ORIGIN = 0x08000000 + 1024K - 0x0200, LENGTH = 0x0200 /* Command CAN ID table */
-	FLASHP0b  (RX)  : ORIGIN = 0x08000000 + 1024K - 0x0400, LENGTH = 0x0200 /* App crc table */
-	FLASHP0c  (RX)  : ORIGIN = 0x08000000 + 1024K - 0x0600, LENGTH = 0x0200 /* Reserved */
-	FLASHP0d  (RX)  : ORIGIN = 0x08000000 + 1024K - 0x0800, LENGTH = 0x0200 /* Reserved */
+	FLASHP0a  (RX)  : ORIGIN = 0x08000000 + 512K - 0x0200, LENGTH = 0x0200 /* Command CAN ID table */
+	FLASHP0b  (RX)  : ORIGIN = 0x08000000 + 512K - 0x0400, LENGTH = 0x0200 /* App crc table */
+	FLASHP0c  (RX)  : ORIGIN = 0x08000000 + 512K - 0x0600, LENGTH = 0x0200 /* Reserved */
+	FLASHP0d  (RX)  : ORIGIN = 0x08000000 + 512K - 0x0800, LENGTH = 0x0200 /* Reserved */
 
 	/* Areas for parameters associated with functions implemented by the app. */
-	FLASHP1  (RX)  : ORIGIN = 0x08000000 + 1024K - 0x0800 - 0x0800, LENGTH = 0x0800
-	FLASHP2  (RX)  : ORIGIN = 0x08000000 + 1024K - 0x0800 - 0x0800 - 0x0800, LENGTH = 0x0800
-	FLASHP3  (RX)  : ORIGIN = 0x08000000 + 1024K - 0x0800 - 0x0800 - 0x0800 - 0x0800, LENGTH = 0x0800
-	FLASHP4  (RX)  : ORIGIN = 0x08000000 + 1024K - 0x0800 - 0x0800 - 0x0800 - 0x0800 - 0x0800, LENGTH = 0x0800
-	FLASHP5  (RX)  : ORIGIN = 0x08000000 + 1024K - 0x0800 - 0x0800 - 0x0800 - 0x0800 - 0x0800 - 0x800, LENGTH = 0x0800
+	FLASHP1  (RX)  : ORIGIN = 0x08000000 + 512K - 0x0800 - 0x0800, LENGTH = 0x0800
+	FLASHP2  (RX)  : ORIGIN = 0x08000000 + 512K - 0x0800 - 0x0800 - 0x0800, LENGTH = 0x0800
+	FLASHP3  (RX)  : ORIGIN = 0x08000000 + 512K - 0x0800 - 0x0800 - 0x0800 - 0x0800, LENGTH = 0x0800
+	FLASHP4  (RX)  : ORIGIN = 0x08000000 + 512K - 0x0800 - 0x0800 - 0x0800 - 0x0800 - 0x0800, LENGTH = 0x0800
+	FLASHP5  (RX)  : ORIGIN = 0x08000000 + 512K - 0x0800 - 0x0800 - 0x0800 - 0x0800 - 0x0800 - 0x800, LENGTH = 0x0800
 }
 
 /* Let programs know what they have to work with. */

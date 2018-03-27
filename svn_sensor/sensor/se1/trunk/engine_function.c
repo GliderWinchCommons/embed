@@ -18,7 +18,7 @@
 #include "temp_calc_param.h"
 #include "PODpinconfig.h"
 #include "poly_compute.h"
-#include "p1_initialization.h"
+//#include "p1_initialization.h"
 #include "can_driver_filter.h"
 #include "cmd_code_dispatch.h"
 
@@ -47,6 +47,7 @@ const uint32_t* pparamflash[NUMENGINEFUNCTIONS] = { \
  (uint32_t*)&__paramflash4,	/* Temperature #1    */
 };
 
+
 /* Highflash command CAN id table lookup mapping. */
 const uint32_t myfunctype[NUMENGINEFUNCTIONS] = { \
  FUNCTION_TYPE_ENG_MANIFOLD,
@@ -55,39 +56,41 @@ const uint32_t myfunctype[NUMENGINEFUNCTIONS] = { \
  FUNCTION_TYPE_ENG_T1,
 };
 /* **************************************************************************************
- * static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct TENSIONFUNCTION* p); 
- * @brief	: Setup CAN msg with reading
- * @param	: canid = CAN ID
+ * static void send_can_msg(struct CANRCVBUF* pcan, uint32_t canid, uint8_t status, uint32_t* pv); 
+ * @brief	: Setup CAN msg 
+ * @param	: pcan = pointer to CAN msg
  * @param	: status = status of reading
- * @param	: pv = pointer to a 4 byte value (little Endian) to be sent
- * @param	: p = pointer to a bunch of things for this function instance
+ * @param	: pv = pointer to a 4 byte value (little Endian) to be sent (int32_t, uint32_t, or float)
+ * @return	: *pcan is setup.
  * ************************************************************************************** */
-static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct TENSIONFUNCTION* p)
+static void send_can_msg(struct CANRCVBUF* pcan, uint32_t canid, uint8_t status, uint32_t* pv)
 {
-	struct CANRCVBUF can;
-	can.id = canid;
-	can.dlc = 5;			// Set return msg payload count
-	can.cd.uc[0] = status;
-	can.cd.uc[1] = (*pv >>  0);	// Add 4 byte value to payload
-	can.cd.uc[2] = (*pv >>  8);
-	can.cd.uc[3] = (*pv >> 16);
-	can.cd.uc[4] = (*pv >> 24);
-	can_hub_send(&can, p->phub_tension);// Send CAN msg to 'can_hub'
-	p->hbct_ticks = (p->ten_a.hbct * tim3_ten2_rate) / 1000; // Convert ms to timer ticks
-	p->hb_t = tim3_ten2_ticks + p->hbct_ticks;	 // Reset heart-beat time duration each time msg sent
+	pcan->id = canid;
+	pcan->dlc = 5;			// Set return msg payload count
+	pcan->cd.uc[0] = status;
+	pcan->cd.uc[1] = (*pv >>  0);	// Add 4 byte value to payload
+	pcan->cd.uc[2] = (*pv >>  8);
+	pcan->cd.uc[3] = (*pv >> 16);
+	pcan->cd.uc[4] = (*pv >> 24);
 	return;
 }
+/*
+	// Send CAN msg and reset heartbeat timeout 
+	can_hub_send(&can, p->cf.phub);// Send CAN msg to 'can_hub'
+	p->cf.hbct_ticks = (p->lc.hbct * tim3_ten2_rate) / 1000; // Convert ms to timer ticks
+	p->cf.hb_t = tim3_ten2_ticks + p->cf.hbct_ticks;	 // Reset heart-beat time duration each time msg sent
+*/
 
 /* *********************************************************** */
 /* Initialization: generic function                            */
 /* *********************************************************** */
-static int function_init(uint32_t n, struct COMMONFUNCTION* p )
+static int function_init(uint32_t n, struct COMMONFUNCTION* p, uint32_t hbct )
 {
 	u32 i;
 
 	/* First heartbeat time */
 	// Convert heartbeat time (ms) to timer ticks (recompute for online update)
-	p->hbct_ticks = (p->man.hbct * tim3_ten2_rate) / 1000;
+	p->hbct_ticks = (hbct * tim3_ten2_rate) / 1000;
 	p->hb_t = tim3_ten2_ticks + p->hbct_ticks;	
 
 	/* Add this function to the "hub-server" msg distribution. */
@@ -149,55 +152,61 @@ int engine_functions_init_all(void)
 {
 	int i;
 	int ret;
+	int ret2;
+
+	extern void* __paramflash1;
+	extern void* __paramflash2;
+	extern void* __paramflash3;
+	extern void* __paramflash4;
 
 	/* Manifold function */
 	// Set pointer to table in highflash.  Base address provided by .ld file 
-	eman_f.pparamflash = (uint32_t*)&__paramflash1;	/* Manifold pressure */
+	eman_f.cf.pparamflash = (uint32_t*)&__paramflash1;	/* Manifold pressure */
 	// Copy table entries to struct in sram from high flash.
-	  ret  = engine_idx_v_struct_copy_eng_man(&eman_f.lc, eman_f.pparamflash);
+	  ret  = engine_idx_v_struct_copy_eng_man(&eman_f.lc, eman_f.cf.pparamflash);
 	// Add CAN IDs to incoming msgs passed by the CAN hardware filter. 
 	  ret2 = can_driver_filter_add_param_tbl(&eman_f.lc.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);
 	if (ret2 != 0) return -996;	// Failed
 	// Remainder is common to all functions
-	 ret |= function_init(&eman_f.cf);
+	 ret |= function_init(0,&eman_f.cf, eman_f.lc.hbct);
 	if (ret < 0) return ret;
 	
 	/* RPM function */
 	// Set pointer to table in highflash.  Base address provided by .ld file 
-     erpm_f.pparamflash = (uint32_t*)&__paramflash2;	/* Manifold pressure */
+     erpm_f.cf.pparamflash = (uint32_t*)&__paramflash2;	/* Manifold pressure */
 	// Copy table entries to struct in sram from high flash.
-	  ret  = engine_idx_v_struct_copy_eng_rpm(&erpm_f.lc, erpm_f.pparamflash);
+	  ret  = engine_idx_v_struct_copy_eng_rpm(&erpm_f.lc, erpm_f.cf.pparamflash);
 	// Add CAN IDs to incoming msgs passed by the CAN hardware filter. 
 	  ret2 = can_driver_filter_add_param_tbl(&erpm_f.lc.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);
 	if (ret2 != 0) return -996;	// Failed
 	// Remainder is common to all functions
-	  ret = function_init(&erpm_f.cf);
+	  ret = function_init(1,&erpm_f.cf,erpm_f.lc.hbct);
 	if (ret < 0) return ret;
 	// Additional rpm specific sensing initialization
   	  rpmsensor_init();
 
 	/* Throttle function */
 	// Set pointer to table in highflash.  Base address provided by .ld file 
-	  ethr_f.pparamflash = (uint32_t*)&__paramflash3;	/* Manifold pressure */
+	  ethr_f.cf.pparamflash = (uint32_t*)&__paramflash3;	/* Manifold pressure */
 	// Copy table entries to struct in sram from high flash.
-	  ret  = engine_idx_v_struct_copy_eng_throttle(&ethr_f.lc, ethr_f.pparamflash);
+	  ret  = engine_idx_v_struct_copy_eng_throttle(&ethr_f.lc, ethr_f.cf.pparamflash);
 	// Add CAN IDs to incoming msgs passed by the CAN hardware filter. 
 	  ret2 = can_driver_filter_add_param_tbl(&ethr_f.lc.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);
 	if (ret2 != 0) return -996;	// Failed
 	// Remainder is common to all functions
-	  ret = function_init(&ethr_f.cf);
+	  ret = function_init(2,&ethr_f.cf,ethr_f.lc.hbct);
 	if (ret < 0) return ret;
 
 	/* Temperature #1 function */
 	// Set pointer to table in highflash.  Base address provided by .ld file 
-	  et1_f.pparamflash = (uint32_t*)&__paramflash4;	/* Manifold pressure */
+	  et1_f.cf.pparamflash = (uint32_t*)&__paramflash4;	/* Manifold pressure */
 	// Copy table entries to struct in sram from high flash.
-	  ret  = engine_idx_v_struct_copy_eng_t1(&et1_f.lc, et1_f.pparamflash);
+	  ret  = engine_idx_v_struct_copy_eng_t1(&et1_f.lc, et1_f.cf.pparamflash);
 	// Add CAN IDs to incoming msgs passed by the CAN hardware filter. 
 	  ret2 = can_driver_filter_add_param_tbl(&et1_f.lc.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);
 	if (ret2 != 0) return -996;	// Failed
 	// Remainder is common to all functions
-	  ret = function_init(&et1_f.cf);
+	  ret = function_init(3,&et1_f.cf,et1_f.lc.hbct);
 
 	return ret;
 }
@@ -209,7 +218,7 @@ int engine_functions_init_all(void)
  * @param	: p = pointer to struct with "everything" for this AD7799
  * @return	: offset & scaled
  * ************************************************************************************** */
-double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n)
+double iir_filtered_calib(struct ENGINEFUNCTION* p, uint32_t n)
 {
 	double d;
 	double s;
@@ -251,8 +260,8 @@ double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n)
 	return dcal;		// Return scaled value
 }
 /* **************************************************************************************
- * int tension_a_functionS_temperature_poll(void);
- * @brief	: Handler for thermistor-to-temperature conversion, and AD7799 temperature correction.
+ * int eng_t1_temperature_poll(void);
+ * @brief	: Function: eng_t1, temperature #1, w  thermistor-to-temperature conversion
  * @return	: 0 = no update; 1 = temperature readings updated
  * ************************************************************************************** */
 /* *** NOTE ***
@@ -267,14 +276,11 @@ double dscale = (1.0 / (1 << 18));	// ADC filtering scale factor (reciprocal mul
 
 void toggle_1led(int led);	// Routine is in 'tension.c'
 
-/* ADC SEQUENCE: ADC of thermistors
-0 PA 3 ADC123-IN3	Thermistor on 32 KHz xtal..Thermistor: AD7799 #2
-1 PC 0 ADC12 -IN10	Accelerometer X....Thermistor: load-cell #1
-2 PC 1 ADC12 -IN11	Accelerometer Y....Thermistor: load-cell #2
-3 PC 2 ADC12 -IN12	Accelerometer Z....Thermistor: AD7799 #1
-*/
-int tension_a_functionS_temperature_poll(void)
+
+#define NUMBERADCTHERMISTER_TEN 1
+int eng_t1_temperature_poll(void)
 {
+#ifdef thisneedsacompleterewrite
 	int i,j;	// One would expect FORTRAN, but alas it is only C
 	double therm[NUMBERADCTHERMISTER_TEN];	// Floating pt of thermistors readings
 
@@ -311,22 +317,24 @@ int tension_a_functionS_temperature_poll(void)
 //toggle_1led(LEDGREEN2);	// Let the puzzled programmer know the ADC stuff is alive
 		return 1;	// Let 'main' know there was an update
 	}
+#endif
 	return 0;	// No update
 }
 /* ######################################################################################
- * int tension_a_functionS_poll(struct CANRCVBUF* pcan, struct TENSIONFUNCTION* p);
+ * int eng_man_poll(struct CANRCVBUF* pcan, struct ENG_MAN_FUNCTION* p);
  * @brief	: Handle incoming CAN msgs ### under interrupt ###
  * @param	; pcan = pointer to CAN msg buffer
- * @param	: p = pointer to struct with "everything" for this instance of tension_a function
+ * @param	: p = pointer to struct with "everything" for this instance of engine manifold
  * @return	: 0 = No msgs sent; 1 = msgs were sent and loaded into can_hub buffer
  * ###################################################################################### */
 //extern unsigned int tim3_ten2_ticks;	// Running count of timer ticks
 /* *** NOTE ***
    This routine is called from CAN_poll_loop.c which runs under I2C1_ER_IRQ
 */
-int tension_a_functionS_poll(struct CANRCVBUF* pcan, struct TENSIONFUNCTION* p)
+int eng_man_poll(struct CANRCVBUF* pcan, struct ENG_MAN_FUNCTION* p)
 {
 	int ret = 0;
+#ifdef skipthisoldsectionofcodeuntilupdated
 	union FTINT	// Union for sending float as 4 byte uint32_t
 	{
 		uint32_t ui;
@@ -373,5 +381,6 @@ if (pcan->id == 0x00400000) // ##### TEST #########
 		return 0;	// No msgs passed to other ports
 	}
 	return ret;
+#endif
 }
 

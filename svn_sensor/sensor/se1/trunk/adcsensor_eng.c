@@ -51,12 +51,11 @@ increments so that cic filter readings are then loaded into a CAN message the me
 #include "canmsg_send_pay_type.h"
 
 /* ADC usage
-
 PA0 ADC123-IN0	Throttle potentiometer
-PA1 ADC123-IN1  Thermistor
+PA1 ADC123-IN1 Thermistor
 PA3 ADC123-IN2	Pressure sensor  
-
 */
+
 /*
 Bits 29:0 SMPx[2:0]: Channel x Sample time selection for less than 1/4 LSB of 12 bit conversion.
            These bits are written by software to select the sample time individually for each channel.
@@ -108,7 +107,6 @@ static void adc_start_conversion_se_eng(void);
 static void adc_start_cal_register_reset_se_eng(void);
 static void adc_start_calibration_se_eng(void);
 static void adcsensor_eng_bufadd(void);
-
 
 /* CIC routines buried somewhere below */
 static void adc_cic_filtering(void);
@@ -359,7 +357,6 @@ static struct CANRCVBUF can_msg_PR;	// Pressure & RPM
 static struct CANRCVBUF can_msg_TR;	// Throttle
 static struct CANRCVBUF can_msg_T;	// Temperature (derived from thermistor)
 
-
 /******************************************************************************
  * static void adc_cic_init(u32 iamunitnumber);
  * @brief 	: Setup for cic filtering of adc readings buffered by dma
@@ -384,10 +381,12 @@ static void adc_cic_init(u32 iamunitnumber)
 	int i,j;
 
 	/* CAN message id's and data types. */
+/*
 	can_msg_PR.id = (CANID_ENG_RPMMANIFOLD);	// Two ints
 	can_msg_TT.id = (CANID_ENG_THERMTHROTL);	// Two ints
 	can_msg_T.id  = (CANID_ENG_TEMP); 		// One short
 	can_msg_TR.id = (CANID_ENG_THROTTLE);		// One short
+*/
 
 // Hard coded CAN ids for test purposes	
 //	can_msg_PR.id = 0xf0600000;	// Two ints
@@ -450,7 +449,7 @@ static void adcsensor_eng_bufadd(void)
 	while (p1 < &adc2048[NUMBERADCCHANNELS_SE]) *p1++ = *p2++;
 
 	/* Call other routines if an address is set up */
-	if (systickHIpriority3_ptr != 0)	// Having no address for the following is bad.
+	if (systickHIpriority3_ptr != 0)	// Having no address for the following is bad, so use an if.
 		(*systickHIpriority3_ptr)();	// Go do something	
 	return;
 }
@@ -567,5 +566,3 @@ for (i = 0; i < 5; i++)
 
 	return;
 }
-
-

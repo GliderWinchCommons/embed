@@ -96,7 +96,8 @@ const struct FLASHP_SE1* flashp_se1 = (struct FLASHP_SE1*)&__highflashp;
 
 #include "libmiscstm32/clockspecifysetup.h"
 #include "libmiscstm32/DTW_counter.h"
-#include "libsensormisc/canwinch_setup_F103_pod.h"
+#include "canwinch_setup_F103_pod.h"
+//#include "../../../sw_f103/trunk/lib/libsensormisc/canwinch_setup_F103_pod.h"
 
 #include "adcsensor_eng.h"
 #include "canwinch_pod_common_systick2048.h"
@@ -191,6 +192,14 @@ struct CAN_PARAMS can_params = { \
 1,		// abom: CAN_MCR[6] Automatic bus-off management
 0,		// awum: CAN_MCR[5] Auto WakeUp Mode
 0		// nart: CAN_MCR[4] No Automatic ReTry (0 = retry; non-zero = transmit once)
+};
+
+/* Specify msg buffer and max useage for TX, RX0, and RX1. */
+const struct CAN_INIT msginit = { \
+180,	/* Total number of msg blocks. */\
+140,	/* TX can use this huge ammount. */\
+40,	/* RX0 can use this many. */\
+8	/* RX1 can use this piddling amount. */\
 };
 
 
@@ -353,6 +362,21 @@ http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0337g/BABJFFGJ.ht
 	printf (" pclk2_freq (MHz) : %9u\n\r", pclk2_freq/1000000);	
 	printf ("sysclk_freq (MHz) : %9u\n\r",sysclk_freq/1000000);	USART1_txint_send();
 
+/* ---------------- Some test, monitoring, debug info ----------------------------------------------- */
+	extern void* __paramflash0a;
+	struct FLASHH2* pcanidtbl = (struct FLASHH2*)&__paramflash0a;
+	printf ("FLASHH2 Address: %08X\n\r",(unsigned int)pcanidtbl);
+	printf ("  CAN unit code: %08X\n\r",(int)pcanidtbl->unit_code);
+	printf ("  Size of table: %d\n\r",(int)pcanidtbl->size);
+	printf(" # func  CANID\n\r");
+	u32 ii;
+	u32 jj = pcanidtbl->size;
+	if (jj > 16) jj = 16;
+	for (ii = 0; ii < jj; ii++)
+	{
+		printf("%2d %4d  %08X\n\r",(int)ii, (int)pcanidtbl->slot[ii].func, (int)pcanidtbl->slot[ii].canid);
+	}
+	printf("\n\r");
 /* --------------------- Get Loader CAN ID -------------------------------------------------------------- */
 	/* Pick up the unique CAN ID stored when the loader was flashed. */
 	struct FUNC_CANID* pfunc = (struct FUNC_CANID*)&__paramflash0a;
@@ -365,7 +389,6 @@ http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0337g/BABJFFGJ.ht
 /* --------------------- CAN setup ---------------------------------------------------------------------- */
 	/* Configure and set MCP 2551 driver: RS pin (PD 11) on POD board */
 	can_nxp_setRS_sys(0,0); // (1st arg) 0 = high speed mode; 1 = standby mode (Sets yellow led on)
-	GPIO_BSRR(GPIOE) = (0xf<<LED3);	// Set bits = all four LEDs off
 
 	/* Initialize CAN for POD board (F103) and get control block */
 	// Set hardware filters for FIFO1 high priority ID & mask, plus FIFO1 ID for this UNIT

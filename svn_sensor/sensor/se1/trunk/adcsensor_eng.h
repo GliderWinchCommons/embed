@@ -19,25 +19,24 @@
 #include "libopenstm32/rcc.h"
 #include "libopenstm32/rtc.h"
 
-#define NUMBERADCCHANNELS_SE	3	// Number of channels each ADC is to scan
-#define NUMBERSEQUENCES		1	// Number of sequences in 1/2 of the buffer
-#define DECIMATION_SE		32	// Decimation ratio
-#define DISCARD_SE		32	// Number of readings to discard before filtering starts
-#define CICSCALE		18	// Right shift count to scale result
+#define NUMBERADCCHANNELS_SE 3   // Number of channels each ADC is to scan
+#define NUMBERSEQUENCES     1   // Number of sequences in 1/2 of the buffer
+#define DECIMATION_SE     32   // Decimation ratio
+#define DISCARD_SE       32   // Number of readings to discard before filtering starts
+#define CICSCALE        18   // Right shift count to scale result
 
 /* ADC usage
-PA0 ADC123-IN0	Throttle potentiometer
-PA1 ADC123-IN1  Thermistor
-PA3 ADC123-IN2	Pressure sensor  
+PA0 ADC123-IN0 Throttle potentiometer
+PA1 ADC123-IN1 Thermistor
+PA3 ADC123-IN2 Pressure sensor  
 */
 
 struct ADCDR_ENG
 {
 	int in[2][NUMBERSEQUENCES][NUMBERADCCHANNELS_SE];	// ADC_DR is stored for each channel in the regular sequence
 	unsigned int cnt;		// DMA interrupt counter
-	unsigned short flg;		// Index of buffer that is not busy (0, or 1)
+	unsigned short flg;	// Index of buffer that is not busy (0, or 1)
 };
-
 
 /******************************************************************************/
 void adc_init_se_eng_sequence(u32 iamunitnumber);
@@ -54,13 +53,13 @@ extern void 	(*dma_ll_ptr)(void);		// DMA -> FSMC  (low priority)
 extern long	adc_last_filtered[NUMBERADCCHANNELS_SE];	// Last computed value for each channel
 extern u32 cic_sync_err[NUMBERADCCHANNELS_SE];	// CIC sync errors
 
-extern long	adc_temperature;		// Thermistor filter/decimate to 2/sec
-extern int	adc_temp_flag;			// Signal main new filtered reading ready
-extern int	adc_calib_temp;			// Temperature in deg C 
+extern long	adc_temperature;  // Thermistor filter/decimate to 2/sec
+extern int	adc_temp_flag;    // Signal main new filtered reading ready
+extern int	adc_calib_temp;   // Temperature in deg C 
 
-extern void 	(*systickHIpriority3_ptr)(void);	// SYSTICK handler (very high priority)
-extern void 	(*systickLOpriority3_ptr)(void);	// SYSTICK handler (low high priority) continuation--1/2048th
-extern void 	(*systickLOpriority3X_ptr)(void);	// SYSTICK handler (low high priority) continuation--1/64th
+extern void 	(*systickHIpriority3_ptr)(void);  // SYSTICK handler (very high priority)
+extern void 	(*systickLOpriority3_ptr)(void);  // SYSTICK handler (low high priority) continuation--1/2048th
+extern void 	(*systickLOpriority3X_ptr)(void); // SYSTICK handler (low high priority) continuation--1/64th
 
 extern unsigned int cicdebug0,cicdebug1;
 

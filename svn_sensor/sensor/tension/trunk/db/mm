@@ -5,7 +5,10 @@
 # ./mm TENSION_1a TENSION_1b
 # 
 # Specify which flash size
-export LDRAPPLD=ldrapp_VC.ld
+#export LDRAPPLD=ldrapp_VC.ld
+export LDRAPPLD=ldrapp_VE.ld
+echo
+echo "$(LDRAPPLD)"
 
 echo
 echo "########## First table ("_a") $1"

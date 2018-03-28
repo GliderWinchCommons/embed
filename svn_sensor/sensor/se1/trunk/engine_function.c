@@ -56,14 +56,14 @@ const uint32_t myfunctype[NUMENGINEFUNCTIONS] = { \
  FUNCTION_TYPE_ENG_T1,
 };
 /* **************************************************************************************
- * static void send_can_msg(struct CANRCVBUF* pcan, uint32_t canid, uint8_t status, uint32_t* pv); 
+ * static void setup_can_msg(struct CANRCVBUF* pcan, uint32_t canid, uint8_t status, uint32_t* pv); 
  * @brief	: Setup CAN msg 
  * @param	: pcan = pointer to CAN msg
  * @param	: status = status of reading
  * @param	: pv = pointer to a 4 byte value (little Endian) to be sent (int32_t, uint32_t, or float)
  * @return	: *pcan is setup.
  * ************************************************************************************** */
-static void send_can_msg(struct CANRCVBUF* pcan, uint32_t canid, uint8_t status, uint32_t* pv)
+static void setup_can_msg(struct CANRCVBUF* pcan, uint32_t canid, uint8_t status, uint32_t* pv)
 {
 	pcan->id = canid;
 	pcan->dlc = 5;			// Set return msg payload count
@@ -74,12 +74,19 @@ static void send_can_msg(struct CANRCVBUF* pcan, uint32_t canid, uint8_t status,
 	pcan->cd.uc[4] = (*pv >> 24);
 	return;
 }
-/*
+/* **************************************************************************************
+ * static void send_can_msg_man(struct ENG_MAN_FUNCTION* p, struct CANRCVBUF* pcan); 
+ * @brief	: Send CAN msg and reset heartbeat counter
+ * @param	: p = pointer to engine manifold function struct
+ * @param	: pcan = pointer to CAN msg that has been set up
+ * ************************************************************************************** */
+static void send_can_msg_man(struct ENG_MAN_FUNCTION* p, struct CANRCVBUF* pcan)
+{
 	// Send CAN msg and reset heartbeat timeout 
-	can_hub_send(&can, p->cf.phub);// Send CAN msg to 'can_hub'
+	can_hub_send(pcan, p->cf.phub);// Send CAN msg to 'can_hub'
 	p->cf.hbct_ticks = (p->lc.hbct * tim3_ten2_rate) / 1000; // Convert ms to timer ticks
-	p->cf.hb_t = tim3_ten2_ticks + p->cf.hbct_ticks;	 // Reset heart-beat time duration each time msg sent
-*/
+	p->cf.hb_t = tim3_ten2_ticks + p->cf.hbct_ticks;	 // Reset heart-beat time duration each time msg sent	
+}
 
 /* *********************************************************** */
 /* Initialization: generic function                            */
@@ -150,7 +157,6 @@ static int function_init(uint32_t n, struct COMMONFUNCTION* p, uint32_t hbct )
  * ************************************************************************************** */
 int engine_functions_init_all(void)
 {
-	int i;
 	int ret;
 	int ret2;
 
@@ -213,53 +219,6 @@ int engine_functions_init_all(void)
 
 
 /* **************************************************************************************
- * double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n); 
- * @brief	: Convert integer IIR filtered value to offset & scaled double
- * @param	: p = pointer to struct with "everything" for this AD7799
- * @return	: offset & scaled
- * ************************************************************************************** */
-double iir_filtered_calib(struct ENGINEFUNCTION* p, uint32_t n)
-{
-	double d;
-	double s;
-	double dcal;
-
-	/* Scale filter Z^-1 accumulator. */
-	int32_t tmp = p->iir_filtered[n].z / p->iir_filtered[n].pprm->scale;
-	
-	/* Apply offset. */
-	tmp += p->ten_a.ad.offset;
-	
-	/* Convert to double and scale. */
-	d = tmp; 		// Convert scaled, filtered int to double
-	s = p->ten_a.ad.scale; 	// Convert float to double
-	dcal = d * s;		// Calibrated reading
-	p->dcalib_lgr = dcal;	// Save calibrated last good reading
-	p->fcalib_lgr = p->dcalib_lgr; // Save float version for CAN bus
-
-	/* Set up status byte for reading. */
-	p->status_byte = STATUS_TENSION_BIT_NONEW; // Show no new readings
-	
-	/* New readings flag. */
-	if (p->readingsct != p->readingsct_lastpoll)
-	{ // Here, there was a new reading since last poll
-		p->status_byte = 0;	// Turn (all) flags off
-	}
-
-	/* Check reading against limits. */
-	if (dcal > p->ten_a.limit_hi)
-	{
-		p->status_byte |= STATUS_TENSION_BIT_EXCEEDHI;
-		return dcal;
-	}
-	if (dcal < p->ten_a.limit_lo)
-	{
-		p->status_byte |= STATUS_TENSION_BIT_EXCEEDLO;
-		return dcal;
-	}
-	return dcal;		// Return scaled value
-}
-/* **************************************************************************************
  * int eng_t1_temperature_poll(void);
  * @brief	: Function: eng_t1, temperature #1, w  thermistor-to-temperature conversion
  * @return	: 0 = no update; 1 = temperature readings updated
@@ -273,10 +232,7 @@ double iir_filtered_calib(struct ENGINEFUNCTION* p, uint32_t n)
 static int adc_temp_flag_prev = 0; // Thermistor readings ready counter
 
 double dscale = (1.0 / (1 << 18));	// ADC filtering scale factor (reciprocal multiply)
-
 void toggle_1led(int led);	// Routine is in 'tension.c'
-
-
 #define NUMBERADCTHERMISTER_TEN 1
 int eng_t1_temperature_poll(void)
 {
@@ -323,7 +279,7 @@ int eng_t1_temperature_poll(void)
 /* ######################################################################################
  * int eng_man_poll(struct CANRCVBUF* pcan, struct ENG_MAN_FUNCTION* p);
  * @brief	: Handle incoming CAN msgs ### under interrupt ###
- * @param	; pcan = pointer to CAN msg buffer
+ * @param	; pcan = pointer to CAN msg buffer (incoming msg)
  * @param	: p = pointer to struct with "everything" for this instance of engine manifold
  * @return	: 0 = No msgs sent; 1 = msgs were sent and loaded into can_hub buffer
  * ###################################################################################### */
@@ -334,15 +290,14 @@ int eng_t1_temperature_poll(void)
 int eng_man_poll(struct CANRCVBUF* pcan, struct ENG_MAN_FUNCTION* p)
 {
 	int ret = 0;
+	struct CANRCVBUF cantmp;	// For setting up outgoing msgs
+
 #ifdef skipthisoldsectionofcodeuntilupdated
 	union FTINT	// Union for sending float as 4 byte uint32_t
 	{
 		uint32_t ui;
 		float ft;
 	}ui; ui.ui = 0; // (initialize to get rid of ui.ft warning)
-
-	/* Check if this instance is used. */
-	if ((p->ten_a.useme & 1) != 1) return 0;
 
 	/* Check for need to send  heart-beat. */
 	 if ( ( (int)tim3_ten2_ticks - (int)p->hb_t) > 0  )	// Time to send heart-beat?
@@ -352,7 +307,8 @@ int eng_man_poll(struct CANRCVBUF* pcan, struct ENG_MAN_FUNCTION* p)
 		
 		/* Send heartbeat and compute next hearbeat time count. */
 		//      Args:  CAN id, status of reading, reading pointer instance pointer
-		send_can_msg(p->ten_a.cid_heartbeat, p->status_byte, &ui.ui, p); 
+		setup_can_msg(&cantmp, p->lc.cid_hb, p->status, &ui.ui); // Setup CAN msg
+		send_can_msg_man(p, &cantmp); // Send CAN msg, reset heartbeat cts
 		ret = 1;
 	}
 
@@ -369,18 +325,20 @@ if (pcan->id == 0x00400000) // ##### TEST #########
 		{ // Here, yes.  Send our precious msg.
 			/* Send tension msg and re-compute next hearbeat time count. */
 			//      Args:  CAN id, status of reading, reading pointer instance pointer
-			send_can_msg(p->ten_a.cid_ten_msg, p->status_byte, &ui.ui, p); 
+			setup_can_msg(&cantmp, p->lc.cid_msg, p->status, &ui.ui); // Setup CAN msg
+		   send_can_msg_man(p, &cantmp); // Send CAN msg, reset heartbeat cts
+ 
 			return 1;
 		}
 	}
 	
-	/* Check for tension function command. */
-	if (pcan->id == *p->pcanid_cmd_func_i)
+	/* Check for eng_manifold function command. */
+	if (pcan->id == *p->cf.pcanid_cmd_func_i)
 	{ // Here, we have a command msg for this function instance. 
 		cmd_code_dispatch(pcan, p); // Handle and send as necessary
 		return 0;	// No msgs passed to other ports
 	}
-	return ret;
 #endif
+	return ret;
 }
 

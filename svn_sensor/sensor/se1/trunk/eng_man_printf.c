@@ -61,8 +61,8 @@ printf("%2d	0x%08X	%s\n\r",i+7, (unsigned int)p->cid_hb, "  7 Eng_manifold: CANI
 
 printf("%2d	0x%08X	%s\n\r",i+8, (unsigned int)p->code_CAN_filt[0], "  8 Eng_man: CANID 1 in CAN hardware filter");
 printf("%2d	0x%08X	%s\n\r",i+9, (unsigned int)p->code_CAN_filt[1], "  9 Eng_man: CANID 2 in CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+10, (unsigned int)p->code_CAN_filt[2], " 10 Eng_man: CANID 3 in CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+11 (unsigned int)p->code_CAN_filt[3], " 11 Eng_man: CANID 4 in CAN hardware filter");
+printf("%2d	0x%08X	%s\n\r",i+10, (unsigned int)p->code_CAN_filt[2]," 10 Eng_man: CANID 3 in CAN hardware filter");
+printf("%2d	0x%08X	%s\n\r",i+11, (unsigned int)p->code_CAN_filt[3]," 11 Eng_man: CANID 4 in CAN hardware filter");
 printf("%2d	0x%08X	%s\n\r",i+12, (unsigned int)p->code_CAN_filt[4]," 12 Eng_man: CANID 5 in CAN hardware filter");
 printf("%2d	0x%08X	%s\n\r",i+13, (unsigned int)p->code_CAN_filt[5]," 13 Eng_man: CANID 6 in CAN hardware filter");
 printf("%2d	0x%08X	%s\n\r",i+14, (unsigned int)p->code_CAN_filt[6]," 14 Eng_man: CANID 7 in CAN hardware filter");

@@ -18,6 +18,7 @@ Naming convention for CANID--"cid" prefix
 #include <stdint.h>
 #include "common_can.h"
 //#include "iir_filter_l.h"
+#include "temp_calc_param.h"
 
 #ifndef __ENGINE_IDX_V_STRUCT
 #define __ENGINE_IDX_V_STRUCT
@@ -27,7 +28,7 @@ Naming convention for CANID--"cid" prefix
    incoming msgs */
 #define CANFILTMAX	8	// Max number of CAN IDs in parameter list
 
-
+#ifdef notelsewhere // ../sw_f103/trunk/lib/libsensormisc/temp_calc_param.h
  // Thermistor parameters for converting ADC readings to temperature
   struct THERMPARAM
  {   //                   	   default values    description
@@ -38,6 +39,7 @@ Naming convention for CANID--"cid" prefix
 	float offset;  // 0.0	 // Therm temp correction offset	1.0 Therm correction scale
 	float scale;   // 1.0	 // Therm temp correction scale	1.0 Therm correction scale
  };
+#endif
 
 // Manifold pressure function 
 struct ENGMANLC

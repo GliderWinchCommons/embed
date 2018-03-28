@@ -47,6 +47,7 @@ Open minicom on the PC with 115200 baud and 8N1.
 //i   2       4     "%f"   0.01         @ Transmission temperature (deg C)
 */
 
+#ifdef thisisoldstuffthatrevisionwillcastoff
 struct FLASHP_SE1
 {
 	unsigned int crc;	// crc-32 placed by loader
@@ -77,7 +78,7 @@ __attribute__ ((section(".ctbldata")))
 const unsigned int flashp_size = sizeof (struct FLASHP_SE1);
 __attribute__ ((section(".ctbldata1")))
 const struct FLASHP_SE1* flashp_se1 = (struct FLASHP_SE1*)&__highflashp;
-
+#endif
 
 
 #include <math.h>
@@ -136,6 +137,7 @@ extern struct CANWINCHPODCOMMONERRORS can_errors;	// A group of error counts
 struct CAN_CTLBLOCK* pctl0;
 
 /* For test with and without XTAL clocking */
+#ifdef usepriortomassiveupdateofse1program
 //#define NOXTAL 
 #ifdef NOXTAL
 
@@ -169,6 +171,7 @@ APBX_4,			/* APB2 prescalar code = SYSCLK divided by 1,2,4,8,16; freq <= 72 MHz 
 AHB_1,			/* AHB prescalar code: SYSCLK/[2,4,8,16,32,64,128,256,512] (drives APB1,2) */ \
 8000000			/* Oscillator source frequency, e.g. 8000000 for an 8 MHz xtal on the external osc. */ \
 };
+#endif
 
 #endif
 
@@ -202,25 +205,38 @@ const struct CAN_INIT msginit = { \
 8	/* RX1 can use this piddling amount. */\
 };
 
-
-/* ************************************************************
-Step through the LEDs
-***************************************************************/
-static int ledct;
-
-void walk_LEDs(void)
+/*******************************************************************************
+ * void can_nxp_setRS_sys(int rs, int board);
+ * @brief 	: Set RS input to NXP CAN driver (TJA1051) (on some PODs) (SYSTICK version)
+ * @param	: rs: 0 = NORMAL mode; not-zero = SILENT mode 
+ * @param	: board: 0 = POD, 1 = sensor RxT6 board
+ * @return	: Nothing for now.
+*******************************************************************************/
+void can_nxp_setRS_sys(int rs, int board)
 {
-	switch (ledct)
+	/* RS (S) control PB7 (on sensor board) PD11 on pod board */
+	// Floating input = resistor controls slope
+	// Pin HI = standby;
+	// Pin LO = high speed;
+	if (board == 0)
 	{
-	case 0: LED19RED_off;		LED20RED_off;		LED21GREEN_on;		break;
-	case 1: LED19RED_off;		LED20RED_on;		LED21GREEN_off;		break;
-	case 2: LED19RED_on;		LED20RED_off;		LED21GREEN_off;		break;
-	default: ledct = 0; break;
+		configure_pin ((volatile u32 *)GPIOD, 11);	// configured for push-pull output
+		if (rs == 0)
+			GPIO_BRR(GPIOD)  = (1<<11);	// Set bit LO for SILENT mode
+		else
+			GPIO_BSRR(GPIOD) = (1<<11);	// Set bit HI for NORMAL mode
 	}
-	ledct += 1;		// Step through all four LEDs
-	if (ledct > 2) ledct = 0;
+	else
+	{
+		configure_pin ((volatile u32 *)GPIOB,  7);	// configured for push-pull output	
+		if (rs == 0)
+			GPIO_BRR(GPIOB)  = (1<< 7);	// Set bit LO for SILENT mode
+		else
+			GPIO_BSRR(GPIOB) = (1<< 7);	// Set bit HI for NORMAL mode
+	}
 	return;
 }
+
 /* **************************************************************************************
  * void system_reset(void);
  * @brief	: Software caused RESET
@@ -464,7 +480,11 @@ static u32 throttleLED = 0;
 static struct CANRCVBUF *pcan;
 
 	/* Print the header for the CAN driver error counts */
-	canwinch_pod_common_systick2048_printerr_header();
+//	canwinch_pod_common_systick2048_printerr_header();
+
+/* --------------- Start TIM3 CH1 and CH2 interrupts ------------------------------------------------- */
+	tim3_ten2_init(pclk1_freq/2048);	// 64E6/2048
+
 
 /* --------------------- Endless Stuff ----------------------------------------------- */
 	while (1==1)
@@ -517,12 +537,6 @@ static struct CANRCVBUF *pcan;
 		/* Poll & compute calibrated temperature */
 		temp_calc(); // Floating pt computation done at mainline priority
 
-		/* Poll to check incoming CAN msgs. */
-		pcan = canrcv_get_sys();
-		if (pcan != 0) 	// Any CAN msgs ready?
-		{ // Here.  Yes.
-			CANascii_poll(pcan);	// Check for command code from PC to enable/disable CAN ascii
-		}
 	}
 
 	return 0;	

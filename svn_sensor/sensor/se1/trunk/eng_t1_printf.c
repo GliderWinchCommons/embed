@@ -48,7 +48,7 @@ INSERT INTO PARAM_LIST VALUES ('ENG_T1_CANID_HW_FILT8'   ,19,'TYP_CANID','%x','E
  * @brief	: Print the values
  * @param	: p = pointer to struct with the values 
  * ************************************************************************************** */
-void eng_t1_printf(struct ENGMANLC* p)
+void eng_t1_printf(struct ENGT1LC* p)
 {
 int i = 0;
 printf("ENG_T1: values: pointer = %08X\n\r",(int)p);
@@ -58,12 +58,12 @@ printf("%2d	%d	%s\n\r",i+1, (unsigned int)p->crc,      "  1 Eng_t1 CRC");
 printf("%2d	%d	%s\n\r",i+2, (unsigned int)p->version,  "  2 Eng_t1 Version number");
 printf("%2d	%d	%s\n\r",i+3, (unsigned int)p->hbct,     "  3 Eng_t1 Time (ms) between HB msg");
 
-fmtprint(i+ 4,p->therm[0].B,     "  5 ENG_T1_THERM1_CONST_B,    Eng_t1 Thermistor1 param: constant B");
-fmtprint(i+ 5,p->therm[0].R0,    "  6 ENG_T1_THERM1_R_SERIES,	  Eng_t1 Thermistor1 param: Series resistor, fixed (K ohms)");
-fmtprint(i+ 6,p->therm[0].RS,    "  7 ENG_T1_THERM1_R_ROOMTMP,  Eng_t1 Thermistor1 param: Thermistor room temp resistance (K ohms)");
-fmtprint(i+ 7,p->therm[0].TREF,  "  8 ENG_T1_THERM1_REF_TEMP,	  Eng_t1 Thermistor1 param: Reference temp for thermistor");
-fmtprint(i+ 8,p->therm[0].offset,"  9 ENG_T1_THERM1_TEMP_OFFSET,Eng_t1 Thermistor1 param: Thermistor temp offset correction (deg C)");
-fmtprint(i+ 9,p->therm[0].scale, " 10 ENG_T1_THERM1_TEMP_SCALE, Eng_t1 Thermistor1 param: Thermistor temp scale correction");
+fmtprint(i+ 4,p->therm.B,     "  5 ENG_T1_THERM1_CONST_B,    Eng_t1 Thermistor1 param: constant B");
+fmtprint(i+ 5,p->therm.R0,    "  6 ENG_T1_THERM1_R_SERIES,	  Eng_t1 Thermistor1 param: Series resistor, fixed (K ohms)");
+fmtprint(i+ 6,p->therm.RS,    "  7 ENG_T1_THERM1_R_ROOMTMP,  Eng_t1 Thermistor1 param: Thermistor room temp resistance (K ohms)");
+fmtprint(i+ 7,p->therm.TREF,  "  8 ENG_T1_THERM1_REF_TEMP,	  Eng_t1 Thermistor1 param: Reference temp for thermistor");
+fmtprint(i+ 8,p->therm.offset,"  9 ENG_T1_THERM1_TEMP_OFFSET,Eng_t1 Thermistor1 param: Thermistor temp offset correction (deg C)");
+fmtprint(i+ 9,p->therm.scale, " 10 ENG_T1_THERM1_TEMP_SCALE, Eng_t1 Thermistor1 param: Thermistor temp scale correction");
 
 printf("%2d	0x%08X	%s\n\r",i+10, (unsigned int)p->cid_msg," 10 Eng_t1 CANID: Poll response: manifold pressure, calibrated"); 
 printf("%2d	0x%08X	%s\n\r",i+11, (unsigned int)p->cid_hb, " 11 Eng_t1 CANID: Heartbeat: manifold pressure, calibrated");

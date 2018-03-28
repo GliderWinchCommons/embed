@@ -115,8 +115,7 @@ void (*const vector_table[]) (void) = {
 //	(void *)0x20000800,	/* Use 2KB stack (0x800 bytes). */
 	(void *)(0x20000000+(96*1024)-1),/* Put stack at top */
 //	main,			/* Use main() as reset vector for now. */
-//	Reset_Handler,	
-	unique_can_block,	
+	Reset_Handler,	//	unique_can_block,
 	nmi_handler,
 	hard_fault_handler,
 	mem_manage_handler,

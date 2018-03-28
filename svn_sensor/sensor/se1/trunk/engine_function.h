@@ -39,6 +39,7 @@ struct ENG_MAN_FUNCTION
 	struct COMMONFUNCTION cf; // Common to all functions
 	struct ENGMANLC lc;	// Flash table copied to sram struct
 	double manval;			// Filtered reading converted to double
+	uint8_t status;		// Reading status
 };
 
 struct ENG_RPM_FUNCTION

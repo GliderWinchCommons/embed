@@ -29,6 +29,7 @@ SRCDIR=.
 # Library directory path prefix--svn_pod library
 LIBPODLIB	= $(SRCDIR)/../../../../svn_pod/sw_stm32/trunk/lib
 LIBPODDEV	= $(SRCDIR)/../../../../svn_pod/sw_stm32/trunk/devices
+
 # Library directory path--svn_pod library 
 LIBMISCSTM32	= $(LIBPODLIB)/libmiscstm32
 LIBOPENSTM32	= $(LIBPODLIB)/libopenstm32
@@ -41,6 +42,8 @@ LIBSENSORF103	= $(SRCDIR)/../../../sw_f103/trunk/lib
 # Library directory path--svn_sensor, f103 library
 LIBDEVICEF103SE	= $(LIBSENSORF103)/libdevicestm32
 LIBSENSORMISC	   = $(LIBSENSORF103)/libsensormisc
+
+$(info LIBSENSORMISC ="$(LIBSENSORMISC)")
 
 # Library directory path--local common includes
 LIBCOMMONALL    = $(SRCDIR)/../../../common_all/trunk
@@ -147,7 +150,7 @@ images: $(NAME)
 
 $(NAME): $(OBJS) $(LDSCRIPT)
 	@printf "  LD      $(subst $(shell pwd)/,,$(@)) $(LFLAGS)\n"
-	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)  -lgcc  -lc -lgcc -lmiscstm32  -lcommon_all -lusartstm32 -lsensormisc -ldevicestm32 -lsensormisc -lsupportstm32 -ldevicesstm32  -lm -lc -lgcc -lcommon_all -lgcc
+	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)  -lgcc  -lc -lgcc -lmiscstm32  -lusartstm32 -lsensormisc -ldevicestm32 -lsensormisc -lsupportstm32 -ldevicesstm32  -lm -lc -lgcc -lgcc
 clean:
 	@printf "  CLEAN   $(subst $(shell pwd)/,,$(OBJS))\n"
 	$(Q)rm -f *.o $(LIBOPENSTM32)/*.o

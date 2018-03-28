@@ -7,14 +7,15 @@
 LIBNAME		= libcommon_all
 
 # Prefix the name for the particular toolchain
-PREFIX		= arm-none-eabi
-# The path for the commands to find the compiler, linker, et al.
-TOOLDIR 	= $(HOME)/CodeSourcery/Sourcery_G++_Lite/bin
-CC		= $(TOOLDIR)/$(PREFIX)-gcc
-LD		= $(TOOLDIR)/$(PREFIX)-ld
-OBJCOPY		= $(TOOLDIR)/$(PREFIX)-objcopy
-OBJDUMP		= $(TOOLDIR)/$(PREFIX)-objdump
-AR		= $(TOOLDIR)/$(PREFIX)-ar
+PREFIX		= arm-none-eabi-
+
+CC	=$(PREFIX)gcc
+LD	=$(PREFIX)ld
+OBJCOPY	=$(PREFIX)objcopy
+SIZE	=$(PREFIX)size
+OBJDUMP	=$(PREFIX)objdump
+AR		= $(PREFIX)-ar
+
 
 
 # Define path to source files.
@@ -38,13 +39,9 @@ LIBSENSORF103	= $(THISDIR)/../../../sw_f103/trunk/lib
 # Library directory path--svn_sensor, f103 library
 LIBSENSORMISC	= $(LIBSENSORF103)/libsensormisc
 
-
-
-
-# Library directory path--compile and stuff
-LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
-LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
-
+# The following is setup in ~/.arm_tools when ~/.profile opens a terminal
+LGCC = $(ARM_PREFIX_GCCLIB)
+LOTHER = $(ARM_PREFIX_OTHER)
 
 # Compiler flags -Os = no optimization, -Os = minimum space, -O3 = fastest
 CFLAGS		= -Os -g -Wall -Wextra\

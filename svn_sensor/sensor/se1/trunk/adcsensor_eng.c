@@ -351,11 +351,6 @@ int	adc_calib_temp;			// Temperature in deg C
 static struct CICLN2M3 adc_cic[NUMBERADCCHANNELS_SE];	// CIC intermediate storage adc readings
 static struct CICLN2M3 adc_cic_temp;			// CIC intermediate storage for further temp filter/decimiation
 
-/* Sensor CAN messages */
-static struct CANRCVBUF can_msg_TT;	// Throttle & Thermistor
-static struct CANRCVBUF can_msg_PR;	// Pressure & RPM
-static struct CANRCVBUF can_msg_TR;	// Throttle
-static struct CANRCVBUF can_msg_T;	// Temperature (derived from thermistor)
 
 /******************************************************************************
  * static void adc_cic_init(u32 iamunitnumber);
@@ -379,20 +374,6 @@ struct CICLN2M3
 static void adc_cic_init(u32 iamunitnumber)
 {
 	int i,j;
-
-	/* CAN message id's and data types. */
-/*
-	can_msg_PR.id = (CANID_ENG_RPMMANIFOLD);	// Two ints
-	can_msg_TT.id = (CANID_ENG_THERMTHROTL);	// Two ints
-	can_msg_T.id  = (CANID_ENG_TEMP); 		// One short
-	can_msg_TR.id = (CANID_ENG_THROTTLE);		// One short
-*/
-
-// Hard coded CAN ids for test purposes	
-//	can_msg_PR.id = 0xf0600000;	// Two ints
-//	can_msg_TT.id = 0xf1600000;	// Two ints
-//	can_msg_T.id  = 0xf2600000; 		// One short
-//	can_msg_TR.id = 0xf3600000;		// One short
 
 
 	/* Initialize the structs that hold the CIC filtering intermediate values. */
@@ -514,51 +495,7 @@ cicdebug0 += 1;
 			}
 		}
 
-/* Test */
-	cantest.id = 0x21c00000;
-for (i = 0; i < 0; i++)
-{
-	canmsg_send_pay_type_U32toU32(&cantest, testpay);
-	testpay += 1;
-}
-	cantest.id = 0x01100000;
-	canmsg_send_pay_type_U32toU32(&cantest, testhi);
-	testhi += 1;
-
-	cantest.id = 0x21c00000;
-for (i = 0; i < 5; i++)
-{
-	canmsg_send_pay_type_U32toU32(&cantest, testpay);
-	testpay += 1;
-}
-
-	cantest.id = 0x01100000;
-	canmsg_send_pay_type_U32toU32(&cantest, testhi);
-	testhi += 1;
-
-		/* Setup Pressure and RPM readings for sending (two signed ints) */
-//		canmsg_send(&can_msg_PR, adc_last_filtered[2], rpm); // Send as two signed ints
-///		canmsg_send_pay_type_S32_S32toS32_S32(&can_msg_PR, adc_last_filtered[2], rpm); // Send as two signed ints
-
-		/* Setup Throttle and Thermistor readings for sending (two unsigned ints) */
-//		canmsg_send(&can_msg_TT, adc_last_filtered[0],adc_last_filtered[1]);
-//		canmsg_send_pay_type_U32_U32toU32_U32(&can_msg_TT, adc_last_filtered[0],adc_last_filtered[1]);
-
-		/* Setup Throttle only */
-//		canmsg_send_sys_n(&can_msg_TR, (u8*)&adc_last_filtered[0], 2); // Send as a unsigned short
-///		canmsg_send_pay_type_U16toU16(&can_msg_TR, (u16)adc_last_filtered[0]); // Send as a unsigned short
-
-		/* Send calibrated temperature (see 'temp_calc.c') */
-		if (adc_temp_flag == 2) // Did mainline (temp_calc.c) place a new temperature reading?
-		{ // Here, yes.
-			adc_temp_flag = 0;	// Reset flag for next round
-//			canmsg_send_sys_n(&can_msg_T, (u8*)&adc_calib_temp, 2); // Send as a signed short
-///			canmsg_send_pay_type_S16toS16(&can_msg_T, (s16)adc_calib_temp); // Send as a signed short
-		}
 		
-		/* Send printf if send switch is on. */
-		while ( CANascii_send() != 0);
-
 		/* Call other routines if an address is set up--64 per sec. */
 		if (systickLOpriority3X_ptr != 0)	// Having no address for the following is bad.
 			(*systickLOpriority3X_ptr)();	// Go do something if address was set

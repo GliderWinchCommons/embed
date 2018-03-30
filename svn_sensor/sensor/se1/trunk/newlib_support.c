@@ -9,7 +9,6 @@ https://sites.google.com/site/stm32discovery/open-source-development-with-the-st
 #include <sys/stat.h>
 #include <sys/times.h>
 #include <sys/unistd.h>
-#include "panic_leds.h"
 
 /* The following are in 'svn_pod/sw_stm32/trunk/lib/libusartstm32' */
 #include "libusartstm32/usartallproto.h"	// For USART1, UART4
@@ -143,14 +142,13 @@ caddr_t _sbrk(int incr)
     }
     prev_heap_end = heap_end;
 
-    if ( (heap_end + incr) >  __MSP)
-     {
-	panic_leds(6);	while (1==1);	// Six flash panic display with code 6
+ //    if ( (heap_end + incr) >  __MSP)
+//     {
 //         _write (STDERR_FILENO, "Heap and stack collision\n", 25);
 //         errno = ENOMEM;
 //         return  (caddr_t) -1;
 //         //abort ();
-     }
+//     }
 
     heap_end += incr;
     return (caddr_t) prev_heap_end;

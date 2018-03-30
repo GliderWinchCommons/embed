@@ -113,7 +113,7 @@ void WEAK DMA2CH4_IRQHandler(void);	// dma2_channel4_5_isr(void);
 __attribute__ ((section(".vectors")))
 void (*const vector_table[]) (void) = {
 //	(void *)0x20000800,	/* Use 2KB stack (0x800 bytes). */
-	(void *)(0x20000000+(96*1024)-1),/* Put stack at top */
+	(void *)(0x20000000+(96*1024)-4),/* Put stack at top */
 //	main,			/* Use main() as reset vector for now. */
 	Reset_Handler,	//	unique_can_block,
 	nmi_handler,

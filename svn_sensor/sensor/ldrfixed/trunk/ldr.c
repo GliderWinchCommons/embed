@@ -195,7 +195,7 @@ int main(void)
 	USART1_rxinttxint_init(115200,96,4,96,4); // Initialize USART and setup control blocks and pointers
 
 	/* Announce who we are */
-	USART1_txint_puts("\r\n\n\n #### LDR #### 08-05-2016 r0 \n\r");
+	USART1_txint_puts("\r\n\n\n #### ../svn_sensor/sensor/ldrfixed/trunk/ldr.c #### 03-29-2018 r0 \n\r");
 	USART1_txint_send();	// Start the line buffer sending
 
 	/* Display things for to entertain the hapless op */

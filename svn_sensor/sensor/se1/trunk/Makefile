@@ -47,6 +47,7 @@ $(info LIBSENSORMISC ="$(LIBSENSORMISC)")
 
 # Library directory path--local common includes
 LIBCOMMONALL    = $(SRCDIR)/../../../common_all/trunk
+LIBCOMMONALL2   = $(SRCDIR)/../../../../svn_common/trunk/f103
 
 # Library of common to all processors
 LIBSVNCOMMON	= $(SRCDIR)/../../../../svn_common/trunk
@@ -60,8 +61,14 @@ LGCC = $(ARM_PREFIX_GCCLIB)
 LOTHER = $(ARM_PREFIX_OTHER)
 
 # Compiler flags -Os = no optimization, -Os = minimum space, -O3 = fastest
-CFLAGS   = -Os -g -Wall -Wextra
-CFLAGS	+= -Iinclude -fno-common -mcpu=cortex-m3 -mthumb -Wstrict-prototypes -fno-builtin-putc
+CFLAGS	 = -std=gnu99 -g -Os -Wall -Wextra
+CFLAGS	+= -mlittle-endian -mthumb -mthumb-interwork -nostartfiles
+CFLAGS	+= -fno-common -mcpu=cortex-m3 -Wstrict-prototypes 
+override FLOAT_TYPE = soft
+
+CFLAGS += -msoft-float
+#CFLAGS   = -Os -g -Wall -Wextra
+#CFLAGS	+= -Iinclude -fno-common -mcpu=cortex-m3 -mthumb -Wstrict-prototypes -fno-builtin-putc
 CFLAGS	+= -I$(LIBDEVICEF103SE) 
 CFLAGS	+= -I$(LIBPODLIB) 
 CFLAGS	+= -I$(LIBPODDEV) 
@@ -73,6 +80,7 @@ CFLAGS	+= -I$(LIBSENSORMISC)
 CFLAGS	+= -I$(LIBCOMMONALL) 
 CFLAGS	+= -I$(LIBSVNCOMMON)
 CFLAGS	+= -I$(LIBSENSORF103)
+CFLAGS	+= -I$(LIBCOMMONALL2)
 
 AFLAGS  = -mcpu=cortex-m3 -mthumb
 
@@ -91,8 +99,9 @@ LDFLAGS	+= -L$(LIBMISCSTM32)
 LDFLAGS	+= -L$(LIBUSARTSTM32) 
 LDFLAGS	+= -L$(LIBSUPPORTSTM32) 
 LDFLAGS	+= -L$(LIBSENSORMISC) 
-#LDFLAGS	+= -L$(LIBCOMMONALL)
+LDFLAGS	+= -L$(LIBCOMMONALL)
 LDFLAGS	+= -L$(LIBSVNCOMMON)/f103
+CFLAGS	+= -L$(LIBCOMMONALL2)
 
 # List of files to be compiled
 OBJS	 =  vector.o $(NAME).o 
@@ -150,7 +159,7 @@ images: $(NAME)
 
 $(NAME): $(OBJS) $(LDSCRIPT)
 	@printf "  LD      $(subst $(shell pwd)/,,$(@)) $(LFLAGS)\n"
-	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)  -lgcc  -lc -lgcc -lmiscstm32  -lusartstm32 -lsensormisc -ldevicestm32 -lsensormisc -lsupportstm32 -ldevicesstm32  -lm -lc -lgcc -lgcc
+	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)  -lgcc  -lc -lgcc -lmiscstm32  -lusartstm32 -lsensormisc -ldevicestm32 -lsensormisc -lsupportstm32 -ldevicesstm32 -lcommon_allf103 -lm -lc -lgcc -lgcc
 clean:
 	@printf "  CLEAN   $(subst $(shell pwd)/,,$(OBJS))\n"
 	$(Q)rm -f *.o $(LIBOPENSTM32)/*.o

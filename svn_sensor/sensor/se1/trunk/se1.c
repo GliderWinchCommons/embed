@@ -83,13 +83,16 @@ const struct FLASHP_SE1* flashp_se1 = (struct FLASHP_SE1*)&__highflashp;
 
 #include <math.h>
 #include <string.h>
+#include <malloc.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-//#include "PODpinconfig.h"
 #include "libopenstm32/adc.h"
 #include "libopenstm32/can.h"
 #include "libopenstm32/rcc.h"
 #include "libopenstm32/gpio.h"
 #include "scb.h"
+
 #include "libopenstm32/usart.h"
 #include "libusartstm32/usartallproto.h"
 //#include "libmiscstm32/systick1.h"
@@ -105,13 +108,13 @@ const struct FLASHP_SE1* flashp_se1 = (struct FLASHP_SE1*)&__highflashp;
 #include "../../../../svn_common/trunk/common_can.h"
 #include "SENSORpinconfig.h"
 #include "sensor_threshold.h"
-#include "rw_eeprom.h"
+//#include "rw_eeprom.h"
 #include "se1.h"
-#include "tick_pod6.h"
+//#include "tick_pod6.h"
 #include "panic_leds.h"
 #include "rpmsensor.h"
 #include "temp_calc.h"
-#include "CANascii.h"
+//#include "CANascii.h"
 #include "canwinch_pod_common_systick2048_printerr.h"
 
 #include "CAN_poll_loop.h"
@@ -121,7 +124,6 @@ const struct FLASHP_SE1* flashp_se1 = (struct FLASHP_SE1*)&__highflashp;
 #include "can_msg_reset.h"
 #include "can_gps_phasing.h"
 #include "sensor_threshold.h"
-#include "panic_leds_pod.h"
 #include "db/gen_db.h"
 #include "CAN_poll_loop.h"
 #include "../../../../svn_common/trunk/common_highflash.h"
@@ -134,7 +136,8 @@ const struct FLASHP_SE1* flashp_se1 = (struct FLASHP_SE1*)&__highflashp;
 extern struct CANWINCHPODCOMMONERRORS can_errors;	// A group of error counts
 
 /* Easy way for other routines to access via 'extern'*/
-struct CAN_CTLBLOCK* pctl0;
+struct CAN_CTLBLOCK* pctl1;
+struct CAN_CTLBLOCK* pctl0;	// Some routines use 0 for CAN1 others use 1 (sigh)
 
 /* For test with and without XTAL clocking */
 #ifdef usepriortomassiveupdateofse1program
@@ -175,6 +178,7 @@ AHB_1,			/* AHB prescalar code: SYSCLK/[2,4,8,16,32,64,128,256,512] (drives APB1
 
 #endif
 
+
 /* Parameters for setting up CAN */
 
 // Default: based on 72 MHz clock|36 MHz AHB freqs--500,000 bps, normal, port B
@@ -204,7 +208,6 @@ const struct CAN_INIT msginit = { \
 40,	/* RX0 can use this many. */\
 8	/* RX1 can use this piddling amount. */\
 };
-
 /*******************************************************************************
  * void can_nxp_setRS_sys(int rs, int board);
  * @brief 	: Set RS input to NXP CAN driver (TJA1051) (on some PODs) (SYSTICK version)
@@ -263,7 +266,6 @@ void system_reset(void)
 	SCB_AIRCR = (0x5FA << 16) | SCB_AIRCR_SYSRESETREQ;	// Cause a RESET
 	while (1==1);
 }
-
 /* **************************************************************************************
  * void prog_checksum_loader(void);
  * @brief	: Do program checksum/prog load until given "GO AHEAD" command
@@ -341,15 +343,8 @@ extern void relocate_vector(void);
 	SENSORgpiopins_Config();	// Now, configure pins
 
 	/* Use DTW_CYCCNT counter for startup timing */
-/* CYCCNT counter is in the Cortex-M-series core.  See the following for details 
-http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0337g/BABJFFGJ.html */
-	*(volatile unsigned int*)0xE000EDFC |= 0x01000000; // SCB_DEMCR = 0x01000000;
-	*(volatile unsigned int*)0xE0001000 |= 0x1;	// Enable DTW_CYCCNT (Data Watch cycle counter)
-
-//[enable GPS power]
-
-//	init_printf(0,putc);	// This one-time initialization is needed by the tiny printf routine
-
+	DTW_counter_init();
+setbuf(stdout, NULL);
 /* --------------------- Initialize usart --------------------------------------------------------- */
 /*	USARTx_rxinttxint_init(...,...,...,...);
 	Receive:  rxint	rx into line buffers
@@ -362,21 +357,18 @@ http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0337g/BABJFFGJ.ht
 		number of tx line buffers, (must be > 1)
 */
 	i = USART1_rxinttxint_init(115200,32,2,96,4); // Initialize USART and setup control blocks and pointers
-//	USART1_rxinttxint_init(  9600,32,2,32,3); // Initialize USART and setup control blocks and pointers
-
 	if (i != 0) panic_leds(7);	// Init failed: Bomb-out flashing LEDs 7 times
 
 	/* Announce who we are */
 	USART1_txint_puts("\n\rSE1: 03-23-2018 v1\n\r");
 	USART1_txint_send();	// Start the line buffer sending
 
-	CANascii_init();	// Setup for sending printf 'putc' as CAN msgs
-
 	/* Display things for to entertain the hapless op */
 	printf ("  hclk_freq (MHz) : %9u\n\r",  hclk_freq/1000000);	
 	printf (" pclk1_freq (MHz) : %9u\n\r", pclk1_freq/1000000);	
 	printf (" pclk2_freq (MHz) : %9u\n\r", pclk2_freq/1000000);	
 	printf ("sysclk_freq (MHz) : %9u\n\r",sysclk_freq/1000000);	USART1_txint_send();
+
 
 /* ---------------- Some test, monitoring, debug info ----------------------------------------------- */
 	extern void* __paramflash0a;
@@ -408,17 +400,18 @@ http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0337g/BABJFFGJ.ht
 
 	/* Initialize CAN for POD board (F103) and get control block */
 	// Set hardware filters for FIFO1 high priority ID & mask, plus FIFO1 ID for this UNIT
-	pctl0 = canwinch_setup_F103_pod(&msginit, canid_ldr); // ('can_ldr' is fifo1 reset CAN ID)
+	pctl1 = canwinch_setup_F103_pod(&msginit, canid_ldr); // ('can_ldr' is fifo1 reset CAN ID)
+	pctl0 = pctl1;	// Save copy for those routines that use 0 instead of 1
 
 	/* Check if initialization was successful. */
-	if (pctl0 == NULL)
+	if (pctl1 == NULL)
 	{
 		printf("CAN1 init failed: NULL ptr\n\r");USART1_txint_send(); 
 		while (1==1);
 	}
-	if (pctl0->ret < 0)
+	if (pctl1->ret < 0)
 	{ // Here, an error code was returned.
-		printf("CAN init failed: return code = %d\n\r",pctl0->ret);USART1_txint_send(); 
+		printf("CAN init failed: return code = %d\n\r",pctl1->ret);USART1_txint_send(); 
 		while (1==1);
 	}
 
@@ -485,7 +478,6 @@ static struct CANRCVBUF *pcan;
 /* --------------- Start TIM3 CH1 and CH2 interrupts ------------------------------------------------- */
 	tim3_ten2_init(pclk1_freq/2048);	// 64E6/2048
 
-
 /* --------------------- Endless Stuff ----------------------------------------------- */
 	while (1==1)
 	{
@@ -500,45 +492,18 @@ static struct CANRCVBUF *pcan;
 				TOGGLE_GREEN;	// Slow flash of green means "OK"
 
 				/* Print the counters in 'canwinch_pod_common_systick2048' */
-				canwinch_pod_common_systick2048_printerr(&can_errors);
+//				canwinch_pod_common_systick2048_printerr(&can_errors);
 			}
 //			printf("%7d %4d %2d %7d %7d %7d\n\r",CAN_ave,CAN_dbg1, CAN_dbg2,CAN_dbg3,CAN_dif, CAN_dev); USART1_txint_send();
-		}
-
-		strT = Tim4_inputcapture_ui();
-		uiT = strT.ic;
-		if (uiT != uiT_prev)
-		{
-			sum += (uiT - uiT_prev)-1066667-60;
-//			printf("%8d ",(uiT - uiT_prev)-1066667-60);
-			if (tctr++ >= 16)
-			{
-				tctr = 0;
-//				printf("%5d %6d\n\r",sctr++,sum/16);
-				sum = 0;
-//				printf("\n\r");USART1_txint_send();
-			}
-			uiT_prev = uiT;
-		}
-
-		/* Periodically list the ADC readings */
-		if (((int)(*(volatile unsigned int *)0xE0001004 - t_adc)) > 0) // Has the time expired?
-		{ // Here, yes.
-//			printf("%5d %5d: ",ct0++,(cicdebug0 - cicdebug0_prev)/3); // Sequence number, number of filtered readings between xprintf's
-			cicdebug0_prev = cicdebug0;
-
-//			for (i = 0; i < NUMBERADCCHANNELS_SE; i++)	// Loop through the three ADC channels
-//				printf("%5d ", adc_last_filtered[i]);	// ADC filtered and scaled reading
-
-//			printf("\n\r"); USART1_txint_send();
-			t_adc += ADCCOUNT; 	// Set next time to display readings
 		}
 
 		/* Poll & compute calibrated temperature */
 		temp_calc(); // Floating pt computation done at mainline priority
 
-	}
+		/* ---------- Trigger a pass through 'CAN_poll' to poll msg handling & sending. ---------- */
+		CAN_poll_loop_trigger();
 
+	}
 	return 0;	
 }
 

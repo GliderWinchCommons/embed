@@ -63,7 +63,7 @@ Open minicom on the PC with 115200 baud and 8N1.
 
 /* &&&&&&&&&&&&& Each node on the CAN bus gets a unit number &&&&&&&&&&&&&&&&&&&&&&&&&& */
 #include "../../../../svn_common/trunk/db/gen_db.h"
-#define	  IAMUNITNUMBER		CANID_UNIT_12	/* Fixed loader (serial number concept) */
+#define	  IAMUNITNUMBER		CANID_UNIT_3	/* Fixed loader (serial number concept) */
 #define   BOARDTYPE		3		/* Board type (e.g. shaft encoder, manifold pressure, tension,... */
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& */
 
@@ -221,7 +221,7 @@ int main(void)
 	USART1_rxinttxint_init(115200,96,4,96,4); // Initialize USART and setup control blocks and pointers
 
 	/* Announce who we are */
-	USART1_txint_puts("\r\n\n\n #### ../LDRFIXEDPOD/TRUNK/LDR #### 04/20/2016 v0 \n\r");
+	USART1_txint_puts("\r\n\n\n #### ../LDRFIXEDPOD/TRUNK/LDR #### 03/29/2018 v0 \n\r");
 
 	USART1_txint_send();	// Start the line buffer sending
 

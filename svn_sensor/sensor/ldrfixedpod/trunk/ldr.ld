@@ -5,10 +5,6 @@ OUTPUT_ARCH(arm)
 
 ENTRY (Reset_Handler);
 
-
-
-
-
 /* Define memory regions. */
 MEMORY
 {

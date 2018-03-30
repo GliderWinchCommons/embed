@@ -14,14 +14,13 @@
 NAME		= ldr
 
 # Prefix the name for the particular toolchain
-PREFIX		= arm-none-eabi
-# The path for the commands to find the compiler, linker, et al.
-TOOLDIR 	= $(HOME)/CodeSourcery/Sourcery_G++_Lite/bin
-CC		= $(TOOLDIR)/$(PREFIX)-gcc
-LD		= $(TOOLDIR)/$(PREFIX)-ld
-OBJCOPY		= $(TOOLDIR)/$(PREFIX)-objcopy
-OBJDUMP		= $(TOOLDIR)/$(PREFIX)-objdump
+PREFIX		= arm-none-eabi-
 
+CC	=$(PREFIX)gcc
+LD	=$(PREFIX)ld
+OBJCOPY	=$(PREFIX)objcopy
+SIZE	=$(PREFIX)size
+OBJDUMP	=$(PREFIX)objdump
 # Current directory
 SRCDIR=.
 
@@ -48,8 +47,12 @@ LIBCOMMONALL    = $(SRCDIR)/../../../common_all/trunk
 LIBSVNCOMMON	= $(SRCDIR)/../../../../svn_common/trunk/f103
 
 # Library directory path--compile and stuff
-LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
-LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
+#LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
+#LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
+
+# The following is setup in ~/.arm_tools when ~/.profile opens a terminal
+LGCC = $(ARM_PREFIX_GCCLIB)
+LOTHER = $(ARM_PREFIX_OTHER)
 
 # Compiler flags -Os = no optimization, -Os = minimum space, -O3 = fastest
 CFLAGS		= -Os -g -Wall -Wextra\
@@ -89,10 +92,11 @@ OBJS	+= newlib_support.o
 OBJS	+= canwinch_ldrproto.o 
 
 
-# Paths for openocd and automatic flashing
-OPENOCD_BASE	= /usr/local
-OPENOCD		= $(OPENOCD_BASE)/bin/openocd
-OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/share/openocd/scripts
+# The following two are 'export'ed in .arm_tools via .profile
+#OPENOCD_BASE	= /usr/share
+#OPENOCD		   = /usr/bin/openocd
+
+OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
 
 ifeq ($(JTAG_TYPE),stlink)
  	OPENOCD_FLASHER = $(OPENOCD_SCRIPTS)/interface/stlink-v2.cfg
@@ -110,8 +114,6 @@ NULL := 2>/dev/null
 endif
 
 all: images
-
-
 
 images: $(NAME)
 	@printf "  OBJCOPY $(NAME).bin\n"

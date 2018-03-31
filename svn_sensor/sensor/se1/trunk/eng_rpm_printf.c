@@ -47,23 +47,23 @@ void eng_rpm_printf(struct ENGRPMLC* p)
 int i = 0;
 printf("ENG_RPM: values: pointer = %08X\n\r",(int)p);
 // NOTE: fmtprint is a fixed format conversion to setup at string to print %8.3f
-printf("%2d	%d	%s\n\r",i+0, (unsigned int)p->size,   "  0 Number of items in list");
-printf("%2d	%d	%s\n\r",i+1, (unsigned int)p->crc,    "  1 Eng_rpm: CRC");
-printf("%2d	%d	%s\n\r",i+2, (unsigned int)p->version,"  2 Eng_rpm: Version number");
-printf("%2d	%d	%s\n\r",i+3, (unsigned int)p->hbct,   "  3 Eng_rpm: Time (ms) between HB msg");
-printf("%2d	%d	%s\n\r",i+4, (unsigned int)p->seg_ct, "  4 Eng_rpm: Counts per revolution on engine");
+printf("%02d	%d	%s\n\r",i+0, (unsigned int)p->size,   "  0 Number of items in list");
+printf("%02d	%d	%s\n\r",i+1, (unsigned int)p->crc,    "  1 Eng_rpm: CRC");
+printf("%02d	%d	%s\n\r",i+2, (unsigned int)p->version,"  2 Eng_rpm: Version number");
+printf("%02d	%d	%s\n\r",i+3, (unsigned int)p->hbct,   "  3 Eng_rpm: Time (ms) between HB msg");
+printf("%02d	%d	%s\n\r",i+4, (unsigned int)p->seg_ct, "  4 Eng_rpm: Counts per revolution on engine");
 
-printf("%2d	0x%08X %s\n\r",i+5, (unsigned int)p->cid_msg,"  5 Eng_rpm: CANID: Poll response, rpm, calibrated"); 
-printf("%2d	0x%08X %s\n\r",i+6, (unsigned int)p->cid_hb, "  6 Eng_rpm: CANID: CANID: Heartbeat: rpm, calibrated");
+printf("%02d	0x%08X %s\n\r",i+5, (unsigned int)p->cid_msg,"  5 Eng_rpm: CANID: Poll response, rpm, calibrated"); 
+printf("%02d	0x%08X %s\n\r",i+6, (unsigned int)p->cid_hb, "  6 Eng_rpm: CANID: CANID: Heartbeat: rpm, calibrated");
 
-printf("%2d	0x%08X %s\n\r",i+7, (unsigned int)p->code_CAN_filt[0], "  7 Eng_rpm: CANID 1 in CAN hw filter");
-printf("%2d	0x%08X %s\n\r",i+8, (unsigned int)p->code_CAN_filt[1], "  8 Eng_rpm: CANID 2 in CAN hw filter");
-printf("%2d	0x%08X %s\n\r",i+9, (unsigned int)p->code_CAN_filt[2], "  9 Eng_rpm: CANID 3 in CAN hw filter");
-printf("%2d	0x%08X %s\n\r",i+10,(unsigned int)p->code_CAN_filt[3], " 10 Eng_rpm: CANID 4 in CAN hw filter");
-printf("%2d	0x%08X %s\n\r",i+11,(unsigned int)p->code_CAN_filt[4], " 11 Eng_rpm: CANID 5 in CAN hw filter");
-printf("%2d	0x%08X %s\n\r",i+12,(unsigned int)p->code_CAN_filt[5], " 12 Eng_rpm: CANID 6 in CAN hw filter");
-printf("%2d	0x%08X %s\n\r",i+13,(unsigned int)p->code_CAN_filt[6], " 13 Eng_rpm: CANID 7 in CAN hw filter");
-printf("%2d	0x%08X %s\n\r",i+14,(unsigned int)p->code_CAN_filt[7], " 14 Eng_rpm: CANID 8 in CAN hw filter");
+printf("%02d	0x%08X %s\n\r",i+7, (unsigned int)p->code_CAN_filt[0], "  7 Eng_rpm: CANID 1 in CAN hw filter");
+printf("%02d	0x%08X %s\n\r",i+8, (unsigned int)p->code_CAN_filt[1], "  8 Eng_rpm: CANID 2 in CAN hw filter");
+printf("%02d	0x%08X %s\n\r",i+9, (unsigned int)p->code_CAN_filt[2], "  9 Eng_rpm: CANID 3 in CAN hw filter");
+printf("%02d	0x%08X %s\n\r",i+10,(unsigned int)p->code_CAN_filt[3], " 10 Eng_rpm: CANID 4 in CAN hw filter");
+printf("%02d	0x%08X %s\n\r",i+11,(unsigned int)p->code_CAN_filt[4], " 11 Eng_rpm: CANID 5 in CAN hw filter");
+printf("%02d	0x%08X %s\n\r",i+12,(unsigned int)p->code_CAN_filt[5], " 12 Eng_rpm: CANID 6 in CAN hw filter");
+printf("%02d	0x%08X %s\n\r",i+13,(unsigned int)p->code_CAN_filt[6], " 13 Eng_rpm: CANID 7 in CAN hw filter");
+printf("%02d	0x%08X %s\n\r",i+14,(unsigned int)p->code_CAN_filt[7], " 14 Eng_rpm: CANID 8 in CAN hw filter");
 
 	USART1_txint_send(); 
 	return;

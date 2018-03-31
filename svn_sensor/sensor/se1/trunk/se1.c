@@ -132,6 +132,9 @@ const struct FLASHP_SE1* flashp_se1 = (struct FLASHP_SE1*)&__highflashp;
 #include "iir_filter_l.h"
 #include "can_filter_print.h"
 
+#include "engine_idx_v_struct.h"
+#include "engine_function.h"
+
 /* Error counts for monitoring. */
 extern struct CANWINCHPODCOMMONERRORS can_errors;	// A group of error counts
 
@@ -360,7 +363,7 @@ setbuf(stdout, NULL);
 	if (i != 0) panic_leds(7);	// Init failed: Bomb-out flashing LEDs 7 times
 
 	/* Announce who we are */
-	USART1_txint_puts("\n\rSE1: 03-23-2018 v1\n\r");
+	USART1_txint_puts("\n\rSE1: 03-30-2018 v1\n\r");
 	USART1_txint_send();	// Start the line buffer sending
 
 	/* Display things for to entertain the hapless op */
@@ -417,6 +420,12 @@ setbuf(stdout, NULL);
 
 /* -------------------- Functions init --------------------------------------------------------------- */
 	engine_functions_init_all();
+
+	eng_man_printf(&eman_f.lc); // Print parameters copied from highflash
+	eng_rpm_printf(&erpm_f.lc);
+	eng_thr_printf(&ethr_f.lc);
+	eng_t1_printf(&et1_f.lc);
+
 /* --------------------- ADC setup and initialization ------------------------------------------------ */
 	adc_init_se_eng_sequence(can_params.iamunitnumber);	// Time delay + calibration, then start conversion
 /* --------------------- Program is ready, so do program-specific startup ---------------------------- */

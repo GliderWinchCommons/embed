@@ -51,24 +51,24 @@ void eng_thr_printf(struct ENGTHROTTLELC* p)
 int i = 0;
 printf("ENG_THROTTLE: pointer = %08X\n\r",(int)p);
 // NOTE: fmtprint is a fixed format conversion to setup at string to print %8.3f
-printf("%2d	%d	%s\n\r",i+0, (unsigned int)p->size,          "  0 Number of items in list");
-printf("%2d	%d	%s\n\r",i+1, (unsigned int)p->crc,           "  1 Eng_throttle: CRC");
-printf("%2d	%d	%s\n\r",i+2, (unsigned int)p->version,       "  2 Eng_throttle: Version number");
-printf("%2d	%d	%s\n\r",i+3, (unsigned int)p->hbct,          "  3 Eng_throttle: Time (ms) between HB msg");
-printf("%2d	%d	%s\n\r",i+4, (unsigned int)p->throttle_open, "  4 Eng_throttle: ADC when throttle full open");
-printf("%2d	%d	%s\n\r",i+5, (unsigned int)p->throttle_close,"  5 Eng_throttle: ADC when throttle closed");
+printf("%02d	%d	%s\n\r",i+0, (unsigned int)p->size,          "  0 Number of items in list");
+printf("%02d	%d	%s\n\r",i+1, (unsigned int)p->crc,           "  1 Eng_throttle: CRC");
+printf("%02d	%d	%s\n\r",i+2, (unsigned int)p->version,       "  2 Eng_throttle: Version number");
+printf("%02d	%d	%s\n\r",i+3, (unsigned int)p->hbct,          "  3 Eng_throttle: Time (ms) between HB msg");
+printf("%02d	%d	%s\n\r",i+4, (unsigned int)p->throttle_open, "  4 Eng_throttle: ADC when throttle full open");
+printf("%02d	%d	%s\n\r",i+5, (unsigned int)p->throttle_close,"  5 Eng_throttle: ADC when throttle closed");
 
-printf("%2d	0x%08X %s\n\r",i+6, (unsigned int)p->cid_msg,   "  6 Eng_throttle: CANID: Poll response: manifold pressure, calibrated"); 
-printf("%2d	0x%08X %s\n\r",i+7, (unsigned int)p->cid_hb,    "  7 Eng_throttle: CANID: Heartbeat: manifold pressure, calibrated");
+printf("%02d	0x%08X %s\n\r",i+6, (unsigned int)p->cid_msg,   "  6 Eng_throttle: CANID: Poll response: manifold pressure, calibrated"); 
+printf("%02d	0x%08X %s\n\r",i+7, (unsigned int)p->cid_hb,    "  7 Eng_throttle: CANID: Heartbeat: manifold pressure, calibrated");
 
-printf("%2d	0x%08X %s\n\r",i+8, (unsigned int)p->code_CAN_filt[0], "  8 Eng_throttle: CANID 1 in CAN hardware filter");
-printf("%2d	0x%08X %s\n\r",i+9, (unsigned int)p->code_CAN_filt[1], "  9 Eng_throttle: CANID 2 in CAN hardware filter");
-printf("%2d	0x%08X %s\n\r",i+10,(unsigned int)p->code_CAN_filt[2]," 10 Eng_throttle: CANID 3 in CAN hardware filter");
-printf("%2d	0x%08X %s\n\r",i+11,(unsigned int)p->code_CAN_filt[3]," 11 Eng_throttle: CANID 4 in CAN hardware filter");
-printf("%2d	0x%08X %s\n\r",i+12,(unsigned int)p->code_CAN_filt[4]," 12 Eng_throttle: CANID 5 in CAN hardware filter");
-printf("%2d	0x%08X %s\n\r",i+13,(unsigned int)p->code_CAN_filt[5]," 13 Eng_throttle: CANID 6 in CAN hardware filter");
-printf("%2d	0x%08X %s\n\r",i+14,(unsigned int)p->code_CAN_filt[6]," 14 Eng_throttle: CANID 7 in CAN hardware filter");
-printf("%2d	0x%08X %s\n\r",i+15,(unsigned int)p->code_CAN_filt[7]," 15 Eng_throttle: CANID 8 in CAN hardware filter");
+printf("%02d	0x%08X %s\n\r",i+8, (unsigned int)p->code_CAN_filt[0], "  8 Eng_throttle: CANID 1 in CAN hardware filter");
+printf("%02d	0x%08X %s\n\r",i+9, (unsigned int)p->code_CAN_filt[1], "  9 Eng_throttle: CANID 2 in CAN hardware filter");
+printf("%02d	0x%08X %s\n\r",i+10,(unsigned int)p->code_CAN_filt[2]," 10 Eng_throttle: CANID 3 in CAN hardware filter");
+printf("%02d	0x%08X %s\n\r",i+11,(unsigned int)p->code_CAN_filt[3]," 11 Eng_throttle: CANID 4 in CAN hardware filter");
+printf("%02d	0x%08X %s\n\r",i+12,(unsigned int)p->code_CAN_filt[4]," 12 Eng_throttle: CANID 5 in CAN hardware filter");
+printf("%02d	0x%08X %s\n\r",i+13,(unsigned int)p->code_CAN_filt[5]," 13 Eng_throttle: CANID 6 in CAN hardware filter");
+printf("%02d	0x%08X %s\n\r",i+14,(unsigned int)p->code_CAN_filt[6]," 14 Eng_throttle: CANID 7 in CAN hardware filter");
+printf("%02d	0x%08X %s\n\r",i+15,(unsigned int)p->code_CAN_filt[7]," 15 Eng_throttle: CANID 8 in CAN hardware filter");
 
 	USART1_txint_send(); 
 	return;

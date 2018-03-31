@@ -49,24 +49,24 @@ void eng_man_printf(struct ENGMANLC* p)
 int i = 0;
 printf("ENG_MAINIFOLD: pointer = %08X\n\r",(int)p);
 // NOTE: fmtprint is a fixed format conversion to setup at string to print %8.3f
-printf("%2d	%d	%s\n\r",   i + 0, (unsigned int)p->size,     "  0 Number of items in list");
-printf("%2d	%d	%s\n\r",   i + 1, (unsigned int)p->crc,      "  1 Eng_manifold: CRC");
-printf("%2d	%d	%s\n\r",   i + 2, (unsigned int)p->version,  "  2 Eng_manifold: Version number");
-printf("%2d	%d	%s\n\r",   i + 3, (unsigned int)p->hbct,     "  3 Eng_manifold: Time (ms) between HB msg");
+printf("%02d	%d	%s\n\r",   i + 0, (unsigned int)p->size,     "  0 Number of items in list");
+printf("%02d	%d	%s\n\r",   i + 1, (unsigned int)p->crc,      "  1 Eng_manifold: CRC");
+printf("%02d	%d	%s\n\r",   i + 2, (unsigned int)p->version,  "  2 Eng_manifold: Version number");
+printf("%02d	%d	%s\n\r",   i + 3, (unsigned int)p->hbct,     "  3 Eng_manifold: Time (ms) between HB msg");
 fmtprint(i+ 4, p->press_offset,                             "  4 Eng_manifold: Manifold pressure offset");
 fmtprint(i+ 5, p->press_scale,                              "  5 Eng_manifold: Manifold pressure  scale (inch Hg)");
 
-printf("%2d	0x%08X	%s\n\r",i+6, (unsigned int)p->cid_msg,"  6 Eng_manifold: CANID: Poll response: manifold pressure, calibrated"); 
-printf("%2d	0x%08X	%s\n\r",i+7, (unsigned int)p->cid_hb, "  7 Eng_manifold: CANID: Heartbeat: manifold pressure, calibrated");
+printf("%02d	0x%08X	%s\n\r",i+6, (unsigned int)p->cid_msg,"  6 Eng_manifold: CANID: Poll response: manifold pressure, calibrated"); 
+printf("%02d	0x%08X	%s\n\r",i+7, (unsigned int)p->cid_hb, "  7 Eng_manifold: CANID: Heartbeat: manifold pressure, calibrated");
 
-printf("%2d	0x%08X	%s\n\r",i+8, (unsigned int)p->code_CAN_filt[0], "  8 Eng_man: CANID 1 in CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+9, (unsigned int)p->code_CAN_filt[1], "  9 Eng_man: CANID 2 in CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+10, (unsigned int)p->code_CAN_filt[2]," 10 Eng_man: CANID 3 in CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+11, (unsigned int)p->code_CAN_filt[3]," 11 Eng_man: CANID 4 in CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+12, (unsigned int)p->code_CAN_filt[4]," 12 Eng_man: CANID 5 in CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+13, (unsigned int)p->code_CAN_filt[5]," 13 Eng_man: CANID 6 in CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+14, (unsigned int)p->code_CAN_filt[6]," 14 Eng_man: CANID 7 in CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+15, (unsigned int)p->code_CAN_filt[7]," 15 Eng_man: CANID 8 in CAN hardware filter");
+printf("%02d	0x%08X	%s\n\r",i+8, (unsigned int)p->code_CAN_filt[0], "  8 Eng_man: CANID 1 in CAN hardware filter");
+printf("%02d	0x%08X	%s\n\r",i+9, (unsigned int)p->code_CAN_filt[1], "  9 Eng_man: CANID 2 in CAN hardware filter");
+printf("%02d	0x%08X	%s\n\r",i+10, (unsigned int)p->code_CAN_filt[2]," 10 Eng_man: CANID 3 in CAN hardware filter");
+printf("%02d	0x%08X	%s\n\r",i+11, (unsigned int)p->code_CAN_filt[3]," 11 Eng_man: CANID 4 in CAN hardware filter");
+printf("%02d	0x%08X	%s\n\r",i+12, (unsigned int)p->code_CAN_filt[4]," 12 Eng_man: CANID 5 in CAN hardware filter");
+printf("%02d	0x%08X	%s\n\r",i+13, (unsigned int)p->code_CAN_filt[5]," 13 Eng_man: CANID 6 in CAN hardware filter");
+printf("%02d	0x%08X	%s\n\r",i+14, (unsigned int)p->code_CAN_filt[6]," 14 Eng_man: CANID 7 in CAN hardware filter");
+printf("%02d	0x%08X	%s\n\r",i+15, (unsigned int)p->code_CAN_filt[7]," 15 Eng_man: CANID 8 in CAN hardware filter");
 
 	USART1_txint_send(); 
 	return;

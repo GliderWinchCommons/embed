@@ -1,4 +1,4 @@
-// 2018-03-25 20:58:42.042
+// 2018-03-30 22:28:02.776
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -151,8 +151,8 @@ const uint32_t paramval06[] = {
  0x00000000 , /*   1 0                    6  Eng1_throttle:: CRC                                                             */
  0x00000001 , /*   2 1                    5  Eng1_throttle:: Version number                                                  */
  0x000003E8 , /*   3 1000                 5  Eng1_throttle:: Time (ms) between HB msg                                        */
- 0x45834000 , /*   4 4200                11  Eng1_throttle:: ADC when throttle full open                                     */
- 0x43FA0000 , /*   5  500                11  Eng1_throttle:: ADC when throttle closed                                        */
+ 0x00001068 , /*   4 4200                 6  Eng1_throttle:: ADC when throttle full open                                     */
+ 0x000001F4 , /*   5 500                  6  Eng1_throttle:: ADC when throttle closed                                        */
  0x40E00000 , /*   6 CANID_MSG_ENG1_THROTTLE  17  Eng1_throttle:: CANID: Poll response: throttle (0.0-100.0)                      */
  0x82400000 , /*   7 CANID_HB_ENG1_THROTTLE  17  Eng1_throttle:: CANID: Heartbeat: throttle (0.0-100.0)                          */
  0x00400000 , /*   8 CANID_HB_TIMESYNC   17  EPS_1: CANID 1: GPS time sync distribution msg                                  */

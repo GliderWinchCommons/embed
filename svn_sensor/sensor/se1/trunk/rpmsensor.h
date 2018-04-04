@@ -37,12 +37,14 @@ struct TIMCAPTRET32 Tim4_inputcapture_ui(void);
 /* @brief	: Lock interrupts
  * @return	: Current timer count and flag counter in a struct
 *******************************************************************************/
+/* ########################## UNDER HIGH PRIORITY CAN INTERRUPT ############################### */
+void rpmsensor_reset_timer(void);
+/* Can time sync msg: reset subinterval and OC 
+ * ############################################################################################### */
 
-extern void 	(*systickHIpriority2X_ptr)(void);	// SYSTICK handler (very high priority)
-extern void 	(*systickLOpriority2_ptr)(void);	// SYSTICK handler (low high priority) continuation--1/2048th
-extern void 	(*systickLOpriority2X_ptr)(void);	// SYSTICK handler (low high priority) continuation--1/64th
+extern void 	(*tim4ocLOpriority_ptr)(void);	// CH3 OC triggers EXTI0_IRQHANDLER -> rpmsensor_compute -> tim4ocLOpriority_ptr
 
-extern u32 rpm;
+extern void (*rpmsensor_can_msg_reset_ptr)(void* pctl, struct CAN_POOLBLOCK* pblk);	// Pointer for extending this routine's interrupt processing
 
 
 #endif 

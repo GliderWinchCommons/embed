@@ -306,21 +306,34 @@ pointer is automatically reloaded with the beginning of the buffer space (i.e. c
 
 'cnt' is a running counter of sequences converted.  Maybe not too useful except for debugging */
 
+	int *p1 = &adcrawbuff[adcidx_in];
+	int *p2;
+
 	if ( (DMA1_ISR & DMA_ISR_TCIF1) != 0 )	// Is this a transfer complete interrupt?
 	{ // Here, yes.  The second sequence has been converted and stored in the second buffer
-		strADC1resultptr->flg  = 1;	// Set the index to the second buffer.  It is ready.
-		strADC1resultptr->cnt += 1;	// Running count of sequences completed
+//		strADC1resultptr->flg  = 1;	// Set the index to the second buffer.  It is ready.
+//		strADC1resultptr->cnt += 1;	// Running count of sequences completed
+		p2 = &strADC1dr.in[1][0][0];
 		DMA1_IFCR = DMA_IFCR_CTCIF1;	// Clear transfer complete flag (p 208)
 	}
 	if ( (DMA1_ISR & DMA_ISR_HTIF1) != 0 )	// Is this a half transfer complete interrupt?
 	{ // Here, yes.  The first sequence has been converted and stored in the first buffer
-		strADC1resultptr->flg  = 0;	// Set index to the first buffer.  It is ready.
-		strADC1resultptr->cnt += 1;	// Running count of sequences completed
+//		strADC1resultptr->flg  = 0;	// Set index to the first buffer.  It is ready.
+//		strADC1resultptr->cnt += 1;	// Running count of sequences completed
+		p2 = &strADC1dr.in[0][0][0];
 		DMA1_IFCR = DMA_IFCR_CHTIF1;	// Clear transfer complete flag (p 208)
 	}
 
+	/* Copy 1/2 buffer just filled with a sequence to a circular buffer */
+	for (i = 0; i < NUMBERADCCHANNELS_SE; i++)
+	{
+		*p1++ = *p2++;
+	}
+	adcidx_in += 3;
+	if (adcidx_in >= ADCRAWBUFFSIZE*3) adcidx_in = 0;
+
 	/* Trigger a pending interrupt that will handle filter the ADC readings. */
-	NVICISPR(NVIC_FSMC_IRQ);	// Set pending (low priority) interrupt for  ('../lib/libusartstm32/nvicdirect.h')
+//	NVICISPR(NVIC_FSMC_IRQ);	// Set pending (low priority) interrupt for  ('../lib/libusartstm32/nvicdirect.h')
 
 	return;
 }
@@ -344,6 +357,7 @@ void FSMC_IRQHandler(void)
 #include "cic_filter_l_N2_M3.h"
 
 long	adc_last_filtered[NUMBERADCCHANNELS_SE];	// Last computed & filtered value for each channel
+uint8_t    adc_cic_flag[NUMBERADCCHANNELS_SE];	// 1 = cic filtering complete, 0 = not ready
 long	adc_temperature;		// Thermistor filter/decimate to 2/sec
 int	adc_temp_flag;			// Signal main new filtered reading ready
 int	adc_calib_temp;			// Temperature in deg C 
@@ -412,38 +426,26 @@ static void adc_cic_init(u32 iamunitnumber)
 
 	return;
 }
-/* ######################### UNDER HIGH PRIORITY SYSTICK INTERRUPT ############################### 
- * Enter from SYSTICK interrupt each 2048 per sec, and buffer latest ADC sequence of readings
+/* ######################### UNDER LO PRIORITY INTERRUPT ############################### 
+ * Triggered by DMA at 1/2 or end buffer interupt
  * ############################################################################################### */
-/* This stores the latest sequence of adc readings, for low priority filtering/sync'ing through a
-   cic filter. 
-
-   This routine is entered from the SYSTICK interrupt handler at high priority.
-*/
-static int adc2048[NUMBERADCCHANNELS_SE];	// Holds the latest sequence of ADC readings
-
 static void adcsensor_eng_bufadd(void)
 {
-	int *p1 = &adc2048[0];
+	int *p1 = &adcrawbuff[adcidx_in];
 	int *p2 = &strADC1dr.in[strADC1dr.flg][0][0];
 	
-	while (p1 < &adc2048[NUMBERADCCHANNELS_SE]) *p1++ = *p2++;
+	for (i = 0; i < NUMBERADCCHANNELS_SE; i++)
+	{
+		*p1++ = *p2++;
+	}
+	adcidx_in += 3;
+	if (adcidx_in >= ADCRAWBUFFSIZE*3) adcidx_in = 0;
 
-	/* Call other routines if an address is set up */
-	if (systickHIpriority3_ptr != 0)	// Having no address for the following is bad, so use an if.
-		(*systickHIpriority3_ptr)();	// Go do something	
 	return;
 }
-/* ########################## UNDER LOW PRIORITY SYSTICK INTERRUPT ############################### 
+/* ########################## UNDER LOW PRIORITY INTERRUPT Triggered by ADC/DMA ##################
  * Run the latest adc readings through the cic filter.
  * ############################################################################################### */
-/* 
-   This routine is entered from the SYSTICK interrupt handler triggering I2C2_EV low priority interrupt. 
-*/
-static struct CANRCVBUF cantest;
-static unsigned int testpay = 0;
-static unsigned short testhi = 0;
-
 unsigned int cicdebug0,cicdebug1;
 
 static u32 stk_64flgctr_prev;
@@ -455,17 +457,21 @@ static void adc_cic_filtering(void)
 {
 	int i;
 	int flag = 0;
+	int *p2 = &strADC1dr.in[strADC1dr.flg][0][0];
 
-	/* Add the latest buffered sequence of readings to the cic filter */
-	for (i = 0; i < NUMBERADCCHANNELS_SE; i++)	
+	while (p2 < &adc2048[NUMBERADCCHANNELS_SE])
 	{
-		adc_cic[i].nIn = adc2048[i]; 	// Load reading to filter struct
-		if (cic_filter_l_N2_M3 (&adc_cic[i]) != 0) // Filtering complete?
-		{ // Here, yes.
-			adc_last_filtered[i] = adc_cic[i].lout >> CICSCALE; // Scale and save
-			flag = 1;
+		/* Add the latest buffered sequence of readings to the cic filter */
+		for (i = 0; i < NUMBERADCCHANNELS_SE; i++)	
+		{
+			adc_cic[i].nIn = *p2++; 	// Load reading to filter struct
+			if (cic_filter_l_N2_M3 (&adc_cic[i]) != 0) // Filtering complete?
+			{ // Here, yes.
+				adc_last_filtered[i] = adc_cic[i].lout >> CICSCALE; // Scale and save
+				flag = 1;
 cicdebug0 += 1;
-		}
+			}
+ 		}
 	}
 	/* Run the thermistor reading through another filter/decimation */
 	if (flag != 0)

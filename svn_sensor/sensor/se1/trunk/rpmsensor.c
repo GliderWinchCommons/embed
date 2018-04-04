@@ -11,6 +11,7 @@ PB9 - TIM4_CH4, TIM11_CH1, SDIO5_D5, I2C1_SDA, CAN_TX: input from inverter.
 
 
 */
+#include <math>
 #include "libopenstm32/timer.h"
 #include "libusartstm32/nvicdirect.h" 
 #include "libusartstm32/commonbitband.h"
@@ -22,27 +23,37 @@ PB9 - TIM4_CH4, TIM11_CH1, SDIO5_D5, I2C1_SDA, CAN_TX: input from inverter.
 #include "adcsensor_eng.h"
 #include "canwinch_pod_common_systick2048.h"
 #include "rpmsensor.h"
-
-#include <math.h>
+#include "libmiscstm32/DTW_counter.h"
 
 /* Static routines buried in this mess. */
 static void Tim4_eng_init(void);
 static void rpmsensor_computerpm(void);
 static void rpmsensor_savetime(void);
 
-/* RPM computing */
-#define RPMSCALE 600	// RPS to RPM * 10
-#define PULSEPERREV	4	// Initial, or default, number of pulses per rev
-u32 	pulseperrev;	// Number of pulses per revolution (e.g. V8 engine = 4)
-static long long llrecip;	// Conversion of ticks to rpm
+/* Low level trigger for doing computation */
+void 	(*tim4ocLOpriority_ptr)(void) = 0;	// CH3 OC -> IC2C2_EV (low priority)
 
+/* TIM4 is on APB1 @ 32 MHz pclk1_freq */
+// One 1/64th sec interval = 500,000 ticks
+// 16 sub-intervals -> 500000/16 = 31250
+#define SUBINTERVAL 31250
+uint32_t subinterval_inc;	// Increment (31250 nominal)
+
+#define NUMSUBINTERVALS 16
+uint32_t subinterval_ct;	// Current subinterval count
+
+// Duration of subinterval: 31250/32 = 976.563 us
+// Allow about 2 ms for computation of readings before
+//  expected CAN poll msg.
+// CAN poll msg resets the subinterval counter and output
+//  capture count. The following is the sub-interval count
+//  that computation is triggered.
+#define SUBINTERVALTRIGGER 14
+#define SUBINTERVALOFFSET (SUBINTERVAL/2)	// Offset to avoid interrupt conflicts
 
 /* Pointers to functions to be executed under a low priority interrupt */
 // These hold the address of the function that will be called
-void 	(*systickHIpriority2X_ptr)(void) = 0;	// SYSTICK handler (very high priority) continuation--1/64th
-void 	(*systickLOpriority2_ptr)(void) = 0;	// SYSTICK handler (low high priority) continuation--1/2048th
-void 	(*systickLOpriority2X_ptr)(void) = 0;	// SYSTICK handler (low high priority) continuation--1/64th
-
+void 	(*rpmsensor_ptr)(void) = 0;	// 
 
 /* Various bit lengths of the timer counters are handled with a union */
 // Timer counter extended counts
@@ -54,25 +65,25 @@ volatile union TIMCAPTURE64	strTim4m;	// 64 bit extended TIM4 CH4 capture (main)
 /* The readings and flag counters are updated upon each capture interrupt */
 volatile u32		usTim4ch4_Flag;		// Incremented when a new capture interrupt serviced, TIM4_CH4
 
+static unsigned int endtime;
+static unsigned int rpmzeroflg = 0;	// not-zero = wait for rpm pulse
+static struct TIMCAPTRET32 endic;
+static struct TIMCAPTRET32 endic_prev;
+static struct TIMCAPTRET32 endic_prev_prev;
+
 /******************************************************************************
  * void rpmsensor_init(void);
  * @brief 	: Initialize TIM4_CH4 and routines to measure rpm
 *******************************************************************************/
 void rpmsensor_init(void)
 {
-	/* Some scaling constants */
-	llrecip = pclk1_freq;
-	pulseperrev = PULSEPERREV; 	// Pick this up from calibration table.
-	llrecip = (llrecip * 2 * RPMSCALE) / pulseperrev;
+	double dclk1_freq = pclk1_freq;
+	
+	/* factor to yield rpm */
+	erpm_f.dk1 = (2 * 60 * dclk1_freq)/erpm_f.lc.seg_ct;
 
-	/* The timer routines are slight mod's to POD timer routines. */
+	/* Input capture and 64/sec timing */
 	Tim4_eng_init();	// Initialize TIM4_CH4
-
-	/* This is call from SYSTICK, high priority, 64/sec. */
-	systickHIpriorityX_ptr = &rpmsensor_savetime;
-
-	/* This is a low priority post SYSTICK interrupt call, 2048 per sec. */
-	systickLOpriority_ptr = &rpmsensor_computerpm;
 
 	return;
 }
@@ -85,6 +96,10 @@ const struct PINCONFIGALL pin_pb9 = {(volatile u32 *)GPIOB, 9, IN_FLT, 0};
 
 static void Tim4_eng_init(void)
 {
+	/* Set subinterval count increment to initial nominal value */
+	subinterval_inc = SUBINTERVAL;
+	subinterval_ct = 0;	// Subinterval counter
+
 
 // Delay starting TIM4 counter
 //volatile int i;
@@ -118,12 +133,17 @@ static void Tim4_eng_init(void)
 	/* Control register 1 */
 	TIM4_CR1 |= TIM_CR1_CEN; 			// Counter enable: counter begins counting (p 371,2)
 
+	/* Enable a lower priority interrupt for handling post-systick timing. */
+	NVICIPR (NVIC_EXTI0_IRQ, NVIC_I2C2_EV_IRQ_PRIORITY );	// Set interrupt priority
+	NVICISER(NVIC_EXTI0_IRQ);			// Enable interrupt controller 
+
 	/* Set and enable interrupt controller for TIM4 interrupt */
 	NVICIPR (NVIC_TIM4_IRQ, TIM4_PRIORITY_SE );	// Set interrupt priority
 	NVICISER(NVIC_TIM4_IRQ);			// Enable interrupt controller for TIM4
 	
 	/* Enable input capture interrupts */
-	TIM4_DIER |= (TIM_DIER_CC4IE | TIM_DIER_UIE);	// Enable CH4 capture interrupt and counter overflow (p 388,9)
+// Enable CH3 output compare, CH4 capture interrupt, and counter overflow
+	TIM4_DIER |= (TIM_DIER_CC3IE | TIM_DIER_CC4IE | TIM_DIER_UIE);	
 
 	return;
 }
@@ -201,9 +221,9 @@ void TIM4_IRQHandler(void)
 {
 	volatile unsigned int temp;
 
-	unsigned short usSR = TIM4_SR & 0x11;	// Get capture & overflow flags
+	unsigned short usSR = TIM4_SR & 0x19;	// Get capture & overflow flags
 
-	switch (usSR)	// There are three cases where we do something.  The "00" case is bogus.
+	switch (usSR & 0x11)	// There are three cases where we do something.  The "00" case is bogus.
 	{
 	// p 394
 
@@ -221,6 +241,10 @@ void TIM4_IRQHandler(void)
 			strTim4.ui[1] = strTim4cnt.ui[1];	// Extended time of upper 32 bits of long long
 			usTim4ch4_Flag += 1;			// Advance the flag counter to signal mailine IC occurred
 			strTim4m = strTim4;			// Update buffered value		
+
+			erpm_f.ct += 1;	// Running count of input captures
+			erpm_f.endic = strTim4m.ui[0];			// Get 32b input capture time
+
 			temp = TIM4_SR;				// Readback register bit to be sure is cleared
 			break;
 
@@ -245,137 +269,87 @@ void TIM4_IRQHandler(void)
 
 			strTim4cnt.ll	+= 0x10000;		// Increment the high order 48 bits of the timer counter
 
+			erpm_f.ct += 1;	// Running count of input captures
+			erpm_f.endic = strTim4m.ui[0];			// Get 32b input capture time
+
 			temp = TIM4_SR;				// Readback register bit to be sure is cleared
 
 			break;
 	}
+	if ((TIM4_SR & 0x08) != 0)
+	{
+			TIM4_SR = ~0x08;	// Reset CH3 output capture flag
+			TIM4_CCR3  += subinterval_inc;	// Next sub-interval interrupt time
+			subinterval_ct += 1;	// Count sub-intervals
+			if (subinterval_ct >= SUBINTERVALTRIGGER) // Time to trigger (lower level) computation?
+			{ // Here, yes
+				/* Trigger a pending interrupt, which will call 'rpmsensor_computerpm' */
+				NVICISPR(NVIC_EXTI0_IRQ);	// Set pending (low priority) interrupt 
+			}
+			if (subinterval_ct >= NUMSUBINTERVALS) // End of sub-interval?
+			{ // Here, yes.
+				subinterval_ct = 0;
+			}
+	}
 	return;
 }
-/* ######################### UNDER HIGH PRIORITY SYSTICK INTERRUPT ############################### 
- * Enter from SYSTICK interrupt each 64 per sec
+/* ########################## UNDER HIGH PRIORITY CAN INTERRUPT ############################### 
+ * void rpmsensor_reset_timer(void);
+ * Can time sync msg: reset subinterval and OC 
  * ############################################################################################### */
-static unsigned int endtime;
-static unsigned int rpmzeroflg = 0;	// not-zero = wait for rpm pulse
-static struct TIMCAPTRET32 endic;
-static struct TIMCAPTRET32 endic_prev;
-static struct TIMCAPTRET32 endic_prev_prev;
-
-static void rpmsensor_savetime(void)
+void rpmsensor_reset_timer(void)
 {
-	/* The following values will be used later for computations under low priority interrupt. */
-	endtime = Tim4_gettime_ui();	// Save current 32b time tick count (time)
-	endic = Tim4_inputcapture_ui();	// Save the last 32b input capture time and ic counter
-	
-	/* Call other routines if an address is set up */
-	if (systickHIpriority2X_ptr != 0)	// Having no address for the following is bad.
-		(*systickHIpriority2X_ptr)();	// Go do something	
-
+	subinterval_ct = 0;
+	TIM4_CCR3 = TIM4_CNT + subinterval_inc - SUBINTERVALOFFSET;
 	return;
 }
-/* ########################## UNDER LOW PRIORITY SYSTICK INTERRUPT ############################### 
+
+/* ########################## UNDER LOW PRIORITY from TIM4 INTERRUPT ############################### 
  * Compute the rpm
  * ############################################################################################### */
-/* 
-   This routine is entered from the SYSTICK interrupt handler triggering I2C2_EV low priority interrupt. 
-*/
-/******************************************************************************
- * static u32 rpm_arith(u32 numerator, u32 denominator);
- * @brief	: Do the arithemtic to compute rpm (with tick rate adjustment)
- * @return	: rpm
-*******************************************************************************/
-static u32 rpm_arith(u32 numerator, u32 denominator)
-{
-/* return = (a * b)/c);
- Where: a = ticks between pulses; b = ticks for 1/64th actual; c = ticks for 1/64th sec ideal
-*/
-double dnum = numerator;
-double dden = denominator;
-double dideal = ticks64thideal;
-double ddev = deviation_one64th;
-double dactual = dideal - (ddev/65536);
-double x1 = (dnum / dden) * (dactual/dideal);
-double recip = llrecip;
-double drpm = recip / x1;
-u32 irpm = drpm;
-return irpm;
+uint32_t rpmsensor_dbug1;	
+uint32_t rpmsensor_dbug2;
+uint32_t rpmsensor_dbug3;
 
-	long long llnum = numerator;			// Ticks between pulses
-	long long lldelta = -deviation_one64th;		// Average ticks deviation per 1/64th sec (scaled)
-	long long llideal = ticks64thideal;		// With 64MHz sys clk, this would be 1E6 ticks per 1/64th sec
-		lldelta += (llideal << TIMESCALE); 	// Average actual ticks per 1/64th sec (scaled by 65536)
 
-	long long llx1 = lldelta * llnum;
-	llx1 = llx1/llideal;	// llx1 = (number_of-pulses * actual_clk / ideal_clk) 
-	llx1 = llx1/denominator;// llx1 = (number_of_pulses / time_interval) = 1/RPM
-	return ( (u32)(llrecip/(llx1 >> TIMESCALE)) ); 	// Return: RPM scaled with "#define RPMSCALE 600"
-}
-
-static u32 stk_64flgctr_prev;
-u32 rpm;
-
-/* Enter this is from low priority post SYSTICK interrupt call, 2048 per sec. */
+/* Enter this is from low priority interrupt triggered by TIM4, about 2 ms before 
+   next expected poll msg.  These are nominally 64 per sec and sync'ed to the poll
+   msg so that there computations are ready slightly before the poll msg. */
 static void rpmsensor_computerpm(void)
 {
-	unsigned int ctrdiff;
-	unsigned int icdiff;
+	int32_t inic;
+	int32_t itim;
+	double dtim;
+	double drpm;
 
-	/* Was this one the 1/64th sec demarcation? 'canwinch_pod_common_systick2048.c' increments
-           'stk_64flgctr' at the end of each 1/64th sec interval. */
-	if (stk_64flgctr != stk_64flgctr_prev)
-	{ // Here, yes.  Compute the rpm.
-	// NOTE: 'adcsensor_eng.c' will set up the CAN message that has pressure and this rpm.
-		stk_64flgctr_prev = stk_64flgctr;
+rpmsensor_dbug1 = DTWTIME;
+	// Number of input captures since last computation
+		inic = erpm_f.ct - erpm_f.ct_prev;
+		erpm_f.ct_prev = erpm_f.ct
+		dnic = inic;	
 
-		ctrdiff = (endic.flg - endic_prev.flg);	// Number of ic's in last 1/64th sec period;	
-		if (ctrdiff != 0)
-		{ // Here, one or more rpm pulses during the last 1/64th sec interval
-			if (rpmzeroflg == 0)
-			{			
-				icdiff = (endic.ic - endic_prev.ic);	// Number of intervening timer ticks
-				rpm = rpm_arith(icdiff,ctrdiff);	// Compute RPM
-			}
-			else
-			{	
-				rpmzeroflg = 0;			// Reset the flag showing rpm forced-to-zero.
-				rpm = 0;			// Next cycle will compute a non-zero rpm.
-			}
-			endic_prev_prev = endic_prev;		// Push the save down one level.
-			endic_prev = endic;			// Update previous for next cycle
+	// Time duration between previous and latest ic
+		itim = erpm_f.endic = erpm_f.endic_prev;
+		erpm_f.endic_prev = erpm_f.endic;
+		dtim = itim;
 
-		}
-		else
-		{ // Here, there were no rpm pulses during the last 1/64th sec interval.
-			if (rpmzeroflg == 0) // Are we in a forced-to-zero situation?
-			{ // Here, no.  We have't timed out to qualify for forcing zero rpm.
-				icdiff = (endtime - endic_prev.ic);	// Use the time of the 1/64th sec ending
-				if ( icdiff > 64000000 ) // Is the interval so that we consider the rpm zero?
-				{ // Yes, we timed out between input captures.
-					rpmzeroflg = 1;	// Set timed out flag.
-					rpm = 0;	// Force rpm to be zero.
-				}
-				else
-				{ // Here, we haven't timed out,
-					/* Is the duration from the last pulse until now, greater than the last pulse pair duration? */
-					if ( (endtime - endic_prev.ic) > (endic_prev.ic - endic_prev_prev.ic) )
-					{ // Here, yes.  Compute a new (and lower) RPM
-						rpm = rpm_arith((endtime - endic_prev.ic), 1);	// Compute RPM
-					}
-					else
-					{ // Here, another pulse is likely to arrive
-						// Leave the RPM unchanged.
-					}
-				}
-			}
-			else
-			{ // Here, we timed out and now are waiting for a rpm pulse to get us off of a forced zero.
-					rpm = 0;  // Force rpm to be zero.
-			}
-		}
-	}
-	/* Call other routines if an address is set up--2048 per sec. */
-	if (systickLOpriority2_ptr != 0)	// Having no address for the following is bad.
-		(*systickLOpriority2_ptr)();	// Go do something
+	// (input capture counts) / (duration) scaled to rpm
+		drpm = (dnic * erpm_f.dk1)/dtim;
+		frpm = drpm;	// Convert to float for CAN msg)
+rpmsensor_dbug2 = DTWTIME;
+	
+	return;
+}
+/*#######################################################################################
+ * ISR routine for output caputure low priority level
+ *####################################################################################### */
+void EXTI0_IRQHANDLER(void)
+{
+	rpmsensor_computerpm();	// Do the rpm computation
+
+	/* TIME4 CH3 (above) at high priority triggers this low priority  */
+	if (tim4ocLOpriority_ptr != 0)	// Skip? Having no address for the following is bad.
+		(*tim4ocLOpriority_ptr)();	   // Go do something for somebody
 
 	return;
 }
-

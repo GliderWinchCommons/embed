@@ -55,7 +55,7 @@ void WEAK tamper_isr(void);
 void WEAK p1_RTC_IRQHandler(void);	    // rtc_isr(void);
 void WEAK flash_isr(void);
 void WEAK rcc_isr(void);
-void WEAK exti0_isr(void);
+void WEAK EXTI0_IRQHANDLER(void);	// exti0_isr(void);
 void WEAK exti1_isr(void);
 void WEAK exti2_isr(void);
 void WEAK exti3_isr(void);
@@ -133,7 +133,7 @@ void (*const vector_table[]) (void) = {
 	p1_RTC_IRQHandler,		//rtc_isr,
 	flash_isr,
 	rcc_isr,
-	exti0_isr,
+	EXTI0_IRQHANDLER,	// exti0_isr,
 	exti1_isr,
 	exti2_isr,
 	exti3_isr,
@@ -259,7 +259,7 @@ void relocate_vector(void)
 #pragma weak rtc_isr = null_handler
 #pragma weak flash_isr = null_handler
 #pragma weak rcc_isr = null_handler
-#pragma weak exti0_isr = null_handler
+#pragma weak EXTI0_IRQHANDLER = null_handler
 #pragma weak exti1_isr = null_handler
 #pragma weak exti2_isr = null_handler
 #pragma weak exti3_isr = null_handler

@@ -95,6 +95,9 @@ static int function_init(uint32_t n, struct COMMONFUNCTION* p, uint32_t hbct )
 {
 	u32 i;
 
+	/* Flag for triggering sending of polled message */
+	p->flag_msg = 0;	// Be sure it is reset
+
 	/* First heartbeat time */
 	// Convert heartbeat time (ms) to timer ticks (recompute for online update)
 	p->hbct_ticks = (hbct * tim3_ten2_rate) / 1000;
@@ -315,21 +318,13 @@ int eng_man_poll(struct CANRCVBUF* pcan, struct ENG_MAN_FUNCTION* p)
 	/* Check if any incoming msgs. */
 	if (pcan == NULL) return ret;
 
-	/* Check for group poll, and send msg if it is for us. */
-//$	if (pcan->id == p->ten_a.cid_ten_poll) // Correct ID?
-//if (pcan->id == p->ten_a.cid_gps_sync) // ##### TEST #########
-if (pcan->id == 0x00400000) // ##### TEST #########
-	{ // Here, group poll msg.  Check if poll and function bits are for us
-//$		if ( ((pcan->cd.uc[0] & p->ten_a.p_pollbit) != 0) && \
-		     ((pcan->cd.uc[1] & p->ten_a.f_pollbit) != 0) )
-		{ // Here, yes.  Send our precious msg.
-			/* Send tension msg and re-compute next hearbeat time count. */
+	if (eman_f.flag_msg != 0) // Poll msg request?
+	{ // Here, yes.  Send response
+		eman_f.flag_msg  = 0;
 			//      Args:  CAN id, status of reading, reading pointer instance pointer
-			setup_can_msg(&cantmp, p->lc.cid_msg, p->status, &ui.ui); // Setup CAN msg
-		   send_can_msg_man(p, &cantmp); // Send CAN msg, reset heartbeat cts
- 
+		setup_can_msg(&cantmp, p->lc.cid_msg, p->status, &ui.ui); // Setup CAN msg
+	   send_can_msg_man(p, &cantmp); // Send CAN msg, reset heartbeat cts
 			return 1;
-		}
 	}
 	
 	/* Check for eng_manifold function command. */
@@ -340,5 +335,54 @@ if (pcan->id == 0x00400000) // ##### TEST #########
 	}
 #endif
 	return ret;
+}
+
+#include "can_msg_reset.h"
+#include "CAN_poll_loop.h"
+static void engine_can_msg_poll(struct CAN_CTLBLOCK* pctl, u32 canid); // declaration
+
+
+/*##############################################################################################
+ * The following executes under CAN driver interrupt level
+ * can_driver.c (CAN RX) -> can_msg_reset.c -> engine_can_msg_poll (and then trigger CAN_poll_loop)
+ *############################################################################################## */
+static void engine_can_msg_poll(struct CAN_CTLBLOCK* pctl, u32 canid)
+{
+/* Note: the canid for poll is likely the same for all these functions, but it is possible
+   to set different poll canids.
+      Since the timing for readings filtering & computation is common, the timer sync reset
+   is only called once.
+*/
+	/* Check for poll msgs and set flags for sending msgs (at lower priority) */
+	if (eman_f.lc.cid_msg == canid)	// Manifold poll?
+	{
+		eman_f.cf.flag_msg = 1;	// Show manifold pressure poll response requested
+	}
+	if (erpm_f.lc.cid_msg == canid)	// RPM poll?
+	{
+		erpm_f.cf.flag_msg = 1; // Show rpm poll response requested
+// Timing reset call goes here since rpm is more time critical than the others
+	}
+	if (ethr_f.lc.cid_msg == canid)	// Throttle poll?
+	{
+		ethr_f.cf.flag_msg = 1;	// Show throttle response requested
+	}
+	CAN_poll_loop_trigger();	// Trigger low level interrupt poll
+}
+/*******************************************************************************
+ * int can_msg_reset_init (struct CAN_CTLBLOCK* pctl, u32 canid);
+ * @brief	: Initializes RX msgs to check for reset
+ * @param	: pctl = pointer to CAN control block 
+ * @param	: canid = CAN id used for reset msg to this unit
+ * @return	: 0 = OK, -1 failed: RX ptr was not NULL
+********************************************************************************/
+int engine_can_msg_poll_init(struct CAN_CTLBLOCK* pctl, u32 canid)
+{
+
+   //	   pctl->ptrs1.func_rx = (void*)&can_msg_reset_msg; // Callback address for CAN RX0 or RX1 handler
+	// 'can_msg_reset.c' will call the following
+	can_msg_reset_ptr = (void*)&engine_can_msg_poll; // Cast since no arguments are used
+
+	return 0;
 }
 

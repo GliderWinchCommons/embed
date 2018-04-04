@@ -22,13 +22,14 @@
 /* Common to all functions */
 struct COMMONFUNCTION
 {
-	void* p_idx_struct;	// Pointer to table of pointers for idx->struct 
-	void* pparamflash;		// Pointer to flash area with flat array of parameters
-	uint32_t* pcanid_cmd_func_i;	// Pointer into high flash for command can id (incoming)
-	uint32_t* pcanid_cmd_func_r;	// Pointer into high flash for command can id (response)
-	uint32_t hb_t;			// tim3 tick counter for next heart-beat CAN msg
-	uint32_t hbct_ticks;		// ten_a.hbct (ms) converted to timer ticks
-	struct CANHUB* phub;	// Pointer: CAN hub buffer
+	void* p_idx_struct;         // Pointer to table of pointers for idx->struct 
+	void* pparamflash;          // Pointer to flash area with flat array of parameters
+	uint32_t* pcanid_cmd_func_i;// Pointer into high flash for command can id (incoming)
+	uint32_t* pcanid_cmd_func_r;// Pointer into high flash for command can id (response)
+	uint32_t hb_t;              // tim3 tick counter for next heart-beat CAN msg
+	uint32_t hbct_ticks;        // ten_a.hbct (ms) converted to timer ticks
+	struct CANHUB* phub;        // Pointer: CAN hub buffer
+	uint8_t flag_msg;           // 1 = send polled msg; 0 = skip
 };
 
 
@@ -44,9 +45,17 @@ struct ENG_MAN_FUNCTION
 
 struct ENG_RPM_FUNCTION
 {
-	struct COMMONFUNCTION cf; // Common to all functions
-   struct ENGRPMLC lc;
-	double rpmval;			// Filtered reading converted to double
+	struct COMMONFUNCTION cf; // Common to all engine Functions
+   struct ENGRPMLC lc;		  // Local Copy of parameters
+	uint32_t endtime; 	 // Tim4_gettime_ui() Save current 32b time tick count (time)
+	uint32_t endic;       // Tim4_inputcapture_ui() Save the last 32b input capture time and ic counter
+	uint32_t endtime_prev;// Previous endtime
+	uint32_t endic_prev;  // Previous endic
+	uint32_t ct;          // Running count of input captures
+	uint32_t ct_prev;     // Previous ic
+	double   dk1;         // Scale factor
+	double   dprm;        // rpm (double)
+	double   frpm;        // rpm (float)
 };
 struct ENG_THR_FUNCTION
 {

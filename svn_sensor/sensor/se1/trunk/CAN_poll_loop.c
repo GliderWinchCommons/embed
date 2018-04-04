@@ -47,12 +47,6 @@ int CAN_poll_loop_init(void)
 	phub_app = can_hub_add_func();	// Get a hub port for dealing with commands
 	if (phub_app == NULL) return -1;
 
-	/* Each CAN msg not rejected by the hardware filters will trigger
-          a pass through CAN_poll.  The trigger comes via a routines that exits to the
-          next routine in the chain.  It starts with 
-	  'can_driver' RX0,1 interrupt -> 'can_msg_reset' -> 'can_msg_reset_ptr' */
-	can_msg_reset_ptr = (void*)&CAN_poll_loop_trigger; // Cast since no arguments are used
-
 	return 0;
 }
 /* **************************************************************************************

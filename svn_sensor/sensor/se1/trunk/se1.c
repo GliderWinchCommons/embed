@@ -432,34 +432,6 @@ setbuf(stdout, NULL);
 
 i = 0;
 
-/* CAN tx test */
-//struct CANRCVBUF can_msg;
-//can_msg.id = IAMUNITNUMBER | 0x05000000;
-//can_msg.id = CAN_UNITID_POD6;	// PD board hack sensor ID
-//can_msg.cd.ui[0] = 0x76543210;	// 1st 4 bytes of msg
-//can_msg.cd.ui[1] = 0xfedcba98;		// 2nd 4 bytes: if zero, then "n" in msg is only 4 bytes
-// can_msg.cd.ull = 0xfedcba9876543210;
-//   can_msg.cd.ull = 0x00000000abcd0000;
-
-/* CAN rx test */
-//struct CANRCVTIMBUF * pFifo1 = 0;	// FIFO 1 buffer receive msg pointer
-//struct CANRCVBUF * pFifo0 = 0;		// FIFO 2 buffer receive msg pointer
-
-//int can_put = -1;
-//int k = 0;
-//int m = 0;
-
-//extern u32 CAN_ticks;
-//u32 CAN_ticks_prev = 0;
-//extern s32 CAN_dev;
-//extern s32 CAN_ave;
-//extern s32 CAN_dbg1;
-//extern s32 CAN_dbg2;
-//extern s32 CAN_dbg3;
-//extern s32 CAN_dif;
-//extern u32	stk_val;
-//extern u32	can_msgovrflow;	
-//u32 		stk_64flgctr_prev1;
 
 u32	uiT;
 u32	uiT_prev = 0;

@@ -24,12 +24,18 @@
 #define DECIMATION_SE     32   // Decimation ratio
 #define DISCARD_SE       32   // Number of readings to discard before filtering starts
 #define CICSCALE        18   // Right shift count to scale result
+#define ADCRAWBUFFSIZE  64  // Number of sequences in circular buffer
 
 /* ADC usage
 PA0 ADC123-IN0 Throttle potentiometer
 PA1 ADC123-IN1 Thermistor
 PA3 ADC123-IN2 Pressure sensor  
 */
+
+/* Circular buffer of sequences */
+int adcrawbuff[ADCRAWBUFFSIZE * NUMBERADCCHANNELS_SE];
+uint32_t adcidx_in = 0;	
+uint32_t adcidx_out = 0;
 
 struct ADCDR_ENG
 {

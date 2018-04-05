@@ -21,12 +21,26 @@ tmpstruch.h that is generated on the fly by the compile script is available.
 // TREF	298.0	 // Reference temp for thermistor
 
 /* **************************************************************************************
- * double temp_calc_param_dbl(int adcreading, struct THERMPARAM *p);
+ * void temp_calc_param_dbl_init(struct THERMPARAMDBL *pd, struct THERMPARAM *pf);
+ * @brief	: Convert parameters from float to double 
+ * @param	: doubles
+ * @param	: floats
+ * ************************************************************************************** */
+void temp_calc_param_dbl_init(struct THERMPARAMDBL *pd, struct THERMPARAM *pf)
+{
+	pd->B    = pf->B;
+	pd->RS   = pf->RS;
+	pd->R0   = pf->R0;
+	pd->TREF = pf->TREF;
+	return;
+}
+/* **************************************************************************************
+ * double temp_calc_param_dbl(int adcreading, struct THERMPARAMDBL *p);
  * @brief	: Compute temperature from adc reading ('d' = double precision)
  * @param	; adcreading,  scaled (0 - 4095) if filtered/averaged
  * @return	: Degrees Centigrade
  * ************************************************************************************** */
-double temp_calc_param_dbl(int adcreading, struct THERMPARAM *p)
+double temp_calc_param_dbl(int adcreading, struct THERMPARAMDBL *p)
 {
 	double r;	// Thermistor resistance
 	double ratio;	// R/Ro

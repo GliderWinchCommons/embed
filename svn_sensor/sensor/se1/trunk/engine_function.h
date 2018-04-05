@@ -28,10 +28,21 @@ struct COMMONFUNCTION
 	uint32_t* pcanid_cmd_func_r;// Pointer into high flash for command can id (response)
 	uint32_t hb_t;              // tim3 tick counter for next heart-beat CAN msg
 	uint32_t hbct_ticks;        // ten_a.hbct (ms) converted to timer ticks
+	uint32_t canid_msg;         // CAN id for poll response msg
+	uint32_t canid_hb;          // CAN id for heartbeat msg
+	uint32_t canid_poll;        // CAN id for poll
+	uint32_t ilast1;            // Last reading: first cic filtered 
+	float    flast1;            // Last reading: converted to float
+	uint32_t ilast2;            // Last reading: second cic filtered 
+	float    flast2;            // Last reading: second, converted to float
+	int32_t  tmp;               // Temporary
 	struct CANHUB* phub;        // Pointer: CAN hub buffer
+	struct CANRCVBUF can_msg;   // Latest reading CAN msg
+	struct CICLN2M3 cic2;       // CIC filtering after initial
+	uint8_t status;		       // Reading status
 	uint8_t flag_msg;           // 1 = send polled msg; 0 = skip
+   uint8_t flag_last1;         // Last reading flag: 1 = new data
 };
-
 
 /* These are the working structs for the functions */
 //
@@ -39,8 +50,10 @@ struct ENG_MAN_FUNCTION
 {
 	struct COMMONFUNCTION cf; // Common to all functions
 	struct ENGMANLC lc;	// Flash table copied to sram struct
-	double manval;			// Filtered reading converted to double
-	uint8_t status;		// Reading status
+	double dlast1;			// Filtered reading converted to double
+	double dcalibrated;	// 
+	double dpress_offset;// 4 Mainfold pressure, zero offset
+	double dpress_scale;	// 5 Manifold pressure, scale
 };
 
 struct ENG_RPM_FUNCTION
@@ -68,6 +81,8 @@ struct ENG_T1_FUNCTION
 {
 	struct COMMONFUNCTION cf; // Common to all functions
    struct ENGT1LC lc;
+	struct THERMPARAMDBL thermdbl; // Parameters converted from float to double
+	float  dlast;			// Last temperature
 	double thrm;			// Filtered reading converted to double
 	double degX;			// Uncalibrated temperature for each thermistor
 };
@@ -137,10 +152,13 @@ int engine_functions_init_all(void);
  * @param	: p = pointer to struct with "everything" for this instance of engine manifold
  * @return	: 0 = No msgs sent; 1 = msgs were sent and loaded into can_hub buffer
  * ************************************************************************************** */
- int eng_t1_temperature_poll(void);
-/* @brief	: Function: eng_t1, temperature #1, w  thermistor-to-temperature conversion
- * @return	: 0 = no update; 1 = temperature readings updated
- * ************************************************************************************** */
+int eng_common_poll(struct CANRCVBUF* pcan, struct COMMONFUNCTION* p);
+/* @brief	: 'CAN_poll_loop.c' calls this for each of the engine functions
+ * @param	; pcan = pointer to CAN msg buffer (incoming msg)
+ * @param	: p = pointer to struct with variables and parameters common to all functions
+ * @return	: 0 = No msgs sent; 1 = msgs were sent and loaded into can_hub buffer
+ * ###################################################################################### */
+
 
 /* Holds parameters and associated computed values and readings for each instance. */
 extern struct ENG_MAN_FUNCTION eman_f;

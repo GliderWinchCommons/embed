@@ -15,6 +15,8 @@
 #include "libopenstm32/rcc.h"
 #include "libopenstm32/rtc.h"
 
+#include "can_driver.h"
+
 union TIMCAPTURE64
 {
 	unsigned short	us[4];

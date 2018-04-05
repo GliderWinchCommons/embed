@@ -281,15 +281,11 @@ void TIM4_IRQHandler(void)
 			TIM4_SR = ~0x08;	// Reset CH3 output capture flag
 			TIM4_CCR3  += subinterval_inc;	// Next sub-interval interrupt time
 			subinterval_ct += 1;	// Count sub-intervals
-			if (subinterval_ct >= SUBINTERVALTRIGGER) // Time to trigger (lower level) computation?
-			{ // Here, yes
-				/* Trigger a pending interrupt, which will call 'rpmsensor_computerpm' */
-				NVICISPR(NVIC_EXTI0_IRQ);	// Set pending (low priority) interrupt 
-			}
 			if (subinterval_ct >= NUMSUBINTERVALS) // End of sub-interval?
 			{ // Here, yes.
 				subinterval_ct = 0;
 			}
+			NVICISPR(NVIC_EXTI0_IRQ);	// Set pending (low priority) interrupt 
 	}
 	return;
 }
@@ -345,9 +341,19 @@ rpmsensor_dbug2 = DTWTIME;
  *####################################################################################### */
 void EXTI0_IRQHANDLER(void)
 {
-	rpmsensor_computerpm();	// Do the rpm computation
+
+	if (subinterval_ct >= SUBINTERVALTRIGGER) // Time to trigger (lower level) computation?
+	{ // Here, yes
+		rpmsensor_computerpm();	// Do the rpm computation
+	}
+
+	/* Filter and prepare readings for ADC readings (manifold, throttle, thermistor) */
+	// Do this each subinterval "tick"
+	adcsensor_reading(subinterval_ct);
+	
 
 	/* TIME4 CH3 (above) at high priority triggers this low priority  */
+	// Set this to filter ADC readings
 	if (tim4ocLOpriority_ptr != 0)	// Skip? Having no address for the following is bad.
 		(*tim4ocLOpriority_ptr)();	   // Go do something for somebody
 

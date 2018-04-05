@@ -22,7 +22,16 @@
 #include "can_driver_filter.h"
 #include "cmd_code_dispatch.h"
 
+#include "can_msg_reset.h"
+#include "CAN_poll_loop.h"
+
 #define TENAQUEUESIZE	3	// Queue size for passing values between levels
+
+	union FTINT	// Union for sending float as 4 byte uint32_t
+	{
+		uint32_t ui;
+		float ft;
+	};
 
 /* CAN control block pointer. */
 extern struct CAN_CTLBLOCK* pctl1;
@@ -97,6 +106,7 @@ static int function_init(uint32_t n, struct COMMONFUNCTION* p, uint32_t hbct )
 
 	/* Flag for triggering sending of polled message */
 	p->flag_msg = 0;	// Be sure it is reset
+	p->status = 0;
 
 	/* First heartbeat time */
 	// Convert heartbeat time (ms) to timer ticks (recompute for online update)
@@ -179,7 +189,14 @@ int engine_functions_init_all(void)
 	// Remainder is common to all functions
 	 ret |= function_init(0,&eman_f.cf, eman_f.lc.hbct);
 	if (ret < 0) return ret;
-	
+	// Convert to parameters to double since computations done in doubles
+	 eman_f.dpress_offset = eman_f.lc.press_offset;
+	 eman_f.dscale_offset = eman_f.lc.press_scale;
+	 eman_f.cf.canid_msg  = eman_f.lc.cid_msg;
+	 eman_f.cf.canid_hb   = eman_f.lc.cid_hb;	
+	 adc_cic2_init(&eman_f.cf.cic2);	// Init second cic filtering constants
+
+
 	/* RPM function */
 	// Set pointer to table in highflash.  Base address provided by .ld file 
      erpm_f.cf.pparamflash = (uint32_t*)&__paramflash2;	/* Manifold pressure */
@@ -193,6 +210,9 @@ int engine_functions_init_all(void)
 	if (ret < 0) return ret;
 	// Additional rpm specific sensing initialization
   	  rpmsensor_init();
+ 	  erpm_f.cf.canid_msg = erpm_f.lc.cid_msg;
+	  erpm_f.cf.canid_hb  = erpm_f.lc.cid_hb;
+
 
 	/* Throttle function */
 	// Set pointer to table in highflash.  Base address provided by .ld file 
@@ -205,6 +225,10 @@ int engine_functions_init_all(void)
 	// Remainder is common to all functions
 	  ret = function_init(2,&ethr_f.cf,ethr_f.lc.hbct);
 	if (ret < 0) return ret;
+     adc_cic2_init(&ethr_f.cf.cic2);	// Init second cic filtering constants
+ 	  ethr_f.cf.canid_msg = ethr_f.lc.cid_msg;
+	  ethr_f.cf.canid_hb  = ethr_f.lc.cid_hb;
+
 
 	/* Temperature #1 function */
 	// Set pointer to table in highflash.  Base address provided by .ld file 
@@ -216,114 +240,48 @@ int engine_functions_init_all(void)
 	if (ret2 != 0) return -996;	// Failed
 	// Remainder is common to all functions
 	  ret = function_init(3,&et1_f.cf,et1_f.lc.hbct);
+	// Temperature computataions are doubles, so convert parameters in floats to doubles
+ 	  temp_calc_param_dbl_init(&et1_f.thermdbl, &et1_f.lc.therm);
+	// Set initial values since not available at first
+	  et1_f.cf.flast2 = -99.0;
+	  et1_f.cf.dlast = -88.8;
+ 	  et1_f.cf.canid_msg = et1_f.lc.cid_msg;
+	  et1_f.cf.canid_hb  = et1_f.lc.cid_hb;
+     adc_cic2_init(&et1_f.cf.cic2);	// Init second cic filtering constants
 
 	return ret;
 }
-
-
-/* **************************************************************************************
- * int eng_t1_temperature_poll(void);
- * @brief	: Function: eng_t1, temperature #1, w  thermistor-to-temperature conversion
- * @return	: 0 = no update; 1 = temperature readings updated
- * ************************************************************************************** */
-/* *** NOTE ***
-   This routine is called from 'main' since the thermistor formulas use functions 
-   with doubles.
-*/
-
-/* Thermistor conversion things. */
-static int adc_temp_flag_prev = 0; // Thermistor readings ready counter
-
-double dscale = (1.0 / (1 << 18));	// ADC filtering scale factor (reciprocal multiply)
-void toggle_1led(int led);	// Routine is in 'tension.c'
-#define NUMBERADCTHERMISTER_TEN 1
-int eng_t1_temperature_poll(void)
-{
-#ifdef thisneedsacompleterewrite
-	int i,j;	// One would expect FORTRAN, but alas it is only C
-	double therm[NUMBERADCTHERMISTER_TEN];	// Floating pt of thermistors readings
-
-	/* Check if 'adcsensor_tension' has a new, filtered, reading for us. */
-	if (adc_temp_flag[0] != adc_temp_flag_prev)
-	{ // Here, a new set of thermistor readings are ready
-		j = (0x1 & adc_temp_flag_prev);		// Get current double buffer index
-		adc_temp_flag_prev = adc_temp_flag[0];	// Reset flag
-
-		/* Convert filtered long long to double. */
-		for (i = 0; i < NUMBERADCTHERMISTER_TEN; i++)
-		{	
-			therm[i] = adc_readings_cic[j][i]; // Convert to double
-			therm[i] = therm[i] * dscale;	   // Scale to 0-4095
-		}
-
-		/* Convert ADC readings into uncalibrated degrees Centigrade. */
-		/* Then, apply calibration to temperature. */
-		j = 0;	// Index input of readings
-		for (i = 0; i < NUMTENSIONFUNCTIONS; i++)
-		{ 
-			ten_f[i].thrm[0] = therm[j];	// Raw thermistor ADC reading
-			ten_f[i].degX[0] = temp_calc_param_dbl(therm[j++], &ten_f[i].ten_a.ad.tp[0]); // Apply formula
-			ten_f[i].degC[0] = compensation_dbl(&ten_f[i].ten_a.ad.comp_t1[0], 4, ten_f[i].degX[0]);// Adjustment
-
-			ten_f[i].thrm[1] = therm[j];
-			ten_f[i].degX[1] = temp_calc_param_dbl(therm[j++], &ten_f[i].ten_a.ad.tp[1]);
-			ten_f[i].degC[1] = compensation_dbl(&ten_f[i].ten_a.ad.comp_t2[0], 4, ten_f[i].degX[1]);
-		}
-
-		// TODO compute AD7799 temperature offset/scale factors
-		// Timing: End of main's loop trigger will pick these up before this recomputes.
-
-//toggle_1led(LEDGREEN2);	// Let the puzzled programmer know the ADC stuff is alive
-		return 1;	// Let 'main' know there was an update
-	}
-#endif
-	return 0;	// No update
-}
 /* ######################################################################################
- * int eng_man_poll(struct CANRCVBUF* pcan, struct ENG_MAN_FUNCTION* p);
- * @brief	: Handle incoming CAN msgs ### under interrupt ###
+ * int eng_common_poll(struct CANRCVBUF* pcan, struct COMMONFUNCTION* p);
+ * @brief	: 'CAN_poll_loop.c' calls this for each of the engine functions
  * @param	; pcan = pointer to CAN msg buffer (incoming msg)
- * @param	: p = pointer to struct with "everything" for this instance of engine manifold
+ * @param	: p = pointer to struct with variables and parameters common to all functions
  * @return	: 0 = No msgs sent; 1 = msgs were sent and loaded into can_hub buffer
  * ###################################################################################### */
-//extern unsigned int tim3_ten2_ticks;	// Running count of timer ticks
-/* *** NOTE ***
-   This routine is called from CAN_poll_loop.c which runs under I2C1_ER_IRQ
-*/
-int eng_man_poll(struct CANRCVBUF* pcan, struct ENG_MAN_FUNCTION* p)
+int eng_common_poll(struct CANRCVBUF* pcan, struct COMMONFUNCTION* p)
 {
 	int ret = 0;
 	struct CANRCVBUF cantmp;	// For setting up outgoing msgs
 
-#ifdef skipthisoldsectionofcodeuntilupdated
-	union FTINT	// Union for sending float as 4 byte uint32_t
-	{
-		uint32_t ui;
-		float ft;
-	}ui; ui.ui = 0; // (initialize to get rid of ui.ft warning)
+	union FTINT ui; ui.ui = 0; // (initialize to get rid of ui.ft warning)
 
 	/* Check for need to send  heart-beat. */
 	 if ( ( (int)tim3_ten2_ticks - (int)p->hb_t) > 0  )	// Time to send heart-beat?
 	{ // Here, yes.
-		iir_filtered_calib(p, 1);	// Slow (long time constant) filter the reading
-		ui.ft = p->fcalib_lgr;		// Float version of calibrated last good reading
 		
 		/* Send heartbeat and compute next hearbeat time count. */
-		//      Args:  CAN id, status of reading, reading pointer instance pointer
-		setup_can_msg(&cantmp, p->lc.cid_hb, p->status, &ui.ui); // Setup CAN msg
-		send_can_msg_man(p, &cantmp); // Send CAN msg, reset heartbeat cts
+		send_can_msg_hb(p); // Send CAN msg, reset heartbeat cts
 		ret = 1;
 	}
 
-	/* Check if any incoming msgs. */
-	if (pcan == NULL) return ret;
+	/* Check if any incoming msgs were with the call to this routine */
+	if (pcan == NULL) return ret;	// No incoming msgs (just heartbeat polling)
 
-	if (eman_f.flag_msg != 0) // Poll msg request?
-	{ // Here, yes.  Send response
-		eman_f.flag_msg  = 0;
+	if (p->flag_msg != 0) // Poll msg request?
+	{ // Here, yes.  Send regular reading response
+		p->flag_msg  = 0;
 			//      Args:  CAN id, status of reading, reading pointer instance pointer
-		setup_can_msg(&cantmp, p->lc.cid_msg, p->status, &ui.ui); // Setup CAN msg
-	   send_can_msg_man(p, &cantmp); // Send CAN msg, reset heartbeat cts
+	   send_can_msg_poll(p); // Send CAN msg, reset heartbeat cts
 			return 1;
 	}
 	
@@ -333,15 +291,8 @@ int eng_man_poll(struct CANRCVBUF* pcan, struct ENG_MAN_FUNCTION* p)
 		cmd_code_dispatch(pcan, p); // Handle and send as necessary
 		return 0;	// No msgs passed to other ports
 	}
-#endif
 	return ret;
 }
-
-#include "can_msg_reset.h"
-#include "CAN_poll_loop.h"
-static void engine_can_msg_poll(struct CAN_CTLBLOCK* pctl, u32 canid); // declaration
-
-
 /*##############################################################################################
  * The following executes under CAN driver interrupt level
  * can_driver.c (CAN RX) -> can_msg_reset.c -> engine_can_msg_poll (and then trigger CAN_poll_loop)
@@ -360,14 +311,15 @@ static void engine_can_msg_poll(struct CAN_CTLBLOCK* pctl, u32 canid)
 	}
 	if (erpm_f.lc.cid_msg == canid)	// RPM poll?
 	{
-		erpm_f.cf.flag_msg = 1; // Show rpm poll response requested
-// Timing reset call goes here since rpm is more time critical than the others
+		erpm_f.cf.flag_msg = 1; 	// Show rpm poll response requested
+		rpmsensor_reset_timer();	// Reset timing
 	}
 	if (ethr_f.lc.cid_msg == canid)	// Throttle poll?
 	{
 		ethr_f.cf.flag_msg = 1;	// Show throttle response requested
 	}
 	CAN_poll_loop_trigger();	// Trigger low level interrupt poll
+	return;
 }
 /*******************************************************************************
  * int can_msg_reset_init (struct CAN_CTLBLOCK* pctl, u32 canid);
@@ -378,7 +330,6 @@ static void engine_can_msg_poll(struct CAN_CTLBLOCK* pctl, u32 canid)
 ********************************************************************************/
 int engine_can_msg_poll_init(struct CAN_CTLBLOCK* pctl, u32 canid)
 {
-
    //	   pctl->ptrs1.func_rx = (void*)&can_msg_reset_msg; // Callback address for CAN RX0 or RX1 handler
 	// 'can_msg_reset.c' will call the following
 	can_msg_reset_ptr = (void*)&engine_can_msg_poll; // Cast since no arguments are used

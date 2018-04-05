@@ -113,7 +113,7 @@ const struct FLASHP_SE1* flashp_se1 = (struct FLASHP_SE1*)&__highflashp;
 //#include "tick_pod6.h"
 #include "panic_leds.h"
 #include "rpmsensor.h"
-#include "temp_calc.h"
+#include "temp_calc_param.h"
 //#include "CANascii.h"
 #include "canwinch_pod_common_systick2048_printerr.h"
 
@@ -132,8 +132,15 @@ const struct FLASHP_SE1* flashp_se1 = (struct FLASHP_SE1*)&__highflashp;
 #include "iir_filter_l.h"
 #include "can_filter_print.h"
 
+#include "tim3_ten2.h"
+
 #include "engine_idx_v_struct.h"
 #include "engine_function.h"
+
+#include "eng_man_printf.h" // Print parameters copied from highflash
+#include "eng_rpm_printf.h"
+#include "eng_thr_printf.h"
+#include "eng_t1_printf.h"
 
 /* Error counts for monitoring. */
 extern struct CANWINCHPODCOMMONERRORS can_errors;	// A group of error counts
@@ -331,7 +338,7 @@ And now for the main routine
 int main(void)
 {
 	int i = 0; 		// Timing loop variable
-	int init_ret = -4;
+//	int init_ret = -4;
 
 /* $$$$$$$$$$$$ Relocate the interrupt vectors from the loader to this program $$$$$$$$$$$$$$$$$$$$ */
 extern void relocate_vector(void);
@@ -417,6 +424,8 @@ setbuf(stdout, NULL);
 		printf("CAN init failed: return code = %d\n\r",pctl1->ret);USART1_txint_send(); 
 		while (1==1);
 	}
+/* ------------------ misc --------------------------------------------------------------------------- */
+	
 
 /* -------------------- Functions init --------------------------------------------------------------- */
 	engine_functions_init_all();
@@ -425,33 +434,35 @@ setbuf(stdout, NULL);
 	eng_rpm_printf(&erpm_f.lc);
 	eng_thr_printf(&ethr_f.lc);
 	eng_t1_printf(&et1_f.lc);
-
 /* --------------------- ADC setup and initialization ------------------------------------------------ */
-	adc_init_se_eng_sequence(can_params.iamunitnumber);	// Time delay + calibration, then start conversion
+	adc_init_se_eng_sequence();	// Time delay + calibration, then start conversion
 /* --------------------- Program is ready, so do program-specific startup ---------------------------- */
 
 i = 0;
 
 
-u32	uiT;
-u32	uiT_prev = 0;
-u32 	tctr = 0;
+//u32	uiT;
+//u32	uiT_prev = 0;
+//u32 	tctr = 0;
 //int tx;
 //int tx_prev = 0;
-int sum = 0;
+//int sum = 0;
 //int sctr = 0;
-struct TIMCAPTRET32 strT = {0,0};
+//struct TIMCAPTRET32 strT = {0,0};
 
 /* ADC testing */
 #define ADCCOUNT 168000000/8;
-u32	t_adc = *(volatile unsigned int *)0xE0001004 + ADCCOUNT; // Set initial time
-extern unsigned int cicdebug0;
-unsigned int cicdebug0_prev = 0;
+//u32	t_adc = *(volatile unsigned int *)0xE0001004 + ADCCOUNT; // Set initial time
+//extern unsigned int cicdebug0;
+//unsigned int cicdebug0_prev = 0;
 
 /* Green LED flashing */
 static u32 stk_64flgctr_prev;
 static u32 throttleLED = 0;
-static struct CANRCVBUF *pcan;
+
+static u32 temp_t1;
+static u32 temp_t2;
+
 
 	/* Print the header for the CAN driver error counts */
 //	canwinch_pod_common_systick2048_printerr_header();
@@ -472,14 +483,20 @@ static struct CANRCVBUF *pcan;
 				throttleLED = 0;
 				TOGGLE_GREEN;	// Slow flash of green means "OK"
 
-				/* Print the counters in 'canwinch_pod_common_systick2048' */
-//				canwinch_pod_common_systick2048_printerr(&can_errors);
-			}
-//			printf("%7d %4d %2d %7d %7d %7d\n\r",CAN_ave,CAN_dbg1, CAN_dbg2,CAN_dbg3,CAN_dif, CAN_dev); USART1_txint_send();
+				printf("%d\n\r",(int)(temp_t2-temp_t1) ); 
+				USART1_txint_send();
+			}				
 		}
 
 		/* Poll & compute calibrated temperature */
-		temp_calc(); // Floating pt computation done at mainline priority
+		if (et1_f.cf.cic2.usFlag != 0)
+		{
+temp_t1 = DTWTIME;
+			et1_f.cf.cic2.usFlag = 0;
+			et1_f.dlast = temp_calc_param_dbl( (int)et1_f.cf.ilast2, &et1_f.thermdbl);
+			et1_f.cf.flast2 = et1_f.dlast; // Convert to float for CAN msgs			
+temp_t2 = DTWTIME;
+		}
 
 		/* ---------- Trigger a pass through 'CAN_poll' to poll msg handling & sending. ---------- */
 		CAN_poll_loop_trigger();

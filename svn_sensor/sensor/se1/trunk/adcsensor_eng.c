@@ -44,11 +44,13 @@ increments so that cic filter readings are then loaded into a CAN message the me
 #include "../../../../svn_common/trunk/common_can.h"
 #include "pinconfig_all.h"
 #include "adcsensor_eng.h"
-#include "canwinch_pod_common_systick2048.h"
+//#include "canwinch_pod_common_systick2048.h"
 #include "rpmsensor.h"
 #include "CANascii.h"
 #include "../../../../svn_common/trunk/db/gen_db.h"
 #include "canmsg_send_pay_type.h"
+
+#include "engine_function.h"
 
 /* ADC usage
 PA0 ADC123-IN0	Throttle potentiometer
@@ -109,8 +111,7 @@ static void adc_start_calibration_se_eng(void);
 static void adcsensor_eng_bufadd(void);
 
 /* CIC routines buried somewhere below */
-static void adc_cic_filtering(void);
-static void adc_cic_init(u32 iamunitnumber);
+static void adc_cic_init(void);
 
 /* Pointers to functions to be executed under a low priority interrupt */
 // These hold the address of the function that will be called
@@ -142,14 +143,13 @@ static void timedelay (unsigned int ticks)
 	return;
 }
 /******************************************************************************
- * void adc_init_se_eng_sequence(u32 iamunitnumber);
+ * void adc_init_se_eng_sequence(void);
  * @brief 	: Call this routine to do a timed sequencing of power up and calibration
- * @param	: iamunitnumber = CAN unit id for this unit, see 'common_can.h'
 *******************************************************************************/
-void adc_init_se_eng_sequence(u32 iamunitnumber)
+void adc_init_se_eng_sequence(void)
 {
 	/* Setup for lower level filtering of ADC readings buffered by DMA. */
-	adc_cic_init(iamunitnumber);
+	adc_cic_init();
 
 	u32 ticksperus = (sysclk_freq/1000000);	// Number of ticks in one microsecond
 
@@ -308,6 +308,7 @@ pointer is automatically reloaded with the beginning of the buffer space (i.e. c
 
 	int *p1 = &adcrawbuff[adcidx_in];
 	int *p2;
+	int i;
 
 	if ( (DMA1_ISR & DMA_ISR_TCIF1) != 0 )	// Is this a transfer complete interrupt?
 	{ // Here, yes.  The second sequence has been converted and stored in the second buffer
@@ -365,7 +366,9 @@ int	adc_calib_temp;			// Temperature in deg C
 static struct CICLN2M3 adc_cic[NUMBERADCCHANNELS_SE];	// CIC intermediate storage adc readings
 static struct CICLN2M3 adc_cic_temp;			// CIC intermediate storage for further temp filter/decimiation
 
+static struct RUNNINGADCAVERAGE radcave[NUMBERADCCHANNELS_SE];	// Running averages
 
+void adc_cic2_init(struct CICLN2M3* p);	// Declaration
 /******************************************************************************
  * static void adc_cic_init(u32 iamunitnumber);
  * @brief 	: Setup for cic filtering of adc readings buffered by dma
@@ -385,9 +388,9 @@ struct CICLN2M3
 };
 */
 
-static void adc_cic_init(u32 iamunitnumber)
+static void adc_cic_init(void)
 {
-	int i,j;
+	int i;
 
 
 	/* Initialize the structs that hold the CIC filtering intermediate values. */
@@ -395,54 +398,39 @@ static void adc_cic_init(u32 iamunitnumber)
 	strADC1dr.flg = 0;
 	for (i = 0; i < NUMBERADCCHANNELS_SE; i++)	
 	{
-		adc_cic[i].usDecimateNum = DECIMATION_SE; // Decimation number
-		adc_cic[i].usDecimateCt = 0;		// Decimation counter
-		adc_cic[i].usDiscard = DISCARD_SE;	// Initial discard count
-		adc_cic[i].usFlag = 0;			// 1/2 buffer flag
-		for (j = 0; j < 3; j++)
-		{ // Very important that the integrators begin with zero.
-			adc_cic[i].lIntegral[j] = 0;
-			adc_cic[i].lDiff[j][0] = 0;
-			adc_cic[i].lDiff[j][1] = 0;
-		}	
+		
+		/* Running average init */
+		radcave[i].accum = 0;	// Zero running average accumulators
+		radcave[i].pend  = &radcave[i].old[RAVESIZE];
+		radcave[i].p     = &radcave[i].old[0];
+		radcave[i].pbegin= radcave[i].p;
+
+		/* Init cic filters with constants from #defines in .h file */
+		adc_cic2_init(&adc_cic[i]);
 	}
-	/* adc_cic_temp filters/decimates the 64/sec thermistor adc reading to 2/sec */
-	adc_cic_temp.usDecimateNum = DECIMATION_SE; // Decimation number
-	adc_cic_temp.usDecimateCt = 0;		// Decimation counter
-	adc_cic_temp.usDiscard = DISCARD_SE;	// Initial discard count
-	adc_cic_temp.usFlag = 0;			// 1/2 buffer flag
+	return;
+}
+/* **************************************************************
+ * void adc_cic2_init(struct CICLN2M3* p);
+ * @brief	: init struct for cic filtering with constants & zeroing
+ * @param	: p = pointer to cic struct
+*****************************************************************/
+void adc_cic2_init(struct CICLN2M3* p)
+{
+	int j;
+	p->usDecimateNum = DECIMATION_SE; // Decimation number
+	p->usDecimateCt = 0;		// Decimation counter
+	p->usDiscard = DISCARD_SE;	// Initial discard count
+	p->usFlag = 0;			// 1/2 buffer flag
 	for (j = 0; j < 3; j++)
 	{ // Very important that the integrators begin with zero.
-		adc_cic_temp.lIntegral[j] = 0;
-		adc_cic_temp.lDiff[j][0] = 0;
-		adc_cic_temp.lDiff[j][1] = 0;
+		p->lIntegral[j] = 0;
+		p->lDiff[j][0] = 0;
+		p->lDiff[j][1] = 0;
 	}	
-
-	/* This is a low priority post SYSTICK interrupt call. */
-	systickLOpriority2_ptr = &adc_cic_filtering;
-
-	/* This is a very high priority post SYSTICK interrupt call. */
-	systickHIpriority_ptr = &adcsensor_eng_bufadd;
-
 	return;
 }
-/* ######################### UNDER LO PRIORITY INTERRUPT ############################### 
- * Triggered by DMA at 1/2 or end buffer interupt
- * ############################################################################################### */
-static void adcsensor_eng_bufadd(void)
-{
-	int *p1 = &adcrawbuff[adcidx_in];
-	int *p2 = &strADC1dr.in[strADC1dr.flg][0][0];
-	
-	for (i = 0; i < NUMBERADCCHANNELS_SE; i++)
-	{
-		*p1++ = *p2++;
-	}
-	adcidx_in += 3;
-	if (adcidx_in >= ADCRAWBUFFSIZE*3) adcidx_in = 0;
 
-	return;
-}
 /* ########################## UNDER LOW PRIORITY INTERRUPT Triggered by ADC/DMA ##################
  * Run the latest adc readings through the cic filter.
  * ############################################################################################### */
@@ -453,14 +441,15 @@ u32 cic_sync_err[NUMBERADCCHANNELS_SE];	// CIC sync errors
 
 /* Low priority post SYSTICK interrupt call, 2048 per sec.,
    executes "rpmsensor_computerpm()", which enters this routine.  */
-static void adc_cic_filtering(void)
+void adc_cic_filtering(void)
 {
 	int i;
-	int flag = 0;
-	int *p2 = &strADC1dr.in[strADC1dr.flg][0][0];
+	int *p2;
 
-	while (p2 < &adc2048[NUMBERADCCHANNELS_SE])
+	/* Run accumulated data in circular buffer through cic filter */
+	while (adcidx_out != adcidx_in)
 	{
+		p2 = &adcrawbuff[adcidx_out];
 		/* Add the latest buffered sequence of readings to the cic filter */
 		for (i = 0; i < NUMBERADCCHANNELS_SE; i++)	
 		{
@@ -468,44 +457,98 @@ static void adc_cic_filtering(void)
 			if (cic_filter_l_N2_M3 (&adc_cic[i]) != 0) // Filtering complete?
 			{ // Here, yes.
 				adc_last_filtered[i] = adc_cic[i].lout >> CICSCALE; // Scale and save
-				flag = 1;
+				adc_cic_flag[i] = 1;
+				
+				/* Running average */
+				radcave[i].accum += adc_last_filtered[i];	// Add new reading
+				radcave[i].accum -= *radcave[i].p;			// Sub old reading
+				*radcave[i].p     = adc_last_filtered[i];	// Save new reading
+				radcave[i].p += 1;
+				if (radcave[i].p >= radcave[i].pend) radcave[i].p = radcave[i].pbegin;
+
 cicdebug0 += 1;
 			}
  		}
 	}
-	/* Run the thermistor reading through another filter/decimation */
-	if (flag != 0)
-	{
-		adc_cic_temp.nIn = adc_last_filtered[1];
-		if (cic_filter_l_N2_M3 (&adc_cic_temp) != 0) // Filtering complete?
-		{ // Here, yes.
-			adc_temperature = adc_cic_temp.lout; // Save for mainline
-			adc_temp_flag = 1;	// Signal main that reading is ready for computation
-		}
-	}
-
-	/* Was this one the 1/64th sec demarcation? 'canwinch_pod_common_systick2048.c' increments
-           'stk_64flgctr' at the end of each 1/64th sec interval. */
-	if (stk_64flgctr != stk_64flgctr_prev)
-	{ // Here, yes.  Time to setup for sending
-	/* ========= Here is where adc readings get setup for sending ============ */
-		stk_64flgctr_prev = stk_64flgctr;
-
-		/* Check that CIC filtering is sync'ed to the 1/64th tick */
-		for (i = 0; i < NUMBERADCCHANNELS_SE; i++)	
-		{
-			if (adc_cic[i].usDecimateCt != 0)
-			{
-				cic_sync_err[i] += 1;	// Count errors
-				adc_cic[i].usDecimateCt = 0; // Re-sync
-			}
-		}
-
-		
-		/* Call other routines if an address is set up--64 per sec. */
-		if (systickLOpriority3X_ptr != 0)	// Having no address for the following is bad.
-			(*systickLOpriority3X_ptr)();	// Go do something if address was set
-	}
-
 	return;
+}
+/* ############################################################################################### */
+void adc_cic_filtering2(struct COMMONFUNCTION* p)
+{
+	p->cic.nIn = p->cf.ilast1; 	// Load reading to filter struct
+	if (cic_filter_l_N2_M3 (&p->cf.cic2) != 0) // Filtering complete?
+	{ // Here, yes.
+		p->cf.ilast2 = p->cf.cic2.lout >> CICSCALE; // Scale and save
+		p->cic2.usflag = 1;
+	}
+	return;
+}
+
+/* **************************************************************************************
+ * static void canprep(struct CANRCVBUF* pcan, float f, uint8_t status);
+ *	@brief	: Setup payload in bytes [1]-[4]
+ * @param	: pcan = pointer to can msg buffer
+ * @param	: f = float pulled into bytes
+ * ************************************************************************************** */
+static void canprep(struct CANRCVBUF* pcan, uint32_t canid, float f)
+{
+	union ITOF
+	{
+		uint8_t b[4];
+		float f;
+	} uf;
+	uf.f = f;
+	pcan->canid = canid;
+	pcan->cd.uc[0] = p->status;
+	pcan->cd.uc[1] = b[0]; 
+	pcan->cd.uc[2] = b[1];
+	pcan->cd.uc[3] = b[2];
+	pcan->cd.uc[4] = b[3];
+	return;
+}
+/* ################## UNDER LOW PRIORITY originating with TIM4 CH3, rpmsensor.c ######## */
+// Entered every subinterval OC (31250/32E6 -> ~976 us)
+// cic with decimation = 16 is about 1 ms.
+void adcsensor_reading(uint32_t subinterval_ct)
+{
+	int32_t del;
+	int32_t rng;	
+	int32_t pctscaled;
+	uint32_t itmp;
+	double dlast1;
+	double dcal;
+
+	/* Run accumulated data through cic filtering & decimation and averaging */
+	adc_cic_filtering();
+
+	if (subinterval_ct >= SUBINTERVALTRIGGER) // Time to prep a CAN msg?
+	{ // Here, yes
+
+		/* Separate ADC sequence data into functions */
+		ethr_f.cf.ilast = radcave[0].accum;
+		 et1_f.cf.ilast = radcave[1].accum;
+		eman_f.cf.ilast = radcave[2].accum;
+
+		/* Thermistor->temperature is taken care at mainline */
+		adc_cic_filtering2(&et1_f.cic2);	// Filter & decimate for console & hb
+
+		/* Throttle */
+		del = ethr_f.cf.ilast1 - ethr_f.lc.throttle_close;
+		rng = ethr_f.lc.throttle_open - ethr_f.lc.throttle_close;
+		pctscaled = (del * ((100 * 1024)/RAVESIZE))/rng; // Scaled
+		p->cf.flast1 = pctscaled;	// Convert to float
+		p->cf.flast1 = p->cf.flast1/1024; // Scale back to pct
+		canprep(&ethr_f.cf,p->lc.cid_msg, p->cf.flast1);	// CAN msg setup
+		adc_cic_filtering2(&ethr_f.cic2);	// Filter & decimate for console & hb
+
+		/* Manifold pressure */
+		eman_f.dlast1 = (eman_f.ilast1 / RAVESIZE);
+		eman_f.dcalibrated = (eman_f.dlast1 - eman_f.dpress_offset) * eman_f.dscale;
+		eman_f.cf.flast1 = eman_f.dcalibrated;
+		canprep(&emanf.cf,p->lc.cid.msg,p->cf.flast1);	// CAN msg setup
+		adc_cic_filtering2(&eman_f.cic2);	// Filter & decimate for console & hb
+		
+	}
+
+	return;	
 }

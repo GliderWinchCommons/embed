@@ -73,7 +73,7 @@ void CAN_poll(void)
 	do
 	{
 		sw = 0;
-		can_hub_begin(); // Load CAN hardware msgs into tension queue, if any
+		can_hub_begin(); // Load CAN hardware msgs into queue, if any
 		/* Get msgs for this APP. */
   		pcan = can_hub_get(phub_app); 	// Get ptr to CAN msg
 		if (pcan != NULL)	// Check for no msgs available
@@ -81,14 +81,28 @@ void CAN_poll(void)
 			sw = 1;
 //$	 		app_function_poll(pcan); 	// function poll
 		}
-		/* eng_manifold: get msgs from eng_manifold buffer */
+		/* eng_manifold: get msgs from buffer */
   		pcan = can_hub_get(eman_f.cf.phub); 	// Get ptr to CAN msg
 		{
-	 		ret = eng_man_poll(pcan,&eman_f); 	// function poll
-			if (ret != 0)	// Did function send & buffer a msg?
-			{ // Here yes.  Other functions may need this msg
-				sw = 1; // Set switch to cause loop again
-			}
+	 		ret = eng_common_poll(pcan,&eman_f.cf); 	// function poll
+		}
+
+		/* eng_rpm: get msgs from buffer */
+  		pcan = can_hub_get(erpm_f.cf.phub); 	// Get ptr to CAN msg
+		{
+	 		ret = eng_common_poll(pcan,&erpm_f.cf); 	// function poll
+		}
+
+		/* eng_throttle: get msgs from buffer */
+  		pcan = can_hub_get(ethr_f.cf.phub); 	// Get ptr to CAN msg
+		{
+	 		ret = eng_common_poll(pcan,&ethr_f.cf); 	// function poll
+		}
+
+		/* eng_temperature: get msgs from buffer */
+  		pcan = can_hub_get(et1_f.cf.phub); 	// Get ptr to CAN msg
+		{
+	 		ret = eng_common_poll(pcan,&et1_f.cf); 	// function poll
 		}
 
 

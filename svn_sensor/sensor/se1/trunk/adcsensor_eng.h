@@ -65,6 +65,10 @@ void adc_cic2_init(struct CICLN2M3* p);
 /* @brief	: init struct for cic filtering with constants & zeroing
  * @param	: p = pointer to cic struct
 *****************************************************************/
+/* ################## UNDER LOW PRIORITY originating with TIM4 CH3, rpmsensor.c ######## */
+// Entered every subinterval OC (31250/32E6 -> ~976 us)
+// cic with decimation = 16 is about 1 ms.
+void adcsensor_reading(uint32_t subinterval_ct);
 
 /* ADC readings buffer */
 extern struct ADCDR_ENG    strADC1dr;

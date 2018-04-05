@@ -108,7 +108,6 @@ static void adc_init_se_eng(void);
 static void adc_start_conversion_se_eng(void);
 static void adc_start_cal_register_reset_se_eng(void);
 static void adc_start_calibration_se_eng(void);
-static void adcsensor_eng_bufadd(void);
 
 /* CIC routines buried somewhere below */
 static void adc_cic_init(void);
@@ -364,7 +363,6 @@ int	adc_temp_flag;			// Signal main new filtered reading ready
 int	adc_calib_temp;			// Temperature in deg C 
 
 static struct CICLN2M3 adc_cic[NUMBERADCCHANNELS_SE];	// CIC intermediate storage adc readings
-static struct CICLN2M3 adc_cic_temp;			// CIC intermediate storage for further temp filter/decimiation
 
 static struct RUNNINGADCAVERAGE radcave[NUMBERADCCHANNELS_SE];	// Running averages
 
@@ -436,7 +434,6 @@ void adc_cic2_init(struct CICLN2M3* p)
  * ############################################################################################### */
 unsigned int cicdebug0,cicdebug1;
 
-static u32 stk_64flgctr_prev;
 u32 cic_sync_err[NUMBERADCCHANNELS_SE];	// CIC sync errors
 
 /* Low priority post SYSTICK interrupt call, 2048 per sec.,
@@ -475,11 +472,11 @@ cicdebug0 += 1;
 /* ############################################################################################### */
 void adc_cic_filtering2(struct COMMONFUNCTION* p)
 {
-	p->cic.nIn = p->cf.ilast1; 	// Load reading to filter struct
-	if (cic_filter_l_N2_M3 (&p->cf.cic2) != 0) // Filtering complete?
+	p->cic2.nIn = p->ilast1; 	// Load reading to filter struct
+	if (cic_filter_l_N2_M3 (&p->cic2) != 0) // Filtering complete?
 	{ // Here, yes.
-		p->cf.ilast2 = p->cf.cic2.lout >> CICSCALE; // Scale and save
-		p->cic2.usflag = 1;
+		p->ilast2 = p->cic2.lout >> CICSCALE; // Scale and save
+		p->cic2.usFlag = 1;
 	}
 	return;
 }
@@ -490,7 +487,7 @@ void adc_cic_filtering2(struct COMMONFUNCTION* p)
  * @param	: pcan = pointer to can msg buffer
  * @param	: f = float pulled into bytes
  * ************************************************************************************** */
-static void canprep(struct CANRCVBUF* pcan, uint32_t canid, float f)
+static void canprep(struct CANRCVBUF* pcan, uint8_t status, float f)
 {
 	union ITOF
 	{
@@ -498,12 +495,11 @@ static void canprep(struct CANRCVBUF* pcan, uint32_t canid, float f)
 		float f;
 	} uf;
 	uf.f = f;
-	pcan->canid = canid;
-	pcan->cd.uc[0] = p->status;
-	pcan->cd.uc[1] = b[0]; 
-	pcan->cd.uc[2] = b[1];
-	pcan->cd.uc[3] = b[2];
-	pcan->cd.uc[4] = b[3];
+	pcan->cd.uc[0] = status;
+	pcan->cd.uc[1] = uf.b[0]; 
+	pcan->cd.uc[2] = uf.b[1];
+	pcan->cd.uc[3] = uf.b[2];
+	pcan->cd.uc[4] = uf.b[3];
 	return;
 }
 /* ################## UNDER LOW PRIORITY originating with TIM4 CH3, rpmsensor.c ######## */
@@ -514,9 +510,6 @@ void adcsensor_reading(uint32_t subinterval_ct)
 	int32_t del;
 	int32_t rng;	
 	int32_t pctscaled;
-	uint32_t itmp;
-	double dlast1;
-	double dcal;
 
 	/* Run accumulated data through cic filtering & decimation and averaging */
 	adc_cic_filtering();
@@ -525,28 +518,28 @@ void adcsensor_reading(uint32_t subinterval_ct)
 	{ // Here, yes
 
 		/* Separate ADC sequence data into functions */
-		ethr_f.cf.ilast = radcave[0].accum;
-		 et1_f.cf.ilast = radcave[1].accum;
-		eman_f.cf.ilast = radcave[2].accum;
+		ethr_f.cf.ilast1 = radcave[0].accum;
+		 et1_f.cf.ilast1 = radcave[1].accum;
+		eman_f.cf.ilast1 = radcave[2].accum;
 
 		/* Thermistor->temperature is taken care at mainline */
-		adc_cic_filtering2(&et1_f.cic2);	// Filter & decimate for console & hb
+		adc_cic_filtering2(&et1_f.cf);	// Filter & decimate for console & hb
 
 		/* Throttle */
 		del = ethr_f.cf.ilast1 - ethr_f.lc.throttle_close;
 		rng = ethr_f.lc.throttle_open - ethr_f.lc.throttle_close;
 		pctscaled = (del * ((100 * 1024)/RAVESIZE))/rng; // Scaled
-		p->cf.flast1 = pctscaled;	// Convert to float
-		p->cf.flast1 = p->cf.flast1/1024; // Scale back to pct
-		canprep(&ethr_f.cf,p->lc.cid_msg, p->cf.flast1);	// CAN msg setup
-		adc_cic_filtering2(&ethr_f.cic2);	// Filter & decimate for console & hb
+		ethr_f.cf.flast1 = pctscaled;	// Convert to float
+		ethr_f.cf.flast1 = ethr_f.cf.flast1/1024; // Scale back to pct
+		canprep(&ethr_f.cf.can_msg,ethr_f.cf.status,ethr_f.cf.flast1);	// CAN msg setup
+		adc_cic_filtering2(&ethr_f.cf);	// Filter & decimate for console & hb
 
 		/* Manifold pressure */
-		eman_f.dlast1 = (eman_f.ilast1 / RAVESIZE);
-		eman_f.dcalibrated = (eman_f.dlast1 - eman_f.dpress_offset) * eman_f.dscale;
+		eman_f.dlast1 = (eman_f.cf.ilast1 / RAVESIZE);
+		eman_f.dcalibrated = (eman_f.dlast1 - eman_f.dpress_offset) * eman_f.dpress_scale;
 		eman_f.cf.flast1 = eman_f.dcalibrated;
-		canprep(&emanf.cf,p->lc.cid.msg,p->cf.flast1);	// CAN msg setup
-		adc_cic_filtering2(&eman_f.cic2);	// Filter & decimate for console & hb
+		canprep(&eman_f.cf.can_msg,eman_f.cf.status,eman_f.cf.flast1);	// CAN msg setup
+		adc_cic_filtering2(&eman_f.cf);	// Filter & decimate for console & hb
 		
 	}
 

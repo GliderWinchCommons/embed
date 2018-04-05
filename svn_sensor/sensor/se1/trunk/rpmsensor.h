@@ -17,6 +17,8 @@
 
 #include "can_driver.h"
 
+#define SUBINTERVALTRIGGER 14
+
 union TIMCAPTURE64
 {
 	unsigned short	us[4];

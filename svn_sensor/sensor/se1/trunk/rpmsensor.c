@@ -11,7 +11,7 @@ PB9 - TIM4_CH4, TIM11_CH1, SDIO5_D5, I2C1_SDA, CAN_TX: input from inverter.
 
 
 */
-#include <math>
+#include <math.h>
 #include "libopenstm32/timer.h"
 #include "libusartstm32/nvicdirect.h" 
 #include "libusartstm32/commonbitband.h"
@@ -24,11 +24,11 @@ PB9 - TIM4_CH4, TIM11_CH1, SDIO5_D5, I2C1_SDA, CAN_TX: input from inverter.
 #include "canwinch_pod_common_systick2048.h"
 #include "rpmsensor.h"
 #include "libmiscstm32/DTW_counter.h"
+#include "engine_function.h"
 
 /* Static routines buried in this mess. */
 static void Tim4_eng_init(void);
-static void rpmsensor_computerpm(void);
-static void rpmsensor_savetime(void);
+static void rpmsensor_computerpm(struct ENG_RPM_FUNCTION* p);
 
 /* Low level trigger for doing computation */
 void 	(*tim4ocLOpriority_ptr)(void) = 0;	// CH3 OC -> IC2C2_EV (low priority)
@@ -48,7 +48,7 @@ uint32_t subinterval_ct;	// Current subinterval count
 // CAN poll msg resets the subinterval counter and output
 //  capture count. The following is the sub-interval count
 //  that computation is triggered.
-#define SUBINTERVALTRIGGER 14
+
 #define SUBINTERVALOFFSET (SUBINTERVAL/2)	// Offset to avoid interrupt conflicts
 
 /* Pointers to functions to be executed under a low priority interrupt */
@@ -65,11 +65,6 @@ volatile union TIMCAPTURE64	strTim4m;	// 64 bit extended TIM4 CH4 capture (main)
 /* The readings and flag counters are updated upon each capture interrupt */
 volatile u32		usTim4ch4_Flag;		// Incremented when a new capture interrupt serviced, TIM4_CH4
 
-static unsigned int endtime;
-static unsigned int rpmzeroflg = 0;	// not-zero = wait for rpm pulse
-static struct TIMCAPTRET32 endic;
-static struct TIMCAPTRET32 endic_prev;
-static struct TIMCAPTRET32 endic_prev_prev;
 
 /******************************************************************************
  * void rpmsensor_init(void);
@@ -193,8 +188,8 @@ unsigned int Tim4_gettime_ui(void)
 *******************************************************************************/
 struct TIMCAPTRET32 Tim4_inputcapture_ui(void)
 {
+	 __attribute__((__unused__))int tmp;	// Dummy for readback of hardware registers
 	struct TIMCAPTRET32 strY;			// 32b input capture time and flag counter
-	int	tmp;
 
 	TIM4_DIER &= ~(TIM_DIER_CC4IE | TIM_DIER_UIE);	// Disable CH4 capture interrupt and counter overflow (p 315)
 	tmp = TIM4_DIER;				// Readback ensures that interrupts have locked
@@ -219,7 +214,7 @@ struct TIMCAPTRET32 Tim4_inputcapture_ui(void)
  *####################################################################################### */
 void TIM4_IRQHandler(void)
 {
-	volatile unsigned int temp;
+	 __attribute__((__unused__))int temp;	// Dummy for readback of hardware registers
 
 	unsigned short usSR = TIM4_SR & 0x19;	// Get capture & overflow flags
 
@@ -243,7 +238,7 @@ void TIM4_IRQHandler(void)
 			strTim4m = strTim4;			// Update buffered value		
 
 			erpm_f.ct += 1;	// Running count of input captures
-			erpm_f.endic = strTim4m.ui[0];			// Get 32b input capture time
+			erpm_f.endtime = strTim4m.ui[0];	// Get 32b input capture time
 
 			temp = TIM4_SR;				// Readback register bit to be sure is cleared
 			break;
@@ -270,7 +265,7 @@ void TIM4_IRQHandler(void)
 			strTim4cnt.ll	+= 0x10000;		// Increment the high order 48 bits of the timer counter
 
 			erpm_f.ct += 1;	// Running count of input captures
-			erpm_f.endic = strTim4m.ui[0];			// Get 32b input capture time
+			erpm_f.endtime = strTim4m.ui[0];			// Get 32b input capture time
 
 			temp = TIM4_SR;				// Readback register bit to be sure is cleared
 
@@ -311,27 +306,27 @@ uint32_t rpmsensor_dbug3;
 /* Enter this is from low priority interrupt triggered by TIM4, about 2 ms before 
    next expected poll msg.  These are nominally 64 per sec and sync'ed to the poll
    msg so that there computations are ready slightly before the poll msg. */
-static void rpmsensor_computerpm(void)
+static void rpmsensor_computerpm(struct ENG_RPM_FUNCTION* p)
 {
 	int32_t inic;
 	int32_t itim;
+	double dnic;
 	double dtim;
-	double drpm;
 
 rpmsensor_dbug1 = DTWTIME;
 	// Number of input captures since last computation
-		inic = erpm_f.ct - erpm_f.ct_prev;
-		erpm_f.ct_prev = erpm_f.ct
-		dnic = inic;	
+		inic = (p->ct - p->ct_prev);
+		p->ct_prev = p->ct;
+		dnic = inic;	// Convert to double
 
 	// Time duration between previous and latest ic
-		itim = erpm_f.endic = erpm_f.endic_prev;
-		erpm_f.endic_prev = erpm_f.endic;
+		itim = (p->endtime - p->endtime_prev);
+		p->endtime_prev = p->endtime;
 		dtim = itim;
 
-	// (input capture counts) / (duration) scaled to rpm
-		drpm = (dnic * erpm_f.dk1)/dtim;
-		frpm = drpm;	// Convert to float for CAN msg)
+	// (input capture counts) / (time duration) scaled to rpm
+		p->drpm = (dnic * p->dk1)/dtim;
+		p->frpm = p->drpm;	// Convert to float for CAN msg)
 rpmsensor_dbug2 = DTWTIME;
 	
 	return;
@@ -344,7 +339,7 @@ void EXTI0_IRQHANDLER(void)
 
 	if (subinterval_ct >= SUBINTERVALTRIGGER) // Time to trigger (lower level) computation?
 	{ // Here, yes
-		rpmsensor_computerpm();	// Do the rpm computation
+		rpmsensor_computerpm(&erpm_f);	// Do the rpm computation
 	}
 
 	/* Filter and prepare readings for ADC readings (manifold, throttle, thermistor) */

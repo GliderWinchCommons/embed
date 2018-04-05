@@ -14,10 +14,12 @@
 #include "engine_idx_v_struct.h"
 #include "iir_filter_l.h"
 #include "queue_dbl.h"
+#include "cic_filter_l_N2_M3.h"
 
 #define NUMENGINEFUNCTIONS 4	// Manifold pressure; RPM; Throttle; Temperature #1
 
 #define CMD_IR_OFFSET 1000	// Command CAN function ID table offset for "R" CAN ID
+
 
 /* Common to all functions */
 struct COMMONFUNCTION
@@ -26,10 +28,8 @@ struct COMMONFUNCTION
 	void* pparamflash;          // Pointer to flash area with flat array of parameters
 	uint32_t* pcanid_cmd_func_i;// Pointer into high flash for command can id (incoming)
 	uint32_t* pcanid_cmd_func_r;// Pointer into high flash for command can id (response)
-	uint32_t hb_t;              // tim3 tick counter for next heart-beat CAN msg
-	uint32_t hbct_ticks;        // ten_a.hbct (ms) converted to timer ticks
-	uint32_t canid_msg;         // CAN id for poll response msg
-	uint32_t canid_hb;          // CAN id for heartbeat msg
+	uint32_t hb_tct;            // tim3 tick counter for next heart-beat CAN msg
+	uint32_t hb_tdur;           // Heartbeat duration (ms) converted to timer ticks
 	uint32_t canid_poll;        // CAN id for poll
 	uint32_t ilast1;            // Last reading: first cic filtered 
 	float    flast1;            // Last reading: converted to float
@@ -37,7 +37,8 @@ struct COMMONFUNCTION
 	float    flast2;            // Last reading: second, converted to float
 	int32_t  tmp;               // Temporary
 	struct CANHUB* phub;        // Pointer: CAN hub buffer
-	struct CANRCVBUF can_msg;   // Latest reading CAN msg
+	struct CANRCVBUF can_msg;   // Latest reading CAN msg: polled
+	struct CANRCVBUF can_hb;    // Latest reading CAN msg: heartbeat
 	struct CICLN2M3 cic2;       // CIC filtering after initial
 	uint8_t status;		       // Reading status
 	uint8_t flag_msg;           // 1 = send polled msg; 0 = skip
@@ -61,13 +62,11 @@ struct ENG_RPM_FUNCTION
 	struct COMMONFUNCTION cf; // Common to all engine Functions
    struct ENGRPMLC lc;		  // Local Copy of parameters
 	uint32_t endtime; 	 // Tim4_gettime_ui() Save current 32b time tick count (time)
-	uint32_t endic;       // Tim4_inputcapture_ui() Save the last 32b input capture time and ic counter
 	uint32_t endtime_prev;// Previous endtime
-	uint32_t endic_prev;  // Previous endic
 	uint32_t ct;          // Running count of input captures
 	uint32_t ct_prev;     // Previous ic
 	double   dk1;         // Scale factor
-	double   dprm;        // rpm (double)
+	double   drpm;        // rpm (double)
 	double   frpm;        // rpm (float)
 };
 struct ENG_THR_FUNCTION

@@ -84,17 +84,22 @@ static void setup_can_msg(struct CANRCVBUF* pcan, uint32_t canid, uint8_t status
 	return;
 }
 /* **************************************************************************************
- * static void send_can_msg_man(struct ENG_MAN_FUNCTION* p, struct CANRCVBUF* pcan); 
+ * static void send_can_msg_hb(struct COMMONFUNCTION* p); // Heartbeat CAN msg
+ * static void send_can_msg_poll(struct COMMONFUNCTION* p);// Polled msg CAN msg
  * @brief	: Send CAN msg and reset heartbeat counter
- * @param	: p = pointer to engine manifold function struct
- * @param	: pcan = pointer to CAN msg that has been set up
+ * @param	: p = pointer to common function struct
  * ************************************************************************************** */
-static void send_can_msg_man(struct ENG_MAN_FUNCTION* p, struct CANRCVBUF* pcan)
+static void send_can_msg_hb(struct COMMONFUNCTION* p)
 {
 	// Send CAN msg and reset heartbeat timeout 
-	can_hub_send(pcan, p->cf.phub);// Send CAN msg to 'can_hub'
-	p->cf.hbct_ticks = (p->lc.hbct * tim3_ten2_rate) / 1000; // Convert ms to timer ticks
-	p->cf.hb_t = tim3_ten2_ticks + p->cf.hbct_ticks;	 // Reset heart-beat time duration each time msg sent	
+	can_hub_send(&p->can_hb, p->phub);// Send CAN msg to 'can_hub'
+	p->hb_tct = tim3_ten2_ticks + p->hb_tdur;	 // Reset heart-beat time duration each time msg sent	
+}
+static void send_can_msg_poll(struct COMMONFUNCTION* p)
+{
+	// Send CAN polled msg
+	can_hub_send(&p->can_msg, p->phub);// Send CAN msg to 'can_hub'
+	p->hb_tct = tim3_ten2_ticks + p->hb_tdur;	 // Reset heart-beat time duration each time msg sent	
 }
 
 /* *********************************************************** */
@@ -105,13 +110,14 @@ static int function_init(uint32_t n, struct COMMONFUNCTION* p, uint32_t hbct )
 	u32 i;
 
 	/* Flag for triggering sending of polled message */
-	p->flag_msg = 0;	// Be sure it is reset
-	p->status = 0;
+	p->flag_msg         = 0;	// Be sure it is reset
+	p->status           = 0;
+	p->can_msg.cd.uc[0] = 0;	// CAN msg polled status
+	p->can_hb.cd.uc[0]  = 0;	// CAN msg hb status
 
 	/* First heartbeat time */
-	// Convert heartbeat time (ms) to timer ticks (recompute for online update)
-	p->hbct_ticks = (hbct * tim3_ten2_rate) / 1000;
-	p->hb_t = tim3_ten2_ticks + p->hbct_ticks;	
+	p->hb_tdur = (hbct * tim3_ten2_rate) / 1000;	// Number of timer ticks for heartbeats
+	p->hb_tct  = tim3_ten2_ticks + p->hb_tdur;	// Set first counter value
 
 	/* Add this function to the "hub-server" msg distribution. */
 	p->phub = can_hub_add_func();	// Set up port/connection to can_hub
@@ -191,9 +197,9 @@ int engine_functions_init_all(void)
 	if (ret < 0) return ret;
 	// Convert to parameters to double since computations done in doubles
 	 eman_f.dpress_offset = eman_f.lc.press_offset;
-	 eman_f.dscale_offset = eman_f.lc.press_scale;
-	 eman_f.cf.canid_msg  = eman_f.lc.cid_msg;
-	 eman_f.cf.canid_hb   = eman_f.lc.cid_hb;	
+	 eman_f.dpress_scale  = eman_f.lc.press_scale;
+	 eman_f.cf.can_msg.id = eman_f.lc.cid_msg;
+	 eman_f.cf.can_hb.id  = eman_f.lc.cid_hb;	
 	 adc_cic2_init(&eman_f.cf.cic2);	// Init second cic filtering constants
 
 
@@ -210,8 +216,8 @@ int engine_functions_init_all(void)
 	if (ret < 0) return ret;
 	// Additional rpm specific sensing initialization
   	  rpmsensor_init();
- 	  erpm_f.cf.canid_msg = erpm_f.lc.cid_msg;
-	  erpm_f.cf.canid_hb  = erpm_f.lc.cid_hb;
+ 	  erpm_f.cf.can_msg.id = erpm_f.lc.cid_msg;
+	  erpm_f.cf.can_hb.id  = erpm_f.lc.cid_hb;
 
 
 	/* Throttle function */
@@ -226,8 +232,8 @@ int engine_functions_init_all(void)
 	  ret = function_init(2,&ethr_f.cf,ethr_f.lc.hbct);
 	if (ret < 0) return ret;
      adc_cic2_init(&ethr_f.cf.cic2);	// Init second cic filtering constants
- 	  ethr_f.cf.canid_msg = ethr_f.lc.cid_msg;
-	  ethr_f.cf.canid_hb  = ethr_f.lc.cid_hb;
+ 	  ethr_f.cf.can_msg.id = ethr_f.lc.cid_msg;
+	  ethr_f.cf.can_hb.id  = ethr_f.lc.cid_hb;
 
 
 	/* Temperature #1 function */
@@ -244,9 +250,9 @@ int engine_functions_init_all(void)
  	  temp_calc_param_dbl_init(&et1_f.thermdbl, &et1_f.lc.therm);
 	// Set initial values since not available at first
 	  et1_f.cf.flast2 = -99.0;
-	  et1_f.cf.dlast = -88.8;
- 	  et1_f.cf.canid_msg = et1_f.lc.cid_msg;
-	  et1_f.cf.canid_hb  = et1_f.lc.cid_hb;
+	  et1_f.dlast = -88.8;
+ 	  et1_f.cf.can_msg.id = et1_f.lc.cid_msg;
+	  et1_f.cf.can_hb.id  = et1_f.lc.cid_hb;
      adc_cic2_init(&et1_f.cf.cic2);	// Init second cic filtering constants
 
 	return ret;
@@ -265,11 +271,10 @@ int eng_common_poll(struct CANRCVBUF* pcan, struct COMMONFUNCTION* p)
 
 	union FTINT ui; ui.ui = 0; // (initialize to get rid of ui.ft warning)
 
-	/* Check for need to send  heart-beat. */
-	 if ( ( (int)tim3_ten2_ticks - (int)p->hb_t) > 0  )	// Time to send heart-beat?
-	{ // Here, yes.
-		
-		/* Send heartbeat and compute next hearbeat time count. */
+	/* Heartbeat msg timing */
+	 if ( ( (int)tim3_ten2_ticks - (int)p->hb_tct) > 0  )	// Time to send heart-beat?
+	{ // Here, yes.		
+		/* Send heartbeat and compute next heartbeat time count. */
 		send_can_msg_hb(p); // Send CAN msg, reset heartbeat cts
 		ret = 1;
 	}
@@ -280,15 +285,14 @@ int eng_common_poll(struct CANRCVBUF* pcan, struct COMMONFUNCTION* p)
 	if (p->flag_msg != 0) // Poll msg request?
 	{ // Here, yes.  Send regular reading response
 		p->flag_msg  = 0;
-			//      Args:  CAN id, status of reading, reading pointer instance pointer
 	   send_can_msg_poll(p); // Send CAN msg, reset heartbeat cts
 			return 1;
 	}
 	
 	/* Check for eng_manifold function command. */
-	if (pcan->id == *p->cf.pcanid_cmd_func_i)
+	if (pcan->id == *p->pcanid_cmd_func_i)
 	{ // Here, we have a command msg for this function instance. 
-		cmd_code_dispatch(pcan, p); // Handle and send as necessary
+//$		cmd_code_dispatch(pcan, p); // Handle and send as necessary
 		return 0;	// No msgs passed to other ports
 	}
 	return ret;
@@ -312,13 +316,13 @@ static void engine_can_msg_poll(struct CAN_CTLBLOCK* pctl, u32 canid)
 	if (erpm_f.lc.cid_msg == canid)	// RPM poll?
 	{
 		erpm_f.cf.flag_msg = 1; 	// Show rpm poll response requested
-		rpmsensor_reset_timer();	// Reset timing
+		rpmsensor_reset_timer();	// ### Sync/Reset timing ###
 	}
 	if (ethr_f.lc.cid_msg == canid)	// Throttle poll?
 	{
 		ethr_f.cf.flag_msg = 1;	// Show throttle response requested
 	}
-	CAN_poll_loop_trigger();	// Trigger low level interrupt poll
+	CAN_poll_loop_trigger();	// Trigger low level interrupt poll incoming msgs
 	return;
 }
 /*******************************************************************************

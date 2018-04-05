@@ -35,7 +35,7 @@
 /* @brief	: Convert parameters from float to double 
  * @param	: doubles
  * @param	: floats
-/* **************************************************************************************/
+ * **************************************************************************************/
 double temp_calc_param_dbl(int adcreading, struct THERMPARAMDBL *p);
 /* @brief	: Compute temperature from adc reading ('d' = double precision)
  * @param	; adcreading,  scaled (0 - 4095) if filtered/averaged

@@ -1,0 +1,74 @@
+README.strategy
+04/05/2018
+
+Notes on general strategy for engine sensor (se1)
+
+Functions
+
+The hardware senses:
+  thermistor
+  throttle pot
+  manifold pressure sensor
+  rpm pickup
+
+These are viewed as separate "functions" and each
+ function has a set of parameters stored in separate
+ areas in high flash (see the .ld file), and
+ a "working" struct in sram that is initialized at
+ startup.  This working struct is held within a struct
+ that has other variables used by the function.  
+ 
+ The sram struct for parameters has a suffix 'LC' (Local Copy)
+ The sram struct for the function has the suffix '_f' and
+   contains a struct that has variables common to all the
+   functions.
+ The function struct names in this program are--
+  engine manifold  (eman_f)
+  engine rpm       (erpm_f)
+  engine throttle  (ethr)f)
+  engine temperature (et1_f)
+
+ Example of the parameters
+  eman_f.lc
+ Example of the common variables
+  eman_f.cf
+
+Timing:
+- TIM4 in 'rpmsensor.c' handles
+  o input capture for determining rpm
+  o 1/64th sec broken into 16 sub-intervals
+  o Timing ticks
+    . Polling loop 
+    . Heartbeat, et al. timing
+    
+- CAN_driver interrupt extension 
+  o Checks for 'unversal reset' CAN msg, then
+  o Checks for CAN id for msg that is a poll request,
+    and sets flags for lower interrupt handling.
+  o Checks for "time sync" CAN msg.  If found, 
+    resets the sub-interval and output capture in
+    the TIM4 routine (above).  This syncs the sub-intervals
+    the reception of the time sync CAN id.
+
+- ADC sequence runs at the full speed of the ADC and is
+  double buffered using the DMA.  A sequence is nominally 51 us
+  and is in the order:
+    1) Throttle position pot
+    2) Thermistor
+    3) Pressure sensor
+  The DMA interrupt stores the just finished sequence in a 
+  circular buffer, for later filtering.
+
+
+'main'
+
+Endless loop handles lowest priority (for things taking a long time)--
+- printf for console monitoring/debugging
+- Compute temperature from thermistor readings
+- The loop ends with a call to trigger the "poll" loop
+
+Polling loop--
+
+This runs at a low level interrupt, just above 'main'
+- Loads incoming CAN msgs from CAN msg buffers (RX0, RX1)
+    into buffers for each "function"

@@ -112,6 +112,12 @@ static void adc_start_calibration_se_eng(void);
 /* CIC routines buried somewhere below */
 static void adc_cic_init(void);
 
+/* Circular buffer of sequences for delayed CIC filtering */
+int adcrawbuff[ADCRAWBUFFSIZE * NUMBERADCCHANNELS_SE];
+uint32_t adcidx_in = 0;		// Incoming index
+uint32_t adcidx_out = 0;	// Outgoing index
+
+
 /* Pointers to functions to be executed under a low priority interrupt */
 // These hold the address of the function that will be called
 void 	(*systickHIpriority3_ptr)(void) = 0;	// SYSTICK handler (very high priority) continuation

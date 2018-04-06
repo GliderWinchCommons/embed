@@ -33,10 +33,6 @@ PA1 ADC123-IN1 Thermistor
 PA3 ADC123-IN2 Pressure sensor  
 */
 
-/* Circular buffer of sequences for delayed CIC filtering */
-int adcrawbuff[ADCRAWBUFFSIZE * NUMBERADCCHANNELS_SE];
-uint32_t adcidx_in = 0;		// Incoming index
-uint32_t adcidx_out = 0;	// Outgoing index
 
 struct ADCDR_ENG
 {

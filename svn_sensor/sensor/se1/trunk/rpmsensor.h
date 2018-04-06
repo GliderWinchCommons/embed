@@ -46,10 +46,14 @@ void rpmsensor_reset_timer(void);
 /* Can time sync msg: reset subinterval and OC 
  * ############################################################################################### */
 
-extern void 	(*tim4ocLOpriority_ptr)(void);	// CH3 OC triggers EXTI0_IRQHANDLER -> rpmsensor_compute -> tim4ocLOpriority_ptr
+extern void (*tim4ocLOpriority_ptr)(void);	// CH3 OC triggers EXTI0_IRQHANDLER -> rpmsensor_compute -> tim4ocLOpriority_ptr
+extern void (*tim4_tim_oc_ptr)(void);	// Low level interrupt trigger function callback	
 
 extern void (*rpmsensor_can_msg_reset_ptr)(void* pctl, struct CAN_POOLBLOCK* pblk);	// Pointer for extending this routine's interrupt processing
 
+/* Timing counter */
+extern uint32_t tim4_tim_ticks; // Running count of time ticks
+extern uint32_t tim4_tim_rate;  // Number of ticks per sec (32E6/16E3)
 
 #endif 
 

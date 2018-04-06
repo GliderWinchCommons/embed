@@ -32,39 +32,56 @@ static void rpmsensor_computerpm(struct ENG_RPM_FUNCTION* p);
 
 /* Low level trigger for doing computation */
 void 	(*tim4ocLOpriority_ptr)(void) = 0;	// CH3 OC -> IC2C2_EV (low priority)
+void (*tim4_tim_oc_ptr)(void);	// Low level interrupt trigger function callback	
 
-/* TIM4 is on APB1 @ 32 MHz pclk1_freq */
-// One 1/64th sec interval = 500,000 ticks
-// 16 sub-intervals -> 500000/16 = 31250
-#define SUBINTERVAL 31250
+/* 
+TIM4 is on APB1 @ 32 MHz pclk1_freq
+One 1/64th sec interval = 1,000,000 ticks
+16 sub-intervals -> 1000000/16 = 62500
+Duration of subinterval: 62500/64 = 976.563 us
+*/
+#define SUBINTERVAL 62500	
 uint32_t subinterval_inc;	// Increment (31250 nominal)
 
 #define NUMSUBINTERVALS 16
 uint32_t subinterval_ct;	// Current subinterval count
 
-// Duration of subinterval: 31250/32 = 976.563 us
-// Allow about 2 ms for computation of readings before
-//  expected CAN poll msg.
-// CAN poll msg resets the subinterval counter and output
-//  capture count. The following is the sub-interval count
-//  that computation is triggered.
+/* 
+   Allow about 2 ms for computation of readings before
+expected CAN poll msg, i.e. two subintervals.
 
+   CAN time sync msg resets the subinterval counter and output
+capture count. The following is the sub-interval count
+that computation is triggered.
+
+  Shameless hack to avoid the issue of CAN time sync msg coincides with
+the TIM4 subinterval interrupt is to offset the subinterval time by
+less than the time duration of a CAN msg.  Should there be a coincidence
+it is not a big deal.  The alternative is the rather intricate phasing
+of the timer ticks to an average time of arrival of the sync CAN msg.  For
+the engine measurements this is not necessary.
+*/
 #define SUBINTERVALOFFSET (SUBINTERVAL/2)	// Offset to avoid interrupt conflicts
 
 /* Pointers to functions to be executed under a low priority interrupt */
-// These hold the address of the function that will be called
-void 	(*rpmsensor_ptr)(void) = 0;	// 
+// The following is loaded with the address of the function that will be called
+void 	(*rpmsensor_ptr)(void) = NULL;
 
 /* Various bit lengths of the timer counters are handled with a union */
 // Timer counter extended counts
 volatile union TIMCAPTURE64	strTim4cnt;	// 64 bit extended TIM4 CH4 timer count
+
 // Input capture extended counts
-volatile union TIMCAPTURE64	strTim4;	// 64 bit extended TIM4 CH4 capture
-volatile union TIMCAPTURE64	strTim4m;	// 64 bit extended TIM4 CH4 capture (main)
+volatile union TIMCAPTURE64	strTim4;  // 64 bit extended TIM4 CH4 capture
+volatile union TIMCAPTURE64	strTim4m; // 64 bit extended TIM4 CH4 capture (main)
 
 /* The readings and flag counters are updated upon each capture interrupt */
-volatile u32		usTim4ch4_Flag;		// Incremented when a new capture interrupt serviced, TIM4_CH4
+volatile u32 usTim4ch4_Flag; // Incremented when a new capture interrupt serviced, TIM4_CH4
 
+/* Timing counter */
+uint32_t tim4_tim_ticks;  // Running count of time ticks
+uint32_t tim4_tim_rate;   // Number of ticks per sec (64E6/16E3)
+#define TIM4TICKINC 32000 // Timer ct for 0.5 ms between interrupts
 
 /******************************************************************************
  * void rpmsensor_init(void);
@@ -91,14 +108,16 @@ const struct PINCONFIGALL pin_pb9 = {(volatile u32 *)GPIOB, 9, IN_FLT, 0};
 
 static void Tim4_eng_init(void)
 {
+	/* Note: variables are used for SUBINTERVAL and TIM4TICKINC should
+      later some timer phasing be implemented. */
+
 	/* Set subinterval count increment to initial nominal value */
 	subinterval_inc = SUBINTERVAL;
 	subinterval_ct = 0;	// Subinterval counter
 
-
-// Delay starting TIM4 counter
-//volatile int i;
-//for (i = 0; i < 1000; i++);	// 1000 results in 13060 count difference between the two timers
+	/* Rate for CH2, for polling and timing */
+	// 2000 interrupts per sec
+	tim4_tim_rate = pclk1_freq/TIM4TICKINC;
 
 	/* Setup the gpio pin for PB9 is not really needed as reset default is "input" "floating" */
 	pinconfig_all( (struct PINCONFIGALL *)&pin_pb9);	// p 156
@@ -109,11 +128,6 @@ static void Tim4_eng_init(void)
 
 	/* Enable bus clocking for alternate function */
 	RCC_APB2ENR |= (RCC_APB2ENR_AFIOEN);		// (p 110) 
-
-// Delay starting TIM3 counter
-//volatile int i;
-//for (i = 0; i < 1000; i++);	// 1000 results in 13060 count difference between the two timers
-
 
 	/* TIMx capture/compare mode register 1  (p 400) */
 	TIM4_CCMR2 |= TIM_CCMR2_CC4S_IN_TI4;		// (p 354)Fig 100 CC4 channel is configured as input, IC4 is mapped on TI4
@@ -137,8 +151,8 @@ static void Tim4_eng_init(void)
 	NVICISER(NVIC_TIM4_IRQ);			// Enable interrupt controller for TIM4
 	
 	/* Enable input capture interrupts */
-// Enable CH3 output compare, CH4 capture interrupt, and counter overflow
-	TIM4_DIER |= (TIM_DIER_CC3IE | TIM_DIER_CC4IE | TIM_DIER_UIE);	
+   // Enable CH2 and CH3 output compare, CH4 input capture, and counter overflow
+	TIM4_DIER |= (TIM_DIER_CC2IE) | (TIM_DIER_CC3IE | TIM_DIER_CC4IE | TIM_DIER_UIE);	
 
 	return;
 }
@@ -188,13 +202,13 @@ unsigned int Tim4_gettime_ui(void)
 *******************************************************************************/
 struct TIMCAPTRET32 Tim4_inputcapture_ui(void)
 {
-	 __attribute__((__unused__))int tmp;	// Dummy for readback of hardware registers
-	struct TIMCAPTRET32 strY;			// 32b input capture time and flag counter
+	 __attribute__((__unused__))int tmp; // Dummy for readback of hardware registers
+	struct TIMCAPTRET32 strY; // 32b input capture time and flag counter
 
 	TIM4_DIER &= ~(TIM_DIER_CC4IE | TIM_DIER_UIE);	// Disable CH4 capture interrupt and counter overflow (p 315)
-	tmp = TIM4_DIER;				// Readback ensures that interrupts have locked
+	tmp = TIM4_DIER; // Readback ensures that interrupts have locked
 
-/* The following is an alternative for to the two instructions above for assuring that the interrupt enable bits
+/* The following is an alternative to the two instructions above for assuring that the interrupt enable bits
    have been cleared.  The following results in exactly the same number of instructions and bytes as the above.
    The only difference is the last compiled instruction is 'str' rather than 'ldr'. */
 //	tmp = TIM4_DIER;
@@ -202,10 +216,9 @@ struct TIMCAPTRET32 Tim4_inputcapture_ui(void)
 //	TIM4_DIER = tmp;
 //	TIM4_DIER = tmp;
 
-
-	strY.ic  = strTim4m.ui[0];			// Get 32b input capture time
-	strY.flg = usTim4ch4_Flag; 			// Get flag counter
-	TIM4_DIER |= (TIM_DIER_CC4IE | TIM_DIER_UIE);	// Enable CH4 capture interrupt and counter overflow (p 315)
+	strY.ic  = strTim4m.ui[0];  // Get 32b input capture time
+	strY.flg = usTim4ch4_Flag;  // Get flag counter
+	TIM4_DIER |= (TIM_DIER_CC4IE | TIM_DIER_UIE); // Enable CH4 capture interrupt and counter overflow (p 315)
 	
 	return strY;
 }
@@ -264,13 +277,24 @@ void TIM4_IRQHandler(void)
 
 			strTim4cnt.ll	+= 0x10000;		// Increment the high order 48 bits of the timer counter
 
-			erpm_f.ct += 1;	// Running count of input captures
-			erpm_f.endtime = strTim4m.ui[0];			// Get 32b input capture time
+			erpm_f.ct += 1; // Running count of input captures
+			erpm_f.endtime = strTim4m.ui[0]; // Save 32b input capture time
 
-			temp = TIM4_SR;				// Readback register bit to be sure is cleared
-
+			temp = TIM4_SR; // Readback register bit to be sure is cleared
 			break;
 	}
+
+	/* OC flag for polling & timing trigger. */
+	if ((TIM4_SR & 0x04) != 0)
+	{
+		TIM4_SR = ~0x04;	// Reset flag
+		tim4_tim_ticks += 1;		// Timing tick running count
+		TIM4_CCR2 += TIM4TICKINC;	// Next interrupt time
+		if (tim4_tim_oc_ptr != 0)	// Skip? Having no address for the following is bad.
+			(*tim4_tim_oc_ptr)();	   // Go do something for somebody
+	}
+
+	/* OC flag for sub_interval timing */
 	if ((TIM4_SR & 0x08) != 0)
 	{
 			TIM4_SR = ~0x08;	// Reset CH3 output capture flag
@@ -298,10 +322,8 @@ void rpmsensor_reset_timer(void)
 /* ########################## UNDER LOW PRIORITY from TIM4 INTERRUPT ############################### 
  * Compute the rpm
  * ############################################################################################### */
-uint32_t rpmsensor_dbug1;	
+uint32_t rpmsensor_dbug1;	// Check timing of fp operations
 uint32_t rpmsensor_dbug2;
-uint32_t rpmsensor_dbug3;
-
 
 /* Enter this is from low priority interrupt triggered by TIM4, about 2 ms before 
    next expected poll msg.  These are nominally 64 per sec and sync'ed to the poll
@@ -333,10 +355,10 @@ rpmsensor_dbug2 = DTWTIME;
 }
 /*#######################################################################################
  * ISR routine for output caputure low priority level
+ * TIME4 CH3 (above) at high priority triggers this low priority interrupt
  *####################################################################################### */
 void EXTI0_IRQHANDLER(void)
 {
-
 	if (subinterval_ct >= SUBINTERVALTRIGGER) // Time to trigger (lower level) computation?
 	{ // Here, yes
 		rpmsensor_computerpm(&erpm_f);	// Do the rpm computation
@@ -346,11 +368,10 @@ void EXTI0_IRQHANDLER(void)
 	// Do this each subinterval "tick"
 	adcsensor_reading(subinterval_ct);
 	
-
-	/* TIME4 CH3 (above) at high priority triggers this low priority  */
 	// Set this to filter ADC readings
 	if (tim4ocLOpriority_ptr != 0)	// Skip? Having no address for the following is bad.
 		(*tim4ocLOpriority_ptr)();	   // Go do something for somebody
 
 	return;
 }
+

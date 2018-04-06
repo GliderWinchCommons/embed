@@ -64,25 +64,7 @@ const uint32_t myfunctype[NUMENGINEFUNCTIONS] = { \
  FUNCTION_TYPE_ENG_THROTTLE,
  FUNCTION_TYPE_ENG_T1,
 };
-/* **************************************************************************************
- * static void setup_can_msg(struct CANRCVBUF* pcan, uint32_t canid, uint8_t status, uint32_t* pv); 
- * @brief	: Setup CAN msg 
- * @param	: pcan = pointer to CAN msg
- * @param	: status = status of reading
- * @param	: pv = pointer to a 4 byte value (little Endian) to be sent (int32_t, uint32_t, or float)
- * @return	: *pcan is setup.
- * ************************************************************************************** */
-static void setup_can_msg(struct CANRCVBUF* pcan, uint32_t canid, uint8_t status, uint32_t* pv)
-{
-	pcan->id = canid;
-	pcan->dlc = 5;			// Set return msg payload count
-	pcan->cd.uc[0] = status;
-	pcan->cd.uc[1] = (*pv >>  0);	// Add 4 byte value to payload
-	pcan->cd.uc[2] = (*pv >>  8);
-	pcan->cd.uc[3] = (*pv >> 16);
-	pcan->cd.uc[4] = (*pv >> 24);
-	return;
-}
+
 /* **************************************************************************************
  * static void send_can_msg_hb(struct COMMONFUNCTION* p); // Heartbeat CAN msg
  * static void send_can_msg_poll(struct COMMONFUNCTION* p);// Polled msg CAN msg
@@ -93,13 +75,13 @@ static void send_can_msg_hb(struct COMMONFUNCTION* p)
 {
 	// Send CAN msg and reset heartbeat timeout 
 	can_hub_send(&p->can_hb, p->phub);// Send CAN msg to 'can_hub'
-	p->hb_tct = tim3_ten2_ticks + p->hb_tdur;	 // Reset heart-beat time duration each time msg sent	
+	p->hb_tct = tim4_tim_ticks + p->hb_tdur;	 // Reset heart-beat time duration each time msg sent	
 }
 static void send_can_msg_poll(struct COMMONFUNCTION* p)
 {
 	// Send CAN polled msg
 	can_hub_send(&p->can_msg, p->phub);// Send CAN msg to 'can_hub'
-	p->hb_tct = tim3_ten2_ticks + p->hb_tdur;	 // Reset heart-beat time duration each time msg sent	
+	p->hb_tct = tim4_tim_ticks + p->hb_tdur;	 // Reset heart-beat time duration each time msg sent	
 }
 
 /* *********************************************************** */
@@ -116,8 +98,8 @@ static int function_init(uint32_t n, struct COMMONFUNCTION* p, uint32_t hbct )
 	p->can_hb.cd.uc[0]  = 0;	// CAN msg hb status
 
 	/* First heartbeat time */
-	p->hb_tdur = (hbct * tim3_ten2_rate) / 1000;	// Number of timer ticks for heartbeats
-	p->hb_tct  = tim3_ten2_ticks + p->hb_tdur;	// Set first counter value
+	p->hb_tdur = (hbct * tim4_tim_rate) / 1000;	// Number of timer ticks between heartbeats
+	p->hb_tct  = tim4_tim_ticks + p->hb_tdur;	// Set first counter value
 
 	/* Add this function to the "hub-server" msg distribution. */
 	p->phub = can_hub_add_func();	// Set up port/connection to can_hub
@@ -267,12 +249,9 @@ int engine_functions_init_all(void)
 int eng_common_poll(struct CANRCVBUF* pcan, struct COMMONFUNCTION* p)
 {
 	int ret = 0;
-	struct CANRCVBUF cantmp;	// For setting up outgoing msgs
-
-	union FTINT ui; ui.ui = 0; // (initialize to get rid of ui.ft warning)
 
 	/* Heartbeat msg timing */
-	 if ( ( (int)tim3_ten2_ticks - (int)p->hb_tct) > 0  )	// Time to send heart-beat?
+	 if ( ( (int)tim4_tim_ticks - (int)p->hb_tct) > 0  )	// Time to send heart-beat?
 	{ // Here, yes.		
 		/* Send heartbeat and compute next heartbeat time count. */
 		send_can_msg_hb(p); // Send CAN msg, reset heartbeat cts
@@ -303,6 +282,7 @@ int eng_common_poll(struct CANRCVBUF* pcan, struct COMMONFUNCTION* p)
  *############################################################################################## */
 static void engine_can_msg_poll(struct CAN_CTLBLOCK* pctl, u32 canid)
 {
+	 __attribute__((__unused__))struct CAN_CTLBLOCK* ptemp = pctl;
 /* Note: the canid for poll is likely the same for all these functions, but it is possible
    to set different poll canids.
       Since the timing for readings filtering & computation is common, the timer sync reset
@@ -334,6 +314,9 @@ static void engine_can_msg_poll(struct CAN_CTLBLOCK* pctl, u32 canid)
 ********************************************************************************/
 int engine_can_msg_poll_init(struct CAN_CTLBLOCK* pctl, u32 canid)
 {
+	 __attribute__((__unused__))u32 temp = canid;
+	 __attribute__((__unused__))struct CAN_CTLBLOCK* ptemp = pctl;
+
    //	   pctl->ptrs1.func_rx = (void*)&can_msg_reset_msg; // Callback address for CAN RX0 or RX1 handler
 	// 'can_msg_reset.c' will call the following
 	can_msg_reset_ptr = (void*)&engine_can_msg_poll; // Cast since no arguments are used

@@ -16,6 +16,7 @@ w flag and have this routine pass that on to the CAN send routine.
 #include "can_driver.h"
 #include "tim3_ten2.h"
 #include "db/gen_db.h"
+#include "rpmsensor.h"
 
 extern void (*can_msg_reset_ptr)(void* pctl, struct CAN_POOLBLOCK* pblk);
 
@@ -39,9 +40,9 @@ struct CANHUB* phub_app = NULL;		// ?
 int CAN_poll_loop_init(void)
 {
 	/* Runs polling loop */
-	tim3_ten2_ll_ptr = &CAN_poll;	// 'tim3_ten.c' timer triggers low level interrupt to come to this function
-	NVICIPR (NVIC_I2C1_ER_IRQ, NVIC_I2C1_ER_IRQ_PRIORITY );	// Set interrupt priority ('../lib/libusartstm32/nvicdirect.h')
-	NVICISER(NVIC_I2C1_ER_IRQ);			// Enable interrupt controller ('../lib/libusartstm32/nvicdirect.h')
+	NVICIPR (NVIC_I2C1_ER_IRQ, NVIC_I2C1_ER_IRQ_PRIORITY );	// Set interrupt priority
+	NVICISER(NVIC_I2C1_ER_IRQ);			// Enable interrupt controller
+	tim4_tim_oc_ptr = &CAN_poll_loop_trigger;	// 'rpmsensor.c' CH2 oc timer triggers poll
 
 	/* Get a buffer for each "port" */
 	phub_app = can_hub_add_func();	// Get a hub port for dealing with commands
@@ -69,7 +70,6 @@ void CAN_poll(void)
 {
 	struct CANRCVBUF* pcan;
 	int sw;	
-	int ret;
 	do
 	{
 		sw = 0;
@@ -84,25 +84,25 @@ void CAN_poll(void)
 		/* eng_manifold: get msgs from buffer */
   		pcan = can_hub_get(eman_f.cf.phub); 	// Get ptr to CAN msg
 		{
-	 		ret = eng_common_poll(pcan,&eman_f.cf); 	// function poll
+	 		eng_common_poll(pcan,&eman_f.cf); 	// function poll
 		}
 
 		/* eng_rpm: get msgs from buffer */
   		pcan = can_hub_get(erpm_f.cf.phub); 	// Get ptr to CAN msg
 		{
-	 		ret = eng_common_poll(pcan,&erpm_f.cf); 	// function poll
+	 		eng_common_poll(pcan,&erpm_f.cf); 	// function poll
 		}
 
 		/* eng_throttle: get msgs from buffer */
   		pcan = can_hub_get(ethr_f.cf.phub); 	// Get ptr to CAN msg
 		{
-	 		ret = eng_common_poll(pcan,&ethr_f.cf); 	// function poll
+	 		eng_common_poll(pcan,&ethr_f.cf); 	// function poll
 		}
 
 		/* eng_temperature: get msgs from buffer */
   		pcan = can_hub_get(et1_f.cf.phub); 	// Get ptr to CAN msg
 		{
-	 		ret = eng_common_poll(pcan,&et1_f.cf); 	// function poll
+	 		eng_common_poll(pcan,&et1_f.cf); 	// function poll
 		}
 
 

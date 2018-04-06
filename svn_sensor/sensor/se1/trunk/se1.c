@@ -463,29 +463,24 @@ static u32 throttleLED = 0;
 static u32 temp_t1;
 static u32 temp_t2;
 
+#define LEDPRINTFRINC 2000	// One per sec
+uint32_t tim4_tim_ticks_next = tim4_tim_ticks + LEDPRINTFRINC;
+int testtic = 0;
 
 	/* Print the header for the CAN driver error counts */
 //	canwinch_pod_common_systick2048_printerr_header();
 
-/* --------------- Start TIM3 CH1 and CH2 interrupts ------------------------------------------------- */
-	tim3_ten2_init(pclk1_freq/2048);	// 64E6/2048
 
 /* --------------------- Endless Stuff ----------------------------------------------- */
 	while (1==1)
 	{
 		/* Green LED OK flasher */
-		if (stk_64flgctr != stk_64flgctr_prev)
+		if ((int)(tim4_tim_ticks - tim4_tim_ticks_next) >= 0)
 		{
-			stk_64flgctr_prev = stk_64flgctr;
-			throttleLED += 1;
-			if (throttleLED >= 64)
-			{
-				throttleLED = 0;
-				TOGGLE_GREEN;	// Slow flash of green means "OK"
+			tim4_tim_ticks_next += LEDPRINTFRINC;
+			TOGGLE_GREEN;	// Slow flash of green means "OK"
 
-				printf("%d\n\r",(int)(temp_t2-temp_t1) ); 
-				USART1_txint_send();
-			}				
+			printf("%d\n\r",testtic++); USART1_txint_send();
 		}
 
 		/* Poll & compute calibrated temperature */

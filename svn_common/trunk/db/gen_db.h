@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2018-03-30 22:28:01.521
+// 2018-04-06 22:11:49.04
 
 #define CANID_COUNT 210
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid

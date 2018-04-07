@@ -119,7 +119,8 @@ OBJS	+= eng_man_printf.o
 OBJS	+= eng_rpm_printf.o
 OBJS	+= eng_thr_printf.o
 OBJS	+= eng_t1_printf.o
-
+OBJS	+= CAN_filter_build.o
+OBJS	+= CAN_filter_list_printf.o
 
 # The following two are 'export'ed in .arm_tools via .profile
 #OPENOCD_BASE	= /usr/share
@@ -159,7 +160,7 @@ images: $(NAME)
 
 $(NAME): $(OBJS) $(LDSCRIPT)
 	@printf "  LD      $(subst $(shell pwd)/,,$(@)) $(LFLAGS)\n"
-	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)  -lgcc  -lc -lgcc -lmiscstm32  -lusartstm32 -lsensormisc -ldevicestm32 -lsensormisc -lsupportstm32 -ldevicesstm32 -lcommon_allf103 -lm -lc -lgcc -lgcc
+	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)  -lgcc  -lc -lgcc -lmiscstm32  -lusartstm32 -lsensormisc -ldevicestm32 -lsensormisc -lsupportstm32 -ldevicesstm32 -lcommon_allf103 -lm -lc -lgcc -lgcc -Map=$(NAME).map
 clean:
 	@printf "  CLEAN   $(subst $(shell pwd)/,,$(OBJS))\n"
 	$(Q)rm -f *.o $(LIBOPENSTM32)/*.o

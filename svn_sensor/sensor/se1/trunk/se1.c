@@ -142,6 +142,9 @@ const struct FLASHP_SE1* flashp_se1 = (struct FLASHP_SE1*)&__highflashp;
 #include "eng_thr_printf.h"
 #include "eng_t1_printf.h"
 
+#include	"CAN_filter_list_printf.h"
+
+
 /* Error counts for monitoring. */
 extern struct CANWINCHPODCOMMONERRORS can_errors;	// A group of error counts
 
@@ -337,8 +340,8 @@ And now for the main routine
   #################################################################################################*/
 int main(void)
 {
-	int i = 0; 		// Timing loop variable
-//	int init_ret = -4;
+	int i = 0;
+   int ret;
 
 /* $$$$$$$$$$$$ Relocate the interrupt vectors from the loader to this program $$$$$$$$$$$$$$$$$$$$ */
 extern void relocate_vector(void);
@@ -434,6 +437,16 @@ setbuf(stdout, NULL);
 	eng_rpm_printf(&erpm_f.lc);
 	eng_thr_printf(&ethr_f.lc);
 	eng_t1_printf(&et1_f.lc);
+
+	// The foregoing loaded the parameters from high-flash into sram structs and built the following table
+	CAN_filter_list_printf();	// List CAN hardware filter list for incoming msgs
+	
+	ret = CAN_filter_build_list_add(); // Add previously built filter tables to CAN hardware
+	if (ret != 0)
+	{
+		printf("\n\r### ERROR: CAN_filter_build_list_add %d\n\r\n\r",ret);USART1_txint_send(); 
+	}
+
 /* --------------------- ADC setup and initialization ------------------------------------------------ */
 	adc_init_se_eng_sequence();	// Time delay + calibration, then start conversion
 /* --------------------- Program is ready, so do program-specific startup ---------------------------- */
@@ -457,11 +470,12 @@ i = 0;
 //unsigned int cicdebug0_prev = 0;
 
 /* Green LED flashing */
-static u32 stk_64flgctr_prev;
-static u32 throttleLED = 0;
+//static u32 stk_64flgctr_prev;
+//static u32 throttleLED = 0;
 
-static u32 temp_t1;
-static u32 temp_t2;
+// Temp computation: 59.45 us
+u32 temp_t1 = DTWTIME;
+u32 temp_t2 = DTWTIME;
 
 #define LEDPRINTFRINC 2000	// One per sec
 uint32_t tim4_tim_ticks_next = tim4_tim_ticks + LEDPRINTFRINC;
@@ -480,7 +494,7 @@ int testtic = 0;
 			tim4_tim_ticks_next += LEDPRINTFRINC;
 			TOGGLE_GREEN;	// Slow flash of green means "OK"
 
-			printf("%d\n\r",testtic++); USART1_txint_send();
+			printf("%d %d\n\r",testtic++,(int)(temp_t2-temp_t1)); USART1_txint_send();
 		}
 
 		/* Poll & compute calibrated temperature */

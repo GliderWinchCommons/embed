@@ -114,8 +114,8 @@ INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_R_ROOMTMP'         ,'10.0'    ,'
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_REF_TEMP'          ,'290.0'   ,'ENG_T1','Eng1_t1: Thermistor param: Reference temp for thermistor');
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_TEMP_OFFSET'       ,'0.0'     ,'ENG_T1','Eng1_t1: Thermistor param: Thermistor temp offset correction (deg C)');
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_TEMP_SCALE'        ,'1.0'     ,'ENG_T1','Eng1_t1: Thermistor param: Thermistor temp scale correction');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_POLL_TEM1_R'    ,'CANID_MSG_ENG1_T1','ENG_T1','Eng1_t1: CANID: Poll response: CANID: Poll response: temperature #1 (deg C)');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_HB_THROTTLE_R'  ,'CANID_HB_ENG1_T1' ,'ENG_T1','Eng1_t1: CANID: Heartbeat: CANID: Heartbeat: temperature #1 (deg C)');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_POLL_T1_R'      ,'CANID_MSG_ENG1_T1','ENG_T1','Eng1_t1: CANID: Poll response: CANID: Poll response: temperature #1 (deg C)');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_HB_T1_R'        ,'CANID_HB_ENG1_T1' ,'ENG_T1','Eng1_t1: CANID: Heartbeat: CANID: Heartbeat: temperature #1 (deg C)');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CANID_HW_FILT1' ,'CANID_HB_TIMESYNC'  ,'ENG_T1','Eng1_t1: CANID 1 added to CAN hardware filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CANID_HW_FILT2' ,'CANID_MSG_TIME_POLL','ENG_T1','Eng1_t1: CANID 2 added to CAN hardware filter to allow incoming msg');

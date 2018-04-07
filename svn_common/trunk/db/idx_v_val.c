@@ -1,4 +1,4 @@
-// 2018-03-30 22:28:02.776
+// 2018-04-06 22:11:50.285
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -9,7 +9,7 @@
 #define CANSENDER_2_PARAM_SIZE 6
 #define ENG1_MANIFOLD_PARAM_SIZE 15
 #define ENG1_RPM_PARAM_SIZE 14
-#define ENG1_T1_PARAM_SIZE 17
+#define ENG1_T1_PARAM_SIZE 19
 #define ENG1_THROTTLE_PARAM_SIZE 15
 #define ENGINE_SENSOR1_PARAM_SIZE 14
 #define GPS_1_PARAM_SIZE 9
@@ -133,14 +133,16 @@ const uint32_t paramval05[] = {
  0x43910000 , /*   7 290.0               11  Eng1_t1: Thermistor param: Reference temp for thermistor                        */
  0x00000000 , /*   8 0.0                 11  Eng1_t1: Thermistor param: Thermistor temp offset correction (deg C)            */
  0x3F800000 , /*   9 1.0                 11  Eng1_t1: Thermistor param: Thermistor temp scale correction                     */
- 0x00400000 , /*  10 CANID_HB_TIMESYNC   17  Eng1_t1: CANID 1 added to CAN hardware filter to allow incoming msg             */
- 0x20000000 , /*  11 CANID_MSG_TIME_POLL  17  Eng1_t1: CANID 2 added to CAN hardware filter to allow incoming msg             */
- 0x81A00000 , /*  12 CANID_CMD_ENG1_T1I  17  Eng1_t1: CANID 3 added to CAN hardware filter to allow incoming msg             */
- 0xFFFFFFFC , /*  13 CANID_DUMMY         17  Eng1_t1: CANID 4 added to CAN hardware filter to allow incoming msg             */
- 0xFFFFFFFC , /*  14 CANID_DUMMY         17  Eng1_t1: CANID 5 added to CAN hardware filter to allow incoming msg             */
- 0xFFFFFFFC , /*  15 CANID_DUMMY         17  Eng1_t1: CANID 6 added to CAN hardware filter to allow incoming msg             */
- 0xFFFFFFFC , /*  16 CANID_DUMMY         17  Eng1_t1: CANID 7 added to CAN hardware filter to allow incoming msg             */
- 0xFFFFFFFC , /*  17 CANID_DUMMY         17  Eng1_t1: CANID 8 added to CAN hardware filter to allow incoming msg             */
+ 0x41200000 , /*  10 CANID_MSG_ENG1_T1   17  Eng1_t1: CANID: Poll response: CANID: Poll response: temperature #1 (deg C)     */
+ 0x82800000 , /*  11 CANID_HB_ENG1_T1    17  Eng1_t1: CANID: Heartbeat: CANID: Heartbeat: temperature #1 (deg C)             */
+ 0x00400000 , /*  12 CANID_HB_TIMESYNC   17  Eng1_t1: CANID 1 added to CAN hardware filter to allow incoming msg             */
+ 0x20000000 , /*  13 CANID_MSG_TIME_POLL  17  Eng1_t1: CANID 2 added to CAN hardware filter to allow incoming msg             */
+ 0x81A00000 , /*  14 CANID_CMD_ENG1_T1I  17  Eng1_t1: CANID 3 added to CAN hardware filter to allow incoming msg             */
+ 0xFFFFFFFC , /*  15 CANID_DUMMY         17  Eng1_t1: CANID 4 added to CAN hardware filter to allow incoming msg             */
+ 0xFFFFFFFC , /*  16 CANID_DUMMY         17  Eng1_t1: CANID 5 added to CAN hardware filter to allow incoming msg             */
+ 0xFFFFFFFC , /*  17 CANID_DUMMY         17  Eng1_t1: CANID 6 added to CAN hardware filter to allow incoming msg             */
+ 0xFFFFFFFC , /*  18 CANID_DUMMY         17  Eng1_t1: CANID 7 added to CAN hardware filter to allow incoming msg             */
+ 0xFFFFFFFC , /*  19 CANID_DUMMY         17  Eng1_t1: CANID 8 added to CAN hardware filter to allow incoming msg             */
 };
 #endif
 

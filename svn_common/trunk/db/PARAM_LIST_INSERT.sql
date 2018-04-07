@@ -211,15 +211,15 @@ INSERT INTO PARAM_LIST VALUES ('ENG_THR_CANID_HW_FILT8'   ,15,'TYP_CANID','%x','
 
 -- Engine sensors: Temperature #1
 --                              Parameter name            Code     Type   format    Function_type            Description
-INSERT INTO PARAM_LIST VALUES ('ENG_T1_CRC'              , 1,'TYP_U32','%08X', 'ENG_T1',	'Eng_t1: CRC');
-INSERT INTO PARAM_LIST VALUES ('ENG_T1_VERSION'          , 2,'TYP_S32',  '%d', 'ENG_T1',	'Eng_t1: Version number');
-INSERT INTO PARAM_LIST VALUES ('ENG_T1_HEARTBEAT_TIME_CT', 3,'TYP_S32',  '%d', 'ENG_T1',	'Eng_t1: Time (ms) between HB msg');
-INSERT INTO PARAM_LIST VALUES ('ENG_T1_CONST_B'          , 4,'TYP_FLT',  '%f', 'ENG_T1',	'Eng_t1: Thermistor param: constant B');
-INSERT INTO PARAM_LIST VALUES ('ENG_T1_R_SERIES'         , 5,'TYP_FLT',  '%f', 'ENG_T1',	'Eng_t1: Thermistor param: Series resistor, fixed (K ohms)');
-INSERT INTO PARAM_LIST VALUES ('ENG_T1_R_ROOMTMP'        , 6,'TYP_FLT',  '%f', 'ENG_T1',	'Eng_t1: Thermistor param: Thermistor room temp resistance (K ohms)');
-INSERT INTO PARAM_LIST VALUES ('ENG_T1_REF_TEMP'         , 7,'TYP_FLT',  '%f', 'ENG_T1',	'Eng_t1: Thermistor param: Reference temp for thermistor');
-INSERT INTO PARAM_LIST VALUES ('ENG_T1_TEMP_OFFSET'      , 8,'TYP_FLT',  '%f', 'ENG_T1',	'Eng_t1: Thermistor param: Thermistor temp offset correction (deg C)');
-INSERT INTO PARAM_LIST VALUES ('ENG_T1_TEMP_SCALE'       , 9,'TYP_FLT',  '%f', 'ENG_T1',	'Eng_t1: Thermistor param: Thermistor temp scale correction');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_CRC'              , 1,'TYP_U32','%08X','ENG_T1','Eng_t1: CRC');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_VERSION'          , 2,'TYP_S32',  '%d','ENG_T1','Eng_t1: Version number');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_HEARTBEAT_TIME_CT', 3,'TYP_S32',  '%d','ENG_T1','Eng_t1: Time (ms) between HB msg');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_CONST_B'          , 4,'TYP_FLT',  '%f','ENG_T1','Eng_t1: Thermistor param: constant B');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_R_SERIES'         , 5,'TYP_FLT',  '%f','ENG_T1','Eng_t1: Thermistor param: Series resistor, fixed (K ohms)');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_R_ROOMTMP'        , 6,'TYP_FLT',  '%f','ENG_T1','Eng_t1: Thermistor param: Thermistor room temp resistance (K ohms)');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_REF_TEMP'         , 7,'TYP_FLT',  '%f','ENG_T1','Eng_t1: Thermistor param: Reference temp for thermistor');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_TEMP_OFFSET'      , 8,'TYP_FLT',  '%f','ENG_T1','Eng_t1: Thermistor param: Thermistor temp offset correction (deg C)');
+INSERT INTO PARAM_LIST VALUES ('ENG_T1_TEMP_SCALE'       , 9,'TYP_FLT',  '%f','ENG_T1','Eng_t1: Thermistor param: Thermistor temp scale correction');
 INSERT INTO PARAM_LIST VALUES ('ENG_T1_POLL_T1_R'        ,10,'TYP_CANID','%x','ENG_T1','Eng_t1: CANID: Poll response: temperature #1 (deg C)');
 INSERT INTO PARAM_LIST VALUES ('ENG_T1_HB_T1_R'          ,11,'TYP_CANID','%x','ENG_T1','Eng_t1: CANID: Heartbeat: temperature #1 (deg C)');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)

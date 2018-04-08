@@ -2,32 +2,52 @@
 # mm - script for compile and flashing
 # 03/23/2018
 #
-echo ==================================================================================================================================================================
-cd ../../../../svn_pod/sw_stm32/trunk/devices
-make clean
+# 'T' to make clean for all, 'F' to skip make clean
+MCLEAN="F"
+echo "========================================================================================"
+cd ../../../../svn_common/trunk
+if [ $MCLEAN = "T" ] ; then  make clean ; fi
 make
 
+echo "========================================================================================"
+cd ../../svn_pod/sw_stm32/trunk/devices
+pwd
+if [ $MCLEAN = "T" ] ; then  make clean ; fi
+make
+
+echo "========================================================================================"
 cd ../lib/libmi*
-#make clean
+pwd
+if [ $MCLEAN = "T" ] ; then  make clean ; fi
 make
 
+echo "========================================================================================"
 cd ../libu*
-#make clean
+pwd
+if [ $MCLEAN = "T" ] ; then  make clean ; fi
 make
 
+echo "========================================================================================"
 cd ../libsu*
-#make clean
+pwd
+if [ $MCLEAN = "T" ] ; then  make clean ; fi
 make
 
+echo "========================================================================================"
 cd ../../../../../svn_sensor/sw_f103/trunk/lib/libdev*
-make clean
+pwd
+if [ $MCLEAN = "T" ] ; then  make clean ; fi
 make
 
+echo "========================================================================================"
 cd ../lib*sensormisc
-make clean
+pwd
+if [ $MCLEAN = "T" ] ; then  make clean ; fi
 make
 
+echo "========================================================================================"
 cd ../../../../sensor/se1/trunk
+pwd
 make clean
 
 

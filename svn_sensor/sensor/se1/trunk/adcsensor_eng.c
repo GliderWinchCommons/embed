@@ -10,6 +10,9 @@ This routine handles the ADC for--
 2) Thermistor
 3) Pressure sensor
 
+04/07/2018
+Major revision to se1 using database and parameters.
+
 04/20/2014
 CAN messages:
 0x30800000 Throttle & thermistor (int & int)
@@ -51,6 +54,8 @@ increments so that cic filter readings are then loaded into a CAN message the me
 #include "canmsg_send_pay_type.h"
 
 #include "engine_function.h"
+#include "IRQ_priority_se1.h"
+#include "libmiscstm32/DTW_counter.h"
 
 /* ADC usage
 PA0 ADC123-IN0	Throttle potentiometer
@@ -240,15 +245,15 @@ inputs selected through the ADC_SQRx or ADC_JSQRx registers are converted."
 
 	// Channel configurion reg (p 209)
 	//          priority high  | 32b mem xfrs | 16b adc xfrs | mem increment | circular mode | half xfr     | xfr complete   | dma chan 1 enable
-//	DMA1_CCR1 =  ( 0x02 << 12) | (0x02 << 10) |  (0x01 << 8) | DMA_CCR1_MINC | DMA_CCR1_CIRC |DMA_CCR1_HTIE | DMA_CCR1_TCIE  | DMA_CCR1_EN;
+	DMA1_CCR1 =  ( 0x02 << 12) | (0x02 << 10) |  (0x01 << 8) | DMA_CCR1_MINC | DMA_CCR1_CIRC |DMA_CCR1_HTIE | DMA_CCR1_TCIE  | DMA_CCR1_EN;
 
-/* NOTE: This implementation does not need deal with the DMA interrupt */
-	DMA1_CCR1 =  ( 0x02 << 12) | (0x02 << 10) |  (0x01 << 8) | DMA_CCR1_MINC | DMA_CCR1_CIRC | DMA_CCR1_EN;
-
+/* NOTE: The following skips the DMA interrupt */
+//	DMA1_CCR1 =  ( 0x02 << 12) | (0x02 << 10) |  (0x01 << 8) | DMA_CCR1_MINC | DMA_CCR1_CIRC | DMA_CCR1_EN;
 
 	/* Set and enable interrupt controller for DMA transfer complete interrupt handling */
-//	NVICIPR (NVIC_DMA1_CHANNEL1_IRQ, DMA1_CH1_PRIORITY );	// Set interrupt priority
-//	NVICISER(NVIC_DMA1_CHANNEL1_IRQ);
+	NVICIPR (NVIC_DMA1_CHANNEL1_IRQ, DMA1_CH1_PRIORITY_SE1 );	// Set interrupt priority
+	NVICISER(NVIC_DMA1_CHANNEL1_IRQ);
+
 	return;
 }
 /******************************************************************************
@@ -300,6 +305,11 @@ should allow a delay of tSTAB between power up and start of conversion. Refer to
 /*#######################################################################################
  * ISR routine for DMA1 Channel1 reading ADC regular sequence of adc channels
  *####################################################################################### */
+uint32_t adcsensorDebugdmact;
+uint32_t adcdb1;
+uint32_t adcdb1_prev;
+uint32_t adcdbdiff;
+
 void DMA1CH1_IRQHandler(void)
 {
 /* Double buffer the sequence of channels converted.  When the DMA goes from the first
@@ -310,6 +320,12 @@ pointer is automatically reloaded with the beginning of the buffer space (i.e. c
 'flg' is the high order index into the two dimensional array. 
 
 'cnt' is a running counter of sequences converted.  Maybe not too useful except for debugging */
+
+adcsensorDebugdmact += 1;
+adcdb1 = DTWTIME;
+adcdbdiff = adcdb1 - adcdb1_prev;
+adcdb1_prev = adcdb1;
+
 
 	int *p1 = &adcrawbuff[adcidx_in];
 	int *p2;
@@ -330,16 +346,17 @@ pointer is automatically reloaded with the beginning of the buffer space (i.e. c
 		DMA1_IFCR = DMA_IFCR_CHTIF1;	// Clear transfer complete flag (p 208)
 	}
 
-	/* Copy 1/2 buffer just filled with a sequence to a circular buffer */
-	for (i = 0; i < NUMBERADCCHANNELS_SE; i++)
+	/* Copy 1/2 buffer just filled to a circular buffer */
+	for (i = 0; i < (NUMBERSEQUENCES * NUMBERADCCHANNELS_SE); i++)
 	{
 		*p1++ = *p2++;
 	}
-	adcidx_in += 3;
+	adcidx_in += NUMBERADCCHANNELS_SE;
 	if (adcidx_in >= ADCRAWBUFFSIZE*3) adcidx_in = 0;
 
 	/* Trigger a pending interrupt that will handle filter the ADC readings. */
 //	NVICISPR(NVIC_FSMC_IRQ);	// Set pending (low priority) interrupt for  ('../lib/libusartstm32/nvicdirect.h')
+
 
 	return;
 }
@@ -370,7 +387,7 @@ int	adc_calib_temp;			// Temperature in deg C
 
 static struct CICLN2M3 adc_cic[NUMBERADCCHANNELS_SE];	// CIC intermediate storage adc readings
 
-static struct RUNNINGADCAVERAGE radcave[NUMBERADCCHANNELS_SE];	// Running averages
+struct RUNNINGADCAVERAGE radcave[NUMBERADCCHANNELS_SE];	// Running averages
 
 void adc_cic2_init(struct CICLN2M3* p);	// Declaration
 /******************************************************************************
@@ -395,7 +412,6 @@ struct CICLN2M3
 static void adc_cic_init(void)
 {
 	int i;
-
 
 	/* Initialize the structs that hold the CIC filtering intermediate values. */
 	strADC1dr.cnt = 0;
@@ -452,7 +468,11 @@ void adc_cic_filtering(void)
 	/* Run accumulated data in circular buffer through cic filter */
 	while (adcidx_out != adcidx_in)
 	{
+cicdebug1 += 1;
 		p2 = &adcrawbuff[adcidx_out];
+		adcidx_out += NUMBERADCCHANNELS_SE;
+		if (adcidx_out >= ADCRAWBUFFSIZE) adcidx_out = 0;
+
 		/* Add the latest buffered sequence of readings to the cic filter */
 		for (i = 0; i < NUMBERADCCHANNELS_SE; i++)	
 		{
@@ -511,6 +531,7 @@ static void canprep(struct CANRCVBUF* pcan, uint8_t status, float f)
 /* ################## UNDER LOW PRIORITY originating with TIM4 CH3, rpmsensor.c ######## */
 // Entered every subinterval OC (31250/32E6 -> ~976 us)
 // cic with decimation = 16 is about 1 ms.
+
 void adcsensor_reading(uint32_t subinterval_ct)
 {
 	int32_t del;
@@ -524,9 +545,9 @@ void adcsensor_reading(uint32_t subinterval_ct)
 	{ // Here, yes
 
 		/* Separate ADC sequence data into functions */
-		ethr_f.cf.ilast1 = radcave[0].accum;
-		 et1_f.cf.ilast1 = radcave[1].accum;
-		eman_f.cf.ilast1 = radcave[2].accum;
+		ethr_f.cf.ilast1 = radcave[0].accum/RAVESIZE; // Throttle
+		 et1_f.cf.ilast1 = radcave[1].accum/RAVESIZE; // Thermistor
+		eman_f.cf.ilast1 = radcave[2].accum/RAVESIZE; // Manifold pressure
 
 		/* Thermistor->temperature is taken care at mainline */
 		adc_cic_filtering2(&et1_f.cf);	// Filter & decimate for console & hb

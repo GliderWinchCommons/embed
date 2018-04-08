@@ -10,7 +10,7 @@
 #include "DTW_counter.h"
 #include "engine_idx_v_struct.h"
 #include "db/gen_db.h"
-#include "tim3_ten2.h"
+//#include "tim3_ten2.h"
 #include "../../../../svn_common/trunk/common_highflash.h"
 #include "engine_function.h"
 #include "rpmsensor.h"

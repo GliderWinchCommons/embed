@@ -18,7 +18,8 @@ PB9 - TIM4_CH4, TIM11_CH1, SDIO5_D5, I2C1_SDA, CAN_TX: input from inverter.
 #include "libmiscstm32/clockspecifysetup.h"
 
 #include "common.h"
-#include "../../../../svn_common/trunk/common_can.h"
+//#include "../../../../svn_common/trunk/common_can.h"
+#include "IRQ_priority_se1.h"
 #include "pinconfig_all.h"
 #include "adcsensor_eng.h"
 #include "canwinch_pod_common_systick2048.h"
@@ -31,17 +32,17 @@ static void Tim4_eng_init(void);
 static void rpmsensor_computerpm(struct ENG_RPM_FUNCTION* p);
 
 /* Low level trigger for doing computation */
-void 	(*tim4ocLOpriority_ptr)(void) = 0;	// CH3 OC -> IC2C2_EV (low priority)
+void 	(*tim4ocLOpriority_ptr)(void) = 0;	// CH3 OC -> EXTI0 (low priority)
 void (*tim4_tim_oc_ptr)(void);	// Low level interrupt trigger function callback	
 
 /* 
 TIM4 is on APB1 @ 32 MHz pclk1_freq
 One 1/64th sec interval = 1,000,000 ticks
 16 sub-intervals -> 1000000/16 = 62500
-Duration of subinterval: 62500/64 = 976.563 us
+Duration of one subinterval: 62500/64 = 976.563 us
 */
 #define SUBINTERVAL 62500	
-uint32_t subinterval_inc;	// Increment (31250 nominal)
+uint32_t subinterval_inc;	// Increment (62500 nominal)
 
 #define NUMSUBINTERVALS 16
 uint32_t subinterval_ct;	// Current subinterval count
@@ -143,11 +144,11 @@ static void Tim4_eng_init(void)
 	TIM4_CR1 |= TIM_CR1_CEN; 			// Counter enable: counter begins counting (p 371,2)
 
 	/* Enable a lower priority interrupt for handling post-systick timing. */
-	NVICIPR (NVIC_EXTI0_IRQ, NVIC_I2C2_EV_IRQ_PRIORITY );	// Set interrupt priority
+	NVICIPR (NVIC_EXTI0_IRQ, NVIC_EXTI0_IRQ_PRIORITY_SE1);	// Set interrupt priority
 	NVICISER(NVIC_EXTI0_IRQ);			// Enable interrupt controller 
 
 	/* Set and enable interrupt controller for TIM4 interrupt */
-	NVICIPR (NVIC_TIM4_IRQ, TIM4_PRIORITY_SE );	// Set interrupt priority
+	NVICIPR (NVIC_TIM4_IRQ, TIM4_PRIORITY_SE1 );	// Set interrupt priority
 	NVICISER(NVIC_TIM4_IRQ);			// Enable interrupt controller for TIM4
 	
 	/* Enable input capture interrupts */
@@ -225,6 +226,9 @@ struct TIMCAPTRET32 Tim4_inputcapture_ui(void)
 /*#######################################################################################
  * ISR routine for TIM4
  *####################################################################################### */
+uint32_t debugrpmsensor1 ;
+uint32_t debugrpmsensorch3ctr ;
+
 void TIM4_IRQHandler(void)
 {
 	 __attribute__((__unused__))int temp;	// Dummy for readback of hardware registers
@@ -287,7 +291,7 @@ void TIM4_IRQHandler(void)
 	/* OC flag for polling & timing trigger. */
 	if ((TIM4_SR & 0x04) != 0)
 	{
-		TIM4_SR = ~0x04;	// Reset flag
+		TIM4_SR = ~0x04;	// Reset CH2 flag
 		tim4_tim_ticks += 1;		// Timing tick running count
 		TIM4_CCR2 += TIM4TICKINC;	// Next interrupt time
 		if (tim4_tim_oc_ptr != 0)	// Skip? Having no address for the following is bad.
@@ -363,6 +367,8 @@ void EXTI0_IRQHANDLER(void)
 	{ // Here, yes
 		rpmsensor_computerpm(&erpm_f);	// Do the rpm computation
 	}
+
+debugrpmsensorch3ctr += 1;
 
 	/* Filter and prepare readings for ADC readings (manifold, throttle, thermistor) */
 	// Do this each subinterval "tick"

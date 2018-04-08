@@ -14,9 +14,10 @@ w flag and have this routine pass that on to the CAN send routine.
 #include "engine_function.h"
 #include "libusartstm32/nvicdirect.h"
 #include "can_driver.h"
-#include "tim3_ten2.h"
+//#include "tim3_ten2.h"
 #include "db/gen_db.h"
 #include "rpmsensor.h"
+#include "IRQ_priority_se1.h"
 
 extern void (*can_msg_reset_ptr)(void* pctl, struct CAN_POOLBLOCK* pblk);
 
@@ -40,7 +41,7 @@ struct CANHUB* phub_app = NULL;		// ?
 int CAN_poll_loop_init(void)
 {
 	/* Runs polling loop */
-	NVICIPR (NVIC_I2C1_ER_IRQ, NVIC_I2C1_ER_IRQ_PRIORITY );	// Set interrupt priority
+	NVICIPR (NVIC_I2C1_ER_IRQ, NVIC_I2C1_ER_IRQ_PRIORITY_SE1 );	// Set interrupt priority
 	NVICISER(NVIC_I2C1_ER_IRQ);			// Enable interrupt controller
 	tim4_tim_oc_ptr = &CAN_poll_loop_trigger;	// 'rpmsensor.c' CH2 oc timer triggers poll
 

@@ -132,7 +132,7 @@ const struct FLASHP_SE1* flashp_se1 = (struct FLASHP_SE1*)&__highflashp;
 #include "iir_filter_l.h"
 #include "can_filter_print.h"
 
-#include "tim3_ten2.h"
+//#include "tim3_ten2.h"
 
 #include "engine_idx_v_struct.h"
 #include "engine_function.h"
@@ -477,14 +477,40 @@ i = 0;
 u32 temp_t1 = DTWTIME;
 u32 temp_t2 = DTWTIME;
 
+char a[32];	// Char buffer for fmtprint.c
+char b[32];
+
 #define LEDPRINTFRINC 2000	// One per sec
 uint32_t tim4_tim_ticks_next = tim4_tim_ticks + LEDPRINTFRINC;
 int testtic = 0;
 
 	/* Print the header for the CAN driver error counts */
 //	canwinch_pod_common_systick2048_printerr_header();
+extern adcsensorDebugdmact;
+uint32_t adcsensorDebugdmact_prev = adcsensorDebugdmact;
+uint32_t diff;
 
+extern int adcrawbuff[ADCRAWBUFFSIZE * NUMBERADCCHANNELS_SE];
+int32_t adc1,adc2,adc3;
 
+extern uint32_t debugrpmsensorch3ctr;
+uint32_t debugrpmsensorch3ctr_prev = debugrpmsensorch3ctr;
+int diff2;
+
+extern unsigned int cicdebug0;
+extern unsigned int cicdebug1;
+uint32_t cicdebug0_prev = cicdebug0;
+uint32_t cicdebug1_prev = cicdebug1;
+int diff3,diff4;
+int et1ct = 0;
+int et1ct_prev = 0;
+int diffet1;
+
+extern long adc_last_filtered[3];
+double dfarn;
+extern uint32_t adcdbdiff;
+
+extern struct RUNNINGADCAVERAGE radcave[NUMBERADCCHANNELS_SE];
 /* --------------------- Endless Stuff ----------------------------------------------- */
 	while (1==1)
 	{
@@ -494,12 +520,49 @@ int testtic = 0;
 			tim4_tim_ticks_next += LEDPRINTFRINC;
 			TOGGLE_GREEN;	// Slow flash of green means "OK"
 
-			printf("%d %d\n\r",testtic++,(int)(temp_t2-temp_t1)); USART1_txint_send();
+/* **********************************************************
+ * void fpformatn(char *p, double d, int n, int m, int q);
+ * @brief	: Convert double to formatted ascii, (e.g. ....-3.145)
+ * @param	: d = input double 
+ * @param	: n = scale fraction, (e.g. 1000)
+ * @param	: m = number of decimals of fraction, (e.g. 3)
+ * @param	: q = number of chars total (e.g. 10)
+ * @param	: p = pointer to output char buffer
+*********************************************************** */
+			fpformatn(a,et1_f.dlast,100,2,6);
+			dfarn = (et1_f.dlast * (9/5)) + 32.0;
+			fpformatn(b,dfarn,100,2,6);
+
+			diff = adcsensorDebugdmact - adcsensorDebugdmact_prev;
+			adcsensorDebugdmact_prev = adcsensorDebugdmact;
+
+			adc1 = adcrawbuff[0];
+			adc2 = adcrawbuff[1];
+			adc3 = adcrawbuff[2];
+
+			diff2 = (debugrpmsensorch3ctr - debugrpmsensorch3ctr_prev);
+			debugrpmsensorch3ctr_prev = debugrpmsensorch3ctr;
+
+			diff3 = cicdebug0 - cicdebug0_prev;			
+			diff4 = cicdebug1 - cicdebug1_prev;			
+			cicdebug0_prev = cicdebug0;
+			cicdebug1_prev = cicdebug1;
+
+			diffet1 = et1ct - et1ct_prev;
+			et1ct_prev = et1ct;			
+
+			printf("%d %d %s %s %d %d %d %d %d %d %d\n\r",testtic++,(int)(temp_t2-temp_t1)/32,a, b, diff,diff2,diff3, diff4, et1ct, diffet1,adcdbdiff ); 
+			printf("%d %d %d\n\r",adc1,adc2,adc3);	// Raw
+			printf("%d %d %d\n\r",adc_last_filtered[0],adc_last_filtered[1],adc_last_filtered[2]); // First cic
+			printf("%d %d %d\n\r",radcave[0].accum/RAVESIZE,radcave[1].accum/RAVESIZE,radcave[2].accum/RAVESIZE); // Ave
+			printf("%d %d %d\n\r",ethr_f.cf.ilast2,et1_f.cf.ilast2,eman_f.cf.ilast2);	// Second cic
+			USART1_txint_send();
 		}
 
 		/* Poll & compute calibrated temperature */
 		if (et1_f.cf.cic2.usFlag != 0)
 		{
+et1ct += 1;
 temp_t1 = DTWTIME;
 			et1_f.cf.cic2.usFlag = 0;
 			et1_f.dlast = temp_calc_param_dbl( (int)et1_f.cf.ilast2, &et1_f.thermdbl);

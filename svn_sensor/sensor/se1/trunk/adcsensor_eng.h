@@ -21,7 +21,7 @@
 #include "cic_filter_l_N2_M3.h"
 
 #define NUMBERADCCHANNELS_SE 3   // Number of channels in a ADC scan sequence
-#define NUMBERSEQUENCES     1   // Number of sequences in 1/2 of the buffer
+#define NUMBERSEQUENCES     4   // Number of sequences in 1/2 of the buffer
 #define DECIMATION_SE     16   // Decimation ratio
 #define DISCARD_SE       32   // Number of readings to discard before filtering starts
 #define CICSCALE        15   // Right shift count to scale result

@@ -370,7 +370,7 @@ setbuf(stdout, NULL);
 		tx line buffer size, (long enough for the longest line)
 		number of tx line buffers, (must be > 1)
 */
-	i = USART1_rxinttxint_init(115200,32,2,96,4); // Initialize USART and setup control blocks and pointers
+	i = USART1_rxinttxint_init(115200,32,2,128,4); // Initialize USART and setup control blocks and pointers
 	if (i != 0) panic_leds(7);	// Init failed: Bomb-out flashing LEDs 7 times
 
 	/* Announce who we are */
@@ -525,7 +525,6 @@ uint32_t adcsensorDebugdmact_prev = adcsensorDebugdmact;
 uint32_t diff;
 
 extern int adcrawbuff[ADCRAWBUFFSIZE * NUMBERADCCHANNELS_SE];
-int32_t adc1,adc2,adc3;
 
 extern uint32_t debugrpmsensorch3ctr;
 uint32_t debugrpmsensorch3ctr_prev = debugrpmsensorch3ctr;
@@ -555,51 +554,43 @@ extern struct RUNNINGADCAVERAGE radcave[NUMBERADCCHANNELS_SE];
 			tim4_tim_ticks_next += LEDPRINTFRINC;
 			TOGGLE_GREEN;	// Slow flash of green means "OK"
 
-/* **********************************************************
- * void fpformatn(char *p, double d, int n, int m, int q);
- * @brief	: Convert double to formatted ascii, (e.g. ....-3.145)
- * @param	: d = input double 
- * @param	: n = scale fraction, (e.g. 1000)
- * @param	: m = number of decimals of fraction, (e.g. 3)
- * @param	: q = number of chars total (e.g. 10)
- * @param	: p = pointer to output char buffer
-*********************************************************** */
-			fpformatn(a,et1_f.dlast,100,2,6);
+			fpformatn(a,et1_f.dlast,100,2,6);	// Deg C
 
 			dfarn = (et1_f.dlast * (9.0/5.0)) + 32.0; // Farenheit
 			fpformatn(b,dfarn,100,2,6);
 		
 			fpformatn(t,ethr_f.cf.flast1,10,1,6); // Throttle pct
 
-			fpformatn(m,eman_f.dcalibrated,100,2,10); // Throttle pct
-
-
+			fpformatn(m,eman_f.dcalibrated,100,2,10); // Manifold pressure
+			/* Latest time duration between DMA interrupts */
 			diff = adcsensorDebugdmact - adcsensorDebugdmact_prev;
 			adcsensorDebugdmact_prev = adcsensorDebugdmact;
 
-			adc1 = adcrawbuff[0];
-			adc2 = adcrawbuff[1];
-			adc3 = adcrawbuff[2];
-
+			/* EXTI0_IRQHANDLER counts */
 			diff2 = (debugrpmsensorch3ctr - debugrpmsensorch3ctr_prev);
 			debugrpmsensorch3ctr_prev = debugrpmsensorch3ctr;
 
-			diff3 = cicdebug0 - cicdebug0_prev;			
-			diff4 = cicdebug1 - cicdebug1_prev;			
+			/* CIC filtering counts */
+			diff3 = cicdebug0 - cicdebug0_prev;	// Outer loop
+			diff4 = cicdebug1 - cicdebug1_prev;	// Inner loop	
 			cicdebug0_prev = cicdebug0;
 			cicdebug1_prev = cicdebug1;
 
+			/* Count of temperature computation flags */
 			diffet1 = et1ct - et1ct_prev;
 			et1ct_prev = et1ct;		
 
+			/* Lastest time duration of Temperature computation */
 			diff1 = 	(int)(temp_t2-temp_t1)/32;
 
-			printf("%d %s %s %s %s %d %d %d %d %d %d %d\n\r",testtic++,a,b,t,m,diff1,diff2,diff3,diff4,et1ct,diffet1,adcdbdiff); 
-#ifdef ADCPRINTLINES
-			printf("%d %d %d\n\r",adc1,adc2,adc3);	// Raw
-			printf("%d %d %d\n\r",adc_last_filtered[0],adc_last_filtered[1],adc_last_filtered[2]); // First cic
-			printf("%d %d %d\n\r",radcave[0].accum/RAVESIZE,radcave[1].accum/RAVESIZE,radcave[2].accum/RAVESIZE); // Ave
-			printf("%d %d %d\n\r",ethr_f.cf.ilast2,et1_f.cf.ilast2,eman_f.cf.ilast2);	// Second cic
+			printf("M %d %s %s %s %s %d %d %d %d %d %d %d\n\r",testtic++,a,b,t,m,diff1,diff2,diff3,diff4,diffet1,adcdbdiff,diff); 
+
+//#define ADCPRINTLINES	// Comment out to eliminate lines
+#ifdef ADCPRINTLINES		// Display ADC readings from raw to highly filtered
+			printf("A %d %d %d\n\r",adcrawbuff[0],adcrawbuff[1],adcrawbuff[2]);	// Raw
+			printf("B %d %d %d\n\r",adc_last_filtered[0],adc_last_filtered[1],adc_last_filtered[2]); // First cic
+			printf("C %d %d %d\n\r",radcave[0].accum/RAVESIZE,radcave[1].accum/RAVESIZE,radcave[2].accum/RAVESIZE); // Ave
+			printf("D %d %d %d\n\r",ethr_f.cf.ilast2,et1_f.cf.ilast2,eman_f.cf.ilast2);	// Second cic
 #endif
 			USART1_txint_send();
 		}

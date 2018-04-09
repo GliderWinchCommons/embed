@@ -30,6 +30,7 @@ overhead of a loop. */
 #define DISCARD_SE       32   // Number of readings to discard before filtering starts
 #define CICSCALE        15   // Right shift count to scale result
 #define ADCRAWBUFFSIZE 64   // Number of sequences in circular buffer
+#define DMASUMSIZE    16   // Number of readings to sum during DMA handling
 
 /* ADC usage & sequence
 PA0 ADC123-IN0 Throttle potentiometer
@@ -47,7 +48,7 @@ struct ADCDR_ENG
 };
 
 /* Running average, approx one 1/64 sec after cic filtering */
-#define RAVESIZE 20	// Length of running average
+#define RAVESIZE 2	// Length of running average
 struct RUNNINGADCAVERAGE
 {
 	uint32_t old[RAVESIZE];

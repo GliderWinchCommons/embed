@@ -309,7 +309,8 @@ uint32_t adcsensorDebugdmact;
 uint32_t adcdb1;
 uint32_t adcdb1_prev;
 uint32_t adcdbdiff;
-
+uint32_t dbgX;
+#define DBGX 1
 void DMA1CH1_IRQHandler(void)
 {
 /* Double buffer the sequence of channels converted.  When the DMA goes from the first
@@ -321,7 +322,7 @@ pointer is automatically reloaded with the beginning of the buffer space (i.e. c
 
 'cnt' is a running counter of sequences converted.  Maybe not too useful except for debugging */
 
-adcsensorDebugdmact += 1;
+
 adcdb1 = DTWTIME;
 adcdbdiff = adcdb1 - adcdb1_prev;
 adcdb1_prev = adcdb1;
@@ -345,7 +346,11 @@ adcdb1_prev = adcdb1;
 		p2 = &strADC1dr.in[0][0][0];
 		DMA1_IFCR = DMA_IFCR_CHTIF1;	// Clear transfer complete flag (p 208)
 	}
-
+dbgX += 1;
+if (dbgX >= DBGX)
+{
+dbgX = 0;
+adcsensorDebugdmact += 1;
 	/* Copy 1/2 buffer just filled to a circular buffer */
 	for (i = 0; i < NUMBERSEQUENCES; i++)
 	{
@@ -357,8 +362,8 @@ adcdb1_prev = adcdb1;
 	}
 	/* Advance index in circular buffer by number of sequences added */
 	adcidx_in += (NUMBERSEQUENCES * NUMBERADCCHANNELS_SE);
-	if (adcidx_in >= ADCRAWBUFFSIZE*NUMBERADCCHANNELS_SE) adcidx_in -= ADCRAWBUFFSIZE*NUMBERADCCHANNELS_SE;
-
+	if (adcidx_in >= (ADCRAWBUFFSIZE*NUMBERADCCHANNELS_SE)) adcidx_in = 0;//-= ADCRAWBUFFSIZE*NUMBERADCCHANNELS_SE;
+}
 	/* Trigger a pending interrupt that will handle filter the ADC readings. */
 //	NVICISPR(NVIC_FSMC_IRQ);	// Set pending (low priority) interrupt for  ('../lib/libusartstm32/nvicdirect.h')
 
@@ -470,13 +475,17 @@ void adc_cic_filtering(void)
 	int i;
 	int *p2;
 
+//while (adcidx_out != adcidx_in) {cicdebug1 += 1; adcidx_out += 3;if (adcidx_out >= (ADCRAWBUFFSIZE * NUMBERADCCHANNELS_SE)) adcidx_out = 0;}
+//return;
+
+
 	/* Run accumulated data in circular buffer through cic filter */
 	while (adcidx_out != adcidx_in)
 	{
 cicdebug1 += 1;
 		p2 = &adcrawbuff[adcidx_out];
 		adcidx_out += NUMBERADCCHANNELS_SE;
-		if (adcidx_out >= ADCRAWBUFFSIZE) adcidx_out = 0;
+		if (adcidx_out >= ADCRAWBUFFSIZE * NUMBERADCCHANNELS_SE) adcidx_out = 0;
 
 		/* Add the latest buffered sequence of readings to the cic filter */
 		for (i = 0; i < NUMBERADCCHANNELS_SE; i++)	
@@ -534,7 +543,7 @@ static void canprep(struct CANRCVBUF* pcan, uint8_t status, float f)
 	return;
 }
 /* ################## UNDER LOW PRIORITY originating with TIM4 CH3, rpmsensor.c ######## */
-// Entered every subinterval OC (31250/32E6 -> ~976 us)
+// Entered every subinterval OC (62500/64E6 -> ~976 us)
 // cic with decimation = 16 is about 1 ms.
 
 void adcsensor_reading(uint32_t subinterval_ct)

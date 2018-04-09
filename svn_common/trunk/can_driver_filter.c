@@ -316,4 +316,35 @@ u32 can_driver_filter_getbanknum(u32 CANnum)
 	if (CANnum == 1) filtnum = filtnum2; // CAN2 starts as an offset
 	return ((filtnum << 8) | oe);
 }
+/******************************************************************************
+ * uint32_t can_driver_hw_filter_list(uint8_t cannumber, uint8_t banknum, uint8_t oe);
+ * @brief 	: Return value in filter
+ * @param	: cannumber = 0 for CAN1, 1 for CAN2
+ * @param	: banknum = 0 - 28; -1 = current filtnum
+ * @param	: oe = 0 = odd; 1 = even
+ * @return	: value
+*******************************************************************************/
+uint32_t can_driver_hw_filter_list(uint8_t cannumber, int8_t banknum, uint8_t oe)
+{
+	if (banknum < 0)
+	{
+		if (cannumber == 1) return (filtnum1<<1)|oe;
+		return (filtnum2<<1)|oe;
+	}
+
+	if (cannumber == 0)
+	{
+		if (oe == 0)
+		{
+			return CAN_FiR1(CAN1, banknum);
+		}
+		return CAN_FiR2(CAN1, banknum);
+	}
+
+		if (oe != 0)
+		{
+			return CAN_FiR1(CAN2, banknum);
+		}
+		return CAN_FiR2(CAN2, banknum);	
+}
 

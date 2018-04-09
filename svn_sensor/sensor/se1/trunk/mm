@@ -2,6 +2,9 @@
 # mm - script for compile and flashing
 # 03/23/2018
 #
+STM32F3=TRUE
+export STM32F3
+
 # 'T' to make clean for all, 'F' to skip make clean
 MCLEAN="F"
 echo "========================================================================================"

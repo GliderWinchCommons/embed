@@ -347,12 +347,17 @@ adcdb1_prev = adcdb1;
 	}
 
 	/* Copy 1/2 buffer just filled to a circular buffer */
-	for (i = 0; i < (NUMBERSEQUENCES * NUMBERADCCHANNELS_SE); i++)
+	for (i = 0; i < NUMBERSEQUENCES; i++)
 	{
-		*p1++ = *p2++;
+		*(p1+0) = *(p2+0); // Fast in-line copy
+		*(p1+1) = *(p2+1);
+		*(p1+2) = *(p2+2);
+		p1        += NUMBERADCCHANNELS_SE; // Advance by one sequence
+		p2        += NUMBERADCCHANNELS_SE;
 	}
-	adcidx_in += NUMBERADCCHANNELS_SE;
-	if (adcidx_in >= ADCRAWBUFFSIZE*3) adcidx_in = 0;
+	/* Advance index in circular buffer by number of sequences added */
+	adcidx_in += (NUMBERSEQUENCES * NUMBERADCCHANNELS_SE);
+	if (adcidx_in >= ADCRAWBUFFSIZE*NUMBERADCCHANNELS_SE) adcidx_in -= ADCRAWBUFFSIZE*NUMBERADCCHANNELS_SE;
 
 	/* Trigger a pending interrupt that will handle filter the ADC readings. */
 //	NVICISPR(NVIC_FSMC_IRQ);	// Set pending (low priority) interrupt for  ('../lib/libusartstm32/nvicdirect.h')
@@ -555,16 +560,16 @@ void adcsensor_reading(uint32_t subinterval_ct)
 		/* Throttle */
 		del = ethr_f.cf.ilast1 - ethr_f.lc.throttle_close;
 		rng = ethr_f.lc.throttle_open - ethr_f.lc.throttle_close;
-		pctscaled = (del * ((100 * 1024)/RAVESIZE))/rng; // Scaled
-		ethr_f.cf.flast1 = pctscaled;	// Convert to float
+		pctscaled = (del * (100 * 1024))/rng; // Scaled
+		ethr_f.cf.flast1 = pctscaled;	// Convert to float for CAN msg
 		ethr_f.cf.flast1 = ethr_f.cf.flast1/1024; // Scale back to pct
 		canprep(&ethr_f.cf.can_msg,ethr_f.cf.status,ethr_f.cf.flast1);	// CAN msg setup
 		adc_cic_filtering2(&ethr_f.cf);	// Filter & decimate for console & hb
 
 		/* Manifold pressure */
-		eman_f.dlast1 = (eman_f.cf.ilast1 / RAVESIZE);
-		eman_f.dcalibrated = (eman_f.dlast1 - eman_f.dpress_offset) * eman_f.dpress_scale;
-		eman_f.cf.flast1 = eman_f.dcalibrated;
+		eman_f.dlast1      = eman_f.cf.ilast1;
+		eman_f.dcalibrated = (eman_f.dlast1 * eman_f.dpress_scale) + eman_f.dpress_offset;
+		eman_f.cf.flast1   = eman_f.dcalibrated; // Convert to float for CAN msg
 		canprep(&eman_f.cf.can_msg,eman_f.cf.status,eman_f.cf.flast1);	// CAN msg setup
 		adc_cic_filtering2(&eman_f.cf);	// Filter & decimate for console & hb
 		

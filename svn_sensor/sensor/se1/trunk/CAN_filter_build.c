@@ -139,9 +139,10 @@ uint32_t* CAN_filter_build_fifo0_fetch(uint8_t r)
  * ************************************************************************************** */
 int CAN_filter_build_list_add(void)
 {
+int ct = 0;
 	uint32_t* pcan;
 	int ret;
-	uint8_t sw = 1; 
+	uint8_t sw = 1; // Set fetch ptr to beginning
 	int i;
 	for (i = 1; i <= CANFILTERLISTSIZE; i++)
 	{
@@ -149,7 +150,8 @@ int CAN_filter_build_list_add(void)
 		if (pcan == NULL) break;
 		sw = 0;
 		ret = can_driver_filter_add_one_32b_id(0, *pcan, 0);
-		if (ret != 0) return ret;
+		if (ret != 0) return ret | (ct << 8);
+		ct += 1;
 	}
 	sw = 1; 
 	for (i = 1; i <= CANFILTERLISTSIZE; i++)
@@ -158,9 +160,10 @@ int CAN_filter_build_list_add(void)
 		if (pcan == NULL) break;
 		sw = 0;
 		ret = can_driver_filter_add_one_32b_id(0, *pcan, 1);
-		if (ret != 0) return ret;
+		if (ret != 0) return ret | (ct << 8);
+		ct += 1;
 	}
-	return ret;
+	return ret | (ct << 8);
 
 }
 

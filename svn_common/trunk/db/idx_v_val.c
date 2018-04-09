@@ -1,4 +1,4 @@
-// 2018-04-06 22:11:50.285
+// 2018-04-08 15:32:44.756
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -84,8 +84,8 @@ const uint32_t paramval03[] = {
  0x00000000 , /*   1 0                    6  Eng1_manifold: CRC                                                              */
  0x00000001 , /*   2 1                    5  Eng1_manifold: Version number                                                   */
  0x000003E8 , /*   3 1000                 5  Eng1_manifold: Time (ms) between HB msg                                         */
- 0xBF000000 , /*   4 -0.5                11  Eng1_manifold: Manifold pressure offset                                         */
- 0x42CF3333 , /*   5 103.6               11  Eng1_manifold: Manifold pressure  scale (inch Hg)                               */
+ 0xBFA66666 , /*   4 -1.3                11  Eng1_manifold: Manifold pressure offset                                         */
+ 0x3C16BB99 , /*   5 0.92E-2             11  Eng1_manifold: Manifold pressure  scale (inch Hg)                               */
  0x40800000 , /*   6 CANID_MSG_ENG1_MANFLD  17  Eng1_manifold: CANID: Poll response: manifold pressure, calibrated              */
  0x82200000 , /*   7 CANID_HB_ENG1_MANFLD  17  Eng1_manifold: CANID: Heartbeat: manifold pressure, calibrated                  */
  0x00400000 , /*   8 CANID_HB_TIMESYNC   17  EPS_1: CANID 1: GPS time sync distribution msg                                  */
@@ -128,10 +128,10 @@ const uint32_t paramval05[] = {
  0x00000001 , /*   2 1                    5  Eng1_t1: Version number                                                         */
  0x00001388 , /*   3 5000                 5  Eng1_t1: Time (ms) between HB msg                                               */
  0x45534000 , /*   4 3380                11  Eng1_t1: Thermistor param: constant B                                           */
- 0x41200000 , /*   5 10.0                11  Eng1_t1: Thermistor param: Series resistor, fixed (K ohms)                      */
+ 0x40F428F6 , /*   5 7.63                11  Eng1_t1: Thermistor param: Series resistor, fixed (K ohms)                      */
  0x41200000 , /*   6 10.0                11  Eng1_t1: Thermistor param: Thermistor room temp resistance (K ohms)             */
  0x43910000 , /*   7 290.0               11  Eng1_t1: Thermistor param: Reference temp for thermistor                        */
- 0x00000000 , /*   8 0.0                 11  Eng1_t1: Thermistor param: Thermistor temp offset correction (deg C)            */
+ 0x3F000000 , /*   8 0.5                 11  Eng1_t1: Thermistor param: Thermistor temp offset correction (deg C)            */
  0x3F800000 , /*   9 1.0                 11  Eng1_t1: Thermistor param: Thermistor temp scale correction                     */
  0x41200000 , /*  10 CANID_MSG_ENG1_T1   17  Eng1_t1: CANID: Poll response: CANID: Poll response: temperature #1 (deg C)     */
  0x82800000 , /*  11 CANID_HB_ENG1_T1    17  Eng1_t1: CANID: Heartbeat: CANID: Heartbeat: temperature #1 (deg C)             */
@@ -153,8 +153,8 @@ const uint32_t paramval06[] = {
  0x00000000 , /*   1 0                    6  Eng1_throttle:: CRC                                                             */
  0x00000001 , /*   2 1                    5  Eng1_throttle:: Version number                                                  */
  0x000003E8 , /*   3 1000                 5  Eng1_throttle:: Time (ms) between HB msg                                        */
- 0x00001068 , /*   4 4200                 6  Eng1_throttle:: ADC when throttle full open                                     */
- 0x000001F4 , /*   5 500                  6  Eng1_throttle:: ADC when throttle closed                                        */
+ 0x00000FCD , /*   4 4045                 6  Eng1_throttle:: ADC when throttle full open                                     */
+ 0x00000032 , /*   5 50                   6  Eng1_throttle:: ADC when throttle closed                                        */
  0x40E00000 , /*   6 CANID_MSG_ENG1_THROTTLE  17  Eng1_throttle:: CANID: Poll response: throttle (0.0-100.0)                      */
  0x82400000 , /*   7 CANID_HB_ENG1_THROTTLE  17  Eng1_throttle:: CANID: Heartbeat: throttle (0.0-100.0)                          */
  0x00400000 , /*   8 CANID_HB_TIMESYNC   17  EPS_1: CANID 1: GPS time sync distribution msg                                  */

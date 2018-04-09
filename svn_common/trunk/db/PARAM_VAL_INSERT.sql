@@ -48,8 +48,8 @@ DELETE FROM PARAM_VAL;
 INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_CRC'              ,'0',     'ENG_MANIFOLD','Eng1_manifold: CRC');
 INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_VERSION'          ,'1',     'ENG_MANIFOLD','Eng1_manifold: Version number');
 INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_HEARTBEAT_TIME_CT','1000',  'ENG_MANIFOLD','Eng1_manifold: Time (ms) between HB msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_PRESS_OFFSET'     ,'-0.5',  'ENG_MANIFOLD','Eng1_manifold: Manifold pressure offset');
-INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_PRESS_SCALE'      ,'103.6', 'ENG_MANIFOLD','Eng1_manifold: Manifold pressure  scale (inch Hg)');
+INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_PRESS_OFFSET'     ,'-1.3',  'ENG_MANIFOLD','Eng1_manifold: Manifold pressure offset');
+INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_PRESS_SCALE'      ,'0.92E-2', 'ENG_MANIFOLD','Eng1_manifold: Manifold pressure  scale (inch Hg)');
 INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_POLL_MANFLD_R','CANID_MSG_ENG1_MANFLD','ENG_MANIFOLD','Eng1_manifold: CANID: Poll response: manifold pressure, calibrated');
 INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_HB_MANFLD_R'  ,'CANID_HB_ENG1_MANFLD' ,'ENG_MANIFOLD','Eng1_manifold: CANID: Heartbeat: manifold pressure, calibrated');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
@@ -85,11 +85,11 @@ INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_CANID_HW_FILT8','CANID_DUMMY',
 -- ENGINE_THROTTLE: Instance 1 = ENG1_THROTTLE
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL               FUNCTION_TYPE      DESCRIPTION11
 -- The CAN hw filter will be setFOR the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_CRC'              ,'0',     'ENG_THROTTLE', 'Eng1_throttle:: CRC');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_VERSION'          ,'1',     'ENG_THROTTLE', 'Eng1_throttle:: Version number');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_HEARTBEAT_TIME_CT','1000',   'ENG_THROTTLE', 'Eng1_throttle:: Time (ms) between HB msg');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_OPENFULL'         ,'4200',   'ENG_THROTTLE', 'Eng1_throttle:: ADC when throttle full open');
-INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_CLOSED'           ,'500',   'ENG_THROTTLE', 'Eng1_throttle:: ADC when throttle closed');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_CRC'              ,'0',    'ENG_THROTTLE', 'Eng1_throttle:: CRC');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_VERSION'          ,'1',    'ENG_THROTTLE', 'Eng1_throttle:: Version number');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_HEARTBEAT_TIME_CT','1000', 'ENG_THROTTLE', 'Eng1_throttle:: Time (ms) between HB msg');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_OPENFULL'         ,'4045', 'ENG_THROTTLE', 'Eng1_throttle:: ADC when throttle full open');
+INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_CLOSED'           ,'50',   'ENG_THROTTLE', 'Eng1_throttle:: ADC when throttle closed');
 INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_POLL_THROTTLE_R','CANID_MSG_ENG1_THROTTLE','ENG_THROTTLE','Eng1_throttle:: CANID: Poll response: throttle (0.0-100.0)');
 INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_HB_THROTTLE_R'  ,'CANID_HB_ENG1_THROTTLE' ,'ENG_THROTTLE','Eng1_throttle:: CANID: Heartbeat: throttle (0.0-100.0)');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
@@ -109,10 +109,10 @@ INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CRC'               ,'0'       ,'
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_VERSION'           ,'1'       ,'ENG_T1','Eng1_t1: Version number');
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_HEARTBEAT_TIME_CT' ,'5000'    ,'ENG_T1','Eng1_t1: Time (ms) between HB msg');
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CONST_B'           ,'3380'    ,'ENG_T1','Eng1_t1: Thermistor param: constant B');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_R_SERIES'          ,'10.0'    ,'ENG_T1','Eng1_t1: Thermistor param: Series resistor, fixed (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_R_SERIES'          ,'7.63'    ,'ENG_T1','Eng1_t1: Thermistor param: Series resistor, fixed (K ohms)');
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_R_ROOMTMP'         ,'10.0'    ,'ENG_T1','Eng1_t1: Thermistor param: Thermistor room temp resistance (K ohms)');
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_REF_TEMP'          ,'290.0'   ,'ENG_T1','Eng1_t1: Thermistor param: Reference temp for thermistor');
-INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_TEMP_OFFSET'       ,'0.0'     ,'ENG_T1','Eng1_t1: Thermistor param: Thermistor temp offset correction (deg C)');
+INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_TEMP_OFFSET'       ,'0.5'     ,'ENG_T1','Eng1_t1: Thermistor param: Thermistor temp offset correction (deg C)');
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_TEMP_SCALE'        ,'1.0'     ,'ENG_T1','Eng1_t1: Thermistor param: Thermistor temp scale correction');
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_POLL_T1_R'      ,'CANID_MSG_ENG1_T1','ENG_T1','Eng1_t1: CANID: Poll response: CANID: Poll response: temperature #1 (deg C)');
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_HB_T1_R'        ,'CANID_HB_ENG1_T1' ,'ENG_T1','Eng1_t1: CANID: Heartbeat: CANID: Heartbeat: temperature #1 (deg C)');

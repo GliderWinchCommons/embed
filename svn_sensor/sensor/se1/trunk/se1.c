@@ -342,6 +342,7 @@ int main(void)
 {
 	int i = 0;
    int ret;
+	uint32_t id;
 
 /* $$$$$$$$$$$$ Relocate the interrupt vectors from the loader to this program $$$$$$$$$$$$$$$$$$$$ */
 extern void relocate_vector(void);
@@ -438,15 +439,45 @@ setbuf(stdout, NULL);
 	eng_thr_printf(&ethr_f.lc);
 	eng_t1_printf(&et1_f.lc);
 
-	// The foregoing loaded the parameters from high-flash into sram structs and built the following table
-	CAN_filter_list_printf();	// List CAN hardware filter list for incoming msgs
+/* ------------------ Set up hardware CAN filter ----------------------------------------------------- */
+	can_msg_reset_init(pctl0, pcanidtbl->unit_code);	// Specify CAN ID for this unit for msg caused RESET
+	/* Go through table and load "command can id" into CAN hardware filter. */
+	//                     (CAN1, even, bank 2)
+	can_driver_filter_setbanknum(0, 0, 2);
+	jj = pcanidtbl->size;
+	if (jj > 16) jj = 16;	// Check for bogus size
+	for (ii = 0; ii < jj; ii++) 
+	{
+		id = pcanidtbl->slot[ii].canid;
+		//  Add one 32b CAN id (     CAN1, CAN ID, FIFO)
+		ret = can_driver_filter_add_one_32b_id(0,id,0);
+		if (ret < 0)
+		{
+			printf("FLASHH CAN id table load failed: %d\n\r",ret);USART1_txint_send(); 
+			while (1==1);
+		}
+	}
 	
 	ret = CAN_filter_build_list_add(); // Add previously built filter tables to CAN hardware
-	if (ret != 0)
+	if (ret <= 0)
 	{
 		printf("\n\r### ERROR: CAN_filter_build_list_add %d\n\r\n\r",ret);USART1_txint_send(); 
 	}
+	printf("CAN_filter_build_list_add: %d\n\r",(ret >> 8)); // Number should match list
 
+	CAN_filter_list_printf();	// List CAN hardware filter list for incoming msgs
+
+	u32 filtnum = can_driver_hw_filter_list(1, -1, 0); // Get next available filter bank number
+	printf("CAN 1 hardware filter list\n\r");
+	printf("filtnum: %d  odd/even: %d\n\r",(filtnum >> 1),(filtnum & 0x1));
+	for (i = 0; i < (filtnum >> 1); i++) // List the hw filter registers
+	{
+		id = can_driver_hw_filter_list(0, i, 0);	printf("%2d 0x%08X ",i,id);
+		id = can_driver_hw_filter_list(0, i, 1);	printf("0x%08X\n\r",id);
+	}
+	printf("\n\r");
+
+	USART1_txint_send(); 
 /* --------------------- ADC setup and initialization ------------------------------------------------ */
 	adc_init_se_eng_sequence();	// Time delay + calibration, then start conversion
 /* --------------------- Program is ready, so do program-specific startup ---------------------------- */
@@ -477,8 +508,11 @@ i = 0;
 u32 temp_t1 = DTWTIME;
 u32 temp_t2 = DTWTIME;
 
-char a[32];	// Char buffer for fmtprint.c
-char b[32];
+// Char buffer for fmtprint.c
+char a[16];	// Deg C
+char b[16];	// Deg Farenheit
+char t[16];	// Throttle pct
+char m[16]; // Manifold press
 
 #define LEDPRINTFRINC 2000	// One per sec
 uint32_t tim4_tim_ticks_next = tim4_tim_ticks + LEDPRINTFRINC;
@@ -486,7 +520,7 @@ int testtic = 0;
 
 	/* Print the header for the CAN driver error counts */
 //	canwinch_pod_common_systick2048_printerr_header();
-extern adcsensorDebugdmact;
+extern uint32_t adcsensorDebugdmact;
 uint32_t adcsensorDebugdmact_prev = adcsensorDebugdmact;
 uint32_t diff;
 
@@ -505,6 +539,7 @@ int diff3,diff4;
 int et1ct = 0;
 int et1ct_prev = 0;
 int diffet1;
+int diff1;
 
 extern long adc_last_filtered[3];
 double dfarn;
@@ -530,8 +565,14 @@ extern struct RUNNINGADCAVERAGE radcave[NUMBERADCCHANNELS_SE];
  * @param	: p = pointer to output char buffer
 *********************************************************** */
 			fpformatn(a,et1_f.dlast,100,2,6);
-			dfarn = (et1_f.dlast * (9/5)) + 32.0;
+
+			dfarn = (et1_f.dlast * (9.0/5.0)) + 32.0; // Farenheit
 			fpformatn(b,dfarn,100,2,6);
+		
+			fpformatn(t,ethr_f.cf.flast1,10,1,6); // Throttle pct
+
+			fpformatn(m,eman_f.dcalibrated,100,2,10); // Throttle pct
+
 
 			diff = adcsensorDebugdmact - adcsensorDebugdmact_prev;
 			adcsensorDebugdmact_prev = adcsensorDebugdmact;
@@ -549,13 +590,17 @@ extern struct RUNNINGADCAVERAGE radcave[NUMBERADCCHANNELS_SE];
 			cicdebug1_prev = cicdebug1;
 
 			diffet1 = et1ct - et1ct_prev;
-			et1ct_prev = et1ct;			
+			et1ct_prev = et1ct;		
 
-			printf("%d %d %s %s %d %d %d %d %d %d %d\n\r",testtic++,(int)(temp_t2-temp_t1)/32,a, b, diff,diff2,diff3, diff4, et1ct, diffet1,adcdbdiff ); 
+			diff1 = 	(int)(temp_t2-temp_t1)/32;
+
+			printf("%d %s %s %s %s %d %d %d %d %d %d %d\n\r",testtic++,a,b,t,m,diff1,diff2,diff3,diff4,et1ct,diffet1,adcdbdiff); 
+#ifdef ADCPRINTLINES
 			printf("%d %d %d\n\r",adc1,adc2,adc3);	// Raw
 			printf("%d %d %d\n\r",adc_last_filtered[0],adc_last_filtered[1],adc_last_filtered[2]); // First cic
 			printf("%d %d %d\n\r",radcave[0].accum/RAVESIZE,radcave[1].accum/RAVESIZE,radcave[2].accum/RAVESIZE); // Ave
 			printf("%d %d %d\n\r",ethr_f.cf.ilast2,et1_f.cf.ilast2,eman_f.cf.ilast2);	// Second cic
+#endif
 			USART1_txint_send();
 		}
 
@@ -566,6 +611,7 @@ et1ct += 1;
 temp_t1 = DTWTIME;
 			et1_f.cf.cic2.usFlag = 0;
 			et1_f.dlast = temp_calc_param_dbl( (int)et1_f.cf.ilast2, &et1_f.thermdbl);
+			et1_f.dlast = (et1_f.dlast * et1_f.lc.therm.scale) + et1_f.lc.therm.offset;
 			et1_f.cf.flast2 = et1_f.dlast; // Convert to float for CAN msgs			
 temp_t2 = DTWTIME;
 		}

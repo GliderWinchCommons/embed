@@ -360,7 +360,6 @@ while(1==1);
 
 #endif
 
-
 /* ---------------- Some test, monitoring, debug info ----------------------------------------------- */
 	extern void* __paramflash0a;
 	struct FLASHH2* pcanidtbl = (struct FLASHH2*)&__paramflash0a;

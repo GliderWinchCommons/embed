@@ -108,7 +108,13 @@ u32 can_driver_filter_getbanknum(u32 CANnum);
  * @param	: CANnum = 0 for CAN1; 1 for CAN2
  * @return	: high byte = bank number; low byte = odd/even
 *******************************************************************************/
-
+uint32_t can_driver_hw_filter_list(uint8_t cannumber, int8_t banknum, uint8_t oe);
+/* @brief 	: Return value in filter
+ * @param	: cannumber = 0 for CAN1, 1 for CAN2
+ * @param	: banknum = 0 - 28; -1 = current filtnum
+ * @param	: oe = 0 = odd; 1 = even
+ * @return	: value
+*******************************************************************************/
 
 
 #endif

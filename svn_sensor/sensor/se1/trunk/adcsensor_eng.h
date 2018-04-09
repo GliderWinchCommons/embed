@@ -20,6 +20,10 @@
 #include "libopenstm32/rtc.h"
 #include "cic_filter_l_N2_M3.h"
 
+/* Note: If NUMBERADCCHANNELS_SE is changed, the number of load/stores in 
+the .c file needs changing. The load/stores were made in-line to avoid the
+overhead of a loop. */
+
 #define NUMBERADCCHANNELS_SE 3   // Number of channels in a ADC scan sequence
 #define NUMBERSEQUENCES     4   // Number of sequences in 1/2 of the buffer
 #define DECIMATION_SE     16   // Decimation ratio

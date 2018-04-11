@@ -14,7 +14,9 @@
 /* Each node on the CAN bus gets a unit number */
 #define IAMUNITNUMBER	CAN_UNITID_SE1	// Sensor board #1 with photosensor, loggable ID
 
-
+/* Easy way for other routines to access via 'extern'*/
+extern struct CAN_CTLBLOCK* pctl1;
+extern struct CAN_CTLBLOCK* pctl0;	// Some routines use 0 for CAN1 others use 1 (sigh)
 
 
 #endif 

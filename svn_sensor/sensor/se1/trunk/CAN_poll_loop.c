@@ -111,4 +111,14 @@ void CAN_poll(void)
 	} while ((can_hub_end() != 0) || (sw != 0)); // Repeat if msgs waiting or were added
 	return;
 }
+/*#######################################################################################
+ * ISR routine for triggering CAN poll loop
+ *####################################################################################### */
+void I2C1_ER_IRQHandler(void)
+{
+	CAN_poll();
+
+	return;
+}
+
 

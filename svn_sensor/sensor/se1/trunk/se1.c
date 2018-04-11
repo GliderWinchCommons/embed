@@ -410,10 +410,9 @@ setbuf(stdout, NULL);
 
 /* --------------------- CAN setup ---------------------------------------------------------------------- */
 	/* Configure and set MCP 2551 driver: RS pin (PD 11) on POD board */
-	can_nxp_setRS_sys(0,0); // (1st arg) 0 = high speed mode; 1 = standby mode (Sets yellow led on)
+	can_nxp_setRS(0,1); // (1st arg) 0 = high speed mode; not-zero = standby mode
 
 	/* Initialize CAN for POD board (F103) and get control block */
-	// Set hardware filters for FIFO1 high priority ID & mask, plus FIFO1 ID for this UNIT
 	pctl1 = canwinch_setup_F103_pod(&msginit, canid_ldr); // ('can_ldr' is fifo1 reset CAN ID)
 	pctl0 = pctl1;	// Save copy for those routines that use 0 instead of 1
 
@@ -429,8 +428,7 @@ setbuf(stdout, NULL);
 		while (1==1);
 	}
 /* ------------------ misc --------------------------------------------------------------------------- */
-	
-
+rpmsensor_init();
 /* -------------------- Functions init --------------------------------------------------------------- */
 	engine_functions_init_all();
 
@@ -441,6 +439,8 @@ setbuf(stdout, NULL);
 
 /* ------------------ Set up hardware CAN filter ----------------------------------------------------- */
 	can_msg_reset_init(pctl0, pcanidtbl->unit_code);	// Specify CAN ID for this unit for msg caused RESET
+	printf("## pcanidtbl->unit_code: 0x%08X\n\r",pcanidtbl->unit_code);
+
 	/* Go through table and load "command can id" into CAN hardware filter. */
 	//                     (CAN1, even, bank 2)
 	can_driver_filter_setbanknum(0, 0, 2);
@@ -480,7 +480,15 @@ setbuf(stdout, NULL);
 	USART1_txint_send(); 
 /* --------------------- ADC setup and initialization ------------------------------------------------ */
 	adc_init_se_eng_sequence();	// Time delay + calibration, then start conversion
+
+	can_driver_enable_interrupts();
+
 /* --------------------- Program is ready, so do program-specific startup ---------------------------- */
+printf("tim4_tim_rate: %d\n\r",tim4_tim_rate);
+printf("eman_f.lc.hbct: %d\teman_f.cf.hb_tdur: %d\n\r",eman_f.lc.hbct,eman_f.cf.hb_tdur);
+printf("erpm_f.lc.hbct: %d\terpm_f.cf.hb_tdur: %d\n\r",erpm_f.lc.hbct,erpm_f.cf.hb_tdur);
+printf("ethr_f.lc.hbct: %d\tethr_f.cf.hb_tdur: %d\n\r",ethr_f.lc.hbct,ethr_f.cf.hb_tdur);
+printf("et1_f.lc.hbct: %d\tet1_f.cf.hb_tdur: %d\n\r\n\r",et1_f.lc.hbct,et1_f.cf.hb_tdur);
 
 i = 0;
 
@@ -545,6 +553,12 @@ double dfarn;
 extern uint32_t adcdbdiff;
 
 extern struct RUNNINGADCAVERAGE radcave[NUMBERADCCHANNELS_SE];
+
+uint32_t tim4_tim_ticks_prev = tim4_tim_ticks;
+
+extern uint32_t engDbghbct;
+uint32_t engDbghbct_prev = engDbghbct;
+int32_t diffhb;
 /* --------------------- Endless Stuff ----------------------------------------------- */
 	while (1==1)
 	{
@@ -583,7 +597,10 @@ extern struct RUNNINGADCAVERAGE radcave[NUMBERADCCHANNELS_SE];
 			/* Lastest time duration of Temperature computation */
 			diff1 = 	(int)(temp_t2-temp_t1)/32;
 
-			printf("M %d %s %s %s %s %d %d %d %d %d %d %d\n\r",testtic++,a,b,t,m,diff1,diff2,diff3,diff4,diffet1,adcdbdiff,diff); 
+diffhb = engDbghbct - engDbghbct_prev;
+engDbghbct_prev = engDbghbct;
+
+			printf("M %d %s %s %s %s %d %d %d %d %d %d %d %d\n\r",testtic++,a,b,t,m,diff1,diff2,diff3,diff4,diffet1,adcdbdiff,diff,diffhb); 
 
 //#define ADCPRINTLINES	// Comment out to eliminate lines
 #ifdef ADCPRINTLINES		// Display ADC readings from raw to highly filtered
@@ -608,7 +625,7 @@ temp_t2 = DTWTIME;
 		}
 
 		/* ---------- Trigger a pass through 'CAN_poll' to poll msg handling & sending. ---------- */
-		CAN_poll_loop_trigger();
+//		CAN_poll_loop_trigger();
 
 	}
 	return 0;	

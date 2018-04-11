@@ -1,7 +1,4 @@
 # Makefile - Cortex-M3, STM32F103
-# 06/06/2013
-
-
 #
 # Note: This version descends into 'libusartstm32' and executes 'make' if
 # started by the command 'make', but not when started with the command
@@ -130,7 +127,6 @@ OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
 OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
 OPENOCD_BOARD	   = $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
 
-
 # Be silent per default, but 'make V=1' will show all compiler calls.
 ifneq ($(V),1)
 Q := @
@@ -138,8 +134,6 @@ NULL := 2>/dev/null
 endif
 
 all: images
-
-
 
 images: $(NAME)
 	@printf "  OBJCOPY $(NAME).bin\n"

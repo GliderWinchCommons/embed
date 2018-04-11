@@ -1,11 +1,11 @@
 /************************************************************
-07-14-2011 - Adds UART4,5
-...
-10/02/2012 - CAN interrupts
+ * 04/10/2018
 *************************************************************/
+#include "can_driver.h"
 #include "panic_leds.h"
 #include "libopenstm32/scb.h"
 #include "libopenstm32/nvic.h"
+
 void unique_can_block(void);
 
 /*
@@ -68,9 +68,9 @@ void WEAK DMA1CH5_IRQHandler(void); 	// dma1_channel5_isr(void);
 void WEAK dma1_channel6_isr(void);
 void WEAK DMA1CH7_IRQHandler(void); 	// dma1_channel7_isr(void);
 void WEAK ADC1_2_IRQHandler(void);	// adc1_2_isr(void);
-void WEAK USB_HP_CAN_TX_IRQHandler(void);
-void WEAK USB_LP_CAN_RX0_IRQHandler(void);
-void WEAK CAN_RX1_Handler(void);
+//void WEAK CAN1_TX_IRQHandler(void);
+//void WEAK CAN1_RX0_IRQHandler(void);
+//void WEAK CAN1_RX1_IRQHandler(void);
 void WEAK CAN_SCE_Handler(void);
 void WEAK exti9_5_isr(void);
 void WEAK p1_TIM1_BRK_IRQHandler(void);	// tim1_brk_isr(void);
@@ -146,9 +146,9 @@ void (*const vector_table[]) (void) = {
 	dma1_channel6_isr,
 	DMA1CH7_IRQHandler,	//dma1_channel7_isr
 	ADC1_2_IRQHandler,	//adc1_2_isr,
-	USB_HP_CAN_TX_IRQHandler, //usb_hp_can_tx_isr,
-	USB_LP_CAN_RX0_IRQHandler,//usb_lp_can_rx0_isr,
-	CAN_RX1_Handler,	//can_rx1_isr,
+	CAN1_TX_IRQHandler,	//USB_HP_CAN_TX_IRQHandler, //usb_hp_can_tx_isr,
+	CAN1_RX0_IRQHandler,	//USB_LP_CAN_RX0_IRQHandler,//usb_lp_can_rx0_isr,
+	CAN1_RX1_IRQHandler,	//CAN_RX1_Handler,	//can_rx1_isr,
 	CAN_SCE_Handler,	//can_sce_isr, 
 	exti9_5_isr,
 	p1_TIM1_BRK_IRQHandler,	//tim1_brk_isr,
@@ -272,9 +272,9 @@ void relocate_vector(void)
 #pragma weak dma1_channel6_isr = null_handler
 #pragma weak DMA1CH7_IRQHandler = null_handler
 #pragma weak ADC1_2_IRQHandler = null_handler
-#pragma weak USB_HP_CAN_TX_IRQHandler = null_handler
-#pragma weak USB_LP_CAN_RX0_IRQHandler = null_handler
-#pragma weak CAN_RX1_Handler = null_handler
+//#pragma weak CAN1_TX_IRQHandler = null_handler
+//#pragma weak CAN1_RX0_IRQHandler = null_handler
+//#pragma weak CAN1_RX1_IRQHandler = null_handler
 #pragma weak CAN_SCE_Handler = null_handler
 #pragma weak exti9_5_isr = null_handler
 #pragma weak p1_TIM1_BRK_IRQHandler = null_handler

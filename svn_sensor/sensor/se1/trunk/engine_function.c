@@ -25,6 +25,8 @@
 #include "can_msg_reset.h"
 #include "CAN_poll_loop.h"
 
+#include "can_driver.h"
+
 #define TENAQUEUESIZE	3	// Queue size for passing values between levels
 
 	union FTINT	// Union for sending float as 4 byte uint32_t
@@ -66,24 +68,17 @@ const uint32_t myfunctype[NUMENGINEFUNCTIONS] = { \
 };
 
 /* **************************************************************************************
- * static void send_can_msg_hb(struct COMMONFUNCTION* p); // Heartbeat CAN msg
- * static void send_can_msg_poll(struct COMMONFUNCTION* p);// Polled msg CAN msg
+ * static void send_can_msg(struct COMMONFUNCTION* p); // Heartbeat CAN msg
  * @brief	: Send CAN msg and reset heartbeat counter
  * @param	: p = pointer to common function struct
  * ************************************************************************************** */
-static void send_can_msg_hb(struct COMMONFUNCTION* p)
+static void send_can_msg(struct COMMONFUNCTION* p)
 {
 	// Send CAN msg and reset heartbeat timeout 
 	can_hub_send(&p->can_hb, p->phub);// Send CAN msg to 'can_hub'
 	p->hb_tct = tim4_tim_ticks + p->hb_tdur;	 // Reset heart-beat time duration each time msg sent	
+	return;
 }
-static void send_can_msg_poll(struct COMMONFUNCTION* p)
-{
-	// Send CAN polled msg
-	can_hub_send(&p->can_msg, p->phub);// Send CAN msg to 'can_hub'
-	p->hb_tct = tim4_tim_ticks + p->hb_tdur;	 // Reset heart-beat time duration each time msg sent	
-}
-
 /* *********************************************************** */
 /* Initialization: generic function                            */
 /* *********************************************************** */
@@ -166,6 +161,8 @@ int engine_functions_init_all(void)
 	extern void* __paramflash3;
 	extern void* __paramflash4;
 
+	CAN_poll_loop_init();
+
 	/* Manifold function */
 	// Set pointer to table in highflash.  Base address provided by .ld file 
 	eman_f.cf.pparamflash = (uint32_t*)&__paramflash1;	/* Manifold pressure */
@@ -176,6 +173,7 @@ int engine_functions_init_all(void)
 	if (ret2 != 0) return -996;	// Failed
 	// Remainder is common to all functions
 	 ret |= function_init(0,&eman_f.cf, eman_f.lc.hbct);
+//eman_f.cf.hb_tdur = 1500;
 	if (ret < 0) return ret;
 	// Convert to parameters to double since computations done in doubles
 	 eman_f.dpress_offset = eman_f.lc.press_offset;
@@ -200,6 +198,7 @@ int engine_functions_init_all(void)
   	  rpmsensor_init();
  	  erpm_f.cf.can_msg.id = erpm_f.lc.cid_msg;
 	  erpm_f.cf.can_hb.id  = erpm_f.lc.cid_hb;
+//erpm_f.cf.hb_tdur = 500;
 
 
 	/* Throttle function */
@@ -216,6 +215,8 @@ int engine_functions_init_all(void)
      adc_cic2_init(&ethr_f.cf.cic2);	// Init second cic filtering constants
  	  ethr_f.cf.can_msg.id = ethr_f.lc.cid_msg;
 	  ethr_f.cf.can_hb.id  = ethr_f.lc.cid_hb;
+//ethr_f.cf.hb_tdur = 2000;
+
 
 
 	/* Temperature #1 function */
@@ -236,6 +237,8 @@ int engine_functions_init_all(void)
  	  et1_f.cf.can_msg.id = et1_f.lc.cid_msg;
 	  et1_f.cf.can_hb.id  = et1_f.lc.cid_hb;
      adc_cic2_init(&et1_f.cf.cic2);	// Init second cic filtering constants
+//et1_f.cf.hb_tdur = 4000;
+
 
 	return ret;
 }
@@ -246,15 +249,18 @@ int engine_functions_init_all(void)
  * @param	: p = pointer to struct with variables and parameters common to all functions
  * @return	: 0 = No msgs sent; 1 = msgs were sent and loaded into can_hub buffer
  * ###################################################################################### */
+uint32_t engDbghbct;
+
 int eng_common_poll(struct CANRCVBUF* pcan, struct COMMONFUNCTION* p)
 {
 	int ret = 0;
 
 	/* Heartbeat msg timing */
-	 if ( ( (int)tim4_tim_ticks - (int)p->hb_tct) > 0  )	// Time to send heart-beat?
+	 if ( ( (int)(tim4_tim_ticks - p->hb_tct) ) > 0  )	// Time to send heart-beat?
 	{ // Here, yes.		
+engDbghbct += 1;
 		/* Send heartbeat and compute next heartbeat time count. */
-		send_can_msg_hb(p); // Send CAN msg, reset heartbeat cts
+		send_can_msg(p); // Send CAN msg, reset heartbeat cts
 		ret = 1;
 	}
 
@@ -264,7 +270,7 @@ int eng_common_poll(struct CANRCVBUF* pcan, struct COMMONFUNCTION* p)
 	if (p->flag_msg != 0) // Poll msg request?
 	{ // Here, yes.  Send regular reading response
 		p->flag_msg  = 0;
-	   send_can_msg_poll(p); // Send CAN msg, reset heartbeat cts
+	   send_can_msg(p); // Send CAN msg, reset heartbeat cts
 			return 1;
 	}
 	

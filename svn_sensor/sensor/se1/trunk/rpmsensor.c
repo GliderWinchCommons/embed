@@ -118,7 +118,7 @@ static void Tim4_eng_init(void)
 
 	/* Rate for CH2, for polling and timing */
 	// 2000 interrupts per sec
-	tim4_tim_rate = pclk1_freq/TIM4TICKINC;
+	tim4_tim_rate = (2 * pclk1_freq)/TIM4TICKINC;
 
 	/* Setup the gpio pin for PB9 is not really needed as reset default is "input" "floating" */
 	pinconfig_all( (struct PINCONFIGALL *)&pin_pb9);	// p 156
@@ -294,8 +294,9 @@ void TIM4_IRQHandler(void)
 		TIM4_SR = ~0x04;	// Reset CH2 flag
 		tim4_tim_ticks += 1;		// Timing tick running count
 		TIM4_CCR2 += TIM4TICKINC;	// Next interrupt time
-		if (tim4_tim_oc_ptr != 0)	// Skip? Having no address for the following is bad.
-			(*tim4_tim_oc_ptr)();	   // Go do something for somebody
+NVICISPR(NVIC_I2C1_ER_IRQ);	// Set pending (low priority) interrupt 
+//		if (tim4_tim_oc_ptr != 0)	// Skip? Having no address for the following is bad.
+//			(*tim4_tim_oc_ptr)();	   // Go do something for somebody
 	}
 
 	/* OC flag for sub_interval timing */

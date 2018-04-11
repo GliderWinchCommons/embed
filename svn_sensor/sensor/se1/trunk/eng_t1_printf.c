@@ -65,8 +65,8 @@ fmtprint(i+ 7,p->therm.TREF,  "  8 ENG_T1_THERM1_REF_TEMP,	  Eng_t1 Thermistor1 
 fmtprint(i+ 8,p->therm.offset,"  9 ENG_T1_THERM1_TEMP_OFFSET,Eng_t1 Thermistor1 param: Thermistor temp offset correction (deg C)");
 fmtprint(i+ 9,p->therm.scale, " 10 ENG_T1_THERM1_TEMP_SCALE, Eng_t1 Thermistor1 param: Thermistor temp scale correction");
 
-printf("%02d	0x%08X	%s\n\r",i+10, (unsigned int)p->cid_msg," 10 Eng_t1 CANID: Poll response: manifold pressure, calibrated"); 
-printf("%02d	0x%08X	%s\n\r",i+11, (unsigned int)p->cid_hb, " 11 Eng_t1 CANID: Heartbeat: manifold pressure, calibrated");
+printf("%02d	0x%08X	%s\n\r",i+10, (unsigned int)p->cid_msg," 10 Eng_t1 CANID: Poll response: temperature, calibrated"); 
+printf("%02d	0x%08X	%s\n\r",i+11, (unsigned int)p->cid_hb, " 11 Eng_t1 CANID: Heartbeat: temperature, calibrated");
 
 printf("%02d	0x%08X	%s\n\r",i+12, (unsigned int)p->code_CAN_filt[0], " 12 Eng_t1 CANID 1 in CAN hw filter");
 printf("%02d	0x%08X	%s\n\r",i+13, (unsigned int)p->code_CAN_filt[1], " 13 Eng_t1 CANID 2 in CAN hw filter");

@@ -68,14 +68,29 @@ const uint32_t myfunctype[NUMENGINEFUNCTIONS] = { \
 };
 
 /* **************************************************************************************
- * static void send_can_msg(struct COMMONFUNCTION* p); // Heartbeat CAN msg
+ * static void send_can_msg(struct CANRCVBUF* pcan,struct COMMONFUNCTION* p); // Heartbeat CAN msg
  * @brief	: Send CAN msg and reset heartbeat counter
+ * @param	: pcan = pointer to CAN msg
  * @param	: p = pointer to common function struct
  * ************************************************************************************** */
-static void send_can_msg(struct COMMONFUNCTION* p)
+static void send_can_msg(struct CANRCVBUF* pcan,struct COMMONFUNCTION* p, float flt)
 {
+	union FINT
+	{
+		uint8_t uc[4];
+		float f;
+	} fint;
+	fint.f = flt;
+
+	pcan->dlc = 5;	// Payload size: status + 4 bytes float
+	pcan->cd.uc[0] = p->status;
+	pcan->cd.uc[1] = fint.uc[0];
+	pcan->cd.uc[2] = fint.uc[1];
+	pcan->cd.uc[3] = fint.uc[2];
+	pcan->cd.uc[4] = fint.uc[3];
+
 	// Send CAN msg and reset heartbeat timeout 
-	can_hub_send(&p->can_hb, p->phub);// Send CAN msg to 'can_hub'
+	can_hub_send(pcan, p->phub);// Send CAN msg to 'can_hub'
 	p->hb_tct = tim4_tim_ticks + p->hb_tdur;	 // Reset heart-beat time duration each time msg sent	
 	return;
 }
@@ -153,6 +168,12 @@ static int function_init(uint32_t n, struct COMMONFUNCTION* p, uint32_t hbct )
  * ************************************************************************************** */
 int engine_functions_init_all(void)
 {
+/* NOTE: much of the following maps the 'lc' (local copy) of the parameters into elements
+   of a struct common to all the winch functions (i.e. manifold, rpm, throttle, temperature 1)
+   so that routines can use these parameters via a pointer to the common struct for a
+   the winch function (rather than have separate routines for each winch function. 
+*/
+
 	int ret;
 	int ret2;
 
@@ -178,8 +199,9 @@ int engine_functions_init_all(void)
 	// Convert to parameters to double since computations done in doubles
 	 eman_f.dpress_offset = eman_f.lc.press_offset;
 	 eman_f.dpress_scale  = eman_f.lc.press_scale;
-	 eman_f.cf.can_msg.id = eman_f.lc.cid_msg;
-	 eman_f.cf.can_hb.id  = eman_f.lc.cid_hb;	
+	 eman_f.cf.can_msg.id = eman_f.lc.cid_msg;	// Outgoing CAN id: polled msg
+	 eman_f.cf.can_hb.id  = eman_f.lc.cid_hb;		// Outgoing CAN id: heartbeat
+	 eman_f.cf.canid_poll = eman_f.lc.code_CAN_filt[0]; // Incoming poll CAN id
 	 adc_cic2_init(&eman_f.cf.cic2);	// Init second cic filtering constants
 
 
@@ -198,7 +220,7 @@ int engine_functions_init_all(void)
   	  rpmsensor_init();
  	  erpm_f.cf.can_msg.id = erpm_f.lc.cid_msg;
 	  erpm_f.cf.can_hb.id  = erpm_f.lc.cid_hb;
-//erpm_f.cf.hb_tdur = 500;
+	  erpm_f.cf.canid_poll = erpm_f.lc.code_CAN_filt[0]; // Incoming poll CAN id
 
 
 	/* Throttle function */
@@ -215,7 +237,7 @@ int engine_functions_init_all(void)
      adc_cic2_init(&ethr_f.cf.cic2);	// Init second cic filtering constants
  	  ethr_f.cf.can_msg.id = ethr_f.lc.cid_msg;
 	  ethr_f.cf.can_hb.id  = ethr_f.lc.cid_hb;
-//ethr_f.cf.hb_tdur = 2000;
+	  ethr_f.cf.canid_poll = ethr_f.lc.code_CAN_filt[0]; // Incoming poll CAN id
 
 
 
@@ -236,8 +258,8 @@ int engine_functions_init_all(void)
 	  et1_f.dlast = -88.8;
  	  et1_f.cf.can_msg.id = et1_f.lc.cid_msg;
 	  et1_f.cf.can_hb.id  = et1_f.lc.cid_hb;
+	  et1_f.cf.canid_poll = et1_f.lc.code_CAN_filt[1]; // Incoming poll CAN id
      adc_cic2_init(&et1_f.cf.cic2);	// Init second cic filtering constants
-//et1_f.cf.hb_tdur = 4000;
 
 
 	return ret;
@@ -260,7 +282,7 @@ int eng_common_poll(struct CANRCVBUF* pcan, struct COMMONFUNCTION* p)
 	{ // Here, yes.		
 engDbghbct += 1;
 		/* Send heartbeat and compute next heartbeat time count. */
-		send_can_msg(p); // Send CAN msg, reset heartbeat cts
+		send_can_msg(&p->can_hb,p, p->flast1); // Send CAN msg, reset heartbeat cts
 		ret = 1;
 	}
 
@@ -270,7 +292,7 @@ engDbghbct += 1;
 	if (p->flag_msg != 0) // Poll msg request?
 	{ // Here, yes.  Send regular reading response
 		p->flag_msg  = 0;
-	   send_can_msg(p); // Send CAN msg, reset heartbeat cts
+	   send_can_msg(&p->can_msg,p,p->flast1); // Send CAN msg, reset heartbeat cts
 			return 1;
 	}
 	
@@ -286,7 +308,7 @@ engDbghbct += 1;
  * The following executes under CAN driver interrupt level
  * can_driver.c (CAN RX) -> can_msg_reset.c -> engine_can_msg_poll (and then trigger CAN_poll_loop)
  *############################################################################################## */
-static void engine_can_msg_poll(struct CAN_CTLBLOCK* pctl, u32 canid)
+static void engine_can_msg_poll(struct CAN_CTLBLOCK* pctl, struct CAN_POOLBLOCK* pblk)
 {
 	 __attribute__((__unused__))struct CAN_CTLBLOCK* ptemp = pctl;
 /* Note: the canid for poll is likely the same for all these functions, but it is possible
@@ -295,38 +317,36 @@ static void engine_can_msg_poll(struct CAN_CTLBLOCK* pctl, u32 canid)
    is only called once.
 */
 	/* Check for poll msgs and set flags for sending msgs (at lower priority) */
-	if (eman_f.lc.cid_msg == canid)	// Manifold poll?
+	if (eman_f.cf.canid_poll == pblk->can.id)	// Manifold poll?
 	{
 		eman_f.cf.flag_msg = 1;	// Show manifold pressure poll response requested
 	}
-	if (erpm_f.lc.cid_msg == canid)	// RPM poll?
+	if (erpm_f.cf.canid_poll == pblk->can.id)	// RPM poll?
 	{
 		erpm_f.cf.flag_msg = 1; 	// Show rpm poll response requested
-		rpmsensor_reset_timer();	// ### Sync/Reset timing ###
 	}
-	if (ethr_f.lc.cid_msg == canid)	// Throttle poll?
+	if (ethr_f.cf.canid_poll == pblk->can.id)	// Throttle poll?
 	{
 		ethr_f.cf.flag_msg = 1;	// Show throttle response requested
+	}
+	/* Sync/reset TIM4 timing counters to either poll or time sync canid */
+	if ((erpm_f.lc.code_CAN_filt[0] == pblk->can.id) ||
+       (erpm_f.lc.code_CAN_filt[1] == pblk->can.id) )
+	{
+		rpmsensor_reset_timer();	// ### Sync/Reset timing ###
 	}
 	CAN_poll_loop_trigger();	// Trigger low level interrupt poll incoming msgs
 	return;
 }
 /*******************************************************************************
- * int can_msg_reset_init (struct CAN_CTLBLOCK* pctl, u32 canid);
- * @brief	: Initializes RX msgs to check for reset
+ * void engine_can_msg_poll_init(void);
+ * @brief	: Set address for high-priority incoming CAN msg check
  * @param	: pctl = pointer to CAN control block 
- * @param	: canid = CAN id used for reset msg to this unit
- * @return	: 0 = OK, -1 failed: RX ptr was not NULL
 ********************************************************************************/
-int engine_can_msg_poll_init(struct CAN_CTLBLOCK* pctl, u32 canid)
+void engine_can_msg_poll_init(void)
 {
-	 __attribute__((__unused__))u32 temp = canid;
-	 __attribute__((__unused__))struct CAN_CTLBLOCK* ptemp = pctl;
+	can_msg_reset_ptr = &engine_can_msg_poll;
 
-   //	   pctl->ptrs1.func_rx = (void*)&can_msg_reset_msg; // Callback address for CAN RX0 or RX1 handler
-	// 'can_msg_reset.c' will call the following
-	can_msg_reset_ptr = (void*)&engine_can_msg_poll; // Cast since no arguments are used
-
-	return 0;
+	return;
 }
 

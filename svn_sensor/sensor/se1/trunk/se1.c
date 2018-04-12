@@ -481,7 +481,11 @@ rpmsensor_init();
 /* --------------------- ADC setup and initialization ------------------------------------------------ */
 	adc_init_se_eng_sequence();	// Time delay + calibration, then start conversion
 
-	can_driver_enable_interrupts();
+/* --------------------- Final CAN setup ------------------------------------------------------------- */
+	// Set addresses to chain tests of incoming canid 
+	engine_can_msg_poll_init(); // Test for poll of winch function
+
+	can_driver_enable_interrupts(); // CAN sending/receiving starts here.
 
 /* --------------------- Program is ready, so do program-specific startup ---------------------------- */
 printf("tim4_tim_rate: %d\n\r",tim4_tim_rate);
@@ -559,6 +563,10 @@ uint32_t tim4_tim_ticks_prev = tim4_tim_ticks;
 extern uint32_t engDbghbct;
 uint32_t engDbghbct_prev = engDbghbct;
 int32_t diffhb;
+
+uint32_t erpm_ct_prev = erpm_f.ct;
+int diffrpm;
+
 /* --------------------- Endless Stuff ----------------------------------------------- */
 	while (1==1)
 	{
@@ -576,6 +584,7 @@ int32_t diffhb;
 			fpformatn(t,ethr_f.cf.flast1,10,1,6); // Throttle pct
 
 			fpformatn(m,eman_f.dcalibrated,100,2,10); // Manifold pressure
+
 			/* Latest time duration between DMA interrupts */
 			diff = adcsensorDebugdmact - adcsensorDebugdmact_prev;
 			adcsensorDebugdmact_prev = adcsensorDebugdmact;
@@ -597,10 +606,10 @@ int32_t diffhb;
 			/* Lastest time duration of Temperature computation */
 			diff1 = 	(int)(temp_t2-temp_t1)/32;
 
-diffhb = engDbghbct - engDbghbct_prev;
-engDbghbct_prev = engDbghbct;
+			diffrpm = erpm_f.ct - erpm_ct_prev;
+			erpm_ct_prev = erpm_f.ct;
 
-			printf("M %d %s %s %s %s %d %d %d %d %d %d %d %d\n\r",testtic++,a,b,t,m,diff1,diff2,diff3,diff4,diffet1,adcdbdiff,diff,diffhb); 
+			printf("M %d %s %s %s %s %d %d %d %d %d %d %d %d\n\r",testtic++,a,b,t,m,diff1,diff2,diff3,diff4,diffet1,adcdbdiff,diff,diffrpm); 
 
 //#define ADCPRINTLINES	// Comment out to eliminate lines
 #ifdef ADCPRINTLINES		// Display ADC readings from raw to highly filtered
@@ -620,12 +629,13 @@ temp_t1 = DTWTIME;
 			et1_f.cf.cic2.usFlag = 0;
 			et1_f.dlast = temp_calc_param_dbl( (int)et1_f.cf.ilast2, &et1_f.thermdbl);
 			et1_f.dlast = (et1_f.dlast * et1_f.lc.therm.scale) + et1_f.lc.therm.offset;
-			et1_f.cf.flast2 = et1_f.dlast; // Convert to float for CAN msgs			
+			et1_f.cf.flast2 = et1_f.dlast; // Convert to float for CAN msgs
+			et1_f.cf.flast1 = et1_f.cf.flast2;
 temp_t2 = DTWTIME;
 		}
 
 		/* ---------- Trigger a pass through 'CAN_poll' to poll msg handling & sending. ---------- */
-//		CAN_poll_loop_trigger();
+		CAN_poll_loop_trigger();
 
 	}
 	return 0;	

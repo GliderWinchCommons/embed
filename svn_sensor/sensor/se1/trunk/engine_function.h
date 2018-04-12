@@ -30,7 +30,7 @@ struct COMMONFUNCTION
 	uint32_t* pcanid_cmd_func_r;// Pointer into high flash for command can id (response)
 	uint32_t hb_tct;            // tim3 tick counter for next heart-beat CAN msg
 	uint32_t hb_tdur;           // Heartbeat duration (ms) converted to timer ticks
-	uint32_t canid_poll;        // CAN id for poll
+	uint32_t canid_poll;        // Incoming CAN id for poll
 	uint32_t ilast1;            // Last reading: first cic filtered 
 	float    flast1;            // Last reading: converted to float
 	uint32_t ilast2;            // Last reading: second cic filtered 
@@ -157,6 +157,12 @@ int eng_common_poll(struct CANRCVBUF* pcan, struct COMMONFUNCTION* p);
  * @param	: p = pointer to struct with variables and parameters common to all functions
  * @return	: 0 = No msgs sent; 1 = msgs were sent and loaded into can_hub buffer
  * ###################################################################################### */
+/*******************************************************************************/
+void engine_can_msg_poll_init(void);
+/* @brief	: Set address for high-priority incoming CAN msg check
+ * @param	: pctl = pointer to CAN control block 
+********************************************************************************/
+
 
 
 /* Holds parameters and associated computed values and readings for each instance. */

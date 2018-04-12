@@ -135,7 +135,7 @@ static void Tim4_eng_init(void)
 
 	/* Compare/Capture Enable Reg (p 324,5) */
 	//  Configured as input: falling edge trigger
-	TIM4_CCER |= TIM_CCER_CC4E; 	// (0x3<<12);	// Capture Enabled (p 401) 
+	TIM4_CCER |= (0x3<<12);	// Capture Enabled (p 401) 
 
 	/* Control register 2 */
 	// Default: The TIMx_CH2 pin is connected to TI1 input (p 372)
@@ -226,8 +226,8 @@ struct TIMCAPTRET32 Tim4_inputcapture_ui(void)
 /*#######################################################################################
  * ISR routine for TIM4
  *####################################################################################### */
-uint32_t debugrpmsensor1 ;
-uint32_t debugrpmsensorch3ctr ;
+uint32_t debugrpmsensor1;
+uint32_t debugrpmsensorch3ctr;
 
 void TIM4_IRQHandler(void)
 {

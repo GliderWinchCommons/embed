@@ -94,6 +94,12 @@ void do_command_keybrd(char* p)
 		msg_sw = 'n';
 		break;
 
+	case 'w': // 'w' command (list a float payload for a canid)
+		if (cmd_w_init(p) >= 0) // negative return means invalid input
+			msg_sw = 'w';
+
+		break;
+
 	case 'm': // 'm' command (list msgs for the id entered)
 		if (cmd_m_init(p) >= 0) // negative return means invalid input
 			msg_sw = 'm';
@@ -194,6 +200,9 @@ void do_canbus_msg(struct CANRCVBUF* p)
 
 	case 'c':
 		cmd_c_do_msg(p);
+
+	case 'w':
+		cmd_w_do_msg(p);
 		break;
 
 	default:
@@ -235,6 +244,7 @@ void do_printmenu(void)
 	printf("r - send high priority RESET\n");
 	printf("s - Toggle sending of test msg file to CAN bus on/off\n");
 	printf("c - request & display launch parameters\n");
+	printf("w - list float or integer payload\n");
 	printf("x - cancel command\n");
 	printf("Control C to quit program\n");
 	return;

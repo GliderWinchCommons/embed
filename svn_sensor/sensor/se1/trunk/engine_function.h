@@ -60,14 +60,16 @@ struct ENG_MAN_FUNCTION
 struct ENG_RPM_FUNCTION
 {
 	struct COMMONFUNCTION cf; // Common to all engine Functions
-   struct ENGRPMLC lc;		  // Local Copy of parameters
-	uint32_t endtime; 	 // Tim4_gettime_ui() Save current 32b time tick count (time)
-	uint32_t endtime_prev;// Previous endtime
-	uint32_t ct;          // Running count of input captures
-	uint32_t ct_prev;     // Previous ic
-	double   dk1;         // Scale factor
-	double   drpm;        // rpm (double)
-	double   frpm;        // rpm (float)
+   struct ENGRPMLC lc;	     // Local Copy of parameters
+	uint32_t endtime; 	     // Tim4_gettime_ui() current 32b time tick count (time)
+	uint32_t endtime_buf;     // Saved/buffered 'endtime' at 1/64th tick
+	uint32_t endtime_prev_buf;// Previous endtime_buf
+	uint32_t ct;              // Running count of input captures
+	uint32_t ct_buf;          // 'ct' saved/buffered at /64th tick
+	uint32_t ct_prev_buf;     // Previous ic
+	double   dk1;             // Scale factor
+	double   drpm;            // rpm (double)
+	double   frpm;            // rpm (float)
 };
 struct ENG_THR_FUNCTION
 {

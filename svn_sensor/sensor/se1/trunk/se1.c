@@ -525,6 +525,7 @@ char a[16];	// Deg C
 char b[16];	// Deg Farenheit
 char t[16];	// Throttle pct
 char m[16]; // Manifold press
+char r[32]; // RPM
 
 #define LEDPRINTFRINC 2000	// One per sec
 uint32_t tim4_tim_ticks_next = tim4_tim_ticks + LEDPRINTFRINC;
@@ -564,8 +565,21 @@ extern uint32_t engDbghbct;
 uint32_t engDbghbct_prev = engDbghbct;
 int32_t diffhb;
 
-uint32_t erpm_ct_prev = erpm_f.ct;
 int diffrpm;
+
+extern	int32_t inic;
+extern	int32_t itim;
+extern uint32_t rpmsensor_dbugct;
+uint32_t rpmsensor_dbugct_prev = rpmsensor_dbugct;
+int diffrpmct;
+
+extern rpmsensor_dbug2;
+extern rpmsensor_dbug1;
+int diffrpm21;
+
+extern uint32_t rpmsensor_dbug3;
+uint32_t rpmsensor_dbug3_prev  = rpmsensor_dbug3;
+int diffrpmdbg3;
 
 /* --------------------- Endless Stuff ----------------------------------------------- */
 	while (1==1)
@@ -605,11 +619,25 @@ int diffrpm;
 
 			/* Lastest time duration of Temperature computation */
 			diff1 = 	(int)(temp_t2-temp_t1)/32;
+// NOTE: *8 is to override database parameter of seg count for testing rpm with
+// 60 Hz transformer, and function generator.
+// 
+			fpformatn(r,erpm_f.drpm*8,1000,3,11); // RPM
 
-			diffrpm = erpm_f.ct - erpm_ct_prev;
-			erpm_ct_prev = erpm_f.ct;
+//			printf("M %d %s %s %s %s %s %d %d %d %d %d %d %d\n\r",testtic++,a,b,t,m,r,diff1,diff2,diff3,diff4,diffet1,adcdbdiff,diff); 
+	
+#define RPMDETAILLINES
+#ifdef RPMDETAILLINES
+			diffrpm21 = (rpmsensor_dbug2 - rpmsensor_dbug1);
 
-			printf("M %d %s %s %s %s %d %d %d %d %d %d %d %d\n\r",testtic++,a,b,t,m,diff1,diff2,diff3,diff4,diffet1,adcdbdiff,diff,diffrpm); 
+			diffrpmct = (rpmsensor_dbugct - rpmsensor_dbugct_prev);
+			rpmsensor_dbugct_prev = rpmsensor_dbugct;
+
+			diffrpmdbg3 = rpmsensor_dbug3 - rpmsensor_dbug3_prev;
+			rpmsensor_dbug3_prev = rpmsensor_dbug3;
+
+			printf("R %s %d %d %d %d %d %d\n\r",r,inic,itim,diffrpmct,diffrpm21,diff2,diffrpmdbg3);
+#endif
 
 //#define ADCPRINTLINES	// Comment out to eliminate lines
 #ifdef ADCPRINTLINES		// Display ADC readings from raw to highly filtered

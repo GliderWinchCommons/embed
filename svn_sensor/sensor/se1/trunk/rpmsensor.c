@@ -47,6 +47,11 @@ uint32_t subinterval_inc;	// Increment (62500 nominal)
 #define NUMSUBINTERVALS 16
 uint32_t subinterval_ct;	// Current subinterval count
 
+/* 1/64th sec intervals with no input capture */
+#define ZCTMAX 20	// Number of no-IC intervals before zero
+static uint16_t zct;			// Count of zero ic intervals
+static uint16_t oto = 0;	// 1st IC skip
+
 /* 
    Allow about 2 ms for computation of readings before
 expected CAN poll msg, i.e. two subintervals.
@@ -115,13 +120,15 @@ static void Tim4_eng_init(void)
 	/* Set subinterval count increment to initial nominal value */
 	subinterval_inc = SUBINTERVAL;
 	subinterval_ct = 0;	// Subinterval counter
+	oto = 0;	// 1st IC skip
+	zct = 0;	// zero interval count
 
 	/* Rate for CH2, for polling and timing */
 	// 2000 interrupts per sec
 	tim4_tim_rate = (2 * pclk1_freq)/TIM4TICKINC;
 
 	/* Setup the gpio pin for PB9 is not really needed as reset default is "input" "floating" */
-	pinconfig_all( (struct PINCONFIGALL *)&pin_pb9);	// p 156
+	pinconfig_all( (struct PINCONFIGALL *)&pin_pb9);	// p 15
 
 	/* ----------- TIM4 CH4  ------------------------------------------------------------------------*/
 	/* Enable bus clocking for TIM4 (p 335 for beginning of section on TIM4-TIM7) */
@@ -228,24 +235,27 @@ struct TIMCAPTRET32 Tim4_inputcapture_ui(void)
  *####################################################################################### */
 uint32_t debugrpmsensor1;
 uint32_t debugrpmsensorch3ctr;
+uint32_t rpmsensor_dbugct;
+uint32_t rpmsensor_dbug1;	// Check timing of fp operations
+uint32_t rpmsensor_dbug2;
+uint32_t rpmsensor_dbug3;
+
 
 void TIM4_IRQHandler(void)
 {
 	 __attribute__((__unused__))int temp;	// Dummy for readback of hardware registers
 
-	unsigned short usSR = TIM4_SR & 0x19;	// Get capture & overflow flags
-
-	switch (usSR & 0x11)	// There are three cases where we do something.  The "00" case is bogus.
+	switch (TIM4_SR & 0x11)	// There are three cases where we do something.  The "00" case is bogus.
 	{
-	// p 394
-
 	case 0x01:	// Overflow flag only
 			TIM4_SR = ~0x1;				// Reset overflow flag
 			strTim4cnt.ll	+= 0x10000;		// Increment the high order 48 bits of the timer counter
-			temp = TIM4_SR;				// Readback register bit to be sure is cleared
+//			temp = TIM4_SR;				// Readback register bit to be sure is cleared
 			break;
 
-	case 0x00:	// Case where ic flag got turned off by overlow interrupt reset coinciding with ic signal
+	case 0x00:	// Case where ic flag got turned off by overlow interrupt reset coinciding with ic signal	
+	// or, timer channels were cause of interrupt !!!
+			break;
 
 	case 0x10:	// Capture flag only
 			strTim4.us[0] = TIM4_CCR4;		// Read the captured count which resets the capture flag
@@ -257,11 +267,10 @@ void TIM4_IRQHandler(void)
 			erpm_f.ct += 1;	// Running count of input captures
 			erpm_f.endtime = strTim4m.ui[0];	// Get 32b input capture time
 
-			temp = TIM4_SR;				// Readback register bit to be sure is cleared
+//			temp = TIM4_SR;				// Readback register bit to be sure is cleared
 			break;
 
 	case 0x11:	// Both flags are on	
-
 			// Take care of overflow flag
 			TIM4_SR = ~0x1;				// Reset overflow flag
 
@@ -284,33 +293,38 @@ void TIM4_IRQHandler(void)
 			erpm_f.ct += 1; // Running count of input captures
 			erpm_f.endtime = strTim4m.ui[0]; // Save 32b input capture time
 
-			temp = TIM4_SR; // Readback register bit to be sure is cleared
+//			temp = TIM4_SR; // Readback register bit to be sure is cleared
 			break;
 	}
 
-	/* OC flag for polling & timing trigger. */
+	/* OC flag for CAN poll loop & timing trigger. (1/2 ms) */
 	if ((TIM4_SR & 0x04) != 0)
 	{
 		TIM4_SR = ~0x04;	// Reset CH2 flag
 		tim4_tim_ticks += 1;		// Timing tick running count
 		TIM4_CCR2 += TIM4TICKINC;	// Next interrupt time
-NVICISPR(NVIC_I2C1_ER_IRQ);	// Set pending (low priority) interrupt 
-//		if (tim4_tim_oc_ptr != 0)	// Skip? Having no address for the following is bad.
+		NVICISPR(NVIC_I2C1_ER_IRQ);	// Set pending (low priority) interrupt 
+//		if (tim4_tim_oc_ptr != 0)		// Opportunity to call other routines
 //			(*tim4_tim_oc_ptr)();	   // Go do something for somebody
 	}
 
-	/* OC flag for sub_interval timing */
+	/* OC flag for sub_interval timing  (and 1/64th sec) */
 	if ((TIM4_SR & 0x08) != 0)
 	{
 			TIM4_SR = ~0x08;	// Reset CH3 output capture flag
 			TIM4_CCR3  += subinterval_inc;	// Next sub-interval interrupt time
 			subinterval_ct += 1;	// Count sub-intervals
 			if (subinterval_ct >= NUMSUBINTERVALS) // End of sub-interval?
-			{ // Here, yes.
-				subinterval_ct = 0;
+			{ // Here, yes.  1/64th sec interval ends
+				subinterval_ct = 0;		// Reset subinterval counter
+				erpm_f.ct_buf = erpm_f.ct;	// Save IC count for later computation
+				erpm_f.endtime_buf = erpm_f.endtime; // Save IC time for later
+rpmsensor_dbug1 = DTWTIME; // Check time for low level handling
 			}
 			NVICISPR(NVIC_EXTI0_IRQ);	// Set pending (low priority) interrupt 
+
 	}
+	temp = TIM4_SR;				// Readback register bit to be sure is cleared
 	return;
 }
 /* ########################## UNDER HIGH PRIORITY CAN INTERRUPT ############################### 
@@ -327,35 +341,51 @@ void rpmsensor_reset_timer(void)
 /* ########################## UNDER LOW PRIORITY from TIM4 INTERRUPT ############################### 
  * Compute the rpm
  * ############################################################################################### */
-uint32_t rpmsensor_dbug1;	// Check timing of fp operations
-uint32_t rpmsensor_dbug2;
-
+// These temporarily available to se1.c for debugging 
+	int32_t inic;
+	int32_t itim;
 /* Enter this is from low priority interrupt triggered by TIM4, about 2 ms before 
    next expected poll msg.  These are nominally 64 per sec and sync'ed to the poll
    msg so that there computations are ready slightly before the poll msg. */
 static void rpmsensor_computerpm(struct ENG_RPM_FUNCTION* p)
 {
-	int32_t inic;
-	int32_t itim;
 	double dnic;
 	double dtim;
 
-rpmsensor_dbug1 = DTWTIME;
 	// Number of input captures since last computation
-		inic = (p->ct - p->ct_prev);
-		p->ct_prev = p->ct;
-		dnic = inic;	// Convert to double
+		inic = (p->ct_buf - p->ct_prev_buf);
+		if (inic == 0)
+		{ // Here, no IC's during this interval
+rpmsensor_dbug3 += 1;
+rpmsensor_dbug2 = DTWTIME;
+			/* Use old rpm values until a new IC occurs */
+			zct += 1; // Limit number of consectutive no-IC intervals
+			if (zct >= ZCTMAX) // Too many?
+			{ // Here, yes, give up waiting for an IC, assume zero rpm
+				zct = ZCTMAX;	// Avoid eventual zct wrap around
+				p->drpm = 0; // No need to compute.  Just set to zero
+				p->frpm = 0;
+			}
+			return; 
+		}
+	// Here, got one or more IC's, so new rpm can be computed
+		zct = 0;			// Reset zero counter count
+		p->ct_prev_buf = p->ct_buf; // Update previous IC count
+		dnic = inic;	// Convert IC count to double
 
 	// Time duration between previous and latest ic
-		itim = (p->endtime - p->endtime_prev);
-		p->endtime_prev = p->endtime;
+		itim = (p->endtime_buf - p->endtime_prev_buf);
+		p->endtime_prev_buf = p->endtime_buf;
 		dtim = itim;
 
-	// (input capture counts) / (time duration) scaled to rpm
+	// rpm = (input capture counts) / (time duration) scaled to rpm
 		p->drpm = (dnic * p->dk1)/dtim;
 		p->frpm = p->drpm;	// Convert to float for CAN msg)
+		p->cf.flast1 = p->frpm;	// Oops.
+
 rpmsensor_dbug2 = DTWTIME;
-	
+rpmsensor_dbugct += 1;	
+
 	return;
 }
 /*#######################################################################################
@@ -364,7 +394,7 @@ rpmsensor_dbug2 = DTWTIME;
  *####################################################################################### */
 void EXTI0_IRQHANDLER(void)
 {
-	if (subinterval_ct >= SUBINTERVALTRIGGER) // Time to trigger (lower level) computation?
+	if (subinterval_ct == 0) // Time to trigger (lower level) computation?
 	{ // Here, yes
 		rpmsensor_computerpm(&erpm_f);	// Do the rpm computation
 	}

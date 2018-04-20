@@ -90,7 +90,7 @@ void do_command_keybrd(char* p)
 		break;
 
 	case 'u': // 'n' command (list all id's and number of msgs during 1 second)
-		cmd_n_init(1);	// Display counts between time messages
+		cmd_n_init(p);	// Display counts between time messages
 		msg_sw = 'n';
 		break;
 

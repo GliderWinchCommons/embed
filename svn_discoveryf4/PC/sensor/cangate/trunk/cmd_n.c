@@ -13,10 +13,13 @@ This lifts & modifies some code from--
 
 #include "cmd_n.h"
 #include <time.h>
+#include <string.h>
+
+#define CAN_TIMESYNCX 0x00400000	// Time sync CAN messge
 
 time_t t_prior;
 
-
+static u32 cansyncid;
 static void cmd_n_count(u32 id);
 
 #define CMDNTBLSIZE	4096		// Number of unique ID|data_type allowed
@@ -31,13 +34,28 @@ static u32 idx_cmd_n_ct;	// Index for double buffering can msg counts
 /* 1 second timing versus counts between time messages */
 static u32 timemode;	// 0 = timer, 1 = counts between time messages
 /******************************************************************************
- * void cmd_n_init(int tmode);
+ * void cmd_n_init(char* p);
  * @brief 	: Reset 
 *******************************************************************************/
-void cmd_n_init(tmode)
+void cmd_n_init(char* p)
 {
 	int i;
-	timemode = tmode;	// Set static variable with time mode for counts
+	if (p != 0)
+	{
+		timemode = 1;	// Use a time sync CAN msg for 1 sec ticks
+		if (strlen(p) < 10)
+		{ // Assume a default timesync CAN address
+			cansyncid = CAN_TIMESYNCX;	// Default time sync CAN id
+		}
+		else
+		{ // Here, hapless Op appears to have typed a CAN id
+			sscanf( (p+1), "%x",&cansyncid);
+		}
+		printf("Time sync CAN address being used for 1 sec timing: 0X%08X\n\n",cansyncid);
+
+	}
+	else	
+		timemode = 0;	// Use PC OS ticks
 
 	idxLast = 0;	// Reset end-of-table (no id's in table)
 	for ( i = 0; i < CMDNTBLSIZE; i++) // Zero out count table
@@ -92,7 +110,7 @@ static u32 throttle = 0;
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 #endif
 
-//printf("%08x\n",p->id);
+//printf("%08X\n",p->id);
 
 	/* The following detects 1 second demarcation has occured. */
 	if (timemode == 0)
@@ -104,7 +122,7 @@ static u32 throttle = 0;
 	}
 	else
 	{ // Here we are using CAN time messages to mark the 1 sec point
-		if (p->id == CAN_TIMESYNC1)
+		if (p->id == cansyncid)
 		{
 			if ((p->cd.us[0] & 0x3f) == 0) // Check the 1/64th sec ticks in the time payload
 			{
@@ -135,11 +153,11 @@ static u32 throttle = 0;
 					tmp = idtbl[i];
 					if ((tmp & ~0xffe00000) == 0)
 					{
-						printf("%03x", (tmp >> 20) );	// 11b id as 3 hex
+						printf("%03X", (tmp >> 20) );	// 11b id as 3 hex
 					}
 					else
 					{
-						printf("%08x", tmp );	// full id
+						printf("%08X", tmp );	// full id
 					}
 					printf(" %2u|",cttbl[b][i]);// msg count
 					totalct += cttbl[b][i];	// Build total count

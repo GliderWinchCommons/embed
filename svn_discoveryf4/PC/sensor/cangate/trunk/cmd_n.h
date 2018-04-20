@@ -28,7 +28,7 @@
 #include "common_can.h"	// Definitions common to CAN and this project.
 
 /******************************************************************************/
-void cmd_n_init(int tmode);
+void cmd_n_init(char* p);
 /* @brief 	: Reset 
 *******************************************************************************/
 void cmd_n_do_msg(struct CANRCVBUF* p);

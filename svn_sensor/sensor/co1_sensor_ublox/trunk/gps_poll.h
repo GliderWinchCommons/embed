@@ -54,30 +54,28 @@ pcan.uc[2:3] = .ht
 struct GPSFUNCTION
 {
 	struct	GPSLC gps_s;
-	struct CANHUB* phub_gps;	// Pointer: CAN hub buffer
-	void* pparamflash;		// Pointer to flash area with flat array of parameters
-	uint32_t* pcanid_cmd_gps;	// Pointer into high flash for command can id
-	uint32_t hb_tim_t;		// tim9 tick counter for next heart-beat CAN msg--time
-	uint32_t hb_llh_t;		// tim9 tick counter for next heart-beat CAN msg--fix
-	uint32_t hbct_tim_ticks;	// gps_s.hbct_tim (ms) converted to timer ticks--time	
-	uint32_t hbct_llh_ticks;	// gps_s.hbct_llh (ms) converted to timer ticks--fix
-	uint32_t hbct_llh_delay_ticks;	// gps_s.hbct_llh_delay (ms) converted to timer ticks between gps lat/lon/ht msgs burst
-	uint8_t	status_byte_tim;	// unix time msg status byte
-	uint8_t	status_byte_llh;	// lat/long/ht msg(s) status byte
-	uint8_t llhmsgidx;		// index for sequencing lat/long/ht msg sending
-	uint32_t llh[3];		// lat/lon/height 
-	time_t tLinuxtimecounter;	// Fancy name for int used by time routines
-	struct GPSFIX gpsfix[2];	// latest fix data buffer
-	uint32_t gpsfixidx;		// gpsfix buffer index for main
-
-
+	struct CANHUB* phub_gps;   // Pointer: CAN hub buffer
+	void* pparamflash;         // Pointer to flash area with flat array of parameters
+	uint32_t* pcanid_cmd_gps;  // Pointer into high flash for command can id
+	uint32_t hb_tim_t;         // tim9 tick counter for next heart-beat CAN msg--time
+	uint32_t hb_llh_t;         // tim9 tick counter for next heart-beat CAN msg--fix
+	uint32_t hbct_tim_ticks;   // gps_s.hbct_tim (ms) converted to timer ticks--time	
+	uint32_t hbct_llh_ticks;   // gps_s.hbct_llh (ms) converted to timer ticks--fix
+	uint32_t hbct_llh_delay_ticks; // gps_s.hbct_llh_delay (ms) converted to timer ticks between gps lat/lon/ht msgs burst
+	uint8_t	status_byte_tim;  // unix time msg status byte
+	uint8_t	status_byte_llh;  // lat/long/ht msg(s) status byte
+	uint8_t  llhmsgidx;        // index for sequencing lat/long/ht msg sending
+	uint32_t llh[3];           // lat/lon/height 
+	time_t tLinuxtimecounter;  // Fancy name for int used by time routines
+	struct GPSFIX gpsfix[2];   // latest fix data buffer
+	uint32_t gpsfixidx;        // gpsfix buffer index for main
 };
 
 /******************************************************************************/
 int gps_poll_can (struct CANRCVBUF* pcan, struct GPSFUNCTION* p);
 /* @brief 	: Handles all things associated with the GPS module and CAN
  * @param	: pcan = pointer to struct with icoming CAN msg
- * @param	: p = pointer to logger function struct with params and more
+ * @param	: p = pointer to gps function struct with params and more
  * @return	: 0 = No outgoing msgs sent; 1 = one or more msgs were sent
  ******************************************************************************/
 void gps_poll(struct GPSFUNCTION* p);
@@ -103,6 +101,9 @@ int gps_poll_init(void);
  *		: -998 did not find function code in table
  *		: -999 unreasonable table size
  ******************************************************************************/
+void CAN_poll_loop_trigger_enable(void);
+/* @brief	: Enable low level interrupt to run 'CAN_poll'
+ * ************************************************************************************** */
 
 /* These are in 'gps_packetize.c' */
 extern volatile unsigned int gps_sd_pkt_ready;		// SD packet ready:    	0 = not ready, + = ready. ?

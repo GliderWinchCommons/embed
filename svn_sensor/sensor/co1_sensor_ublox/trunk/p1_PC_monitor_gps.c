@@ -15,7 +15,7 @@ the time phasing.
 
 
 
-
+#include <stdio.h>
 #include "p1_gps_time_convert.h"
 #include "p1_common.h"
 #include "p1_PC_handler.h"

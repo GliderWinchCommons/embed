@@ -196,6 +196,8 @@ int main(void)
 	int SD_rdy = 0;	// SD card not yet initialized
 	int i;
 	int ret;
+	u32 id;
+
 
 /* $$$$$$$$$$$$ Relocate the interrupt vectors from the loader to this program $$$$$$$$$$$$$$$$$$$$ */
 extern void relocate_vector(void);
@@ -293,7 +295,6 @@ ret = 0;
 	}
 
 //	/* Setup unit CAN ID in CAN hardware filter. */
-	u32 id;
 //	id = pcanidtbl->unit_code;
 //	//  Add one 32b CAN id (     CAN1, CAN ID, FIFO)
 //	ret = can_driver_filter_add_one_32b_id(0,id,1);
@@ -376,17 +377,17 @@ ret = 0;
 
 /* -------------- List parameters (debugging parameters) ---------------------------------------------- */
 	can_log_printf(&logger_f.logger_s);	// List parameter values
-	can_log_printf_extra(&logger_f);	// List non-parameter values in total function
+//	can_log_printf_extra(&logger_f);	// List non-parameter values in total function
 
 /* ------------- Get params & init gps, then list ----------------------------------------------------- */
 	gps_poll_init();	
 	gps_poll_printf(&gps_f.gps_s);		// List parameter values
-	gps_poll_printf_extra(&gps_f);		// List non-parameter values in total function
+//	gps_poll_printf_extra(&gps_f);		// List non-parameter values in total function
 	Tim4_pod_se_set_sync_msg();	// Setup CAN ID and dlc for time sync msg
 
 /* ---------------- When CAN interrupts are enabled reception of msgs begins! ------------------------ */
 	can_driver_enable_interrupts();	// Enable CAN interrupts
-	CAN_poll_loop_trigger_active = 1;	// enable CAN_loop_trigger interrupts
+	CAN_poll_loop_trigger_enable();	// enable CAN_loop_trigger interrupts
 /* -------------------- Endless bliss of logging ----------------------------------------------------- */
 extern u32 canlogct;
 extern volatile u32 canlogSDwritectr;

@@ -219,15 +219,15 @@ INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_POLL_R'	  	,'CANID_POLLR_
 --============================================================================================================================================================================================
 -- GPS_1
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
-INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_LIST_CRC'	   		,'0', 		'GPS',		'GPS_1: 1 CRC ');
-INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_LIST_VERSION'      		,'1', 		'GPS',		'GPS_1: 2 Version number');
-INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_HEARTBEAT_TIME_CT'		,'1000', 	'GPS',		'GPS_1: 3 Time (ms) between unix time HB msgs');
-INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_HEARTBEAT_LLH_CT'		,'10000', 	'GPS',		'GPS_1: 4 Time (ms) between burst of lat lon height HB msgs');
-INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_HEARTBEAT_LLH_DELAY_CT'	,'1100',	'GPS',		'GPS_1: 5 Time (ms) between lat/lon and lon/ht msgs');
-INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_HEARTBEAT_TIME'    		,'CANID_HB_GPS_TIME_1','GPS',	'GPS_1: 6 Heartbeat unix time');
-INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_HEARTBEAT_LLH'  		,'CANID_HB_GPS_LLH_1','GPS', 	'GPS_1: 7 Heartbeat (3 separate msgs) lattitude longitude height');
-INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_DISABLE_SYNCMSGS'		,'0',		'GPS',		'GPS_1: 8 time sync msgs: 0 = enable  1 = disable');
-INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_TIME_SYNC_MSG'    		,'CANID_HB_TIMESYNC' ,'GPS', 	'GPS_1: 9 Time sync msg');
+INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_LIST_CRC'              ,'0', 		'GPS',		'GPS_1: 1 CRC ');
+INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_LIST_VERSION'          ,'1', 		'GPS',		'GPS_1: 2 Version number');
+INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_HEARTBEAT_TIME_CT'     ,'1000', 	'GPS',		'GPS_1: 3 Time (ms) between unix time HB msgs');
+INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_HEARTBEAT_LLH_CT'      ,'10000', 	'GPS',		'GPS_1: 4 Time (ms) between burst of lat lon height HB msgs');
+INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_HEARTBEAT_LLH_DELAY_CT','1100',	   'GPS',		'GPS_1: 5 Time (ms) between lat/lon and lon/ht msgs');
+INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_HEARTBEAT_TIME'        ,'CANID_HB_GPS_TIME_1','GPS','GPS_1: 6 Heartbeat unix time');
+INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_HEARTBEAT_LLH'         ,'CANID_HB_GPS_LLH_1' ,'GPS','GPS_1: 7 Heartbeat (3 separate msgs) lattitude longitude height');
+INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_DISABLE_SYNCMSGS'      ,'0'                  ,'GPS','GPS_1: 8 time sync msgs: 0 = enable  1 = disable');
+INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_TIME_SYNC_MSG'         ,'CANID_HB_TIMESYNC'  ,'GPS','GPS_1: 9 Time sync msg');
 --
 --============================================================================================================================================================================================
 -- LOGGER_1

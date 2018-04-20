@@ -221,7 +221,7 @@ static void gpsfix_msg(struct GPSFUNCTION* p, int n)
  * int gps_poll_can (struct CANRCVBUF* pcan, struct GPSFUNCTION* p);
  * @brief 	: Handles all things associated with the GPS module and CAN
  * @param	: pcan = pointer to struct with icoming CAN msg
- * @param	: p = pointer to logger function struct with params and more
+ * @param	: p = pointer to gps function struct with params and more
  * @return	: 0 = No outgoing msgs sent; 1 = one or more msgs were sent
  ******************************************************************************/
 /* This routine is called from the CAN_poll_loop.c */
@@ -243,7 +243,7 @@ int gps_poll_can (struct CANRCVBUF* pcan, struct GPSFUNCTION* p)
 
 	/* This flag takes care of the case where the time sync msg is setup and we are further down in
            the loop and should make another pass so the foregoing code sends it now. */
-	tim_sync_flag = 0;	
+//???	tim_sync_flag = 0;	
 
 	/* Check for need to send TIME heartbeat. */
 	if ( ((int)tim9_tick_ctr - (int)p->hb_tim_t) > 0  )	// Time to send heart-beat?

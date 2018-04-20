@@ -22,7 +22,7 @@ possible loggable buffers that contain data.
 
 
 */
-
+#include <stdio.h>
 #include "p1_common.h"		// This has almost everything (for POD routines)
 //#include "common.h"
 #include "common_can.h"
@@ -52,6 +52,7 @@ static int adv_index(int idx, int size)
  * @brief 	: Output pair of hex chars 
  & @param	: Input byte
 *******************************************************************************/
+#ifdef m_COMMAND_MIGHTBEUSEFUL
 static const char otbl[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
 static void output(char c)
 {
@@ -65,6 +66,7 @@ static void output(char c)
 
 	return;
 }
+#endif
 /******************************************************************************
  * void p1_PC_can_monitor_msgs(void);
  * @brief 	: Output current data for an ID ('m' command)

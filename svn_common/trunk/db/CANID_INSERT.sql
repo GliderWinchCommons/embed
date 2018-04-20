@@ -253,7 +253,8 @@ INSERT INTO CANID VALUES ('CANID_HB_GPS_TIME_1',	'E1000000', 'GPS', 'UNIXTIME', 
 INSERT INTO CANID VALUES ('CANID_HB_GPS_TIME_2',	'E1E00000', 'GPS', 'UNIXTIME',  'GPS_2: Heartbeat unix time');
 
 INSERT INTO CANID VALUES ('CANID_HB_GPS_LLH_1',		'E1C00000', 'GPS', 'LAT_LON_HT','GPS_1: Heartbeat (3 separate msgs) lattitude longitude height');
-INSERT INTO CANID VALUES ('CANID_HB_GPS_LLH_2',		'E2600000', 'LOGGER','U8_U32',    'Logger_1: Heartbeat logging ctr');
+INSERT INTO CANID VALUES ('CANID_HB_GPS_LLH_2',		'E2600000', 'GPS', 'LAT_LON_HT','GPS_2: Heartbeat (3 separate msgs) lattitude longitude height');
+INSERT INTO CANID VALUES ('CANID_HB_LOGGER_1',		'E1800000', 'LOGGER','U8_U32',    'Logger_1: Heartbeat logging ctr');
 INSERT INTO CANID VALUES ('CANID_HB_LOGGER_2',		'E1A00000', 'LOGGER','U8_U32',    'Logger_2: Heartbeat logging ctr');
 
 INSERT INTO CANID VALUES ('CANID_HB_CANSENDER_1',    'F0200000', 'CANSENDER','U8_U32',	'Cansender_1: Heartbeat w ctr');

@@ -63,10 +63,9 @@ LIBSVNCOMMON	= $(SRCDIR)/../../../../svn_common/trunk
 LIBF4D	  = $(CURDIR)/../../../../sw_discoveryf4/trunk
 
 # Library directory path--compile and stuff
-#LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
-#LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
-LGCC	= /opt/launchpad/gcc-arm-none-eabi-4_9-2015q2/lib/gcc/arm-none-eabi/4.9.3/armv7-m
-LOTHER	= /opt/launchpad/gcc-arm-none-eabi-4_9-2015q2/arm-none-eabi/lib/armv7-m
+# The following is setup in ~/.arm_tools when ~/.profile opens a terminal
+LGCC = $(ARM_PREFIX_GCCLIB)
+LOTHER = $(ARM_PREFIX_OTHER)
 
 # Compiler directories for .h files
 CFLAGS	+= -I$(LIBDEVICEF103SE) 
@@ -128,13 +127,14 @@ OBJS	+= newlib_support.o
 OBJS	+= can_log_printf.o
 OBJS	+= gps_poll_printf.o
 
-# Paths for openocd and automatic flashing
-OPENOCD_BASE	= /usr/local
-OPENOCD		= $(OPENOCD_BASE)/bin/openocd
-OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/share/openocd/scripts
-OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
+# The following two are 'export'ed in .arm_tools via .profile
+#OPENOCD_BASE	= /usr/share
+#OPENOCD		   = /usr/bin/openocd
 
-OPENOCD_BOARD	= $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
+OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
+OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
+OPENOCD_BOARD	   = $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
+
 
 # Be silent per default, but 'make V=1' will show all compiler calls.
 ifneq ($(V),1)
@@ -165,7 +165,7 @@ images: $(NAME)
 
 $(NAME): $(OBJS) $(LDSCRIPT)
 	@printf "  LD      $(subst $(shell pwd)/,,$(@)) $(LFLAGS)\n"
-	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)  -lm -lgcc -lc -lgcc -lmiscstm32 -lusartstm32  -ldevicestm32 -lsensormisc -lsupportstm32 -ldevicesstm32 -lusartstm32 -lmiscstm32  -lsupportstm32 -lcommon_allf103 -lc -lm -lgcc 
+	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)  -lm -lgcc -lc -lgcc -lmiscstm32 -lusartstm32  -ldevicestm32 -lsensormisc -lsupportstm32 -ldevicesstm32 -lusartstm32 -lmiscstm32  -lsupportstm32 -lcommon_allf103 -lc -lm -lgcc -Map=$(NAME).map
 
 clean:
 	@printf "  CLEAN   $(subst $(shell pwd)/,,$(OBJS))\n"

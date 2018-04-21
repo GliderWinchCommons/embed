@@ -36,7 +36,7 @@ printf("%02d	%d	%s\n\r",    i + 0, (unsigned int)p->size,         " 0 Number of 
 printf("%02d	%d	%s\n\r",    i + 1, (unsigned int)p->crc,          " 1 Logger: CRC");
 printf("%02d	%d	%s\n\r",    i + 2, (unsigned int)p->version,      " 2 Logger: Version number");
 printf("%02d	%d	%s\n\r",    i + 3, (unsigned int)p->hbct,         " 3 Logger: Heartbeat count (ms) between msgs");
-printf("%02d	%0x08x %s\n\r",i + 4, (unsigned int)p->cid_loghb_ctr," 4 Logger: CANID: Heartbeat running count");
+printf("%02d	0x%08X %s\n\r",i + 4, (unsigned int)p->cid_loghb_ctr," 4 Logger: CANID: Heartbeat running count");
 
 	USART1_txint_send(); 
 	return;

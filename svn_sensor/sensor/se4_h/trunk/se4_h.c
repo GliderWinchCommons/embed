@@ -48,6 +48,8 @@ Open minicom on the PC with 115200 baud and 8N1.
 #include "libmiscstm32/DTW_counter.h"
 #include "can_nxp_setRS.h"
 #include "canwinch_pod_common_systick2048_printerr.h"
+#include "../../../../svn_common/trunk/common_highflash.h"
+
 
 int dummy;
 

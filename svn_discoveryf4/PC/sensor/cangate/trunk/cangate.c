@@ -205,6 +205,7 @@ int main(int argc, char *argv[])
 	int	port;	// Socket port number
 //	char xbuf[256];
 
+printf ("\n### CANGATE ### 04/20/2018\n\n");
 
 printf("BAUDRATE is FIXED AT: %s baud\n",baudratesetting);
 
@@ -215,9 +216,6 @@ printf("BAUDRATE is FIXED AT: %s baud\n",baudratesetting);
 //	}
 
 	fpListsw = 0; // 0 = no test msg file list opened
-
-
-	printf ("CANGATE has started\n");
 
 printf ("argc %u\n",argc);
 for (i = 0; i < argc; i++)

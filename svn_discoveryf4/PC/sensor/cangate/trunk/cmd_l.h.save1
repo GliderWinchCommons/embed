@@ -26,12 +26,8 @@
 #include <math.h>
 #include <time.h>
 #include "common_can.h"	// Definitions common to CAN and this project.
+
 /******************************************************************************/
-int cmd_l_init(char* p);
-/* @brief 	: Reset 
- * @param	: p = pointer to line entered on keyboard
- * @return	: -1 = too few chars.  0 = OK.
- ******************************************************************************/
 void cmd_l_datetime(struct CANRCVBUF* p);
 /* @brief	: Format and print date time from time sync msg in readable form
  ******************************************************************************/

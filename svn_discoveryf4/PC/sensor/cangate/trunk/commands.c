@@ -22,6 +22,7 @@ This takes care of dispatching keyboard commands.
 #include "cmd_q.h"
 #include "cmd_r.h"
 #include "cmd_c.h"
+#include "cmd_w.h"
 
 extern int fpListsw;
 
@@ -81,6 +82,7 @@ void do_command_keybrd(char* p)
 		break;
 
 	case 'l': // Display time from time sync msg
+		cmd_l_init(p);
 		msg_sw = 'l';
 		break;
 
@@ -235,16 +237,16 @@ void do_printmenu(void)
 	printf("d - list raw msgs\n");
 	printf("f - display fix\n");
 	printf("h - Photodetector level histogram from sensor\n");
-	printf("l - list time/date from time CAN sync msgs\n");
+	printf("l - list unix time/date in heartbeat time msgs (l e1000000)\n");
 	printf("n - list msg id's and msg ct during 1 sec (coarse computer timing)\n");
-	printf("u - list msg id's and msg ct between CAN 1 sec time messages (precise gps timing)\n");
+	printf("u - list msg id's and msg ct between CAN 1 sec time mgs (e.g. u 00600000)\n");
 	printf("m - list msgs for id entered 'm xxxxxxxx (CAN ID as 8 hex digits)'\n");
 	printf("p - CAN bus loader: using file for specs, edit-check and load\n");
 	printf("q - CAN bus file spec edit-check only\n");
 	printf("r - send high priority RESET\n");
 	printf("s - Toggle sending of test msg file to CAN bus on/off\n");
 	printf("c - request & display launch parameters\n");
-	printf("w - list float or integer payload\n");
+	printf("w - list msgs float (wf) or integer (wi) payload with payload byte offset (wi1 E1800000)\n");
 	printf("x - cancel command\n");
 	printf("Control C to quit program\n");
 	return;

@@ -48,10 +48,10 @@ printf("%02d	%d	%s\n\r",    i + 2, (unsigned int)p->version,       " 2 GPS: Vers
 printf("%02d	%d	%s\n\r",    i + 3, (unsigned int)p->hbct_tim,      " 3 GPS: Time (ms) between unix time msgs");
 printf("%02d	%d	%s\n\r",    i + 4, (unsigned int)p->hbct_llh,      " 4 GPS: Time (ms) between burst of lat lon height msgs");
 printf("%02d	%d	%s\n\r",    i + 5, (unsigned int)p->hbct_llh_delay," 5 GPS: Heartbeat count (ms) between gps lat/lon/ht msgs burst");
-printf("%02d	0X%08X %s\n\r",i + 6, (unsigned int)p->cid_hb_tim,    " 6 GPS: CANID: Heartbeat unix time");
-printf("%02d	0X%08X %s\n\r",i + 7, (unsigned int)p->cid_hb_llh,    " 7 GPS: CANID: Heartbeat fix (3 msgs) lat/lon/ht");
+printf("%02d	0x%08X %s\n\r",i + 6, (unsigned int)p->cid_hb_tim,    " 6 GPS: CANID: Heartbeat unix time");
+printf("%02d	0x%08X %s\n\r",i + 7, (unsigned int)p->cid_hb_llh,    " 7 GPS: CANID: Heartbeat fix (3 msgs) lat/lon/ht");
 printf("%02d	%d	%s\n\r",    i + 8, (unsigned int)p->disable_sync,  " 8 GPS: 0 = enable time sync msgs; 1 = disable");
-printf("%02d	0X%08X %s\n\r",i + 9, (unsigned int)p->disable_sync,  " 9 GPS: CANID: Time Sync msg");
+printf("%02d	0x%08X %s\n\r",i + 9, (unsigned int)p->cid_timesync,  " 9 GPS: CANID: Time Sync msg");
 
 #ifdef ADDALLTHESEINCOMINGCANIDS
 printf("%02d	0x%08X	%s\n\r",i+10, (unsigned int)p->code_CAN_filt[0]," 10 GPS: CANID 1 in CAN hardware filter");

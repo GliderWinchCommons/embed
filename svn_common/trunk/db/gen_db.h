@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2018-04-19 21:25:23.715
+// 2018-04-20 20:40:34.498
 
-#define CANID_COUNT 210
+#define CANID_COUNT 211
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -165,7 +165,8 @@
 #define  CANID_HB_GPS_TIME_1      0xE1000000  // GPS            : GPS_1: Heartbeat unix time
 #define  CANID_HB_GPS_TIME_2      0xE1E00000  // GPS            : GPS_2: Heartbeat unix time
 #define  CANID_HB_GPS_LLH_1       0xE1C00000  // GPS            : GPS_1: Heartbeat (3 separate msgs) lattitude longitude height
-#define  CANID_HB_GPS_LLH_2       0xE2600000  // LOGGER         : Logger_1: Heartbeat logging ctr
+#define  CANID_HB_GPS_LLH_2       0xE2600000  // GPS            : GPS_2: Heartbeat (3 separate msgs) lattitude longitude height
+#define  CANID_HB_LOGGER_1        0xE1800000  // LOGGER         : Logger_1: Heartbeat logging ctr
 #define  CANID_HB_LOGGER_2        0xE1A00000  // LOGGER         : Logger_2: Heartbeat logging ctr
 #define  CANID_HB_CANSENDER_1     0xF0200000  // CANSENDER      : Cansender_1: Heartbeat w ctr
 #define  CANID_HB_CANSENDER_2     0xF0400000  // CANSENDER      : Cansender_2: Heartbeat w ctr
@@ -712,6 +713,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 653  */
+/* TOTAL COUNT OF #defines = 654  */
 /* Test 2016/06/12 */
 

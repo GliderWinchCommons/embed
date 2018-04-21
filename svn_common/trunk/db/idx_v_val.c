@@ -1,4 +1,4 @@
-// 2018-04-19 21:25:31.9
+// 2018-04-20 20:40:35.92
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -228,7 +228,7 @@ const uint32_t paramval10[] = {
  0x00000000 , /*   1 0                    6  Logger_1: 1 CRC                                                                 */
  0x00000001 , /*   2 1                    5  Logger_1: 2 Version number                                                      */
  0x00001F40 , /*   3 8000                 6  Logger_1: 3 Heartbeat count of time (ms) between msgs                           */
- 0x## CAN ID NOT FOUND ## , /*   4 CANID_HB_LOGGER_1   17  Logger_1: 4 CANID: Hearbeat sends running count of logged msgs                  */
+ 0xE1800000 , /*   4 CANID_HB_LOGGER_1   17  Logger_1: 4 CANID: Hearbeat sends running count of logged msgs                  */
 };
 #endif
 

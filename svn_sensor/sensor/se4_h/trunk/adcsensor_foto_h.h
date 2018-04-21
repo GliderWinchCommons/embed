@@ -38,7 +38,7 @@ ADC voltage applied--3.3v
 #include "common_misc.h"
 #include "common_highflash.h"
 //#include "../../../../../svn_discoveryf4/PC/sensor/cangate/trunk/tmpstruct.h"	// structs generated from .txt file for parameters, etc.
-#include "../../../../svn_common/trunk/db/can_db.h"
+//#include "../../../../svn_common/trunk/db/can_db.h"
 
 
 #define DMA1_CH1_PRIORITY	0x80	// 

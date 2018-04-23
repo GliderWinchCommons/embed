@@ -32,14 +32,14 @@
 DELETE from FUNCTIONS;
 --                                                                       CMD-IR
 --                            FUNCTION_NAME       CANID_CMD_NAME               CAN_UNIT_NAME     FUNCTION_TYPE     DESCRIPTION7
-INSERT INTO FUNCTIONS VALUES ('DRIVE_SHAFT',	'CANID_CMD_DRIVE_SHAFTII','I', 'CAN_UNIT_2',	'SHAFT_ENCODER','Sensor, shaft: I Drive shaft encoder' );
-INSERT INTO FUNCTIONS VALUES ('DRIVE_SHAFT',	'CANID_CMD_DRIVE_SHAFTR','R', 'CAN_UNIT_2',	'SHAFT_ENCODER','Sensor, shaft: R Drive shaft encoder' );
+INSERT INTO FUNCTIONS VALUES ('SHAFT1',	   'CANID_CMD_SHAFT1I'       ,'I', 'CAN_UNIT_2',	'DRIVE_SHAFT','Sensor, shaft1: I Drive shaft encoder' );
+INSERT INTO FUNCTIONS VALUES ('SHAFT1',	   'CANID_CMD_SHAFT1R'       ,'R', 'CAN_UNIT_2',	'DRIVE_SHAFT','Sensor, shaft1: R Drive shaft encoder' );
 
-INSERT INTO FUNCTIONS VALUES ('SHAFT_UPPERSHV', 'CANID_CMD_UPPERSHVI',	'I', 'CAN_UNIT_4',	'SHAFT_ENCODER','(Upper sheave) I' );
-INSERT INTO FUNCTIONS VALUES ('SHAFT_UPPERSHV', 'CANID_CMD_UPPERSHVR',	'R', 'CAN_UNIT_4',	'SHAFT_ENCODER','(Upper sheave) R' );
+INSERT INTO FUNCTIONS VALUES ('SHAFT_UPPERSHV', 'CANID_CMD_UPPERSHVI'  ,'I', 'CAN_UNIT_4',	'SHAFT_ENCODER','(Upper sheave) I' );
+INSERT INTO FUNCTIONS VALUES ('SHAFT_UPPERSHV', 'CANID_CMD_UPPERSHVR'  ,'R', 'CAN_UNIT_4',	'SHAFT_ENCODER','(Upper sheave) R' );
 
-INSERT INTO FUNCTIONS VALUES ('SHAFT_LOWERSHV', 'CANID_CMD_LOWERSHVI',	'I', 'CAN_UNIT_5',	'SHAFT_ENCODER','(Lower sheave) I Count and speed' );
-INSERT INTO FUNCTIONS VALUES ('SHAFT_LOWERSHV', 'CANID_CMD_LOWERSHVR',	'R', 'CAN_UNIT_5',	'SHAFT_ENCODER','(Lower sheave) R Count and speed' );
+INSERT INTO FUNCTIONS VALUES ('SHAFT_LOWERSHV', 'CANID_CMD_LOWERSHVI'  ,'I', 'CAN_UNIT_5',	'SHAFT_ENCODER','(Lower sheave) I Count and speed' );
+INSERT INTO FUNCTIONS VALUES ('SHAFT_LOWERSHV', 'CANID_CMD_LOWERSHVR'  ,'R', 'CAN_UNIT_5',	'SHAFT_ENCODER','(Lower sheave) R Count and speed' );
 
 -- The following pair are commented out.  These are if all four functions are combined into one (which was the original approach)
 --INSERT INTO FUNCTIONS VALUES ('ENGINE_SENSOR', 	'CANID_CMD_ENGINE_SENSORI','I', 'CAN_UNIT_3', 'ENGINE_SENSOR','Sensor, engine: I rpm, manifold pressure, throttle setting, temperature' );

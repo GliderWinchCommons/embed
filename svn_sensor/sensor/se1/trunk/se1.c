@@ -374,7 +374,7 @@ setbuf(stdout, NULL);
 	if (i != 0) panic_leds(7);	// Init failed: Bomb-out flashing LEDs 7 times
 
 	/* Announce who we are */
-	USART1_txint_puts("\n\rSE1: 03-30-2018 v1\n\r");
+	USART1_txint_puts("\n\r### SE1: 04-10-2018 v1 ###\n\r");
 	USART1_txint_send();	// Start the line buffer sending
 
 	/* Display things for to entertain the hapless op */

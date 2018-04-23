@@ -185,7 +185,8 @@ int gps_poll_init(void)
 		}
 	}
 	return -998;	// Argh! Table size reasonable, but didn't find it.
-}/******************************************************************************
+}
+/******************************************************************************
  * static void gpsfix_msg(struct GPSFUNCTION* p, int n);
  * @brief 	: Setup and send FIX msgs
  * @param	: p = pointer to logger function struct with params and more

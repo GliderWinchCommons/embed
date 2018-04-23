@@ -35,7 +35,7 @@ DELETE from FUNCTION_CODES;
 --   understanding this mess.
 --                                                                              CMD_IR
 --                                  FUNCTION_NAME  FUNCTION_TYPE CAN_UNIT_NAME  FUNCTION_CODE    DESCRIPTION6
-INSERT INTO FUNCTION_CODES VALUES ('DRIVE_SHAFT'	,'ENCODER',		  'UNIT_2',	1,	'Sensor, shaft: Drive shaft encoder' );
+INSERT INTO FUNCTION_CODES VALUES ('SHAFT1'	      ,'DRIVE_SHAFT'  ,'UNIT_2',	1,	'Sensor, shaft: Drive shaft encoder #1' );
 INSERT INTO FUNCTION_CODES VALUES ('ENGINE_SENSOR'	,'ENGINE_SENSOR','UNIT_3',	2,	'Sensor, engine: rpm, manifold pressure, throttle setting, temperature' );
 INSERT INTO FUNCTION_CODES VALUES ('TENSION_X'		,'TENSION',		  'UNIT_D',	3,	'Tension_X: POD board, NO AD7799');
 INSERT INTO FUNCTION_CODES VALUES ('TENSION_a1X'	,'TENSION_a',    'UNIT_F',	4,	'Tension_a1x: Tension drum #1 AD7799 #1 (a)' );

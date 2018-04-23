@@ -1,0 +1,23 @@
+#!/bin/bash
+# 04/22/2018
+# Compile and load database parameter tables
+#
+#          1         2             3  
+# ./mm SHAFT1 shaft_param CANID_UNIT_2
+# 
+echo
+export LDRAPPLD=ldrapp_VG.ld
+echo "LDRAPPLD is "$LDRAPPLD
+echo
+
+echo "########## First table db-select: $1 source file: $2 "
+export SRCNAME=$2
+make -f Makefile clean
+make -f Makefile TSELECT=-D$1 && make -f Makefile TSELECT=-D$1 flash
+
+echo
+echo "########## Table with function command CAN ids: db-select: $3 source file: unit_cmd_canid "
+export SRCNAME=unit_cmd_canid
+make -f Makefile clean
+make -f Makefile TSELECT=-D$3 && make -f Makefile TSELECT=-D$3 flash
+

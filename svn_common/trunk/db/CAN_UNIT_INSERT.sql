@@ -30,7 +30,7 @@
 DELETE from CAN_UNIT;
 --                                       CAN_UNIT_CODE
 --                           CAN_UNIT_NAME  ||   PROG_NAME      SKIP   CANID_NAME             DESCRIPTION3
-INSERT INTO CAN_UNIT VALUES ('CAN_UNIT_2' ,  2,'PROG_ENCODER'	, 0,'CANID_UNIT_2' ,'Shaft encoder: Drive shaft encoder');
+INSERT INTO CAN_UNIT VALUES ('CAN_UNIT_2' ,  2,'PROG_SHAFT' 	, 0,'CANID_UNIT_2' ,'Shaft encoder: Drive shaft encoder');
 INSERT INTO CAN_UNIT VALUES ('CAN_UNIT_3' ,  3,'PROG_ENGINE' 	, 0,'CANID_UNIT_3' ,'Engine: ');
 INSERT INTO CAN_UNIT VALUES ('CAN_UNIT_4' ,  4,'PROG_ENCODER'	, 1,'CANID_UNIT_4' ,'Shaft encoder: Lower sheave shaft encoder');
 INSERT INTO CAN_UNIT VALUES ('CAN_UNIT_5' ,  5,'PROG_ENCODER'	, 1,'CANID_UNIT_5' ,'Shaft encoder: Upper sheave shaft encoder');

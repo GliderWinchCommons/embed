@@ -1,0 +1,108 @@
+#!/bin/bash
+# mm - script for compile and flashing
+# 04/21/2018
+#
+STM32F3=TRUE
+export STM32F3
+
+# 'T' to make clean for all, 'F' to skip make clean
+MCLEAN="F"
+echo "========================================================================================"
+cd ../../../../svn_common/trunk
+if [ $MCLEAN = "T" ] ; then  make clean ; fi
+make
+
+echo "========================================================================================"
+cd ../../svn_pod/sw_stm32/trunk/devices
+pwd
+if [ $MCLEAN = "T" ] ; then  make clean ; fi
+make
+
+echo "========================================================================================"
+cd ../lib/libmi*
+pwd
+if [ $MCLEAN = "T" ] ; then  make clean ; fi
+make
+
+echo "========================================================================================"
+cd ../libu*
+pwd
+if [ $MCLEAN = "T" ] ; then  make clean ; fi
+make
+
+echo "========================================================================================"
+cd ../libsu*
+pwd
+if [ $MCLEAN = "T" ] ; then  make clean ; fi
+make
+
+echo "========================================================================================"
+cd ../../../../../svn_sensor/sw_f103/trunk/lib/libdev*
+pwd
+if [ $MCLEAN = "T" ] ; then  make clean ; fi
+make
+
+echo "========================================================================================"
+cd ../lib*sensormisc
+pwd
+if [ $MCLEAN = "T" ] ; then  make clean ; fi
+make
+
+echo "========================================================================================"
+cd ../../../../sensor/shaft/trunk
+pwd
+make clean
+
+
+# ### Select LD file ### for processor memory sizes
+PROCTYPE="VG"
+#PROCTYPE="VE"
+#PROCTYPE="VC"
+
+# The high flash table is defined in the .ld file.  We have three
+# types of processors: 
+#   VG -   1M|96K 
+#   VE - 512K|64K
+#   VC - 128K|20K
+#
+#   The following compiles both versions from the same .c source code,
+#     but with different high flash defines in the .ld files.
+# LDRAPP selects .ld file for processor size in svn_common/trunk/
+# VXNAME sets the name of the compiled files for that processor size
+#
+echo "select processor type:$PROCTYPE"
+if [ $PROCTYPE = "VG" ]; then
+	# VG version--
+	echo "VG version"
+	export LDRAPPLD=ldrapp_VG.ld
+	export VXNAME=engine_VG
+	make
+	make flash
+	exit
+fi
+echo "not VG"
+
+if [ $PROCTYPE = "VE" ]; then
+	# VC version--
+	echo "VE version"
+	export LDRAPPLD=ldrapp_VE.ld
+	export VXNAME=engine_VE
+	make
+	make flash
+	exit
+fi
+echo "not VE"
+
+if [ $PROCTYPE = "VC" ]; then
+	# VC version--
+	echo "VC version"
+	export LDRAPPLD=ldrapp_VC.ld
+	export VXNAME=engine_VC
+	make
+	make flash
+	exit
+fi
+echo
+echo "#### ERROR: no processor type selelcted #####"
+echo
+

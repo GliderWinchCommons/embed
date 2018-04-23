@@ -1,5 +1,20 @@
 README.txt
 
+04/21/2018 shaft - drive shaft reflective sensor
+  Rework/update se4_h for database scheme
+
+04/21/2018 co1_sensor_ublox = Logger, GPS
+  Reconstructed missing files no on repository
+
+04/20/2018 se1 - RPM, Manifold pressure, throttle, temperatue
+  Updated for database scheme
+
+04/??/2018 tension 
+
+
+
+
+
 12/08/2012
 
 Programs for each unit on system--

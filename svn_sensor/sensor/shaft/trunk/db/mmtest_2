@@ -1,0 +1,7 @@
+#!/bin/bash
+# Supply function instance name for selection of database parameters
+#  for compiling and flashing in high address flash
+# ./mm <function instance name> <.c file for parameter compiling>
+./mm SHAFT1 shaft_param CAN_UNIT_2 unit_cmd_canid
+exit
+

@@ -4,6 +4,7 @@
 #
 STM32F3=TRUE
 export STM32F3
+export PROCTYPE='VG'
 
 # 'T' to make clean for all, 'F' to skip make clean
 MCLEAN="F"

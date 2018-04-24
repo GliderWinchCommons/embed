@@ -660,7 +660,7 @@ static void compute_init(struct SHAFT_FUNCTION* p)
 		p->rpm_cic.lDiff[j][1]  = 0;
 	}
 
-	/* Pre-load CAN messages for msgs sent periodically. */
+	/* Pre-load CAN messages wiht values from parameers for msgs sent periodically. */
 	// CAN id
 	p->can_msg_speed.id = p->lc.cid_msg_speed; //  8 Shaft speed, calibrated, response to poll
 	p->can_msg_count.id = p->lc.cid_msg_ct;    //  9 CAN msg. Drive Shaft--odometer
@@ -702,10 +702,10 @@ static void compute_init(struct SHAFT_FUNCTION* p)
 #endif
 
 	/* This is a low priority post SYSTICK interrupt call. */
-	systickLOpriority_ptr = &compute_doit2;
+//	systickLOpriority_ptr = &compute_doit2;
 
 	/* This is a very high priority post SYSTICK interrupt call. */
-	systickHIpriority_ptr = &savereadings2;
+//	systickHIpriority_ptr = &savereadings2;
 
 	return;
 }
@@ -731,7 +731,6 @@ void canmsg_send(struct CANRCVBUF* pcan, int pay1, int pay2)
  ************************************************************************************/
 void testfoto(void)
 {
-can_msg_put(&shaft_f.can_msg_DS);	// 0 highflash table index
 can_msg_put(&shaft_f.can_msg_ER1);	// 1
 can_msg_put(&shaft_f.can_msg_ER2);	// 2
 can_msg_put(&shaft_f.can_msg_histo31);	// 3
@@ -783,8 +782,8 @@ static void savereadings2(void)
 	idxsaveh = adv_index(idxsaveh, RPMDATABUFFSIZE);
 
 	/* Call other routines if an address is set up--64 per sec. */
-	if (systickHIpriority3_ptr != 0)	// Having no address for the following is bad.
-		(*systickHIpriority3_ptr)();	// Go do something
+//	if (systickHIpriority3_ptr != 0)	// Having no address for the following is bad.
+//		(*systickHIpriority3_ptr)();	// Go do something
 
 	return;
 }
@@ -820,8 +819,8 @@ static void compute_doit2(void)
 
 			/* ========= Here is where adc readings get setup for sending ============ */
 			/* Setup counter and speed readings for sending */
-			canmsg_send(&can_msg_DS, encoder_ctrZ[idxsavel], speed_filtered);
-			encoder_ctrA2 = encoder_ctrZ[idxsavel];	// Save for mainline monitoring
+//			canmsg_send(&can_msg_DS, encoder_ctrZ[idxsavel], speed_filtered);
+//			encoder_ctrA2 = encoder_ctrZ[idxsavel];	// Save for mainline monitoring
 			
 			/* We should have come out even, but check jic. */
 			if (shaft_f.rpm_cic.usDecimateCt != 0)
@@ -844,11 +843,9 @@ static void compute_doit2(void)
 //			}
 
 			/* Call other routines if an address is set up. */
-			if (systickLOpriority3X_ptr != 0)	// Having no address for the following is bad.
-				(*systickLOpriority3X_ptr)();	// Go do something
+//			if (systickLOpriority3X_ptr != 0)	// Having no address for the following is bad.
+//				(*systickLOpriority3X_ptr)();	// Go do something
 
-			/* This is for cangate command 'a' that displays printf data. */		
-			while ( CANascii_send() != 0); // Output any can msgs buffered with printf ascii
 		}
 		/* Advance index for low priority processing. */
 		idxsavel = adv_index(idxsavel, RPMDATABUFFSIZE);
@@ -1060,7 +1057,7 @@ static void adc_histo_build_ADC12(void)
 
 		/* Set up for 2nd msg sending (after 1st msg is sent) */
 		shaft_f.can_msg_ptr2 = &shaft_f.can_msg_histo22; // Show systick entry, above, that CAN msg is ready to send
-		shaft_f.can_msg_histo_ptr = &adc2histo[adc3histo_send][0]; // Pointer into histo counts
+		can_msg_histo_ptr = &adc2histo[adc3histo_send][0]; // Pointer into histo counts
 		// The following is the one that triggers off the sending
 		shaft_f.can_msg_histo22.cd.ui[1] = 0; // Reset bin number for responses with histogram counts
 	}
@@ -1131,7 +1128,7 @@ static void adc_histo_build_ADC3(void)
 
 		/* Set up for 2nd msg sending (after 1st msg is sent) */
 		shaft_f.can_msg_ptr2 = &shaft_f.can_msg_histo32; // Show systick entry, above, that CAN msg1 is ready to send
-		shaft_f.can_msg_histo_ptr = &adc3histo[adc3histo_send][0]; // Pointer into 
+		can_msg_histo_ptr = &adc3histo[adc3histo_send][0]; // Pointer into 
 		// The following is the one that triggers off the sending
 		shaft_f.can_msg_histo32.cd.ui[1] = 0; // Reset bin number for responses with histogram counts
 	}

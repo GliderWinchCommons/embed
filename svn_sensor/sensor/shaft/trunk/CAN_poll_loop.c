@@ -11,17 +11,11 @@ w flag and have this routine pass that on to the CAN send routine.
 */
 
 #include "can_hub.h"
-#include "tension_a_functionS.h"
-#include "cable_angle_function.h"
+#include "shaft_function.h"
 #include "libusartstm32/nvicdirect.h"
 #include "can_driver.h"
-#include "tim3_ten2.h"
 #include "db/gen_db.h"
-
-/* Define to include code */
-#define HUB_TENSION_A		// AD7799 #1 tension
-#define HUB_TENSION_B		// AD7799 #2 tension
-//#define HUB_CABLE_ANGLE	// Cable angle
+#include "tim4_shaft.h"
 
 extern void (*can_msg_reset_ptr)(void* pctl, struct CAN_POOLBLOCK* pblk);
 
@@ -31,11 +25,7 @@ void CAN_poll(void);
 /* hub port buffer pointers. */
 // These were made non-static since if they are not included the compiler
 //   will issue a warning.
-struct CANHUB* phub_app = NULL;		// ?
-/* The following are added separately. */
-//struct CANHUB* phub_tension_a = NULL;	// AD7799 #1
-//struct CANHUB* phub_tension_b = NULL;	// AD7799 #2
-//struct CANHUB* phub_cable_angle = NULL;	// Cable angle function
+struct CANHUB* phub_app = NULL;	
 
 /* **************************************************************************************
  * int CAN_poll_loop_init(void);
@@ -45,9 +35,10 @@ struct CANHUB* phub_app = NULL;		// ?
 int CAN_poll_loop_init(void)
 {
 	/* Runs polling loop */
-	tim3_ten2_ll_ptr = &CAN_poll;	// 'tim3_ten.c' timer triggers low level interrupt to come to this function
-	NVICIPR (NVIC_I2C1_ER_IRQ, NVIC_I2C1_ER_IRQ_PRIORITY );	// Set interrupt priority ('../lib/libusartstm32/nvicdirect.h')
-	NVICISER(NVIC_I2C1_ER_IRQ);			// Enable interrupt controller ('../lib/libusartstm32/nvicdirect.h')
+	tim4_shaft_tim_oc_ptr = &CAN_poll_loop_trigger;	// 'rpmsensor.c' CH2 oc timer triggers poll
+
+	NVICIPR (NVIC_I2C1_ER_IRQ, NVIC_I2C1_ER_IRQ_PRIORITY );	// Set interrupt priority
+	NVICISER(NVIC_I2C1_ER_IRQ);			// Enable interrupt controller
 
 	/* Get a buffer for each "port" */
 	phub_app = can_hub_add_func();	// Get a hub port for dealing with commands
@@ -93,36 +84,13 @@ void CAN_poll(void)
 			sw = 1;
 //$	 		app_function_poll(pcan); 	// function poll
 		}
-		/* tension a: get msgs from tension_a buffer */
-  		pcan = can_hub_get(ten_f[0].phub_tension); 	// Get ptr to CAN msg
-		if ((ten_f[0].ten_a.useme & USEME_TENSION_BIT_AD7799_1) != 0)
-		{
-	 		ret = tension_a_functionS_poll(pcan,&ten_f[0]); 	// function poll
-			if (ret != 0)	// Did function send & buffer a msg?
-			{ // Here yes.  Other functions may need this msg
-				sw = 1; // Set switch to cause loop again
-			}
+		/* shaft: get msgs from shaft buffer */
+  		pcan = can_hub_get(shaft_f.cf.phub); 	// Get ptr to CAN msg
+	 	ret = shaft_common_poll(pcan,&shaft_f.cf); 	// function poll
+		if (ret != 0)	// Did function send & buffer a msg?
+		{ // Here yes.  Other functions may need this msg
+			sw = 1; // Set switch to cause loop again
 		}
-		/* tension b:  get msgs from tension_b buffer */
-  		pcan = can_hub_get(ten_f[1].phub_tension); 	// Get ptr to CAN msg
-		if ((ten_f[1].ten_a.useme & USEME_TENSION_BIT_AD7799_2) != 0)
-		{
-	 		ret = tension_a_functionS_poll(pcan,&ten_f[1]); 	// function poll
-			if (ret != 0)	
-			{
-				sw = 1;
-			}
-		}
-#ifdef HUB_CABLE_ANGLE
-		/* cable angle:  get msgs from this buffer*/
-  		pcan = can_hub_get(phub_cable_angle); 	// Get ptr to CAN msg
-		ret = cable_angle_function_poll(pcan); 	// Do something with the msg
-		if (ret != 0)	// Check for no msgs available
-  		{ // Here, we have a msg (from CAN hardware, or other functions)
-			sw = 1;			
- 		}
-#endif
-	/* Loop until no msgs were handled. */
 	} while ((can_hub_end() != 0) || (sw != 0)); // Repeat if msgs waiting or were added
 	return;
 }

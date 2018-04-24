@@ -49,10 +49,6 @@ LIBCOMMONALL2   = $(SRCDIR)/../../../../svn_common/trunk/f103
 # Library of common to all processors
 LIBSVNCOMMON	= $(SRCDIR)/../../../../svn_common/trunk
 
-# Library directory path--compile and stuff
-#LGCC =     $(HOME)/launchpad/gcc-arm-none-eabi-5_4-2016q3/lib/gcc/arm-none-eabi/5.4.1/armv7-m
-#LOTHER      = $(HOME)/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m
-
 # The following is setup in ~/.arm_tools when ~/.profile opens a terminal
 LGCC = $(ARM_PREFIX_GCCLIB)
 LOTHER = $(ARM_PREFIX_OTHER)
@@ -82,8 +78,6 @@ CFLAGS	+= -I$(LIBCOMMONALL2)
 AFLAGS  = -mcpu=cortex-m3 -mthumb
 
 # Linker script which has the definition of memory layout and "sections"
-#LDSCRIPT	= $(VXNAME).ld
-#LDSCRIPT	= $(LIBCOMMONALL)/ldrapp.ld
 # LDRAPP is defined in the mm file to select for processor memory size
 LDSCRIPT	= $(LIBCOMMONALL)/$(LDRAPPLD)
 

@@ -77,8 +77,8 @@ CFLAGS	+= -I$(LIBCOMMONALL2)
 AFLAGS  = -mcpu=cortex-m3 -mthumb
 
 # Linker script which has the definition of memory layout and "sections"
-#LDSCRIPT	= $(NAME).ld
-LDSCRIPT	= $(LIBCOMMONALL)/ldrapp.ld
+# LDRAPP is defined in the mm file to select for processor memory size
+LDSCRIPT	= $(LIBCOMMONALL)/$(LDRAPPLD)
 
 # Libraries (.a), script (.ld), (.map) for the linker
 LDFLAGS         = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles \
@@ -90,12 +90,23 @@ LDFLAGS         = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T
  -L$(LIBSUPPORTSTM32) \
  -L$(LIBSENSORMISC) \
  -L$(LIBCOMMONALL) \
+ -L$(LIBCOMMONALL2) \
  -L$(LIBSVNCOMMON) \
 
 # List of files to be compiled
 OBJS	 =  vector.o $(NAME).o 
 OBJS	+= adcsensor_foto_h.o 
 OBJS	+= newlib_support.o 
+
+OBJS  += shaft_idx_v_struct.o
+OBJS  += shaft_function.o
+OBJS	+= fmtprint.o
+OBJS	+= CAN_poll_loop.o
+OBJS	+= can_filter_print.o
+OBJS	+= CAN_filter_build.o
+OBJS	+= CAN_filter_list_printf.o
+OBJS  += shaft_printf.o
+OBJS  += tim4_shaft.o
 
 # The following two are 'export'ed in .arm_tools via .profile
 #OPENOCD_BASE	= /usr/share

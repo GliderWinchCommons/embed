@@ -212,6 +212,7 @@ INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CID_MSG_SPEED'  ,'CANID_MSG_SHAFT1_
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CID_HB_SPEED'   ,'CANID_HB_SHAFT1_SPEED' ,'DRIVE_SHAFT','Shaft1: CANID: Shaft speed, calibrated, heartbeat');
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CID_MSG_CT'     ,'CANID_MSG_SHAFT1_COUNT','DRIVE_SHAFT','Shaft1: CANID: Shaft running counT, response to poll');
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CID_HB_CT '     ,'CANID_HB_SHAFT1_COUNT' ,'DRIVE_SHAFT','Shaft1: CANID: Shaft running count, heartbeat');
+INSERT INTO PARAM_VAL VALUES('SHAFT1'.'SHAFT_NUMBER_SEG'     .'10',    'DRIVE_SHAFT','Shaft1: Number of segments on code wheel');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CANID_HW_FILT1' ,'CANID_HB_TIMESYNC'  ,'DRIVE_SHAFT','Shaft1: CANID 1: GPS time sync distribution msg');
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CANID_HW_FILT2' ,'CANID_MSG_TIME_POLL','DRIVE_SHAFT','Shaft1: CANID 2:Time msg/Group polling');
@@ -233,12 +234,12 @@ INSERT INTO PARAM_VAL VALUES ('CANSENDER_1','CANSENDER_POLL_R'       ,'CANID_POL
 -- ===================================================================================================================================================================================
 -- CANSENDER_2
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL                FUNCTION_TYPE     DESCRIPTION11
-INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_LIST_CRC'	,'0',	   	 	'CANSENDER',	'Cansender_2: 1 CRC');
-INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_LIST_VERSION'	,'1',      		'CANSENDER',	'Cansender_2: 2 Version number');
-INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_HEARTBEAT_CT'	,'375',			'CANSENDER',	'Cansender_2: 3 Heartbeat count of time (ms) between msgs');
-INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_HEARTBEAT_MSG'	,'CANID_HB_CANSENDER_2','CANSENDER',  	'Cansender_2: 4 CANID: Hearbeat sends running count');
-INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_POLL'	    	,'CANID_POLL_CANSENDER','CANSENDER',  	'Cansender_2: 5 CANID: Poll this cansender');
-INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_POLL_R'	  	,'CANID_POLLR_CANSENDER_2','CANSENDER',	'Cansender_2: 6 CANID: Response to POLL');
+INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_LIST_CRC'	,'0',                      'CANSENDER','Cansender_2: 1 CRC');
+INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_LIST_VERSION'	,'1',                   'CANSENDER','Cansender_2: 2 Version number');
+INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_HEARTBEAT_CT'	,'375',			         'CANSENDER','Cansender_2: 3 Heartbeat count of time (ms) between msgs');
+INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_HEARTBEAT_MSG','CANID_HB_CANSENDER_2','CANSENDER','Cansender_2: 4 CANID: Hearbeat sends running count');
+INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_POLL'	    	,'CANID_POLL_CANSENDER','CANSENDER','Cansender_2: 5 CANID: Poll this cansender');
+INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_POLL_R'	  	,'CANID_POLLR_CANSENDER_2','CANSENDER','Cansender_2: 6 CANID: Response to POLL');
 -- ====================================================================================================================================================================================
 -- GPS_1
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
@@ -251,15 +252,13 @@ INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_HEARTBEAT_TIME'        ,'CANID_HB_GPS
 INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_HEARTBEAT_LLH'         ,'CANID_HB_GPS_LLH_1' ,'GPS','GPS_1: 7 Heartbeat (3 separate msgs) lattitude longitude height');
 INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_DISABLE_SYNCMSGS'      ,'0'                  ,'GPS','GPS_1: 8 time sync msgs: 0 = enable  1 = disable');
 INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_TIME_SYNC_MSG'         ,'CANID_HB_TIMESYNC'  ,'GPS','GPS_1: 9 Time sync msg');
---
 --============================================================================================================================================================================================
 -- LOGGER_1
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
-INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_LIST_CRC'	   	,'0',  		'LOGGER',	'Logger_1: 1 CRC ');
-INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_LIST_VERSION'   	,'1', 		'LOGGER',	'Logger_1: 2 Version number');
-INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_HEARTBEAT1_CT'		,'8000', 	'LOGGER',	'Logger_1: 3 Heartbeat count of time (ms) between msgs');
-INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_HEARTBEAT_MSG'    	,'CANID_HB_LOGGER_1','LOGGER',  'Logger_1: 4 CANID: Hearbeat sends running count of logged msgs');
---
+INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_LIST_CRC'        ,'0',              'LOGGER','Logger_1: 1 CRC ');
+INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_LIST_VERSION'    ,'1',              'LOGGER','Logger_1: 2 Version number');
+INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_HEARTBEAT1_CT'   ,'8000',           'LOGGER','Logger_1: 3 Heartbeat count of time (ms) between msgs');
+INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_HEARTBEAT_MSG' ,'CANID_HB_LOGGER_1','LOGGER','Logger_1: 4 CANID: Hearbeat sends running count of logged msgs');
 --===========================================================================================================================================================================================
 -- GPS_2
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11

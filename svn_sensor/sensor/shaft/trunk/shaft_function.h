@@ -16,7 +16,7 @@
 #include "queue_dbl.h"
 #include "cic_filter_l_N2_M3.h"
 
-#define NUMENGINEFUNCTIONS 1	// Just one function for now
+#define NUMSHAFTFUNCTIONS 1	// Just one function for now
 
 #define CMD_IR_OFFSET 1000	// Command CAN function ID table offset for "R" CAN ID
 
@@ -55,6 +55,8 @@ struct SHAFT_FUNCTION
 	struct SHAFTLC lc;		// Local sram copy of database parameters
 	double dlast1;			// Filtered reading converted to double
 	double dcalibrated;	// 
+	double dk1;				// Scale factor
+
 	
 /* These were originally in the.c file */
 long	speed_filteredA2;	// Most recent computed & filtered rpm

@@ -32,8 +32,18 @@
 	uint32_t cid_hb_speed;	   //  9 Shaft speed, calibrated, heartbeat
 	uint32_t cid_msg_ct;    	// 10 Shaft running count, response to poll
 	uint32_t cid_hb_ct;	   	// 11 Shaft running count, heartbeat
+	uint32_t num_seg;          // 12 Number of segments on code wheel
 	uint32_t code_CAN_filt[CANFILTMAX];// List of CAN ID's for setting up hw filter
  };
  
+/* **************************************************************************************/
+int shaft_idx_v_struct_copy_shaft(struct SHAFTLC* p, uint32_t* ptbl);
+/* @brief	: Copy the flat array in high flash with parameters into the struct
+ * @param	: p = pointer struct with parameters to be loaded
+ * @param	: ptbl = pointer to flat table array
+ * return	:  + = table size
+ *		:  0 = error
+ *		:  - = -(size of struct table count)
+ * ************************************************************************************** */
 
 #endif

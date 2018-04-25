@@ -121,6 +121,7 @@ NOTE: Some page number refer to the Ref Manual RM0008, rev 11 and some more rece
 #include "CANascii.h"
 #include "../../../../svn_common/trunk/can_gps_phasing.h"
 #include "adcsensor_foto_h.h"
+#include "tim4_shaft.h"
 
 
 /* Pointer to control block for CAN1. */
@@ -224,19 +225,32 @@ static u32 histthrottle = 0;	// Throttle for readouts of bins
 /* All parameters and variables for this instance of the function */
 struct SHAFT_FUNCTION shaft_f;
 
-/******************************************************************************
- * static int adv_index(int idx, int size);
- * @brief	: Format and print date time in readable form
- * @param	: idx = incoming index
- * @param	: size = number of items in FIFO
- * return	: index advanced by one
- ******************************************************************************/
-static int adv_index(int idx, int size)
+/* Circular buffer for DWT times of ADC transitions */
+#define ADCTIMBUFSIZE 64	// Circular buffer size
+
+
+#define ADCTIMSCALE (1 << 24)	// Scale
+
+/* Buffer and parameters for photocells */
+struct ADCTIMBUF
 {
-	int localidx = idx;
-	localidx += 1; if (localidx >= size) localidx = 0;
-	return localidx;
-}
+	uint32_t* padd;   // Buffer position to be added
+	uint32_t* psub;	// Position to be removed
+	uint32_t* p_begin;	// Beginning of buffer
+	uint32_t* b_end;	// End of buffer
+	uint32_t  rct;		// Running count
+	uint32_t  n;		// Number in average
+	int32_t   accum;	// Cumulative 1/delta_t
+	uint32_t  tprev;	// Previous saved time
+	uint32_t  nprev;	// Previous n
+	uint32_t  zeroct;	// Consecutive intervals with no transitions
+	int32_t   iave;	// Integer average
+	double    dave;
+	float     fave;
+   uint32_t  buf[ADCTIMBUFSIZE];
+};
+static struct ADCTIMBUF adctim2; // Photocell B
+static struct ADCTIMBUF adctim3; // Photocell A
 
 /* ----------------------------------------------------------------------------- 
  * void timedelay (u32 ticks);
@@ -248,6 +262,24 @@ static void timedelay (unsigned int ticks)
 	u32 t0 = *(volatile unsigned int *)0xE0001004; // DWT_CYCNT
 	t0 += ticks;
 	while (( (int)t0 ) - (int)(*(volatile unsigned int *)0xE0001004) > 0 );
+	return;
+}
+/******************************************************************************
+ * static void adctimbuf_init(sruct ADCTIMBUF* p);
+ * @brief 	: Initialize struct for circular buffering ADC transisiton times
+ * @param	: p = pointer to wonderful things
+*******************************************************************************/
+static void adctimbuf_init(sruct ADCTIMBUF* p)
+{
+	p->padd = &p->buf[0]; // Add to buffer pointer
+	p->psub = p->padd;    // Take from buffer pointer
+	p->p_begin = p->psub;	 // Beginning of buffer
+	p->p_end = &p->buf[ADCTIMBUFSIZE]; // End of buffer
+	p->rct = 0; // Running count
+	p->n = 0;
+	p->accum = 0;
+	p->zeroct = 0;
+	p->tprev = *(volatile unsigned int *)0xE0001004; // Current sys counter time
 	return;
 }
 /******************************************************************************
@@ -267,6 +299,10 @@ void adc_init_sequence_foto_h(struct SHAFT_FUNCTION* p)
 
 	/* Set up for computations and CAN messaging shaft count and speed */
 	compute_init(p);
+
+	/* Init circular buffers */
+	adctimbuf_init(&adctim2);
+	adctimbuf_init(&adctim3);
 
 	/* Initialize ADC1 & ADC2 */
 	adc_init_foto();			// Initialize ADC1 and ADC2 registers.
@@ -520,17 +556,16 @@ static unsigned short new;	// Latest 0|1 pair--bit 0 = ADC1 (photocell A); bit 1
 static unsigned short old;	// Saved "new" from last interrupt.
 
 /* Values generated in interrupt routine */
-s32 encoder_ctr2;	// Shaft encoder running count (+/-)
-u32 encoder_Actr2;	// Cumulative count--photocell A
-u32 encoder_Bctr2;	// Cumulative count--photocell B
-u32 adc_encode_time2;	// DTW_CYCCNT time of last transition
-
+s32 encoder_ctr2;	    // Shaft encoder running count (+/-)
+s32 encoder_ctr2_prev;	    // Shaft encoder running count (+/-)
+//u32 encoder_Actr2;	 // Cumulative count--photocell A
+//u32 encoder_Bctr2;	 // Cumulative count--photocell B
+//u32 adc_encode_time2; // DTW_CYCCNT time of last transition
 
 u32 adc_encode_time_prev2;	// Previous time at SYSTICK
 s32 encoder_ctr_prev2;		// Previous encoder running count
 
 static unsigned int speedzeroflg = 0;	// not-zero = wait for a encoder tick
-
 
 /* Table lookup for shaft encoding count: -1 = negative direction count, +1 = positive direction count, 0 = error */
 /* One sequence of 00 01 11 10 results in four counts. */
@@ -541,9 +576,19 @@ void ADC1_2_IRQHandler2(void)
 	__attribute__((__unused__))int temp;	// Register readback to assure a prior write has been taken by the register
 	int both;	// Table lookup index = ((old << 2) | new)
 
+	struct ADCTIMBUF *p = &adctim2; 
+
 	/* ADC2, IN1, Photocell B  */	
 	if ((ADC2_SR & ADC_SR_AWD) != 0)	// ADC2 watchdog interrupt?
 	{ // Here, yes.  Watchdog flag is on
+
+
+		if (subinterval_ct_flag != 0) // Time to save accumulated counts and latest saved time?
+		{	// Yes. Advance buffer index
+			subinterval_ct_flag = 0;
+			idxsaveh += 1; if (idxsaveh >= RPMDATABUFFSIZE) idxsaveh = 0;
+		}
+
 		/* Is the data *above* the high threshold register? (p 219) */
 		if (ADC2_DR > ADC2_HTR)
 		{ // Here, watchdog interrupt was the signal going upwards
@@ -559,17 +604,21 @@ void ADC1_2_IRQHandler2(void)
 			new &= ~0x02;		// Turn 0|1 status bit OFF
 			LED19RED_on;
 		}
-		encoder_Bctr2 += 1;		// Cumulative counter--either direction
+//		encoder_Bctr2 += 1;		// Cumulative counter--either direction
+		p->rct += 1;	// Cumulative counter--either direction
 		both = (old << 2) | new;	// Make lookup index
 		encoder_ctr2 += en_state[both];	// Add +1, -1, or 0
 		if (en_state[both] == 0)	// Was this an error
 			adcsensor_foto_err[0] += 1;	// Cumulative count
 		/* Save time of shaft encoding transitions (for speed computation) */
-		adc_encode_time2 = *(volatile unsigned int *)0xE0001004; // DWT_CYCNT
-		old = new;			// Update for next 
+//		adc_encode_time2 = *(volatile unsigned int *)0xE0001004; // DWT_CYCNT
+		p->padd = *(volatile unsigned int *)0xE0001004; // Save sys time (DWT_CYCNT)
+		p->padd += 1; if (p->padd == p->p_end) p->padd = p->p_begin;
+		old = new;					// Update for next 
 		temp = ADC2_HTR | ADC2_LTR;	// Be sure new threshold values are set before turning off interrupt flag
 		ADC2_SR = ~0x1;			// Reset adc watchdog flag
 		temp = ADC2_SR;			// Readback assures interrupt flag is off (prevent tail-chaining)
+
 	}
 	return;
 }
@@ -581,10 +630,19 @@ void ADC3_IRQHandler(void)
 	__attribute__((__unused__))int temp;	// Register readback to assure a prior write has been taken by the register
 	int both;	// Table lookup index = ((old << 2) | new)
 
+	struct ADCTIMBUF *p = &adctim3; 
+
 	/* ADC3, IN0, Photocell A  */
 	if ((ADC3_SR & ADC_SR_AWD) != 0)	// ADC1 watchdog interrupt?
 /* Note: bit banding the above 'if' makes no difference in the number of instructions compiled. */
 	{ // Here, yes.  Watchdog flag is on
+
+		if (subinterval_ct_flag != 0) // Time to save accumulated counts and latest saved time?
+		{	// Yes. Advance buffer index
+			subinterval_ct_flag = 0;
+			idxsaveh += 1; if (idxsaveh >= RPMDATABUFFSIZE) idxsaveh = 0;
+		}
+
 		/* Is the data *above* the high threshold register? (p 219) */
 		if (ADC3_DR > ADC3_HTR)
 		{ // Here, watchdog interrupt was the signal going upwards
@@ -600,14 +658,18 @@ void ADC3_IRQHandler(void)
 			new &= ~0x01;		// Turn 0|1 status bit OFF
 			LED20RED_on;
 		}
-		encoder_Actr2 += 1;		// Cumulative counter--either direction
+//		encoder_Actr2 += 1;		// Cumulative counter--either direction
+		p->rct += 1;	// Cumulative counter--either direction
 		both = (old << 2) | new;	// Make lookup index
 		encoder_ctr2 += en_state[both];	// Add +1, -1, or 0
 		if (en_state[both] == 0)	// Was this an error
 			adcsensor_foto_err[0] += 1;	// Cumulative count
 		/* Save time of shaft encoding transitions (for speed computation) */
-		adc_encode_time2 = *(volatile unsigned int *)0xE0001004; // DWT_CYCNT
-		old = new;			// Update for next
+//		adc_encode_time2 = *(volatile unsigned int *)0xE0001004; // DWT_CYCNT
+		p->padd = *(volatile unsigned int *)0xE0001004; // Save sys time (DWT_CYCNT)
+		p->padd += 1; if (p->padd == p->p_end) p->padd = p->p_begin;
+
+		old = new;					// Update for next
 		temp = ADC3_HTR | ADC3_LTR;	// Be sure new threshold values are set before turning off interrupt flag
 		ADC3_SR = ~0x1;			// Reset adc watchdog interrupt flag
 		temp = ADC3_SR;			// Readback assures interrupt flag is off (prevent tail-chaining)
@@ -740,9 +802,98 @@ can_msg_put(&shaft_f.can_msg_histo22);	// 6
 can_msg_put(&shaft_f.can_msg_adc_5);	// 7
 };
 
-/* ######################### UNDER HIGH PRIORITY SYSTICK INTERRUPT ############################### 
+/* ######################### tim4_tim subinterval in############################### 
  * Enter from SYSTICK interrupt each 64 per sec, and buffer latest readings
  * ############################################################################################### */
+/* *************************************************************************************************
+ * static void adcrpmave(struct ADCTIMBUF *p);
+ *	@brief	: Compute and accumulate reciprocals of times between ADC transitions for each photocell
+ * @param	: p = pointer to photocell struct with buffer, pointers and counts
+ **************************************************************************************************/	
+static void adcrpmave(struct ADCTIMBUF *p)
+{
+struct ADCTIMBUF
+{
+	uint32_t tdiff;
+	uint32_t recip;
+
+	while (p->psub != p->padd)
+	{
+		tdiff = *p->psub - p->tprev;
+		p->tlast = *p->psub;
+		recip = ADCTIMSCALE/tdiff;
+		p->accum += tdiff;
+		p->n += 1;
+		p->sub += 1;
+		if (p->psub == p->p_end) p->psub = p->p_begin;
+	}
+	return;
+}
+
+static int32_t interval_rpm(struct ADCTIMBUF *p)
+{
+	/* Number of ADC transitions during this interval */
+	uint32_t ndiff = (p->n - p->nprev);
+	p->nprev = p->n;
+
+	if (ndiff > 0)
+	{
+		p->iave = (p->accum / p->n);
+		p->zeroct = 0;	// Reset zero rpm timeout counter
+	}
+	else
+	{ // Limit number of interval with no ADC transitions
+		p->zeroct += 1;
+		if (p->zeroct >= ZEROCTMAX)	
+		{ // Here, the RPM will assumed to be zero.
+			p->iave = 0;
+		}
+	}
+	p->accum = 0;	// Reset accumulator
+}
+
+/* *************************************************************************************************
+ * void adc_rpm_compute(uint32_t subintct);
+ *	@brief	: Compute and accumulate reciprocals of times between ADC transitions for each photocell
+ **************************************************************************************************/
+static int32_t sign = 1; // Direction: +1, -1
+
+void adc_rpm_compute(void)
+{
+	int32_t sign;	// Direction of rotation
+	int32_t ndiff;
+	int32_t bave;
+
+	/* Compute accumulated scale reciprocals of durations between ADC transitions */
+	adcrpmave(&adctim2);
+	adcrpmave(&adctim3);
+
+	/* Compute rpm at trigger interval within 64 per sec reading rate */
+	if (subinterval_ct >= SUBINTERVALTRIGGER) 
+	{ // Here, time to compute
+
+		/* Direction +/-   */
+		ndiff = encoder_ctr2 - encoder_ctr2_prev;
+		encoder_ctr2_prev = encoder_ctr2;
+		if (ndiff > 0)
+			sign = +1;
+		else if (ndiff < 0)
+			sign = -1;
+		
+		bave  = interval_rpm(&adctim2);
+		bave += interval_rpm(&adctim3);
+		bave /= 2;
+
+		/* Complete scaling and conversions for CAN msgs */
+		shaft.cf.nrpm = bave * sign;
+		shaft.cf.drpm = shaft.cf.nrpm * shaft.cf.dk1;
+		shaft.cf.frpm = shaft.cf.drpm;
+	}
+	return;
+}
+
+
+
 /* Circular buffer saved data */
 #define RPMDATABUFFSIZE	8
 static int idxsaveh = 0;	// Index for storing new data
@@ -751,6 +902,7 @@ static u32 encoder_ctrZ[RPMDATABUFFSIZE];
 static u32 adc_encode_timeZ[RPMDATABUFFSIZE];
 static u32 systicktimeZ[RPMDATABUFFSIZE];
 static u32 stk_32ctrZ[RPMDATABUFFSIZE];
+
 
 static void savereadings2(void)
 {
@@ -781,6 +933,7 @@ static void savereadings2(void)
 	/* Advance index for high priority storing. */
 	idxsaveh = adv_index(idxsaveh, RPMDATABUFFSIZE);
 
+RPMDATABUFFSIZE
 	/* Call other routines if an address is set up--64 per sec. */
 //	if (systickHIpriority3_ptr != 0)	// Having no address for the following is bad.
 //		(*systickHIpriority3_ptr)();	// Go do something
@@ -849,6 +1002,7 @@ static void compute_doit2(void)
 		}
 		/* Advance index for low priority processing. */
 		idxsavel = adv_index(idxsavel, RPMDATABUFFSIZE);
+		idxsavel += 1; if (idxsavel >= RPMDATABUFFSIZE) idxsavel = 0;
 	}
 
 	/* Setup histogram CAN msgs.  Msg #1 once, then next time Msg #2 'HISTO' times each pass until complete. */

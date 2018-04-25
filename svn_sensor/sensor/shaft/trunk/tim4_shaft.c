@@ -15,7 +15,7 @@
 
 #include "common.h"
 //#include "../../../../svn_common/trunk/common_can.h"
-#include "IRQ_priority_se1.h"
+#include "IRQ_priority_shaft.h"
 #include "pinconfig_all.h"
 #include "adcsensor_foto_h.h"
 #include "canwinch_pod_common_systick2048.h"
@@ -23,9 +23,12 @@
 #include "libmiscstm32/DTW_counter.h"
 #include "shaft_function.h"
 
+/* Flag signals adc storing count and time for rpm computation */
+uint32_t subinterval_ct_flag; // not zero = subinterval triggered
+
 /* Static routines buried in this mess. */
 static void tim4_init(void);
-static void rpmsensor_computerpm(struct ENG_RPM_FUNCTION* p);
+static void rpmsensor_computerpm(struct SHAFT_FUNCTION* p);
 
 /* Low level trigger for doing computation */
 void 	(*tim4ocLOpriority_ptr)(void) = 0;	// CH3 OC -> EXTI0 (low priority)
@@ -94,7 +97,7 @@ void tim4_shaft_init(void)
 	double dclk1_freq = pclk1_freq;
 	
 	/* factor to yield rpm */
-	shaft_f.dk1 = (2 * 60 * dclk1_freq)/erpm_f.lc.seg_ct;
+	shaft_f.dk1 = (2 * 60 * dclk1_freq)/shaft_f.lc.num_seg;
 
 	/* Input capture and 64/sec timing */
 	tim4_init();	// Initialize TIM4_CH4
@@ -263,8 +266,8 @@ void TIM4_IRQHandler(void)
 			usTim4ch4_Flag += 1;			// Advance the flag counter to signal mailine IC occurred
 			strTim4m = strTim4;			// Update buffered value		
 
-			erpm_f.ct += 1;	// Running count of input captures
-			erpm_f.endtime = strTim4m.ui[0];	// Get 32b input capture time
+			shaft_f.ct += 1;	// Running count of input captures
+			shaft_f.endtime = strTim4m.ui[0];	// Get 32b input capture time
 
 //			temp = TIM4_SR;				// Readback register bit to be sure is cleared
 			break;
@@ -289,8 +292,8 @@ void TIM4_IRQHandler(void)
 
 			strTim4cnt.ll	+= 0x10000;		// Increment the high order 48 bits of the timer counter
 
-			erpm_f.ct += 1; // Running count of input captures
-			erpm_f.endtime = strTim4m.ui[0]; // Save 32b input capture time
+			shaft_f.ct += 1; // Running count of input captures
+			shaft_f.endtime = strTim4m.ui[0]; // Save 32b input capture time
 
 //			temp = TIM4_SR; // Readback register bit to be sure is cleared
 			break;
@@ -317,8 +320,8 @@ void TIM4_IRQHandler(void)
 			if (subinterval_ct >= NUMSUBINTERVALS) // End of sub-interval?
 			{ // Here, yes.  1/64th sec interval ends
 				subinterval_ct = 0;		// Reset subinterval counter
-				erpm_f.ct_buf = erpm_f.ct;	// Save IC count for later computation
-				erpm_f.endtime_buf = erpm_f.endtime; // Save IC time for later
+				shaft_f.ct_buf = shaft_f.ct;	// Save IC count for later computation
+				shaft_f.endtime_buf = shaft_f.endtime; // Save IC time for later
 tim4_dbug1 = DTWTIME; // Check time for low level handling
 			}
 			NVICISPR(NVIC_EXTI0_IRQ);	// Set pending (low priority) interrupt 
@@ -347,7 +350,7 @@ void rpmsensor_reset_timer(void)
 /* Enter this is from low priority interrupt triggered by TIM4, about 2 ms before 
    next expected poll msg.  These are nominally 64 per sec and sync'ed to the poll
    msg so that there computations are ready slightly before the poll msg. */
-static void rpmsensor_computerpm(struct ENG_RPM_FUNCTION* p)
+static void rpmsensor_compute_rpm(struct SHAFT_FUNCTION* p)
 {
 	double dnic;
 	double dtim;
@@ -396,14 +399,14 @@ void EXTI0_IRQHANDLER(void)
 {
 	if (subinterval_ct == 0) // Time to trigger (lower level) computation?
 	{ // Here, yes
-		rpmsensor_computerpm(&erpm_f);	// Do the rpm computation
+		rpmsensor_compute_rpm(&shaft_f);	// Do the rpm computation
 	}
 
 debugrpmsensorch3ctr += 1;
 
 	/* Filter and prepare readings for ADC readings (manifold, throttle, thermistor) */
 	// Do this each subinterval "tick"
-	adcsensor_reading(subinterval_ct);
+//???	adcsensor_reading(subinterval_ct);
 	
 	// Set this to filter ADC readings
 	if (tim4ocLOpriority_ptr != 0)	// Skip? Having no address for the following is bad.

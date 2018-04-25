@@ -55,8 +55,17 @@ struct SHAFT_FUNCTION
 	struct SHAFTLC lc;		// Local sram copy of database parameters
 	double dlast1;			// Filtered reading converted to double
 	double dcalibrated;	// 
-	double dk1;				// Scale factor
-
+ // Following lifted from ../sensor/se1/engine_function.h, struct ENG_RPM_FUNCTION
+	uint32_t endtime; 	     // Tim4_gettime_ui() current 32b time tick count (time)
+	uint32_t endtime_buf;     // Saved/buffered 'endtime' at 1/64th tick
+	uint32_t endtime_prev_buf;// Previous endtime_buf
+	uint32_t ct;              // Running count of input captures
+	uint32_t ct_buf;          // 'ct' saved/buffered at /64th tick
+	uint32_t ct_prev_buf;     // Previous ic
+	double   dk1;             // Scale factor (compute at init)
+	int32_t  nrpm;            // rpm (signed int)
+	double   drpm;            // rpm (double)
+	double   frpm;            // rpm (float)
 	
 /* These were originally in the.c file */
 long	speed_filteredA2;	// Most recent computed & filtered rpm

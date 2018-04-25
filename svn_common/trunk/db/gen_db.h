@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2018-04-22 12:47:56.532
+// 2018-04-24 13:02:54.872
 
 #define CANID_COUNT 213
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -302,7 +302,7 @@
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
 
-#define PARAM_LIST_COUNT 291	// TOTAL COUNT OF PARAMETER LIST
+#define PARAM_LIST_COUNT 292	// TOTAL COUNT OF PARAMETER LIST
 
 #define  ENCODER_LIST_CRC        	1         // Encoder_f4_1: crc: CRC for tension list         
 #define  ENCODER_LIST_VERSION    	2         // Encoder_f4_1: version: Version number for Tension List
@@ -344,16 +344,17 @@
 #define  SHAFT_CID_HB_SPEED      	9         // Shaft: CANID: Shaft speed, calibrated, heartbeat
 #define  SHAFT_CID_MSG_CT        	10        // Shaft: CANID: Shaft running count, response to poll
 #define  SHAFT_CID_HB_CT         	11        // Shaft: CANID: Shaft running count, heartbeat    
+#define  SHAFT_NUMBER_SEG        	12        // Shaft: Number of segments on code wheel         
 #define  SHAFT_CANID_HW_FILT1    	12        // Shaft: CANID 1 added to CAN hw filter to allow incoming msg
-#define  SHAFT_CANID_HW_FILT2    	13        // Shaft: CANID 2 added to CAN hw filter to allow incoming msg
-#define  SHAFT_CANID_HW_FILT3    	14        // Shaft: CANID 3 added to CAN hw filter to allow incoming msg
-#define  SHAFT_CANID_HW_FILT4    	15        // Shaft: CANID 4 added to CAN hw filter to allow incoming msg
-#define  SHAFT_CANID_HW_FILT5    	16        // Shaft: CANID 5 added to CAN hw filter to allow incoming msg
-#define  SHAFT_CANID_HW_FILT6    	17        // Shaft: CANID 6 added to CAN hw filter to allow incoming msg
-#define  SHAFT_CANID_HW_FILT7    	18        // Shaft: CANID 7 added to CAN hw filter to allow incoming msg
-#define  SHAFT_CANID_HW_FILT8    	19        // Shaft: CANID 8 added to CAN hw filter to allow incoming msg
+#define  SHAFT_CANID_HW_FILT2    	14        // Shaft: CANID 2 added to CAN hw filter to allow incoming msg
+#define  SHAFT_CANID_HW_FILT3    	15        // Shaft: CANID 3 added to CAN hw filter to allow incoming msg
+#define  SHAFT_CANID_HW_FILT4    	16        // Shaft: CANID 4 added to CAN hw filter to allow incoming msg
+#define  SHAFT_CANID_HW_FILT5    	17        // Shaft: CANID 5 added to CAN hw filter to allow incoming msg
+#define  SHAFT_CANID_HW_FILT6    	18        // Shaft: CANID 6 added to CAN hw filter to allow incoming msg
+#define  SHAFT_CANID_HW_FILT7    	19        // Shaft: CANID 7 added to CAN hw filter to allow incoming msg
+#define  SHAFT_CANID_HW_FILT8    	20        // Shaft: CANID 8 added to CAN hw filter to allow incoming msg
 
-#define PARAM_LIST_CT_DRIVE_SHAFT	19	// Count of same FUNCTION_TYPE in preceding list
+#define PARAM_LIST_CT_DRIVE_SHAFT	20	// Count of same FUNCTION_TYPE in preceding list
 
 #define  TENSION_a_LIST_CRC      	1         // Tension_a: crc: CRC for tension list            
 #define  TENSION_a_LIST_VERSION  	2         // Tension_a: version: Version number for Tension List
@@ -738,6 +739,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 676  */
+/* TOTAL COUNT OF #defines = 677  */
 /* Test 2016/06/12 */
 

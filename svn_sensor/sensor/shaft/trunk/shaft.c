@@ -50,6 +50,7 @@ Open minicom on the PC with 115200 baud and 8N1.
 
 #include "fmtprint.h"
 #include "can_filter_print.h"
+#include "CAN_filter_list_printf.h"
 
 /* Easy way for other routines to access via 'extern'*/
 struct CAN_CTLBLOCK* pctl1;

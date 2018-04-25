@@ -51,6 +51,7 @@ extern void (*tim4_shaft_can_msg_reset_ptr)(void* pctl, struct CAN_POOLBLOCK* pb
 /* Timing counter */
 extern uint32_t tim4_tim_ticks; // Running count of time ticks
 extern uint32_t tim4_tim_rate;  // Number of ticks per sec (64E6/32E3)
+extern uint32_t subinterval_ct_flag; // not zero = subinterval triggered
 
 #endif 
 

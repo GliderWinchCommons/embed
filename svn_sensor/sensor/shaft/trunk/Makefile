@@ -58,6 +58,7 @@ LOTHER = $(ARM_PREFIX_OTHER)
 CFLAGS	 = -std=gnu99 -g -Os -Wall -Wextra
 CFLAGS	+= -mlittle-endian -mthumb -mthumb-interwork -nostartfiles
 CFLAGS	+= -fno-common -mcpu=cortex-m3 -Wstrict-prototypes 
+#-fno-builtin-putc
 override FLOAT_TYPE = soft
 CFLAGS   += -msoft-float
 

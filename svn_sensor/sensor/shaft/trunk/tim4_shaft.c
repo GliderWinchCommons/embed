@@ -28,7 +28,6 @@ uint32_t subinterval_ct_flag; // not zero = subinterval triggered
 
 /* Static routines buried in this mess. */
 static void tim4_init(void);
-static void rpmsensor_computerpm(struct SHAFT_FUNCTION* p);
 
 /* Low level trigger for doing computation */
 void 	(*tim4ocLOpriority_ptr)(void) = 0;	// CH3 OC -> EXTI0 (low priority)

@@ -24,7 +24,6 @@ Open minicom on the PC with 115200 baud and 8N1.
 #include "libopenstm32/gpio.h"
 #include "libopenstm32/usart.h"
 #include "libusartstm32/usartallproto.h"
-#include "libmiscstm32/printf.h"
 #include "libmiscstm32/clockspecifysetup.h"
 #include "scb.h"
 
@@ -51,39 +50,11 @@ Open minicom on the PC with 115200 baud and 8N1.
 #include "fmtprint.h"
 #include "can_filter_print.h"
 #include "CAN_filter_list_printf.h"
+#include "tim4_shaft.h"
 
 /* Easy way for other routines to access via 'extern'*/
 struct CAN_CTLBLOCK* pctl1;
 struct CAN_CTLBLOCK* pctl0;	// Some routines use 0 for CAN1 others use 1 (sigh)
-
-
-/* Make block that can be accessed via the "jump" vector (e.g. 0x08004004) that points
-   to 'unique_can_block', which then starts Reset_Handler in the normal way.  The loader
-   program knows the vector address so it can then get the address of 'unique_can_block'
-   and get the crc, size, and data area via a fixed offset from the 'unique_can_block'
-   address. 
-
-   The .ld file assures that the 'unique_can_block' function is is followed by the data
-   by using the sections.  */
-#include "startup_deh.h"
-__attribute__ ((section(".ctbltext")))
-void unique_can_block(void)
-{
-	Reset_Handler();
-	while(1==1);
-}
-
-/* The order of the following is important. */
-extern const struct FLASHP_SE4 __highflashp;
-__attribute__ ((section(".ctbldata")))
-const unsigned int flashp_size = sizeof (struct FLASHP_SE4);
-__attribute__ ((section(".ctbldata1")))
-const struct FLASHP_SE4* flashp_se3 = (struct FLASHP_SE4*)&__highflashp;
-
-/* Parameters for setting up CAN */
-
-// Default: based on 72 MHz clock|36 MHz AHB freqs--500,000 bps, normal, port B
-//const struct CAN_PARAMS can_params = CAN_PARAMS_DEFAULT;	// See 'canwinch_pod.h'
 
 /* Specify msg buffer and max useage for TX, RX0, and RX1. */
 const struct CAN_INIT msginit = { \
@@ -93,8 +64,6 @@ const struct CAN_INIT msginit = { \
 8	/* RX1 can use this piddling amount. */\
 };
 
-/* Easy way for other routines to access via 'extern'*/
-struct CAN_CTLBLOCK* pctl1;
 /*******************************************************************************
  * void can_nxp_setRS_sys(int rs, int board);
  * @brief 	: Set RS input to NXP CAN driver (TJA1051) (on some PODs) (SYSTICK version)
@@ -185,7 +154,6 @@ extern void relocate_vector(void);
 /* ---------------------- Set up 32b DTW system counter ------------------------------------------- */
 	DTW_counter_init();
 setbuf(stdout, NULL);
-
 /* --------------------- Initialize usart --------------------------------------------------------- */
 /*	USARTx_rxinttxint_init(...,...,...,...);
 	Receive:  rxint	rx into line buffers
@@ -203,7 +171,7 @@ setbuf(stdout, NULL);
 	if (j != 0) panic_leds(7);	// Init failed: Bomb-out flashing LEDs 7 times
 
 	/* Announce who we are */
-	USART1_txint_puts("\n\r#### SHAFT #### 04/22/2018 (../svn_sensor/sensor/shaft/trunk) \n\r");
+	USART1_txint_puts("\n\r#### SHAFT #### 04/25/2018 (../svn_sensor/sensor/shaft/trunk) \n\r");
 	USART1_txint_send();	// Start the line buffer sending
 
 	printf ("  hclk_freq (MHz) : %9u\n\r",  hclk_freq/1000000);
@@ -312,11 +280,8 @@ setbuf(stdout, NULL);
 
 /* --------------------- Program is ready, so do program-specific startup ---------------------------- */
 //printf("tim4_tim_rate: %d\n\r",tim4_tim_rate);
-//printf("eman_f.lc.hbct: %d\teman_f.cf.hb_tdur: %d\n\r",eman_f.lc.hbct,eman_f.cf.hb_tdur);
+
 i = 0;
-extern s32 CAN_dev;
-extern s32 CAN_ave;
-extern s32 CAN_dif;
 
 #ifdef THIS_MAY_BE_NEEDED_LATER
 extern u32 adc2histo[2][ADCHISTOSIZE];
@@ -327,76 +292,21 @@ extern union ADC12VAL adc12valbuff[2][ADCVALBUFFSIZE];
 extern unsigned short adc3valbuff[2][ADCVALBUFFSIZE];
 #endif
 
-//int k = 0;
-
-struct CANRCVBUF* pcan;
-u32 z = 0;
-u32 q = 0;
-
 /* Green LED flashing */
-static u32 stk_64flgctr_prev;
-
+#define LEDPRINTFRINC 2000	// One per sec
+uint32_t tim4_tim_ticks_next = tim4_tim_ticks + LEDPRINTFRINC;
 extern void testfoto(void);
-//testfoto();
 
-int xct = 0;
-unsigned int ctr = 0;
 //canwinch_pod_common_systick2048_printerr_header();
 /* --------------------- Endless Stuff ----------------------------------------------- */
 	while (1==1)
 	{
-		/* Check for a 1/2048th sec tick ('canwinch_pod_common_systick2048.c') */
-		if (stk_64flgctr != stk_64flgctr_prev)
+		/* Green LED OK flasher */
+		if ((int)(tim4_tim_ticks - tim4_tim_ticks_next) >= 0)
 		{
-			stk_64flgctr_prev = stk_64flgctr;
+			tim4_tim_ticks_next += LEDPRINTFRINC;
+			TOGGLE_GREEN;	// Slow flash of green means "OK"
 
-			/* Flash green LED in sync with time--ON/OFF each 1 sec */
-			if ((stk_64flgctr & 0x7ff) == 0) 
-			{
-				TOGGLE_GREEN;
-//				canwinch_pod_common_systick2048_printerr(&pctl1->can_errors); // CAN error counts
-			}	// Slow flash of green means "OK"
-
-			/* Throttle CANascii to stay within bandwidth of CAN bus & PC<->gateway link. */			
-			if ((stk_64flgctr & 0x7ff) == 0) 
-			{
-				printf("A %3d %7d %7d %7d %7d %7d %3u%3u%3u%3u", xct++,CAN_ave, CAN_dif, CAN_dev, encoder_ctrA2, speed_filteredA2,\
-				adcsensor_foto_err[0],adcsensor_foto_err[1],adcsensor_foto_err[2],adcsensor_foto_err[3]); 
-
-//				printf ("HSTct: %5d %5d %5d %5d : ",adc2histoctr[k],adc3histoctr[k],adc12valbuff[0][47].us[1],adc3valbuff[0][1]);
-//				for (j = 40; j < 70; j++)
-//				{
-//					printf("%5d %5d | ",adc2histo[k][j]/512,adc3histo[k][j]/512);
-//				}
-				printf ("\n\r");USART1_txint_send(); 
-			}
-		}
-		/* Check incoming CAN msgs for readout commands and send response. */
-		pcan = can_driver_peek0(pctl1);	// Check for FIFO 0 msgs
-		if (pcan != NULL) 	// Check for PC CAN msg to readout histogram
-		{ // Here, we got something!
-			adc_histo_cansend(pcan);// Check for commands to readout histogram and other functions
-			z += 1;
-			switch (pcan->id & ~0x1)
-			{
-		/* NOTE: The following CAN IDs are hard coded and not .txt file derived. */
-			case 0xd1e00014: q = 0; break;
-			case 0xd1e00034: q = 0; break;
-			case 0xd1e00024:
-			case 0xd1e00044:
-				printf ("%u %u\n\r",z,q++);USART1_txint_send(); 
-				break;
-			case 0xFFFF0004: // Test CAN ID sent by cangate:s
-				printf ("%u %d\n\r",pcan->cd.ui[0],(int)(pcan->cd.ui[0] - ctr) );USART1_txint_send(); 
-				ctr += 1;
-				break;
-			}
-			can_driver_toss0(pctl1);	// Release buffer block
-		}
-		pcan = can_driver_peek1(pctl1);	// Check for FIFO 0 msgs
-		if (pcan != NULL) 	// Check for PC CAN msg to readout histogram
-		{ // Here, we got something!
-			can_driver_toss1(pctl1);	// Release buffer block
 		}
 	}
 	return 0;	

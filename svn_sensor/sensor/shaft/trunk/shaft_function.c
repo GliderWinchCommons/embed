@@ -185,7 +185,7 @@ int shaft_functions_init_all(void)
 	// Convert to parameters to double since computations done in doubles
 
 	// CAN msgs preloaded with id and dlc in 'void compute_init(struct SHAFT_FUNCTION* p)'
-	 adc_cic2_init(&shaft_f.cf.cic2);	// Init second cic filtering constants
+//$	 adc_cic2_init(&shaft_f.cf.cic2);	// Init second cic filtering constants
 
 
 	return ret;

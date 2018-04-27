@@ -1,4 +1,4 @@
-// 2018-04-24 13:02:56.169
+// 2018-04-26 17:40:20.859
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -17,7 +17,7 @@
 #define LOGGER_1_PARAM_SIZE 4
 #define LOGGER_2_PARAM_SIZE 4
 #define MCL_PARAM_SIZE 22
-#define SHAFT1_PARAM_SIZE 19
+#define SHAFT1_PARAM_SIZE 20
 #define SHEAVE_1LO_PARAM_SIZE 17
 #define SHEAVE_1UP_PARAM_SIZE 17
 #define TENSION_a11_PARAM_SIZE 51
@@ -288,14 +288,15 @@ const uint32_t paramval13[] = {
  0xE2800000 , /*   9 CANID_HB_SHAFT1_SPEED  17  Shaft1: CANID: Shaft speed, calibrated, heartbeat                               */
  0x82E00000 , /*  10 CANID_MSG_SHAFT1_COUNT  17  Shaft1: CANID: Shaft running counT, response to poll                            */
  0xE2A00000 , /*  11 CANID_HB_SHAFT1_COUNT  17  Shaft1: CANID: Shaft running count, heartbeat                                   */
- 0x00400000 , /*  12 CANID_HB_TIMESYNC   17  Shaft1: CANID 1: GPS time sync distribution msg                                 */
- 0x20000000 , /*  13 CANID_MSG_TIME_POLL  17  Shaft1: CANID 2:Time msg/Group polling                                          */
- 0xA0600000 , /*  14 CANID_CMD_SHAFT1I   17  Shaft1: CANID 3: command                                                        */
- 0xFFFFFFFC , /*  15 CANID_DUMMY         17  Shaft1: CANID 4 added to CAN hw filter to allow incoming msg                    */
- 0xFFFFFFFC , /*  16 CANID_DUMMY         17  Shaft1: CANID 5 added to CAN hw filter to allow incoming msg                    */
- 0xFFFFFFFC , /*  17 CANID_DUMMY         17  Shaft1: CANID 6 added to CAN hw filter to allow incoming msg                    */
- 0xFFFFFFFC , /*  18 CANID_DUMMY         17  Shaft1: CANID 7 added to CAN hw filter to allow incoming msg                    */
- 0xFFFFFFFC , /*  19 CANID_DUMMY         17  Shaft1: CANID 8 added to CAN hw filter to allow incoming msg                    */
+ 0x0000000A , /*  12 10                   6  Shaft1: Number of segments on code wheel                                        */
+ 0x00400000 , /*  13 CANID_HB_TIMESYNC   17  Shaft1: CANID 1: GPS time sync distribution msg                                 */
+ 0x20000000 , /*  14 CANID_MSG_TIME_POLL  17  Shaft1: CANID 2:Time msg/Group polling                                          */
+ 0xA0600000 , /*  15 CANID_CMD_SHAFT1I   17  Shaft1: CANID 3: command                                                        */
+ 0xFFFFFFFC , /*  16 CANID_DUMMY         17  Shaft1: CANID 4 added to CAN hw filter to allow incoming msg                    */
+ 0xFFFFFFFC , /*  17 CANID_DUMMY         17  Shaft1: CANID 5 added to CAN hw filter to allow incoming msg                    */
+ 0xFFFFFFFC , /*  18 CANID_DUMMY         17  Shaft1: CANID 6 added to CAN hw filter to allow incoming msg                    */
+ 0xFFFFFFFC , /*  19 CANID_DUMMY         17  Shaft1: CANID 7 added to CAN hw filter to allow incoming msg                    */
+ 0xFFFFFFFC , /*  20 CANID_DUMMY         17  Shaft1: CANID 8 added to CAN hw filter to allow incoming msg                    */
 };
 #endif
 

@@ -212,7 +212,7 @@ INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CID_MSG_SPEED'  ,'CANID_MSG_SHAFT1_
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CID_HB_SPEED'   ,'CANID_HB_SHAFT1_SPEED' ,'DRIVE_SHAFT','Shaft1: CANID: Shaft speed, calibrated, heartbeat');
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CID_MSG_CT'     ,'CANID_MSG_SHAFT1_COUNT','DRIVE_SHAFT','Shaft1: CANID: Shaft running counT, response to poll');
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CID_HB_CT '     ,'CANID_HB_SHAFT1_COUNT' ,'DRIVE_SHAFT','Shaft1: CANID: Shaft running count, heartbeat');
-INSERT INTO PARAM_VAL VALUES('SHAFT1'.'SHAFT_NUMBER_SEG'     .'10',    'DRIVE_SHAFT','Shaft1: Number of segments on code wheel');
+INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_NUMBER_SEG'     ,'10',    'DRIVE_SHAFT','Shaft1: Number of segments on code wheel');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CANID_HW_FILT1' ,'CANID_HB_TIMESYNC'  ,'DRIVE_SHAFT','Shaft1: CANID 1: GPS time sync distribution msg');
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CANID_HW_FILT2' ,'CANID_MSG_TIME_POLL','DRIVE_SHAFT','Shaft1: CANID 2:Time msg/Group polling');

@@ -95,14 +95,14 @@ p->cid_hb_speed    = ptbl[SHAFT_CID_HB_SPEED];     /*  9 Shaft: CANID: Shaft spe
 p->cid_msg_ct      = ptbl[SHAFT_CID_MSG_CT];       /* 10 Shaft: CANID: Shaft running count, response to poll */
 p->cid_hb_ct       = ptbl[SHAFT_CID_HB_CT];        /* 11 Shaft: CANID: Shaft running count, heartbeat */
 p->num_seg         = ptbl[SHAFT_NUMBER_SEG];       /* 12,Shaft: Number of segments on code wheel'); */
-p->code_CAN_filt[0] = ptbl[SHAFT_CANID_HW_FILT1];	/* 44 Shaft: CAN ID 1 for setting up CAN hardware filter */
-p->code_CAN_filt[1] = ptbl[SHAFT_CANID_HW_FILT2];	/* 45 Shaft: CAN ID 2 for setting up CAN hardware filter */
-p->code_CAN_filt[2] = ptbl[SHAFT_CANID_HW_FILT3];	/* 46 Shaft: CAN ID 3 for setting up CAN hardware filter */
-p->code_CAN_filt[3] = ptbl[SHAFT_CANID_HW_FILT4];	/* 47 Shaft: CAN ID 4 for setting up CAN hardware filter */
-p->code_CAN_filt[4] = ptbl[SHAFT_CANID_HW_FILT5];	/* 48 Shaft: CAN ID 5 for setting up CAN hardware filter */
-p->code_CAN_filt[5] = ptbl[SHAFT_CANID_HW_FILT6];	/* 49 Shaft: CAN ID 6 for setting up CAN hardware filter */
-p->code_CAN_filt[6] = ptbl[SHAFT_CANID_HW_FILT7];	/* 50 Shaft: CAN ID 7 for setting up CAN hardware filter */
-p->code_CAN_filt[7] = ptbl[SHAFT_CANID_HW_FILT8];	/* 51 Shaft: CAN ID 8 for setting up CAN hardware filter */
+p->code_CAN_filt[0] = ptbl[SHAFT_CANID_HW_FILT1];	/* 13 Shaft: CAN ID 1 for setting up CAN hardware filter */
+p->code_CAN_filt[1] = ptbl[SHAFT_CANID_HW_FILT2];	/* 14 Shaft: CAN ID 2 for setting up CAN hardware filter */
+p->code_CAN_filt[2] = ptbl[SHAFT_CANID_HW_FILT3];	/* 15 Shaft: CAN ID 3 for setting up CAN hardware filter */
+p->code_CAN_filt[3] = ptbl[SHAFT_CANID_HW_FILT4];	/* 16 Shaft: CAN ID 4 for setting up CAN hardware filter */
+p->code_CAN_filt[4] = ptbl[SHAFT_CANID_HW_FILT5];	/* 17 Shaft: CAN ID 5 for setting up CAN hardware filter */
+p->code_CAN_filt[5] = ptbl[SHAFT_CANID_HW_FILT6];	/* 18 Shaft: CAN ID 6 for setting up CAN hardware filter */
+p->code_CAN_filt[6] = ptbl[SHAFT_CANID_HW_FILT7];	/* 19 Shaft: CAN ID 7 for setting up CAN hardware filter */
+p->code_CAN_filt[7] = ptbl[SHAFT_CANID_HW_FILT8];	/* 20 Shaft: CAN ID 8 for setting up CAN hardware filter */
 
 
 return PARAM_LIST_CT_DRIVE_SHAFT;

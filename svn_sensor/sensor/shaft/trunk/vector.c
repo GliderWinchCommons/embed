@@ -58,7 +58,7 @@ void WEAK tamper_isr(void);
 void WEAK p1_RTC_IRQHandler(void);	    // rtc_isr(void);
 void WEAK flash_isr(void);
 void WEAK rcc_isr(void);
-void WEAK exti0_isr(void);
+void WEAK EXTI0_IRQHANDLER(void);	// exti0_isr(void);
 void WEAK exti1_isr(void);
 void WEAK exti2_isr(void);
 void WEAK exti3_isr(void);
@@ -70,10 +70,10 @@ void WEAK DMA1CH4_IRQHandler(void); 	// dma1_channel4_isr(void);
 void WEAK DMA1CH5_IRQHandler(void); 	// dma1_channel5_isr(void);
 void WEAK dma1_channel6_isr(void);
 void WEAK DMA1CH7_IRQHandler(void); 	// dma1_channel7_isr(void);
-void WEAK ADC1_2_IRQHandler2(void);	// adc1_2_isr(void);
-void WEAK USB_HP_CAN_TX_IRQHandler(void);
-void WEAK USB_LP_CAN_RX0_IRQHandler(void);
-void WEAK CAN_RX1_Handler(void);
+void WEAK ADC1_2_IRQHandler(void);	// adc1_2_isr(void);
+//void WEAK CAN1_TX_IRQHandler(void);
+//void WEAK CAN1_RX0_IRQHandler(void);
+//void WEAK CAN1_RX1_IRQHandler(void);
 void WEAK CAN_SCE_Handler(void);
 void WEAK exti9_5_isr(void);
 void WEAK p1_TIM1_BRK_IRQHandler(void);	// tim1_brk_isr(void);
@@ -101,7 +101,7 @@ void WEAK tim8_trg_com_isr(void);
 void WEAK tim8_cc_isr(void);
 void WEAK ADC3_IRQHandler(void);	// adc3_isr(void);
 void WEAK FSMC_IRQHandler(void);	// fsmc_isr(void);
-void WEAK SDIO_IRQHandler(void);		// sdio_isr(void);
+void WEAK sdio_isr(void);
 void WEAK TIM5_IRQHandler(void);
 void WEAK spi3_isr(void);
 void WEAK UART4_IRQHandler(void);	// usart4_isr(void);
@@ -111,7 +111,7 @@ void WEAK TIM7_IRQHandler(void);	// tim7_isr(void);
 void WEAK dma2_channel1_isr(void);
 void WEAK dma2_channel2_isr(void);
 void WEAK DMA2CH3_IRQHandler(void);
-void WEAK DMA2CH4_5_IRQHandler(void);	// dma2_channel4_5_isr(void);
+void WEAK DMA2CH4_IRQHandler(void);	// dma2_channel4_5_isr(void);
 
 __attribute__ ((section(".vectors")))
 void (*const vector_table[]) (void) = {
@@ -136,7 +136,7 @@ void (*const vector_table[]) (void) = {
 	p1_RTC_IRQHandler,		//rtc_isr,
 	flash_isr,
 	rcc_isr,
-	exti0_isr,
+	EXTI0_IRQHANDLER,	// exti0_isr,
 	exti1_isr,
 	exti2_isr,
 	exti3_isr,
@@ -148,7 +148,7 @@ void (*const vector_table[]) (void) = {
 	DMA1CH5_IRQHandler,	//dma1_channel5_isr,
 	dma1_channel6_isr,
 	DMA1CH7_IRQHandler,	//dma1_channel7_isr
-	ADC1_2_IRQHandler2,	//adc1_2_isr,
+	ADC1_2_IRQHandler,	//adc1_2_isr,
 	CAN1_TX_IRQHandler,	//USB_HP_CAN_TX_IRQHandler, //usb_hp_can_tx_isr,
 	CAN1_RX0_IRQHandler,	//USB_LP_CAN_RX0_IRQHandler,//usb_lp_can_rx0_isr,
 	CAN1_RX1_IRQHandler,	//CAN_RX1_Handler,	//can_rx1_isr,
@@ -179,7 +179,7 @@ void (*const vector_table[]) (void) = {
 	tim8_cc_isr,
 	ADC3_IRQHandler,	// adc3_isr,
 	FSMC_IRQHandler,	// fsmc_isr,
-	SDIO_IRQHandler,	// sdio_isr,
+	sdio_isr,
 	TIM5_IRQHandler,	// tim5_isr,
 	spi3_isr,
 	UART4_IRQHandler,	// usart4_isr,
@@ -189,7 +189,7 @@ void (*const vector_table[]) (void) = {
 	dma2_channel1_isr,
 	dma2_channel2_isr,
 	DMA2CH3_IRQHandler,	//dma2_channel3_isr
-	DMA2CH4_5_IRQHandler,	//dma2_channel4_5_isr,
+	DMA2CH4_IRQHandler,	//dma2_channel4_5_isr,
 };
 
 void hard_fault_handler(void)
@@ -250,7 +250,7 @@ void relocate_vector(void)
 #pragma weak rtc_isr = null_handler
 #pragma weak flash_isr = null_handler
 #pragma weak rcc_isr = null_handler
-#pragma weak exti0_isr = null_handler
+#pragma weak EXTI0_IRQHANDLER = null_handler
 #pragma weak exti1_isr = null_handler
 #pragma weak exti2_isr = null_handler
 #pragma weak exti3_isr = null_handler
@@ -262,10 +262,10 @@ void relocate_vector(void)
 #pragma weak dma1_channel5_isr = null_handler
 #pragma weak dma1_channel6_isr = null_handler
 #pragma weak DMA1CH7_IRQHandler = null_handler
-#pragma weak ADC1_2_IRQHandler2 = null_handler
-#pragma weak USB_HP_CAN_TX_IRQHandler = null_handler
-#pragma weak USB_LP_CAN_RX0_IRQHandler = null_handler
-#pragma weak CAN_RX1_Handler = null_handler
+#pragma weak ADC1_2_IRQHandler = null_handler
+//#pragma weak CAN1_TX_IRQHandler = null_handler
+//#pragma weak CAN1_RX0_IRQHandler = null_handler
+//#pragma weak CAN1_RX1_IRQHandler = null_handler
 #pragma weak CAN_SCE_Handler = null_handler
 #pragma weak exti9_5_isr = null_handler
 #pragma weak p1_TIM1_BRK_IRQHandler = null_handler
@@ -293,7 +293,7 @@ void relocate_vector(void)
 #pragma weak tim8_cc_isr = null_handler
 #pragma weak ADC3_IRQHandler = null_handler
 #pragma weak FSMC_IRQHandler = null_handler
-#pragma weak SDIO_IRQHandler = null_handler
+#pragma weak sdio_isr = null_handler
 #pragma weak TIM5_IRQHandler = null_handler
 #pragma weak spi3_isr = null_handler
 #pragma weak usart4_isr = null_handler
@@ -303,4 +303,4 @@ void relocate_vector(void)
 #pragma weak dma2_channel1_isr = null_handler
 #pragma weak dma2_channel2_isr = null_handler
 #pragma weak DMA2CH3_IRQHandler = null_handler
-#pragma weak DMA2CH4_5_IRQHandler = null_handler
+#pragma weak dma2_channel4_5_isr = null_handler

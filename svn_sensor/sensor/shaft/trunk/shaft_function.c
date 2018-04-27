@@ -154,7 +154,7 @@ static int function_init(uint32_t n, struct COMMONFUNCTION* p, uint32_t hbct )
  * @param	: p = pointer to things needed for this function
  * @return	: Same as above
  * ************************************************************************************** */
-int shaft_functions_init_all(void)
+int shaft_function_init_all(void)
 {
 /* NOTE: much of the following maps the 'lc' (local copy) of the parameters into elements
    of a struct common to all the winch functions (i.e. manifold, rpm, throttle, temperature 1)
@@ -169,22 +169,21 @@ int shaft_functions_init_all(void)
 
 	CAN_poll_loop_init();
 
-	/* Manifold function */
 	// Set pointer to table in highflash.  Base address provided by .ld file 
 	  shaft_f.cf.pparamflash = (uint32_t*)&__paramflash1;	/* Manifold pressure */
+
 	// Copy table entries to struct in sram from high flash.
 	  ret  = shaft_idx_v_struct_copy_shaft(&shaft_f.lc, shaft_f.cf.pparamflash);
+
 	// Add CAN IDs to incoming msgs passed by the CAN hardware filter. 
 	  ret2 = can_driver_filter_add_param_tbl(&shaft_f.lc.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);
 	if (ret2 != 0) return -996;	// Failed
+
 	// Remainder is common to all functions
 	  ret |= function_init(0,&shaft_f.cf, shaft_f.lc.hbct);
-//shaft_f.cf.hb_tdur = 1500;
+
 	if (ret < 0) return ret;
 
-	// Convert to parameters to double since computations done in doubles
-
-	// CAN msgs preloaded with id and dlc in 'void compute_init(struct SHAFT_FUNCTION* p)'
 //$	 adc_cic2_init(&shaft_f.cf.cic2);	// Init second cic filtering constants
 
 

@@ -74,7 +74,7 @@ INSERT INTO PARAM_LIST VALUES ('SHAFT_CID_MSG_CT'     ,10,'TYP_CANID','%x','DRIV
 INSERT INTO PARAM_LIST VALUES ('SHAFT_CID_HB_CT '     ,11,'TYP_CANID','%x','DRIVE_SHAFT','Shaft: CANID: Shaft running count, heartbeat');
 INSERT INTO PARAM_LIST VALUES ('SHAFT_NUMBER_SEG'     ,12,'TYP_U32','%d',  'DRIVE_SHAFT','Shaft: Number of segments on code wheel');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_LIST VALUES ('SHAFT_CANID_HW_FILT1' ,12,'TYP_CANID','%x','DRIVE_SHAFT','Shaft: CANID 1 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHAFT_CANID_HW_FILT1' ,13,'TYP_CANID','%x','DRIVE_SHAFT','Shaft: CANID 1 added to CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('SHAFT_CANID_HW_FILT2' ,14,'TYP_CANID','%x','DRIVE_SHAFT','Shaft: CANID 2 added to CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('SHAFT_CANID_HW_FILT3' ,15,'TYP_CANID','%x','DRIVE_SHAFT','Shaft: CANID 3 added to CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('SHAFT_CANID_HW_FILT4' ,16,'TYP_CANID','%x','DRIVE_SHAFT','Shaft: CANID 4 added to CAN hw filter to allow incoming msg');

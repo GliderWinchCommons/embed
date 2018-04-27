@@ -49,8 +49,10 @@ Open minicom on the PC with 115200 baud and 8N1.
 
 #include "fmtprint.h"
 #include "can_filter_print.h"
-#include "CAN_filter_list_printf.h"
+//#include "CAN_filter_list_printf.h"
 #include "tim4_shaft.h"
+#include "shaft_printf.h"
+#include "shaft_function.h"
 
 /* Easy way for other routines to access via 'extern'*/
 struct CAN_CTLBLOCK* pctl1;
@@ -141,6 +143,7 @@ And now for the main routine
 int main(void)
 {
 	int j;
+	int ret;
 
 /* $$$$$$$$$$$$ Relocate the interrupt vectors from the loader to this program $$$$$$$$$$$$$$$$$$$$ */
 extern void relocate_vector(void);
@@ -186,8 +189,8 @@ setbuf(stdout, NULL);
 	printf ("  CAN unit code: %08X\n\r",(int)pcanidtbl->unit_code);
 	printf ("  Size of table: %d\n\r",(int)pcanidtbl->size);
 	printf(" # func  CANID\n\r");
-	u32 ii;
-	u32 jj = pcanidtbl->size;
+	unsigned int ii;
+	unsigned int jj = pcanidtbl->size;
 	if (jj > 16) jj = 16;
 	for (ii = 0; ii < jj; ii++)
 	{
@@ -197,7 +200,6 @@ setbuf(stdout, NULL);
 /* --------------------- Get Loader CAN ID -------------------------------------------------------------- */
 	/* Pick up the unique CAN ID stored when the loader was flashed. */
 	struct FUNC_CANID* pfunc = (struct FUNC_CANID*)&__paramflash0a;
-//	u32 canid_ldr = *(u32*)((u32)((u8*)*(u32*)0x08000004 + 7 + 0));	// First table entry = can id
 	u32 canid_ldr = pfunc[0].func;
 	printf("CANID_LDR  : 0x%08X\n\r", (unsigned int)canid_ldr );
 	printf("TBL SIZE   : %d\n\r",(unsigned int)pfunc[0].canid);
@@ -225,44 +227,57 @@ setbuf(stdout, NULL);
 /* ------------------ misc --------------------------------------------------------------------------- */
 
 /* -------------------- Functions init --------------------------------------------------------------- */
+	ret = shaft_function_init_all();
+	if (ret < 0)
+	{
+		printf("FAIL: shaft_functions_init_all, return code %d\n\r",ret);USART1_txint_send(); 
+		while (1==1);
+	}
+	if ((int)shaft_f.lc.size != ret)
+	{
+		printf("### WARNING ### shaft_functions_init_all return size, %d,not equal Number of elements in list %d\n\r",ret,(int)shaft_f.lc.size);
+	}
+	printf("PASS: shaft_functions_init_all, return is size: %d\n\r",ret);USART1_txint_send(); 
 
+	shaft_printf(&shaft_f.lc);	// Print parameters in local copy
 /* ------------------ Set up hardware CAN filter ----------------------------------------------------- */
 	can_msg_reset_init(pctl0, pcanidtbl->unit_code);	// Specify CAN ID for this unit for msg caused RESET
-	printf("## pcanidtbl->unit_code: 0x%08X\n\r",pcanidtbl->unit_code);
+	printf("\n\r## pcanidtbl->unit_code: 0x%08X\n\r",(int)pcanidtbl->unit_code);
 
 	/* Go through table and load "command can id" into CAN hardware filter. */
 	//                     (CAN1, even, bank 2)
 	can_driver_filter_setbanknum(0, 0, 2);
 
-	int ret;
-	u32 id;
+	unsigned int id;
 	jj = pcanidtbl->size;
+	printf("pcanidtbl->size: %u\n\r",jj);USART1_txint_send(); 
 	if (jj > 16) jj = 16;	// Check for bogus size
 	for (ii = 0; ii < jj; ii++) 
 	{
 		id = pcanidtbl->slot[ii].canid;
 		//  Add one 32b CAN id (     CAN1, CAN ID, FIFO)
 		ret = can_driver_filter_add_one_32b_id(0,id,0);
+		printf(" %2u 0x%08X added to filter\n\r",ii,id);
 		if (ret < 0)
 		{
 			printf("FLASHH CAN id table load failed: %d\n\r",ret);USART1_txint_send(); 
 			while (1==1);
 		}
 	}
-	ret = CAN_filter_build_list_add(); // Add previously built filter tables to CAN hardware
-	if (ret <= 0)
-	{
-		printf("\n\r### ERROR: CAN_filter_build_list_add %d\n\r\n\r",ret);USART1_txint_send(); 
-	}
-	printf("CAN_filter_build_list_add: %d\n\r",(ret >> 8)); // Number should match list
+//	ret = CAN_filter_build_list_add(); // Add previously built filter tables to CAN hardware
+//	if (ret <= 0)
+//	{
+//		printf("\n\r### ERROR: CAN_filter_build_list_add 0x%X\n\r\n\r",ret);USART1_txint_send(); 
+//	}
+//	printf("CAN_filter_build_list_add: %d\n\r",(ret >> 8)); // Number should match list
 
-	CAN_filter_list_printf();	// List CAN hardware filter list for incoming msgs
+//	CAN_filter_list_printf();	// List CAN hardware filter list for incoming msgs
 
-	u32 filtnum = can_driver_hw_filter_list(1, -1, 0); // Get next available filter bank number
+	unsigned int filtnum = can_driver_hw_filter_list(1, -1, 0); // Get next available filter bank number
 	printf("CAN 1 hardware filter list\n\r");
-	printf("filtnum: %d  odd/even: %d\n\r",(filtnum >> 1),(filtnum & 0x1));
-	u32 i;
-	for (i = 0; i < (filtnum >> 1); i++) // List the hw filter registers
+	printf("filtnum: %u  odd/even: %d\n\r",(filtnum >> 1),(filtnum & 0x1));
+	int i;
+	for (i = 0; i < (int)(filtnum >> 1); i++) // List the hw filter registers
 	{
 		id = can_driver_hw_filter_list(0, i, 0);	printf("%2d 0x%08X ",i,id);
 		id = can_driver_hw_filter_list(0, i, 1);	printf("0x%08X\n\r",id);
@@ -271,7 +286,9 @@ setbuf(stdout, NULL);
 
 	USART1_txint_send(); 
 /* --------------------- ADC setup and initialization ------------------------------------------------ */
+	adc_init_sequence_foto_h(&shaft_f);
 
+	tim4_shaft_init();
 /* --------------------- Final CAN setup ------------------------------------------------------------- */
 	// Set addresses to chain tests of incoming canid 
 //	engine_can_msg_poll_init(); // Test for poll of winch function

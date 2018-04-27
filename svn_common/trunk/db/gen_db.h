@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2018-04-24 13:02:54.872
+// 2018-04-26 17:40:19.571
 
 #define CANID_COUNT 213
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -345,7 +345,7 @@
 #define  SHAFT_CID_MSG_CT        	10        // Shaft: CANID: Shaft running count, response to poll
 #define  SHAFT_CID_HB_CT         	11        // Shaft: CANID: Shaft running count, heartbeat    
 #define  SHAFT_NUMBER_SEG        	12        // Shaft: Number of segments on code wheel         
-#define  SHAFT_CANID_HW_FILT1    	12        // Shaft: CANID 1 added to CAN hw filter to allow incoming msg
+#define  SHAFT_CANID_HW_FILT1    	13        // Shaft: CANID 1 added to CAN hw filter to allow incoming msg
 #define  SHAFT_CANID_HW_FILT2    	14        // Shaft: CANID 2 added to CAN hw filter to allow incoming msg
 #define  SHAFT_CANID_HW_FILT3    	15        // Shaft: CANID 3 added to CAN hw filter to allow incoming msg
 #define  SHAFT_CANID_HW_FILT4    	16        // Shaft: CANID 4 added to CAN hw filter to allow incoming msg

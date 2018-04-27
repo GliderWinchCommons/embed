@@ -11,8 +11,10 @@
 /* ************************************************************************************** 
  * void CAN_filter_list_printf(void);
  * @brief	: Print the values
- * @param	: pten = pointer to struct with the values 
  * ************************************************************************************** */
+/* NOTE: the first filter bank has a mask and id, so the individual ids install
+   starting at filter bank 1.
+*/
 void CAN_filter_list_printf(void)
 {
 	uint32_t* pcan;

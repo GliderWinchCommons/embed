@@ -23,7 +23,11 @@ of the early version.
     to cic filter rpm, with cic input at a higher than 64 rate.  Works except for
     some glitch when the rpm hovers around the no encoder counts to one count within
     one 1/64th sec frame.
+
+04/27/2018: Revisons when updating se4_h->shaft programs to use database parameter
+    scheme.
 */
+
 /* 
 07/08/2013 This is a hack of svn_pod/sw_stm32/trunk/devices/adcsensor_pod.c
 See p214 of Ref Manual for ADC section 
@@ -122,6 +126,7 @@ NOTE: Some page number refer to the Ref Manual RM0008, rev 11 and some more rece
 #include "../../../../svn_common/trunk/can_gps_phasing.h"
 #include "adcsensor_foto_h.h"
 #include "tim4_shaft.h"
+#include "IRQ_priority_shaft.h"
 
 
 /* Pointer to control block for CAN1. */
@@ -200,10 +205,10 @@ extern unsigned int	pclk2_freq;	// APB2 bus frequency in Hz (see 'lib/libmiscstm
 extern unsigned int	sysclk_freq;	// SYSCLK freq in Hz (see 'lib/libmiscstm32/clockspecifysetup.c')
 
 /* High and low watchdog register threshold values */
-static unsigned short usHtr1 = ADC3_HTR_INITIAL;	// ADC1 High register initial value
-static unsigned short usLtr1 = ADC3_LTR_INITIAL;	// ADC1 Low  register initial valueit
-static unsigned short usHtr2 = ADC2_HTR_INITIAL;	// ADC2 High register initial value
-static unsigned short usLtr2 = ADC2_LTR_INITIAL;	// ADC2 Low  register initial value
+static unsigned short usHtr1;// = ADC3_HTR_INITIAL;	// ADC1 High register initial value
+static unsigned short usLtr1;// = ADC3_LTR_INITIAL;	// ADC1 Low  register initial valueit
+static unsigned short usHtr2;// = ADC2_HTR_INITIAL;	// ADC2 High register initial value
+static unsigned short usLtr2;// = ADC2_LTR_INITIAL;	// ADC2 Low  register initial value
 
 /* DMA circular buffered with 1/2 way interrupt double buffers ADC1,2 pairs. */
  //  [Double for DMA][pairs of 16b ADC readings with ADC1, ADC2]
@@ -356,10 +361,10 @@ static void adc_init_foto(void)
 //ucPrescalar = 3;	// Slow it down for debugging and test
 
 	/* Set APB2 bus divider for ADC clock */
-	RCC_CFGR |= ( (ucPrescalar & 0x3) << 14)	; // Set code for bus division (p 92)
+	RCC_CFGR |= ( (ucPrescalar & 0x3) << 14)	; // Set code for bus division
 
 	/* Enable bus clocking for ADC */
-	RCC_APB2ENR |= ( (RCC_APB2ENR_ADC1EN) | (RCC_APB2ENR_ADC2EN) | (RCC_APB2ENR_ADC3EN) );	// Enable ADC1, ADC2, ADC3 clocking (see p 104)
+	RCC_APB2ENR |= ( (RCC_APB2ENR_ADC1EN) | (RCC_APB2ENR_ADC2EN) | (RCC_APB2ENR_ADC3EN) );	// Enable ADC1, ADC2, ADC3 clocking
 	
 	/* Scan mode (p 236) 
 "This bit is set and cleared by software to enable/disable Scan mode. In Scan mode, the
@@ -375,8 +380,7 @@ inputs selected through the ADC_SQRx or ADC_JSQRx registers are converted."
 	ADC2_CR2  = ( ADC_CR2_CONT  | ADC_CR2_ADON              ); 
 	ADC3_CR2  = ( ADC_CR2_CONT  | ADC_CR2_ADON | ADC_CR2_DMA); 
 
-	/* 1 us Tstab time is required before writing a second 1 to ADON to start conversions 
-	(see p 98 of datasheet) */
+	/* 1 us Tstab time is required before writing a second 1 to ADON to start conversions */
 	timedelay(2 * ticksperus);	// Wait
 
 	// ---Modified for sensor---
@@ -386,15 +390,15 @@ inputs selected through the ADC_SQRx or ADC_JSQRx registers are converted."
 	ADC3_SMPR2 = ( (SMP1 << 0) );
 
 	/* Set high and low threshold registers for both ADCs with initial values */
-	ADC3_HTR = ADC3_HTR_INITIAL;
-	ADC3_LTR = ADC3_LTR_INITIAL;
-	ADC2_HTR = ADC2_HTR_INITIAL;
-	ADC2_LTR = ADC2_LTR_INITIAL;
+	ADC3_HTR = usHtr1; //ADC3_HTR_INITIAL;
+	ADC3_LTR = usLtr1; //ADC3_LTR_INITIAL;
+	ADC2_HTR = usHtr2; //ADC2_HTR_INITIAL;
+	ADC2_LTR = usLtr2; //ADC2_LTR_INITIAL;
 
-	/* Setup the number of channels scanned (zero = just one) (p 238) */
-	ADC3_SQR1 = ( ( (NUMBERADCCHANNELS_FOTO-1) << 20) );	// Chan count, sequences 16 - 13 (p 217, 238)
-	ADC2_SQR1 = ( ( (NUMBERADCCHANNELS_FOTO-1) << 20) );	// Chan count, sequences 16 - 13 (p 217, 238)
-	ADC1_SQR1 = ( ( (NUMBERADCCHANNELS_FOTO-1) << 20) );	// Chan count, sequences 16 - 13 (p 217, 238)
+	/* Setup the number of channels scanned (zero = just one) */
+	ADC3_SQR1 = ( ( (NUMBERADCCHANNELS_FOTO-1) << 20) );	// Chan count, sequences 16 - 13
+	ADC2_SQR1 = ( ( (NUMBERADCCHANNELS_FOTO-1) << 20) );	// Chan count, sequences 16 - 13
+	ADC1_SQR1 = ( ( (NUMBERADCCHANNELS_FOTO-1) << 20) );	// Chan count, sequences 16 - 13
 
 	/* This maps the ADC channel number to the position in the conversion sequence */
 	// Load channels IN11,IN10, for conversions sequences (p 240)
@@ -403,48 +407,56 @@ inputs selected through the ADC_SQRx or ADC_JSQRx registers are converted."
 	ADC1_SQR3 = ( (2 << 0) ); // Conversion sequence number dummy
 
 	/* Set and enable interrupt controller for ADCs. */
-	NVICIPR (NVIC_ADC1_2_IRQ,ADC1_2_PRIORITY_FOTO );// Set interrupt priority (p 227)
-	NVICISER(NVIC_ADC1_2_IRQ);			// Enable interrupt controller for ADC1|ADC2
+	NVICIPR (NVIC_ADC1_2_IRQ,ADC1_2_PRIORITY_FOTO );// Set interrupt priority
 
-	NVICIPR (NVIC_ADC3_IRQ,ADC1_2_PRIORITY_FOTO );	// Set interrupt priority (p 227) *SAME AS* ADC1|ADC2
-	NVICISER(NVIC_ADC3_IRQ);			// Enable interrupt controller for ADC3
+	NVICIPR (NVIC_ADC3_IRQ,ADC1_2_PRIORITY_FOTO );	// Set interrupt priority *SAME AS* ADC1|ADC2
 
 	/* Low level interrupt for doing adc filtering following DMA1 CH1 interrupt. */
 	NVICIPR (NVIC_FSMC_IRQ, ADC_FSMC_PRIORITY);	// Set low level interrupt priority for post DMA1 interrupt processing
-	NVICISER(NVIC_FSMC_IRQ);			// Enable low level interrupt
 
 	/* Low level interrupt for doing adc filtering following DMA2 CH5 interrupt. */
 	NVICIPR (NVIC_SDIO_IRQ, ADC_FSMC_PRIORITY);// Set low level interrupt priority for post DMA2 interrupt processing
-	NVICISER(NVIC_SDIO_IRQ);			// Enable low level interrupt
 
 	/* Setup DMA1 for storing data in the ADC_DR (with 32v ADC1|ADC2 pairs) */
-	RCC_AHBENR |= RCC_AHBENR_DMA1EN;		// Enable DMA1 clock (p 102)
-	DMA1_CNDTR1 = (2 * ADCVALBUFFSIZE);		// Number of data items before wrap-around
-	DMA1_CPAR1 = (u32)&ADC1_DR;			// DMA1 channel 1 peripheral address (adc1|2 data register) (p 211, 247)
-	DMA1_CMAR1 = (u32)&adc12valbuff[0][0];		// Memory address of first buffer array for storing data (p 211)
+	RCC_AHBENR |= RCC_AHBENR_DMA1EN;      // Enable DMA1 clock
+	DMA1_CNDTR1 = (2 * ADCVALBUFFSIZE);   // Number of data items before wrap-around
+	DMA1_CPAR1 = (u32)&ADC1_DR;           // DMA1 channel 1 peripheral address (adc1|2 data register)
+	DMA1_CMAR1 = (u32)&adc12valbuff[0][0];// Memory address of first buffer array for storing data
 
 	// Channel configurion reg (p 209)
 	//          priority high  | 32b mem xfrs | 32b adc xfrs | mem increment | circular mode | half xfr     | xfr complete   | dma chan 1 enable
 	DMA1_CCR1 =  ( 0x02 << 12) | (0x02 << 10) |  (0x02 << 8) | DMA_CCR1_MINC | DMA_CCR1_CIRC |DMA_CCR1_HTIE | DMA_CCR1_TCIE  | 0 ;
 
 	/* Set and enable interrupt controller for DMA transfer complete interrupt handling */
-	NVICIPR (NVIC_DMA1_CHANNEL1_IRQ, DMA1_CH1_PRIORITY );	// Set interrupt priority
-	NVICISER(NVIC_DMA1_CHANNEL1_IRQ);
+	NVICIPR (NVIC_DMA1_CHANNEL1_IRQ, DMA1_CH1_PRIORITY_SHAFT );	// Set interrupt priority
 
 	/* Setup DMA2 for storing data in the ADC_DR (with 16b ADC3) */
-	RCC_AHBENR |= RCC_AHBENR_DMA2EN;		// Enable DMA2 clock
-	DMA2_CNDTR5 = (2 * ADCVALBUFFSIZE);		// Number of data items before wrap-around
-	DMA2_CPAR5 = (u32)&ADC3_DR;			// DMA2 channel 5 peripheral address (adc3 data register) (p 211, 247)
-	DMA2_CMAR5 = (u32)&adc3valbuff[0][0];		// Memory address of first buffer array for storing data (p 211)
+	RCC_AHBENR |= RCC_AHBENR_DMA2EN;      // Enable DMA2 clock
+	DMA2_CNDTR5 = (2 * ADCVALBUFFSIZE);   // Number of data items before wrap-around
+	DMA2_CPAR5 = (u32)&ADC3_DR;           // DMA2 channel 5 peripheral address (adc3 data register)
+	DMA2_CMAR5 = (u32)&adc3valbuff[0][0]; // Memory address of first buffer array for storing data
 
 	// Channel configurion reg (p 209)
 	//          priority high  | 16b mem xfrs | 16b adc xfrs | mem increment | circular mode | half xfr     | xfr complete   | dma chan 1 enable
 	DMA2_CCR5 =  ( 0x02 << 12) | (0x01 << 10) |  (0x01 << 8) | DMA_CCR5_MINC | DMA_CCR5_CIRC |DMA_CCR5_HTIE | DMA_CCR5_TCIE  | 0 ;
 
 	/* Set and enable interrupt controller for DMA transfer complete interrupt handling */
-	NVICIPR (NVIC_DMA2_CHANNEL4_5_IRQ, DMA1_CH1_PRIORITY );	// Set interrupt priority *SAME AS* DMA1 for ADC1|ADC2
-	NVICISER(NVIC_DMA2_CHANNEL4_5_IRQ);
-
+	NVICIPR (NVIC_DMA2_CHANNEL4_5_IRQ, DMA1_CH1_PRIORITY_SHAFT );	// Set interrupt priority *SAME AS* DMA1 for ADC1|ADC2
+	
+	return;
+}
+/******************************************************************************
+ * void adcsensor_foto_h_enable_interrupts(void);
+ * @brief 	: do as the name says
+*******************************************************************************/
+void adcsensor_foto_h_enable_interrupts(void)
+{	
+	NVICISER(NVIC_ADC1_2_IRQ);			// Enable interrupt ADC1|ADC2 Watchdog
+	NVICISER(NVIC_ADC3_IRQ);			// Enable interrupt ADC3 Watchdog
+	NVICISER(NVIC_DMA1_CHANNEL1_IRQ);  // DMA ADC 3 store reading Photocell A
+	NVICISER(NVIC_DMA2_CHANNEL4_5_IRQ);// DMA ADC 1 & 2 store reading Photocell B
+	NVICISER(NVIC_FSMC_IRQ);			// Enable low level interrupt, build histogram
+	NVICISER(NVIC_SDIO_IRQ);			// Enable low level interrupt, build histogram
 	return;
 }
 /******************************************************************************
@@ -1102,7 +1114,6 @@ void 	(*dma2_ll_ptr)(void) = 0;		// DMA2CH5 -> SDIO_IRQHandler (low priority)
 void SDIO_IRQHandler(void)
 {
 	adc_histo_build_ADC3();	// Add buffer readings to histogram
-
 
 	/* Call other routines if an address is set up */
 	if (dma2_ll_ptr != 0)	// Having no address for the following is bad.

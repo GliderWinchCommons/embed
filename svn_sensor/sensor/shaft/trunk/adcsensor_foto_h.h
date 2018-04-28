@@ -88,6 +88,9 @@ void adc_histo_cansend(struct CANRCVBUF* p);
  * @param	: p = pointer to 'struct' with CAN msg
  * @return	: ? 
 *******************************************************************************/
+void adcsensor_foto_h_enable_interrupts(void);
+/* @brief 	: do as the name says
+*******************************************************************************/
 
 
 extern long speed_filteredA2;		// Most recent computed & filtered rpm

@@ -83,7 +83,7 @@ volatile union TIMCAPTURE64	strTim4m; // 64 bit extended TIM4 CH4 capture (main)
 volatile u32 usTim4ch4_Flag; // Incremented when a new capture interrupt serviced, TIM4_CH4
 
 /* Timing counter */
-uint32_t tim4_tim_ticks;  // Running count of time ticks
+volatile uint32_t tim4_tim_ticks;  // Running count of time ticks
 uint32_t tim4_tim_rate;   // Number of ticks per sec (64E6/16E3)
 #define TIM4TICKINC 32000 // Timer ct for 0.5 ms between interrupts
 
@@ -149,17 +149,24 @@ static void tim4_init(void)
 
 	/* Enable a lower priority interrupt for handling post-systick timing. */
 	NVICIPR (NVIC_EXTI0_IRQ, NVIC_EXTI0_IRQ_PRIORITY_SE1);	// Set interrupt priority
-	NVICISER(NVIC_EXTI0_IRQ);			// Enable interrupt controller 
 
 	/* Set and enable interrupt controller for TIM4 interrupt */
-	NVICIPR (NVIC_TIM4_IRQ, TIM4_PRIORITY_SE1 );	// Set interrupt priority
+	NVICIPR (NVIC_TIM4_IRQ, TIM4_PRIORITY_SHAFT);	// Set interrupt priority
+
+	return;
+}
+/* **************************************************************************************
+ * void tim4_shaft_enable_interrupts(void);
+ * @brief	: Enable interrupts for EXTI0
+ * ************************************************************************************** */
+void tim4_shaft_enable_interrupts(void)
+{
+	NVICISER(NVIC_EXTI0_IRQ);			// Enable interrupt controller 
 	NVICISER(NVIC_TIM4_IRQ);			// Enable interrupt controller for TIM4
-	
-	/* Enable input capture interrupts */
+
    // Enable CH2 and CH3 output compare, CH4 input capture, and counter overflow
 //IC	TIM4_DIER |= (TIM_DIER_CC2IE) | (TIM_DIER_CC3IE | TIM_DIER_CC4IE | TIM_DIER_UIE);	
-	TIM4_DIER |= (TIM_DIER_CC2IE) | (TIM_DIER_CC3IE);	
-
+	TIM4_DIER = (TIM_DIER_CC2IE) | (TIM_DIER_CC3IE);	
 	return;
 }
 /******************************************************************************

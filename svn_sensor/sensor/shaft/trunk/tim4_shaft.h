@@ -37,11 +37,14 @@ struct TIMCAPTRET32
 void tim4_shaft_init(void);
 /* @brief 	: Initialize TIM4 and routines to measure rpm
 *******************************************************************************/
+void tim4_shaft_enable_interrupts(void);
+/* @brief	: Enable interrupts for EXTI0
+ * ************************************************************************** */
 
-/* ########################## UNDER HIGH PRIORITY CAN INTERRUPT ############################### */
+/* ########################## UNDER HIGH PRIORITY CAN INTERRUPT ############# */
 void tim4_shaft_reset_timer(void);
 /* Can time sync msg: reset subinterval and OC 
- * ############################################################################################### */
+ * ########################################################################## */
 
 extern void (*tim4ocLOpriority_ptr)(void);	// CH3 OC triggers EXTI0_IRQHANDLER -> rpmsensor_compute -> tim4ocLOpriority_ptr
 extern void (*tim4_shaft_tim_oc_ptr)(void);	// Low level interrupt trigger function callback	
@@ -49,7 +52,7 @@ extern void (*tim4_shaft_tim_oc_ptr)(void);	// Low level interrupt trigger funct
 extern void (*tim4_shaft_can_msg_reset_ptr)(void* pctl, struct CAN_POOLBLOCK* pblk);	// Pointer for extending this routine's interrupt processing
 
 /* Timing counter */
-extern uint32_t tim4_tim_ticks; // Running count of time ticks
+extern volatile uint32_t tim4_tim_ticks; // Running count of time ticks
 extern uint32_t tim4_tim_rate;  // Number of ticks per sec (64E6/32E3)
 extern uint32_t subinterval_ct_flag; // not zero = subinterval triggered
 extern uint32_t subinterval_ct;	// Current subinterval count

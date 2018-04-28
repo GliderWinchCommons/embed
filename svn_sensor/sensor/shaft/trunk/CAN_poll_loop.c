@@ -38,7 +38,6 @@ int CAN_poll_loop_init(void)
 	tim4_shaft_tim_oc_ptr = &CAN_poll_loop_trigger;	// 'rpmsensor.c' CH2 oc timer triggers poll
 
 	NVICIPR (NVIC_I2C1_ER_IRQ, NVIC_I2C1_ER_IRQ_PRIORITY );	// Set interrupt priority
-	NVICISER(NVIC_I2C1_ER_IRQ);			// Enable interrupt controller
 
 	/* Get a buffer for each "port" */
 	phub_app = can_hub_add_func();	// Get a hub port for dealing with commands
@@ -51,6 +50,15 @@ int CAN_poll_loop_init(void)
 	can_msg_reset_ptr = (void*)&CAN_poll_loop_trigger; // Cast since no arguments are used
 
 	return 0;
+}
+/* **************************************************************************************
+ * void CAN_poll_loop_enable_interrupts(void);
+ * @brief	: Enable interrupts of I2C1_ER
+ * ************************************************************************************** */
+void CAN_poll_loop_enable_interrupts(void)
+{
+	NVICISER(NVIC_I2C1_ER_IRQ);			// Enable interrupt controller	
+	return;
 }
 /* **************************************************************************************
  * void CAN_poll_loop_trigger(void);

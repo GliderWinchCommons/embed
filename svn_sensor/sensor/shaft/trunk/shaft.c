@@ -5,10 +5,8 @@
 * Description        : sensor: shaft encoder w foto detector histogram collection
 *******************************************************************************/
 /* 
-02-05-2014
-Hack of se4.c routine
-
-Open minicom on the PC with 115200 baud and 8N1.
+02-05-2014 Hack of se4.c
+04/27/2018 Hack of se4_h Update to database parameter scheme
 
 */
 #include <math.h>
@@ -16,7 +14,6 @@ Open minicom on the PC with 115200 baud and 8N1.
 #include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 
 #include "libopenstm32/adc.h"
 #include "libopenstm32/can.h"
@@ -211,7 +208,6 @@ setbuf(stdout, NULL);
 
 	/* Initialize CAN for POD board (F103) and get control block */
 	pctl1 = canwinch_setup_F103_pod(&msginit, canid_ldr); // ('can_ldr' is fifo1 reset CAN ID)
-	pctl0 = pctl1;	// Save copy for those routines that use 0 instead of 1
 
 	/* Check if initialization was successful. */
 	if (pctl1 == NULL)
@@ -241,7 +237,7 @@ setbuf(stdout, NULL);
 
 	shaft_printf(&shaft_f.lc);	// Print parameters in local copy
 /* ------------------ Set up hardware CAN filter ----------------------------------------------------- */
-	can_msg_reset_init(pctl0, pcanidtbl->unit_code);	// Specify CAN ID for this unit for msg caused RESET
+	can_msg_reset_init(pctl1, pcanidtbl->unit_code);	// Specify CAN ID for this unit for msg caused RESET
 	printf("\n\r## pcanidtbl->unit_code: 0x%08X\n\r",(int)pcanidtbl->unit_code);
 
 	/* Go through table and load "command can id" into CAN hardware filter. */
@@ -283,17 +279,36 @@ setbuf(stdout, NULL);
 		id = can_driver_hw_filter_list(0, i, 1);	printf("0x%08X\n\r",id);
 	}
 	printf("\n\r");
-
 	USART1_txint_send(); 
-/* --------------------- ADC setup and initialization ------------------------------------------------ */
-	adc_init_sequence_foto_h(&shaft_f);
+/* ----------------------- Misc ---------------------------------------------------------------------- */
+	pctl0 = pctl1;	// Save copy for those routines that use 0 instead of 1 (shameless hack)
 
-	tim4_shaft_init();
-/* --------------------- Final CAN setup ------------------------------------------------------------- */
-	// Set addresses to chain tests of incoming canid 
-//	engine_can_msg_poll_init(); // Test for poll of winch function
+	adc_init_sequence_foto_h(&shaft_f);	// ADC setup
 
-	can_driver_enable_interrupts(); // CAN sending/receiving starts here.
+	tim4_shaft_init();	// Timer for miilsecond timing and 1/64th sec timing
+	
+/* --------------------- Start interrupts ------------------------------------------------------------ */
+	adcsensor_foto_h_enable_interrupts(); 
+//	NVICISER(NVIC_ADC1_2_IRQ);			// Enable interrupt controller for ADC1|ADC2
+//	NVICISER(NVIC_ADC3_IRQ);			// Enable interrupt controller for ADC3
+//	NVICISER(NVIC_FSMC_IRQ);			// Enable low level interrupt
+//	NVICISER(NVIC_SDIO_IRQ);			// Enable low level interrupt
+//	NVICISER(NVIC_DMA1_CHANNEL1_IRQ);
+//	NVICISER(NVIC_DMA2_CHANNEL4_5_IRQ);
+
+	tim4_shaft_enable_interrupts();
+//	NVICISER(NVIC_EXTI0_IRQ);			// Enable interrupt controller 
+//	NVICISER(NVIC_TIM4_IRQ);			// Enable interrupt controller for TIM4
+
+//@	CAN_poll_loop_enable_interrupts();
+//	NVICISER(NVIC_I2C1_ER_IRQ);			// Enable interrupt controller	
+
+//	ret = can_driver_enable_interrupts(); // CAN sending/receiving starts here.
+	if (ret < 0)
+	{
+		printf("### FAIL ###\n\rCAN interrupt enable fail.  buffct in can_driver.c not zero\n\r");
+	}
+printf("READY FOR WHILE LOOP\n\r");USART1_txint_send(); 
 
 /* --------------------- Program is ready, so do program-specific startup ---------------------------- */
 //printf("tim4_tim_rate: %d\n\r",tim4_tim_rate);
@@ -323,7 +338,6 @@ extern void testfoto(void);
 		{
 			tim4_tim_ticks_next += LEDPRINTFRINC;
 			TOGGLE_GREEN;	// Slow flash of green means "OK"
-
 		}
 	}
 	return 0;	

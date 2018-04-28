@@ -19,6 +19,9 @@ int CAN_poll_loop_init(void);
 /* @brief	: Initialize
  * @return	: 0 = OK, negative = fail
  * ************************************************************************************** */
+void CAN_poll_loop_enable_interrupts(void);
+/* @brief	: Enable interrupts of I2C1_ER
+ * ************************************************************************************** */
 
 #endif 
 

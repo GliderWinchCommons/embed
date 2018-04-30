@@ -223,6 +223,7 @@ setbuf(stdout, NULL);
 /* ------------------ misc --------------------------------------------------------------------------- */
 
 /* -------------------- Functions init --------------------------------------------------------------- */
+	tim4_shaft_init();	// Timer for miilsecond timing and 1/64th sec timing
 	ret = shaft_function_init_all();
 	if (ret < 0)
 	{
@@ -284,26 +285,20 @@ setbuf(stdout, NULL);
 	pctl0 = pctl1;	// Save copy for those routines that use 0 instead of 1 (shameless hack)
 
 	adc_init_sequence_foto_h(&shaft_f);	// ADC setup
-
-	tim4_shaft_init();	// Timer for miilsecond timing and 1/64th sec timing
 	
 /* --------------------- Start interrupts ------------------------------------------------------------ */
 	adcsensor_foto_h_enable_interrupts(); 
 //	NVICISER(NVIC_ADC1_2_IRQ);			// Enable interrupt controller for ADC1|ADC2
 //	NVICISER(NVIC_ADC3_IRQ);			// Enable interrupt controller for ADC3
-//	NVICISER(NVIC_FSMC_IRQ);			// Enable low level interrupt
-//	NVICISER(NVIC_SDIO_IRQ);			// Enable low level interrupt
-//	NVICISER(NVIC_DMA1_CHANNEL1_IRQ);
-//	NVICISER(NVIC_DMA2_CHANNEL4_5_IRQ);
 
 	tim4_shaft_enable_interrupts();
 //	NVICISER(NVIC_EXTI0_IRQ);			// Enable interrupt controller 
 //	NVICISER(NVIC_TIM4_IRQ);			// Enable interrupt controller for TIM4
 
-//@	CAN_poll_loop_enable_interrupts();
+	CAN_poll_loop_enable_interrupts();
 //	NVICISER(NVIC_I2C1_ER_IRQ);			// Enable interrupt controller	
 
-//	ret = can_driver_enable_interrupts(); // CAN sending/receiving starts here.
+	ret = can_driver_enable_interrupts(); // CAN sending/receiving starts here.
 	if (ret < 0)
 	{
 		printf("### FAIL ###\n\rCAN interrupt enable fail.  buffct in can_driver.c not zero\n\r");
@@ -311,9 +306,9 @@ setbuf(stdout, NULL);
 printf("READY FOR WHILE LOOP\n\r");USART1_txint_send(); 
 
 /* --------------------- Program is ready, so do program-specific startup ---------------------------- */
-//printf("tim4_tim_rate: %d\n\r",tim4_tim_rate);
+printf("tim4_tim_rate_shaft: %u hb_tdur: %u\n\r",(unsigned int)tim4_tim_rate_shaft,(unsigned int)shaft_f.cf.hb_tdur);
 
-i = 0;
+i = 6;
 
 #ifdef THIS_MAY_BE_NEEDED_LATER
 extern u32 adc2histo[2][ADCHISTOSIZE];
@@ -329,6 +324,16 @@ extern unsigned short adc3valbuff[2][ADCVALBUFFSIZE];
 uint32_t tim4_tim_ticks_next = tim4_tim_ticks + LEDPRINTFRINC;
 extern void testfoto(void);
 
+// Char buffer for fmtprint.c
+char a[16];	// RPM
+char b[32];
+
+int encoder_prev = encoder_ctr2;
+int encoder_diff;
+
+extern int adcsensordb[4];
+//int adcsensordb_prev[4];
+
 //canwinch_pod_common_systick2048_printerr_header();
 /* --------------------- Endless Stuff ----------------------------------------------- */
 	while (1==1)
@@ -338,6 +343,19 @@ extern void testfoto(void);
 		{
 			tim4_tim_ticks_next += LEDPRINTFRINC;
 			TOGGLE_GREEN;	// Slow flash of green means "OK"
+
+			fpformatn(a,shaft_f.drpm,10,1,6); // 
+			encoder_diff = encoder_ctr2 - encoder_prev;
+			encoder_prev = encoder_ctr2;
+						
+			printf("%5d %s %5d %6d ",i++,a, encoder_diff, (int)encoder_ctr2);
+
+			for (j = 0; j < 4; j++)
+			{
+				printf(" %d",adcsensordb[j]);
+//				adcsensordb_prev[j] = adcsensordb[j];
+			} 
+			printf("\n\r");USART1_txint_send();
 		}
 	}
 	return 0;	

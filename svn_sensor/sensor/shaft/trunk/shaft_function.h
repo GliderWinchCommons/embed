@@ -67,30 +67,30 @@ struct SHAFT_FUNCTION
 	double   drpm;            // rpm (double)
 	double   frpm;            // rpm (float)
 	
+	
 /* These were originally in the.c file */
-long	speed_filteredA2;	// Most recent computed & filtered rpm
-u32 	encoder_ctrA2;		// Most recent encoder count
-struct CICLN2M3 rpm_cic;		// Double buffer CIC intermediate storage
-struct CANRCVBUF can_msg_speed;	// CAN msg. Drive Shaft--speed
-struct CANRCVBUF can_msg_count;	// CAN msg. Drive Shaft--odometer
-struct CANRCVBUF can_hb_speed;	// CAN hearbeat. Drive Shaft--speed
-struct CANRCVBUF can_hb_count;	// CAN hearbeat. Drive Shaft--odometer
-struct CANRCVBUF can_msg_ER1;	// CAN msg. Errors
-struct CANRCVBUF can_msg_ER2;	// CAN msg. Errors
-struct CANRCVBUF can_msg_histo31;	// CAN msg. Histogram tx: request count, switch buffers. rx: send count
-struct CANRCVBUF can_msg_histo32;	// CAN msg. Histogram tx: bin number, rx: send bin count
-struct CANRCVBUF can_msg_histo21;	// CAN msg. Histogram tx: request count, switch buffers; rx send count
-struct CANRCVBUF can_msg_histo22;	// CAN msg. Histogram tx: bin number, rx: send bin count
-struct CANRCVBUF* can_msg_ptr1;	// 1st can msg pointer
-struct CANRCVBUF* can_msg_ptr2;	// 2nd can msg pointer
-/* ADC3 ADC2 readings readout */
-uint32_t adcreadings_ctr;
-struct CANRCVBUF can_msg_adc_5;	// CAN msg. Histogram tx: request count, switch buffers. rx: send count
+  long	speed_filteredA2;	// Most recent computed & filtered rpm
+  u32 	encoder_ctrA2;		// Most recent encoder count
+  struct CICLN2M3 rpm_cic;		// Double buffer CIC intermediate storage
+  struct CANRCVBUF can_msg_speed;	// CAN msg. Drive Shaft--speed
+  struct CANRCVBUF can_msg_count;	// CAN msg. Drive Shaft--odometer
+  struct CANRCVBUF can_hb_speed;	// CAN hearbeat. Drive Shaft--speed
+  struct CANRCVBUF can_hb_count;	// CAN hearbeat. Drive Shaft--odometer
+  struct CANRCVBUF can_msg_ER1;	// CAN msg. Errors
+  struct CANRCVBUF can_msg_ER2;	// CAN msg. Errors
+  struct CANRCVBUF can_msg_histo31;	// CAN msg. Histogram tx: request count, switch buffers. rx: send count
+  struct CANRCVBUF can_msg_histo32;	// CAN msg. Histogram tx: bin number, rx: send bin count
+  struct CANRCVBUF can_msg_histo21;	// CAN msg. Histogram tx: request count, switch buffers; rx send count
+  struct CANRCVBUF can_msg_histo22;	// CAN msg. Histogram tx: bin number, rx: send bin count
+  struct CANRCVBUF* can_msg_ptr1;	// 1st can msg pointer
+  struct CANRCVBUF* can_msg_ptr2;	// 2nd can msg pointer
+  /* ADC3 ADC2 readings readout */
+  uint32_t adcreadings_ctr;
+  struct CANRCVBUF can_msg_adc_5;	// CAN msg. Histogram tx: request count, switch buffers. rx: send count
 
-
+	uint8_t status_speed;	// Reading status for CAN msg: rpm/speed
+	uint8_t status_count;	// Reading status for CAN msg: quadrature counter
 };
-
-
 
 /* **************************************************************************************/
 int shaft_function_init_all(void);
@@ -110,13 +110,13 @@ int shaft_function_init_all(void);
  * @param	: p = pointer to things needed for this function
  * @return	: Same as above
  * ************************************************************************************** */
- int shaft_man_poll(struct CANRCVBUF* pcan, struct SHAFT_FUNCTION* p);
+int shaft_man_poll(struct CANRCVBUF* pcan, struct SHAFT_FUNCTION* p);
 /* @brief	: Handle incoming CAN msgs ### under interrupt ###
  * @param	; pcan = pointer to CAN msg buffer
  * @param	: p = pointer to struct with "everything" for this instance of engine manifold
  * @return	: 0 = No msgs sent; 1 = msgs were sent and loaded into can_hub buffer
  * ************************************************************************************** */
-int shaft_common_poll(struct CANRCVBUF* pcan, struct COMMONFUNCTION* p);
+int shaft_common_poll(struct CANRCVBUF* pcan, struct SHAFT_FUNCTION* p);
 /* @brief	: 'CAN_poll_loop.c' calls this for each of the engine functions
  * @param	; pcan = pointer to CAN msg buffer (incoming msg)
  * @param	: p = pointer to struct with variables and parameters common to all functions

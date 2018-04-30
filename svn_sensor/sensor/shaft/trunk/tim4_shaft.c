@@ -84,7 +84,7 @@ volatile u32 usTim4ch4_Flag; // Incremented when a new capture interrupt service
 
 /* Timing counter */
 volatile uint32_t tim4_tim_ticks;  // Running count of time ticks
-uint32_t tim4_tim_rate;   // Number of ticks per sec (64E6/16E3)
+uint32_t tim4_tim_rate_shaft;   // Number of ticks per sec (64E6/16E3)
 #define TIM4TICKINC 32000 // Timer ct for 0.5 ms between interrupts
 
 /******************************************************************************
@@ -122,7 +122,7 @@ static void tim4_init(void)
 
 	/* Rate for CH2, for polling and timing */
 	// 2000 interrupts per sec
-	tim4_tim_rate = (2 * pclk1_freq)/TIM4TICKINC;
+	tim4_tim_rate_shaft = (2 * pclk1_freq)/TIM4TICKINC;
 
 	/* Setup the gpio pin for PB9 is not really needed as reset default is "input" "floating" */
 //IC	pinconfig_all( (struct PINCONFIGALL *)&pin_pb9);	// p 15
@@ -337,75 +337,26 @@ tim4_dbug1 = DTWTIME; // Check time for low level handling
 	return;
 }
 /* ########################## UNDER HIGH PRIORITY CAN INTERRUPT ############################### 
- * void rpmsensor_reset_timer(void);
+ * void tim4_shaft_reset_timer(void);
  * Can time sync msg: reset subinterval and OC 
  * ############################################################################################### */
-void rpmsensor_reset_timer(void)
+void tim4_shaft_reset_timer(void)
 {
 	subinterval_ct = 0;
 	TIM4_CCR3 = TIM4_CNT + subinterval_inc - SUBINTERVALOFFSET;
 	return;
 }
 
-/* ########################## UNDER LOW PRIORITY from TIM4 INTERRUPT ############################### 
- * Compute the rpm
- * ############################################################################################### */
-// These temporarily available to se1.c for debugging 
-	int32_t inic;
-	int32_t itim;
-/* Enter this is from low priority interrupt triggered by TIM4, about 2 ms before 
-   next expected poll msg.  These are nominally 64 per sec and sync'ed to the poll
-   msg so that there computations are ready slightly before the poll msg. */
-static void rpmsensor_compute_rpm(struct SHAFT_FUNCTION* p)
-{
-	double dnic;
-	double dtim;
 
-	// Number of input captures since last computation
-		inic = (p->ct_buf - p->ct_prev_buf);
-		if (inic == 0)
-		{ // Here, no IC's during this interval
-tim4_dbug3 += 1;
-tim4_dbug2 = DTWTIME;
-			/* Use old rpm values until a new IC occurs */
-			zct += 1; // Limit number of consectutive no-IC intervals
-			if (zct >= ZCTMAX) // Too many?
-			{ // Here, yes, give up waiting for an IC, assume zero rpm
-				zct = ZCTMAX;	// Avoid eventual zct wrap around
-				p->drpm = 0; // No need to compute.  Just set to zero
-				p->frpm = 0;
-			}
-			return; 
-		}
-	// Here, got one or more IC's, so new rpm can be computed
-		zct = 0;			// Reset zero counter count
-		p->ct_prev_buf = p->ct_buf; // Update previous IC count
-		dnic = inic;	// Convert IC count to double
-
-	// Time duration between previous and latest ic
-		itim = (p->endtime_buf - p->endtime_prev_buf);
-		p->endtime_prev_buf = p->endtime_buf;
-		dtim = itim;
-
-	// rpm = (input capture counts) / (time duration) scaled to rpm
-		p->drpm = (dnic * p->dk1)/dtim;
-		p->frpm = p->drpm;	// Convert to float for CAN msg)
-		p->cf.flast1 = p->frpm;	// Oops.
-
-tim4_dbug2 = DTWTIME;
-tim4_dbugct += 1;	
-
-	return;
-}
 /*#######################################################################################
  * ISR routine for output caputure low priority level
  * TIME4 CH3 (above) at high priority triggers this low priority interrupt
  *####################################################################################### */
 void EXTI0_IRQHANDLER(void)
 {
-	if (subinterval_ct == 0) // Time to trigger (lower level) computation?
+	if (subinterval_ct == SUBINTERVALTRIGGER) // Time to trigger (lower level) computation?
 	{ // Here, yes
-		rpmsensor_compute_rpm(&shaft_f);	// Do the rpm computation
+		adcsensor_rpm_compute();	// Do the rpm computation
 	}
 
 debugrpmsensorch3ctr += 1;

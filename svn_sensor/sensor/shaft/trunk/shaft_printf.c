@@ -30,7 +30,7 @@ printf("%2d	%d	   %s\n\r",i+5, (unsigned int)p->adc3_ltr_initial,"Shaft:  5 Low 
 printf("%2d	%d	   %s\n\r",i+6, (unsigned int)p->adc2_htr_initial,"Shaft:  6 High threshold register setting, ADC2");
 printf("%2d	%d	   %s\n\r",i+7, (unsigned int)p->adc2_ltr_initial,"Shaft:  7 Low  threshold register setting, ADC2");
 printf("%2d	0x%08X %s\n\r",i+8, (unsigned int)p->cid_msg_speed,   "Shaft:  8 CANID speed, calibrated, response to poll");
-printf("%2d	0x%08X %s\n\r",i+9, (unsigned int)p->cid_hb_speed,    "Shaft:  9 CANID speed, calibrated, response to poll");
+printf("%2d	0x%08X %s\n\r",i+9, (unsigned int)p->cid_hb_speed,    "Shaft:  9 CANID speed, calibrated, heartbeat");
 printf("%2d	0x%08X %s\n\r",i+10,(unsigned int)p->cid_msg_ct,      "Shaft: 10 CANID running count, response to poll");
 printf("%2d	0x%08X %s\n\r",i+11,(unsigned int)p->cid_hb_ct,       "Shaft: 11 CANID running count, heartbeat");
 printf("%2d	%d	   %s\n\r",i+12,(unsigned int)p->num_seg,         "Shaft: 12 Number of segments on code wheel");

@@ -72,11 +72,10 @@ void CAN_poll_loop_trigger(void)
 	NVICISPR(NVIC_I2C1_ER_IRQ);	// Set pending (low priority) interrupt 
 	return;
 }
-/* ###################### UNDER INTERRUPT ###############################################
- * void CAN_poll(void);
- * @brief	: Low priority interrupt polls for CAN msgs, uses can_hub
- * ###################################################################################### */
-void CAN_poll(void)
+/*#######################################################################################
+ * ISR routine runs CAN poll loop
+ *####################################################################################### */
+void I2C1_ER_IRQHandler(void)
 {
 	struct CANRCVBUF* pcan;
 	int sw;	
@@ -93,8 +92,8 @@ void CAN_poll(void)
 //$	 		app_function_poll(pcan); 	// function poll
 		}
 		/* shaft: get msgs from shaft buffer */
-  		pcan = can_hub_get(shaft_f.cf.phub); 	// Get ptr to CAN msg
-	 	ret = shaft_common_poll(pcan,&shaft_f.cf); 	// function poll
+  		pcan = can_hub_get(shaft_f.cf.phub);      // Get ptr to CAN msg
+	 	ret = shaft_common_poll(pcan,&shaft_f);   // function poll
 		if (ret != 0)	// Did function send & buffer a msg?
 		{ // Here yes.  Other functions may need this msg
 			sw = 1; // Set switch to cause loop again

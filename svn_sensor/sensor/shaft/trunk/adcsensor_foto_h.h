@@ -78,6 +78,7 @@ union ADC12VAL		// In dual mode: DMA stores pairs of ADC readings, two 16b readi
 #define THROTTLE2	64	// Number of 1/2048 sec ticks between sending bin msgs
 #define ADC3ADC2READCT	2048	// Number of readings output before shutting it off
 
+
 /******************************************************************************/
 void adc_init_sequence_foto_h(struct SHAFT_FUNCTION* p);
 /* @brief 	: Call this routine to do a timed sequencing of power up and calibration
@@ -91,16 +92,23 @@ void adc_histo_cansend(struct CANRCVBUF* p);
 void adcsensor_foto_h_enable_interrupts(void);
 /* @brief 	: do as the name says
 *******************************************************************************/
-
+void adcsensor_foto_h_disable_histogram(void);
+/* @brief 	: Stop DMA interrupts for histogram (storing stills goes on)
+*******************************************************************************/
+void adcsensor_foto_h_enable_histogram(void);
+/* @brief 	: Enable DMA and low level interrupts for histogram
+*******************************************************************************/
+void adcsensor_rpm_compute(void);
+/*	@brief	: Compute rpm based on differences from last call to this routine
+ ******************************************************************************/
 
 extern long speed_filteredA2;		// Most recent computed & filtered rpm
 extern u32 encoder_ctrA2;		// Most recent encoder count
 extern u32 adc_encode_time_prev2;	// Previous time at SYSTICK
 extern s32 encoder_ctr_prev2;		// Previous encoder running count
+extern s32 encoder_ctr2;
 
 /* Error counters */
 extern u32 adcsensor_foto_err[ADCERRORCTRSIZE];	// Error counters
-
-
 
 #endif 

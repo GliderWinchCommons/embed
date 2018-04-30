@@ -55,28 +55,15 @@ const uint32_t myfunctype[NUMSHAFTFUNCTIONS] = { \
  FUNCTION_TYPE_DRIVE_SHAFT,
 };
 
+
 /* **************************************************************************************
- * static void send_can_msg(struct CANRCVBUF* pcan,struct COMMONFUNCTION* p); // Heartbeat CAN msg
+ * static void send_can_msg_reset(struct CANRCVBUF* pcan,struct COMMONFUNCTION* p); // Heartbeat CAN msg
  * @brief	: Send CAN msg and reset heartbeat counter
  * @param	: pcan = pointer to CAN msg
  * @param	: p = pointer to common function struct
  * ************************************************************************************** */
-static void send_can_msg(struct CANRCVBUF* pcan,struct COMMONFUNCTION* p, float flt)
+static void send_can_msg_reset(struct CANRCVBUF* pcan,struct COMMONFUNCTION* p)
 {
-	union FINT
-	{
-		uint8_t uc[4];
-		float f;
-	} fint;
-	fint.f = flt;
-
-	pcan->dlc = 5;	// Payload size: status + 4 bytes float
-	pcan->cd.uc[0] = p->status;
-	pcan->cd.uc[1] = fint.uc[0];
-	pcan->cd.uc[2] = fint.uc[1];
-	pcan->cd.uc[3] = fint.uc[2];
-	pcan->cd.uc[4] = fint.uc[3];
-
 	// Send CAN msg and reset heartbeat timeout 
 	can_hub_send(pcan, p->phub);// Send CAN msg to 'can_hub'
 	p->hb_tct = tim4_tim_ticks + p->hb_tdur;	 // Reset heart-beat time duration each time msg sent	
@@ -96,7 +83,7 @@ static int function_init(uint32_t n, struct COMMONFUNCTION* p, uint32_t hbct )
 	p->can_hb.cd.uc[0]  = 0;	// CAN msg hb status
 
 	/* First heartbeat time */
-	p->hb_tdur = (hbct * tim4_tim_rate) / 1000;	// Number of timer ticks between heartbeats
+	p->hb_tdur = (hbct * tim4_tim_rate_shaft) / 1000;	// Number of timer ticks between heartbeats
 	p->hb_tct  = tim4_tim_ticks + p->hb_tdur;	// Set first counter value
 
 	/* Add this function to the "hub-server" msg distribution. */
@@ -167,10 +154,11 @@ int shaft_function_init_all(void)
 
 	extern void* __paramflash1;
 
-	CAN_poll_loop_init();
+	ret = CAN_poll_loop_init();
+	if (ret != 0) return ret;
 
 	// Set pointer to table in highflash.  Base address provided by .ld file 
-	  shaft_f.cf.pparamflash = (uint32_t*)&__paramflash1;	/* Manifold pressure */
+	  shaft_f.cf.pparamflash = (uint32_t*)&__paramflash1;
 
 	// Copy table entries to struct in sram from high flash.
 	  ret  = shaft_idx_v_struct_copy_shaft(&shaft_f.lc, shaft_f.cf.pparamflash);
@@ -186,43 +174,47 @@ int shaft_function_init_all(void)
 
 //$	 adc_cic2_init(&shaft_f.cf.cic2);	// Init second cic filtering constants
 
+	shaft_can_msg_poll_init(); // CAN rx msgs come here to check for poll msg
 
 	return ret;
 }
 /* ######################################################################################
- * int shaft_common_poll(struct CANRCVBUF* pcan, struct COMMONFUNCTION* p);
+ * int shaft_common_poll(struct CANRCVBUF* pcan, struct SHAFT_FUNCTION* p);
  * @brief	: 'CAN_poll_loop.c' calls this for each of the shaft functions
  * @param	; pcan = pointer to CAN msg buffer (incoming msg)
- * @param	: p = pointer to struct with variables and parameters common to all functions
+ * @param	: p = pointer to struct with variables and parameters
  * @return	: 0 = No msgs sent; 1 = msgs were sent and loaded into can_hub buffer
+ CALLED from CAN_poll_loop
  * ###################################################################################### */
 uint32_t shaftDbghbct;
 
-int shaft_common_poll(struct CANRCVBUF* pcan, struct COMMONFUNCTION* p)
+int shaft_common_poll(struct CANRCVBUF* pcan, struct SHAFT_FUNCTION* p)
 {
 	int ret = 0;
 
 	/* Heartbeat msg timing */
-	 if ( ( (int)(tim4_tim_ticks - p->hb_tct) ) > 0  )	// Time to send heart-beat?
+	 if ( ( (int)(tim4_tim_ticks - p->cf.hb_tct) ) > 0  )	// Time to send heart-beat?
 	{ // Here, yes.		
 shaftDbghbct += 1;
 		/* Send heartbeat and compute next heartbeat time count. */
-		send_can_msg(&p->can_hb,p, p->flast1); // Send CAN msg, reset heartbeat cts
-		ret = 1;
+		send_can_msg_reset(&p->can_hb_count,&p->cf); // Send CAN msg and reset heartbeat cts
+		send_can_msg_reset(&p->can_hb_speed,&p->cf); // Send CAN msg and reset heartbeat cts
+		ret = 0;
 	}
 
 	/* Check if any incoming msgs were with the call to this routine */
 	if (pcan == NULL) return ret;	// No incoming msgs (just heartbeat polling)
 
-	if (p->flag_msg != 0) // Poll msg request?
-	{ // Here, yes.  Send regular reading response
-		p->flag_msg  = 0;
-	   send_can_msg(&p->can_msg,p,p->flast1); // Send CAN msg, reset heartbeat cts
+	if (p->cf.flag_msg != 0) // Poll response msg request?
+	{ // Here, yes.  Send regular reading response(s)
+		p->cf.flag_msg  = 0;	// Reset flag
+	   can_hub_send(&p->can_msg_speed,p->cf.phub); //  Send CAN msg
+		can_hub_send(&p->can_msg_count,p->cf.phub); //  Send CAN msg
 			return 1;
 	}
-	
+// TODO Command handling
 	/* Check drive shaft function command. */
-	if (pcan->id == *p->pcanid_cmd_func_i)
+	if (pcan->id == *p->cf.pcanid_cmd_func_i)
 	{ // Here, we have a command msg for this function instance. 
 //$		cmd_code_dispatch(pcan, p); // Handle and send as necessary
 		return 0;	// No msgs passed to other ports
@@ -242,17 +234,18 @@ static void shaft_can_msg_poll(struct CAN_CTLBLOCK* pctl, struct CAN_POOLBLOCK* 
    is only called once.
 */
 	/* Check for poll msgs and set flags for sending msgs (at lower priority) */
-	if (shaft_f.cf.canid_poll == pblk->can.id)	// Manifold poll?
-	{
-		shaft_f.cf.flag_msg = 1;	// Show manifold pressure poll response requested
+	if (shaft_f.lc.code_CAN_filt[0] == pblk->can.id)	// Drive shaft response request msg?
+	{ // Here, yes.
+		shaft_f.cf.flag_msg = 1;	// Show poll loop that poll response msg was requested
 	}
 
 	/* Sync/reset TIM4 timing counters to either poll or time sync canid */
-//	if ((erpm_f.lc.code_CAN_filt[0] == pblk->can.id) ||
-//       (erpm_f.lc.code_CAN_filt[1] == pblk->can.id) )
-//	{
-//		rpmsensor_reset_timer();	// ### Sync/Reset timing ###
-//	}
+	if ((shaft_f.lc.code_CAN_filt[0] == pblk->can.id) ||
+       (shaft_f.lc.code_CAN_filt[1] == pblk->can.id) )
+	{
+		tim4_shaft_reset_timer();	// ### Sync/Reset timing ###
+	}
+
 	CAN_poll_loop_trigger();	// Trigger low level interrupt poll incoming msgs
 	return;
 }

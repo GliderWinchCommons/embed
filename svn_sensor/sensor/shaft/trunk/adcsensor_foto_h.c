@@ -224,32 +224,31 @@ u32* can_msg_histo_ptr = 0;
 static u32 histthrottle = 0;	// Throttle for readouts of bins
 #endif
 
-/* Circular buffer for DWT times of ADC transitions */
-#define ADCTIMBUFSIZE 64	// Circular buffer size
-
 /* (ADCTIMSCALE/time_diff_between_ADC_transition) */
-#define ADCTIMSCALE (1 << 21)	// Scale 
+#define ADCTIMSCALEBITS 21
+#define ADCTIMSCALE (1 << ADCTIMSCALEBITS)	// Scale 
 #define ADCTRANSITIONPERSEG 4	// Transition per encoding wheel segment
 
+/* Circular buffer for DWT times of ADC transitions */
+#define ADCTIMBUFSIZE 64	// Circular buffer size
 
 /* Buffer and parameters for photocells */
 struct ADCTIMBUF
 {
 	uint32_t* padd;   // Buffer position to be added
 	uint32_t* psub;	// Position to be removed
-	uint32_t* p_begin;	// Beginning of buffer
+	uint32_t* plast;  // Latest/last added transition time
+	uint32_t* p_begin;// Beginning of buffer
 	uint32_t* p_end;	// End of buffer
 	uint32_t  rct;		// Running count
-	uint32_t  n;		// Number in average
-	int32_t   accum;	// Cumulative 1/delta_t
-	uint32_t  tprev;	// Previous saved time
-	uint32_t  nprev;	// Previous n
+	 int32_t  n;		// Number in average
 	uint32_t  zeroct;	// Consecutive intervals with no transitions
-	int32_t   iave;	// Integer average, unscaled
-	double    dave;
-	float     fave;
-   uint32_t  buf[ADCTIMBUFSIZE];
+	uint32_t  tdiff;	// System ticks time diff between transitions
+	int32_t   irecip;	// (n/delta_t)
+   uint32_t  buf[ADCTIMBUFSIZE]; // 32b sys counter times
 };
+
+/* Circular buffers for "up" and "down" transitions */
 static struct ADCTIMBUF adctim2[2]; // Photocell B up:down
 static struct ADCTIMBUF adctim3[2]; // Photocell A up:down
 
@@ -272,15 +271,15 @@ static void timedelay (unsigned int ticks)
 *******************************************************************************/
 static void adctimbuf_init(struct ADCTIMBUF* p)
 {
-	p->padd = &p->buf[0]; // Add to buffer pointer
-	p->psub = p->padd;    // Take from buffer pointer
+	p->padd    = &p->buf[0]; // Add to buffer pointer
+	p->psub    = p->padd;    // Take from buffer pointer
 	p->p_begin = p->psub;	 // Beginning of buffer
-	p->p_end = &p->buf[ADCTIMBUFSIZE]; // End of buffer
-	p->rct = 0; // Running count
-	p->n = 0;
-	p->accum = 0;
-	p->zeroct = 0;
-	p->tprev = *(volatile unsigned int *)0xE0001004; // Current sys counter time
+	p->p_end   = &p->buf[ADCTIMBUFSIZE]; // End of buffer
+	p->plast   = p->p_end;
+	p->rct     = 0; // Running count
+	p->n       = 0;
+	p->zeroct  = 0;
+	*p->psub   = *(volatile unsigned int *)0xE0001004; // Current sys counter time
 	return;
 }
 /******************************************************************************
@@ -453,6 +452,26 @@ void adcsensor_foto_h_enable_interrupts(void)
 {	
 	NVICISER(NVIC_ADC1_2_IRQ);			// Enable interrupt ADC1|ADC2 Watchdog
 	NVICISER(NVIC_ADC3_IRQ);			// Enable interrupt ADC3 Watchdog
+	return;
+}
+/******************************************************************************
+ * void adcsensor_foto_h_disable_histogram(void);
+ * @brief 	: Stop DMA interrupts for histogram (storing stills goes on)
+*******************************************************************************/
+void adcsensor_foto_h_disable_histogram(void)
+{	
+	NVICICER(NVIC_DMA1_CHANNEL1_IRQ);  // DMA ADC 3 store reading Photocell A
+	NVICICER(NVIC_DMA2_CHANNEL4_5_IRQ);// DMA ADC 1 & 2 store reading Photocell B
+	NVICICER(NVIC_FSMC_IRQ);			// Low level interrupt, build histogram
+	NVICICER(NVIC_SDIO_IRQ);			// Low level interrupt, build histogram
+	return;
+}
+/******************************************************************************
+ * void adcsensor_foto_h_enable_histogram(void);
+ * @brief 	: Enable DMA and low level interrupts for histogram
+*******************************************************************************/
+void adcsensor_foto_h_enable_histogram(void)
+{	
 	NVICISER(NVIC_DMA1_CHANNEL1_IRQ);  // DMA ADC 3 store reading Photocell A
 	NVICISER(NVIC_DMA2_CHANNEL4_5_IRQ);// DMA ADC 1 & 2 store reading Photocell B
 	NVICISER(NVIC_FSMC_IRQ);			// Enable low level interrupt, build histogram
@@ -667,6 +686,7 @@ void ADC3_IRQHandler(void)
 			*p->padd = *(volatile unsigned int *)0xE0001004; // Save sys time (DWT_CYCNT)
 			p->padd += 1; if (p->padd >= p->p_end) p->padd = p->p_begin;		
 			p->rct += 1;	// Cumulative counter--either direction
+
 		}
 		both = (old << 2) | new;        // Make lookup index
 		encoder_ctr2 += en_state[both]; // Add +1, -1, or 0
@@ -740,6 +760,7 @@ static void compute_init(struct SHAFT_FUNCTION* p)
 	p->can_hb_count.dlc  = PAYSIZE_U8_S32; // 11 CAN hearbeat. Drive Shaft--odometer
 
 
+
 #ifdef HISTOGRAM_SENDING_REQUIRES_MUCH_REWRITING
 	can_msg_ct.id  = phfp
 	can_msg_ER1.id = phfp->canid_error2;			// [0]encode_state er ct [1]adctick_diff<2000 ct
@@ -754,7 +775,7 @@ static void compute_init(struct SHAFT_FUNCTION* p)
 
 	can_msg_DS.dlc  = 8;
 	can_msg_ER1.dlc = 8;
-	can_msg_ER2.dlc = 8;
+	can_msg_ER2.dlc = 
 
 	can_msg_histo31.dlc = 4;
 	can_msg_histo32.dlc = 8;
@@ -807,115 +828,167 @@ can_msg_put(&shaft_f.can_msg_adc_5);	// 7
  * static void adcrpmave(struct ADCTIMBUF *p);
  *	@brief	: Compute and accumulate reciprocals of times between ADC transitions for each photocell
  * @param	: p = pointer to photocell struct with buffer, pointers and counts
+ * @return	: Speed (n/delta_t)
  **************************************************************************************************/	
 #define TDIFFMAX (ADCTIMSCALE * 256)	// Prevent 'accum' overflow: Limit sys ticks between ADC transitions
 #define ZEROCTMAX 32	// Number of cases of zero ADC transitions between 1/64th sec intervals
 
 /* Direction of rotation to be applied to rpm/speed. */
 static int32_t rpmsign = 1; // Direction: +1, -1
-
-static void adcrpmave(struct ADCTIMBUF *p)
+/*
+struct ADCTIMBUF
 {
-	uint32_t tdiff;
-	uint32_t recip;
-
-	while (p->psub != p->padd) // Any new data buffered?
-	{ // Here, yes.
-		tdiff = *p->psub - p->tprev; // Sys ticks difference
-		if (tdiff > TDIFFMAX) tdiff = TDIFFMAX; // Prevent .accum overflow
-		p->tprev = *p->psub; // Upate previous
-		recip = ADCTIMSCALE/tdiff; // (Scale number / time difference)
-		p->accum += recip;	// Accumulate for computing an average
-		p->n += 1; 				// Count number of cases accumulated
-		p->psub += 1;			// Advance buffer pointer
-		if (p->psub >= p->p_end) p->psub = p->p_begin;
-	}
-	return;
-}
-
-/* *************************************************************************************************
- * static int32_t interval_rpm(struct ADCTIMBUF *p);
- *	@brief	: Compute ADC data buffered 
- * @param	: p = pointer to photocell struct with buffer, pointers and counts
- * @return	: average
- **************************************************************************************************/	
-static int32_t interval_rpm(struct ADCTIMBUF *p)
+	uint32_t* padd;   // Buffer position to be added
+	uint32_t* psub;	// Position to be removed
+	uint32_t* p_begin;// Beginning of buffer
+	uint32_t* p_end;	// End of buffer
+	uint32_t* plast;  // Latest/last added transition time
+	uint32_t  rct;		// Running count
+	uint32_t  n;		// Number in average
+	uint32_t  zeroct;	// Consecutive intervals with no transitions
+	uint32_t  tdiff;	// System ticks time diff between transitions
+	int32_t   irecip;	// (n/delta_t)
+   uint32_t  buf[ADCTIMBUFSIZE]; // 32b sys counter times
+};
+*/
+static uint32_t adcrpmave(struct ADCTIMBUF *p)
 {
-	/* Number of ADC transitions during this interval */
-	uint32_t ndiff = (p->n - p->nprev);
-	p->nprev = p->n;
+	/* Compute number of transitions since last time */
+	// Difference between pointers in circular buffer
+	p->n = ((uint32_t)p->padd - (uint32_t)p->psub) - 4;
+	if (p->n < 0)	p->n += ADCTIMBUFSIZE * sizeof(uint32_t);
 
-	if (ndiff > 0)
-	{ // Compute integer average, unscaled
-		p->iave = (p->accum / ndiff);
-		p->zeroct = 0;	// Reset zero rpm timeout counter
-	}
+	// Note: p->n is 4x the number of transitions 
+	if (p->n > 0)
+	{ // Here, there are transitions
+
+		// Back up a ptr 
+		p->plast = p->padd - 1;
+		if (p->plast < p->p_begin) p->plast += ADCTIMBUFSIZE;
+		p->tdiff = *(p->plast) - *(p->psub); // Time duration between
+
+		// Speed = number_transitions / time_duration
+		// Scale upwards, allowing for the 4x scale of p->n above
+		p->irecip  = (p->n << (ADCTIMSCALEBITS - 2)) / p->tdiff;
+
+		p->psub = p->plast;  // Update "tail" ptr
+		p->zeroct = 0;       // Reset no-transition counter
+	}		
 	else
-	{ // Limit number of intervals with no ADC transitions
-		p->zeroct += 1;	// Count number of consecutive zero cases
-		if (p->zeroct >= ZEROCTMAX)	
+	{ // Here, no transitions during the inteval
+		p->zeroct += 1;     // Count number of consecutive zero cases
+		if (p->zeroct >= ZEROCTMAX) // Too many?
 		{ // Here, the RPM will assumed to be zero.
 			p->zeroct = ZEROCTMAX;
-			p->iave = 0;
+			p->irecip = 0;	
 		}
 	}
-	p->accum = 0;	// Reset accumulator
-	return p->iave;
+	return p->irecip;
 }
-
 /* *************************************************************************************************
- * void adc_rpm_compute(uint32_t subintct);
- *	@brief	: Compute and accumulate reciprocals of times between ADC transitions for each photocell
+ * static void load_payload_flt(struct CANRCVBUF* pcan, uint8_t status, float fpay);
+ *	@brief	: Assemble payload from input of status byte, and a float
+ *	@brief	: Assemble payload from input of status byte, and a 32b float
+ * @param	: pcan = pointer to CAN msg to loaded
+ * @param	: status = status byte for reading
+ * @param	: uipay = unsigned int with payload
+ **************************************************************************************************/
+static void load_payload_fit(struct CANRCVBUF* pcan, uint8_t status, float fpay)
+{
+	union FUI // Float to byte array conversion
+	{
+		float f;
+		uint8_t uc[4];
+	}fui;
+	fui.f = fpay;	
+	
+	pcan->cd.uc[0] = status;
+	pcan->cd.uc[1] = fui.uc[0];
+	pcan->cd.uc[2] = fui.uc[1];
+	pcan->cd.uc[3] = fui.uc[2];
+	pcan->cd.uc[4] = fui.uc[3];
+	return;
+}
+/* *************************************************************************************************
+ * static void load_payload_int(struct CANRCVBUF* pcan, uint8_t status, uint32_t uipay);
+ *	@brief	: Assemble payload from input of status byte, and a unsigned int
+ * @param	: pcan = pointer to CAN msg to loaded
+ * @param	: status = status byte for reading
+ * @param	: uipay = unsigned int with payload
+ **************************************************************************************************/
+static void load_payload_int(struct CANRCVBUF* pcan, uint8_t status, uint32_t uipay)
+{
+	union UIB  // uint32_t to byte array cnversion
+	{
+		uint32_t ui;
+		uint8_t uc[4];
+	}uib;
+	uib.ui = uipay;	
+	
+	pcan->cd.uc[0] = status;
+	pcan->cd.uc[1] = uib.uc[0];
+	pcan->cd.uc[2] = uib.uc[1];
+	pcan->cd.uc[3] = uib.uc[2];
+	pcan->cd.uc[4] = uib.uc[3];
+	return;
+}
+/* *************************************************************************************************
+ * void adcsensor_rpm_compute(void);
+ *	@brief	: Compute rpm based on differences from last call to this routine
  **************************************************************************************************/
 
-/* NOTE: This routine is entered each subinterval from tim4_tim triggering EXI0 interrupt */
+/* NOTE: This routine is entered frm the EXI0 low level interrupt when the tim4_tim routine subinterval
+   count reaches the SUBINTERVALTRIGGER (presently 14) count.  The allows a little time for computation
+   before the expected CAN msg that polls for rpm. */
+unsigned int adcsensordb[4];
 
-void adc_rpm_compute(void)
+void adcsensor_rpm_compute(void)
 {
 	int32_t ndiff;
 	int32_t bave;
 
-	/* Compute accumulated scale reciprocals of durations between ADC transitions */
-	adcrpmave(&adctim2[0]); // Up transition	 Photocell B
-	adcrpmave(&adctim3[0]); // Up transition   Photocell A
-	adcrpmave(&adctim2[1]); // Down transition Photocell B
-	adcrpmave(&adctim3[1]); // Down transition Photocell A
+	/* Compute reciprocals of durations between oldest and latest ADC transitions */
+	bave  = adcrpmave(&adctim2[0]); // Up transition	Photocell B
+	bave += adcrpmave(&adctim3[0]); // Up transition   Photocell A
+	bave += adcrpmave(&adctim2[1]); // Down transition Photocell B
+	bave += adcrpmave(&adctim3[1]); // Down transition Photocell A
 
-	/* Compute rpm at trigger interval within 64 per sec reading rate */
-	// Compute slightly ahead of expected time sync CAN msg
-	if (subinterval_ct >= SUBINTERVALTRIGGER) 
-	{ // Here, time to compute
-
-		/* Direction +/-   */
-		ndiff = encoder_ctr2 - encoder_ctr2_prev;
-		encoder_ctr2_prev = encoder_ctr2;
-		if (ndiff > 0)
-			rpmsign = +1;
-		else if (ndiff < 0)
-			rpmsign = -1;
+	/* Discern direction: +/-   */
+	ndiff = encoder_ctr2 - encoder_ctr2_prev; // Overall quadrature counter
+	encoder_ctr2_prev = encoder_ctr2;
+	if (ndiff > 0)	     // Counts increasing?
+		rpmsign = +1;	  // Plus direction speed
+	else if (ndiff < 0) // Counts decreasing?
+		rpmsign = -1;    // Negative speed
 		
-		/* Compute average speed, and accumulate averages of both photocells */
-		bave  = interval_rpm(&adctim2[0]); // Photocell B up
-		bave += interval_rpm(&adctim3[0]); // Photocell A down
-		bave += interval_rpm(&adctim2[1]); // Photocell B up
-		bave += interval_rpm(&adctim3[1]); // Photocell A down
+	/* Complete scaling and conversions for CAN msgs */
+	shaft_f.nrpm  = bave * rpmsign; // Apply direction to rpm
+	shaft_f.drpm  = shaft_f.nrpm;	  // Convert to double for computations
+	shaft_f.drpm *= shaft_f.dk1;	  // Apply scale to yield rev per minute
+	shaft_f.frpm  = shaft_f.drpm;	  // Convert to float for CAN msga
 
-		/* Complete scaling and conversions for CAN msgs */
-		shaft_f.nrpm  = bave * rpmsign;	// Apply direction to rpm
-		shaft_f.drpm  = shaft_f.nrpm;	// Convert to double for computations
-		shaft_f.drpm *= shaft_f.dk1;	// Apply scale to yield rev per second
-		shaft_f.frpm  = shaft_f.drpm;	// Convert to float for CAN msga
-	}
+	/* Load CAN msgs with these latest readings */
+	load_payload_fit(&shaft_f.can_msg_speed, shaft_f.status_speed, shaft_f.frpm);
+	load_payload_fit(&shaft_f.can_hb_speed , shaft_f.status_speed, shaft_f.frpm);
+
+	load_payload_int(&shaft_f.can_msg_count, shaft_f.status_count, (uint32_t)encoder_ctr2);
+	load_payload_int(&shaft_f.can_hb_count , shaft_f.status_count, (uint32_t)encoder_ctr2);
+
+// debug
+adcsensordb[0] = adctim2[0].tdiff;
+adcsensordb[1] = adctim2[1].tdiff;
+adcsensordb[2] = adctim3[0].tdiff;
+adcsensordb[3] = adctim3[1].tdiff;
 	return;
 }
 
+#ifdef HISTOGRAM_MAY_HAVE_SOME_USEFUL_CODE_USED_LATER
 /* ########################## UNDER LOW PRIORITY SYSTICK INTERRUPT ############################### 
  * Do the computations and send the CAN msg
  * ############################################################################################### */
 /* 
    This routine is entered from the SYSTICK interrupt handler triggering I2C2_EV low priority interrupt. 
 */
-#ifdef HISTOGRAM_MAY_HAVE_SOME_USEFUL_CODE_USED_LATER
 static void compute_doit2(void)
 {
 	s32 	speed_filtered = 0;

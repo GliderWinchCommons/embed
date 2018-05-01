@@ -225,12 +225,12 @@ static u32 histthrottle = 0;	// Throttle for readouts of bins
 #endif
 
 /* (ADCTIMSCALE/time_diff_between_ADC_transition) */
-#define ADCTIMSCALEBITS 21
+#define ADCTIMSCALEBITS 32
 #define ADCTIMSCALE (1 << ADCTIMSCALEBITS)	// Scale 
 #define ADCTRANSITIONPERSEG 4	// Transition per encoding wheel segment
 
 /* Circular buffer for DWT times of ADC transitions */
-#define ADCTIMBUFSIZE 64	// Circular buffer size
+#define ADCTIMBUFSIZE 256	// Circular buffer size
 
 /* Buffer and parameters for photocells */
 struct ADCTIMBUF
@@ -244,6 +244,7 @@ struct ADCTIMBUF
 	 int32_t  n;		// Number in average
 	uint32_t  zeroct;	// Consecutive intervals with no transitions
 	uint32_t  tdiff;	// System ticks time diff between transitions
+	uint32_t  tlast;	// Last time reading
 	int32_t   irecip;	// (n/delta_t)
    uint32_t  buf[ADCTIMBUFSIZE]; // 32b sys counter times
 };
@@ -306,12 +307,16 @@ void adc_init_sequence_foto_h(struct SHAFT_FUNCTION* p)
 	adctimbuf_init(&adctim2[1]);
 	adctimbuf_init(&adctim3[1]);
 
-	/* Pre-compute scale factor for scaling raw rpm to scaled rpm */
+	/* Pre-compute scale factor for scaling interger raw rpm to scaled rpm double */
+	// Numerator
 	shaft_f.dk1  = 60.0;	// RPS -> RPM
-   shaft_f.dk1 /=(double)ADCTRANSITIONPERSEG; // e.g. 4 counts per segment
-	shaft_f.dk1 /=(double)ADCTIMSCALE;         // e.g. (1<<21) integer scaling
-	shaft_f.dk1 /=(double)ticksperus;          // e.g. 64 system ticks per us
-	shaft_f.dk1 /=(double)p->lc.num_seg;       // e.g. 16 segs per rev
+	shaft_f.dk1 *= sysclk_freq;	// e.g. 64,000,000
+	// Denominator
+	shaft_f.dk1 /=(double)(1<<16);       // equivalent of 32b integer scaling
+	shaft_f.dk1 /=(double)(1<<16);       //
+	shaft_f.dk1 /= 4;                    // four counts per transition
+	shaft_f.dk1 /= 4;                    // Sum for four transition streams
+	shaft_f.dk1 /=(double)p->lc.num_seg; // e.g. 16 segs per rev
 
 	/* Initialize ADC1 & ADC2 */
 	adc_init_foto();			// Initialize ADC1 and ADC2 registers.
@@ -851,8 +856,16 @@ struct ADCTIMBUF
    uint32_t  buf[ADCTIMBUFSIZE]; // 32b sys counter times
 };
 */
+//#define BONEHEADRPMCOMPUTATION
+#ifndef BONEHEADRPMCOMPUTATION
 static uint32_t adcrpmave(struct ADCTIMBUF *p)
 {
+	union U3264
+	{
+		uint64_t r64;
+		uint32_t r32[2];
+	}u3264;
+
 	/* Compute number of transitions since last time */
 	// Difference between pointers in circular buffer
 	p->n = ((uint32_t)p->padd - (uint32_t)p->psub) - 4;
@@ -868,8 +881,10 @@ static uint32_t adcrpmave(struct ADCTIMBUF *p)
 		p->tdiff = *(p->plast) - *(p->psub); // Time duration between
 
 		// Speed = number_transitions / time_duration
-		// Scale upwards, allowing for the 4x scale of p->n above
-		p->irecip  = (p->n << (ADCTIMSCALEBITS - 2)) / p->tdiff;
+		// Scale upwards by 32b, by putting count in upper word
+		u3264.r32[0] = 0;
+		u3264.r32[1] = p->n;
+		p->irecip = u3264.r64 / p->tdiff; // long_long/long
 
 		p->psub = p->plast;  // Update "tail" ptr
 		p->zeroct = 0;       // Reset no-transition counter
@@ -885,6 +900,48 @@ static uint32_t adcrpmave(struct ADCTIMBUF *p)
 	}
 	return p->irecip;
 }
+#endif
+#ifdef BONEHEADRPMCOMPUTATION
+// Bonehead approach as a double check on foregoing
+static uint32_t adcrpmave(struct ADCTIMBUF *p)
+{
+	uint32_t t = p->tlast;
+	union U3264
+	{
+		uint64_t r64;
+		uint32_t r32[2];
+	}u3264;
+
+	p->n = 0;
+
+	while (p->padd != p->psub)
+	{
+		t = *p->psub;
+		p->psub += 1;
+		if (p->psub >= p->p_end) p->psub = p->p_begin;
+		p->n += 4;	// 4x the count to correspond to the above version
+	}
+	p->tdiff = (int)((int)t - (int)p->tlast);
+	if (p->tdiff > 0)
+	{
+		p->zeroct = 0;       // Reset no-transition counter
+		u3264.r32[0] = 0;
+		u3264.r32[1] = p->n;
+		p->irecip = u3264.r64 / p->tdiff;
+	}
+	else
+	{ // Here, no transitions during the inteval
+		p->zeroct += 1;     // Count number of consecutive zero cases
+		if (p->zeroct >= ZEROCTMAX) // Too many?
+		{ // Here, the RPM will assumed to be zero.
+			p->zeroct = ZEROCTMAX;
+			p->irecip = 0;	
+		}
+	}
+	p->tlast = t;
+	return p->irecip;
+}
+#endif
 /* *************************************************************************************************
  * static void load_payload_flt(struct CANRCVBUF* pcan, uint8_t status, float fpay);
  *	@brief	: Assemble payload from input of status byte, and a float
@@ -940,7 +997,7 @@ static void load_payload_int(struct CANRCVBUF* pcan, uint8_t status, uint32_t ui
 /* NOTE: This routine is entered frm the EXI0 low level interrupt when the tim4_tim routine subinterval
    count reaches the SUBINTERVALTRIGGER (presently 14) count.  The allows a little time for computation
    before the expected CAN msg that polls for rpm. */
-unsigned int adcsensordb[4];
+int adcsensordb[5];
 
 void adcsensor_rpm_compute(void)
 {
@@ -975,10 +1032,26 @@ void adcsensor_rpm_compute(void)
 	load_payload_int(&shaft_f.can_hb_count , shaft_f.status_count, (uint32_t)encoder_ctr2);
 
 // debug
-adcsensordb[0] = adctim2[0].tdiff;
-adcsensordb[1] = adctim2[1].tdiff;
-adcsensordb[2] = adctim3[0].tdiff;
-adcsensordb[3] = adctim3[1].tdiff;
+adcsensordb[0] = adctim2[0].n;
+adcsensordb[1] = adctim2[0].tdiff;
+adcsensordb[2] = adctim2[0].tlast;
+adcsensordb[3] = adctim2[0].irecip;
+adcsensordb[4] = 1;
+
+//adcsensordb[0] = adctim2[0].irecip;
+//adcsensordb[1] = adctim2[1].irecip;
+//adcsensordb[2] = adctim3[0].irecip;
+//adcsensordb[3] = adctim3[1].irecip;
+
+//adcsensordb[0] = adctim2[0].n;
+//adcsensordb[1] = adctim2[1].n;
+//adcsensordb[2] = adctim3[0].n;
+//adcsensordb[3] = adctim3[1].n;
+
+//adcsensordb[0] = adctim2[0].tdiff;
+//adcsensordb[1] = adctim2[1].tdiff;
+//adcsensordb[2] = adctim3[0].tdiff;
+//adcsensordb[3] = adctim3[1].tdiff;
 	return;
 }
 

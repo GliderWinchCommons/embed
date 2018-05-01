@@ -331,8 +331,9 @@ char b[32];
 int encoder_prev = encoder_ctr2;
 int encoder_diff;
 
-extern int adcsensordb[4];
-//int adcsensordb_prev[4];
+extern int adcsensordb[5];
+//int adcsensordb_prev[5];
+
 
 //canwinch_pod_common_systick2048_printerr_header();
 /* --------------------- Endless Stuff ----------------------------------------------- */
@@ -343,8 +344,8 @@ extern int adcsensordb[4];
 		{
 			tim4_tim_ticks_next += LEDPRINTFRINC;
 			TOGGLE_GREEN;	// Slow flash of green means "OK"
-
-			fpformatn(a,shaft_f.drpm,10,1,6); // 
+#ifdef ZXCVB
+			fpformatn(a,shaft_f.drpm,10,1,10); // 
 			encoder_diff = encoder_ctr2 - encoder_prev;
 			encoder_prev = encoder_ctr2;
 						
@@ -356,6 +357,12 @@ extern int adcsensordb[4];
 //				adcsensordb_prev[j] = adcsensordb[j];
 			} 
 			printf("\n\r");USART1_txint_send();
+#endif
+		}
+		if (adcsensordb[4] != 0)
+		{
+			adcsensordb[4] = 0;
+			printf("%5d %2d %7d %d\n\r",i++,adcsensordb[0],adcsensordb[1],adcsensordb[3]);
 		}
 	}
 	return 0;	

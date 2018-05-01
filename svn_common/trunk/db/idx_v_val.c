@@ -1,4 +1,4 @@
-// 2018-04-26 17:40:20.859
+// 2018-04-30 22:23:47.597
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -288,7 +288,7 @@ const uint32_t paramval13[] = {
  0xE2800000 , /*   9 CANID_HB_SHAFT1_SPEED  17  Shaft1: CANID: Shaft speed, calibrated, heartbeat                               */
  0x82E00000 , /*  10 CANID_MSG_SHAFT1_COUNT  17  Shaft1: CANID: Shaft running counT, response to poll                            */
  0xE2A00000 , /*  11 CANID_HB_SHAFT1_COUNT  17  Shaft1: CANID: Shaft running count, heartbeat                                   */
- 0x0000000A , /*  12 10                   6  Shaft1: Number of segments on code wheel                                        */
+ 0x00000010 , /*  12 16                   6  Shaft1: Number of segments on code wheel                                        */
  0x00400000 , /*  13 CANID_HB_TIMESYNC   17  Shaft1: CANID 1: GPS time sync distribution msg                                 */
  0x20000000 , /*  14 CANID_MSG_TIME_POLL  17  Shaft1: CANID 2:Time msg/Group polling                                          */
  0xA0600000 , /*  15 CANID_CMD_SHAFT1I   17  Shaft1: CANID 3: command                                                        */

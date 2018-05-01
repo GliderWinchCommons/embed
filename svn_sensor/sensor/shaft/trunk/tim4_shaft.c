@@ -357,9 +357,10 @@ void EXTI0_IRQHANDLER(void)
 	if (subinterval_ct == SUBINTERVALTRIGGER) // Time to trigger (lower level) computation?
 	{ // Here, yes
 		adcsensor_rpm_compute();	// Do the rpm computation
+debugrpmsensorch3ctr += 1;
 	}
 
-debugrpmsensorch3ctr += 1;
+
 
 	/* Filter and prepare readings for ADC readings (manifold, throttle, thermistor) */
 	// Do this each subinterval "tick"

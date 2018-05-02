@@ -44,6 +44,9 @@ printf("%2d	0x%08X %s\n\r",i+18, (unsigned int)p->code_CAN_filt[5], "Shaft: 18 C
 printf("%2d	0x%08X %s\n\r",i+19, (unsigned int)p->code_CAN_filt[6], "Shaft: 19 CANID 7 for setting up CAN hardware filter");
 printf("%2d	0x%08X %s\n\r",i+20, (unsigned int)p->code_CAN_filt[7], "Shaft: 20 CANID 8 for setting up CAN hardware filter");
 
+printf("%2d	%d	   %s\n\r",i+21, (unsigned int)p->iir_k_hb,			"Shaft: 21 Filter factor: divisor sets time constant: hb msg");
+printf("%2d	%d	   %s\n\r",i+22, (unsigned int)p->iir_scale_hb,	   "Shaft: 22 Filter scale : upscaling: hb msg");
+
 	USART1_txint_send(); 
 	return;
 }

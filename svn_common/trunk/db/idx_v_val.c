@@ -1,4 +1,4 @@
-// 2018-04-30 22:23:47.597
+// 2018-05-01 23:45:29.013
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -17,7 +17,7 @@
 #define LOGGER_1_PARAM_SIZE 4
 #define LOGGER_2_PARAM_SIZE 4
 #define MCL_PARAM_SIZE 22
-#define SHAFT1_PARAM_SIZE 20
+#define SHAFT1_PARAM_SIZE 22
 #define SHEAVE_1LO_PARAM_SIZE 17
 #define SHEAVE_1UP_PARAM_SIZE 17
 #define TENSION_a11_PARAM_SIZE 51
@@ -297,6 +297,8 @@ const uint32_t paramval13[] = {
  0xFFFFFFFC , /*  18 CANID_DUMMY         17  Shaft1: CANID 6 added to CAN hw filter to allow incoming msg                    */
  0xFFFFFFFC , /*  19 CANID_DUMMY         17  Shaft1: CANID 7 added to CAN hw filter to allow incoming msg                    */
  0xFFFFFFFC , /*  20 CANID_DUMMY         17  Shaft1: CANID 8 added to CAN hw filter to allow incoming msg                    */
+ 0x00000004 , /*  21 4                    6  Shaft1: IIR Filter factor: divisor sets time const: for heart-beat msg          */
+ 0x00000040 , /*  22 64                   6  Shaft1: IIR Filter scale : upscaling (integer math): for heart-beat msg         */
 };
 #endif
 

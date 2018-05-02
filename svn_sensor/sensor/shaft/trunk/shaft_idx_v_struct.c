@@ -63,6 +63,9 @@ INSERT INTO PARAM_LIST VALUES ('SHAFT_CANID_HW_FILT5' ,16,'TYP_CANID','%x','DRIV
 INSERT INTO PARAM_LIST VALUES ('SHAFT_CANID_HW_FILT6' ,17,'TYP_CANID','%x','DRIVE_SHAFT','Shaft: CANID 6 added to CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('SHAFT_CANID_HW_FILT7' ,18,'TYP_CANID','%x','DRIVE_SHAFT','Shaft: CANID 7 added to CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('SHAFT_CANID_HW_FILT8' ,19,'TYP_CANID','%x','DRIVE_SHAFT','Shaft: CANID 8 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHAFT_IIR_HB_K'       ,21,'TYP_U32','%u',  'DRIVE_SHAFT','Shaft: IIR Filter factor: divisor sets time constant: reading for hb msg');
+INSERT INTO PARAM_LIST VALUES ('SHAFT_IIR_HB_SCALE'   ,22,'TYP_U32','%u',  'DRIVE_SHAFT','Shaft: IIR Filter scale : upscaling (due to integer math): for hb msg');
+
  struct SHAFTLC
  {
 	uint32_t size;					//  0 Number of items in struct
@@ -78,6 +81,8 @@ INSERT INTO PARAM_LIST VALUES ('SHAFT_CANID_HW_FILT8' ,19,'TYP_CANID','%x','DRIV
 	uint32_t cid_msg_ct;    	// 10 Shaft running count, response to poll
 	uint32_t cid_hb_ct;	   	// 11 Shaft running count, heartbeat
 	uint32_t code_CAN_filt[CANFILTMAX];// List of CAN ID's for setting up hw filter
+	uint32_t iir_k_hb;			// 21 Filter factor: divisor sets time constant: hb msg
+   uint32_t iir_scale_hb;		// 22 Filter scale : upscaling: hb msg
  };
 */
 
@@ -103,7 +108,8 @@ p->code_CAN_filt[4] = ptbl[SHAFT_CANID_HW_FILT5];	/* 17 Shaft: CAN ID 5 for sett
 p->code_CAN_filt[5] = ptbl[SHAFT_CANID_HW_FILT6];	/* 18 Shaft: CAN ID 6 for setting up CAN hardware filter */
 p->code_CAN_filt[6] = ptbl[SHAFT_CANID_HW_FILT7];	/* 19 Shaft: CAN ID 7 for setting up CAN hardware filter */
 p->code_CAN_filt[7] = ptbl[SHAFT_CANID_HW_FILT8];	/* 20 Shaft: CAN ID 8 for setting up CAN hardware filter */
-
+p->iir_k_hb        = ptbl[SHAFT_IIR_HB_K];			/* 21 Filter factor: divisor sets time constant: hb msg */
+p->iir_scale_hb    = ptbl[SHAFT_IIR_HB_SCALE];     /* 22 Filter scale : upscaling: hb msg */
 
 return PARAM_LIST_CT_DRIVE_SHAFT;
 }

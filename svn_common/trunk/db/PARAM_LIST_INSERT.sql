@@ -49,6 +49,7 @@ INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT5'    ,14, 'TYP_CANID','%x
 INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT6'    ,15, 'TYP_CANID','%x',  'SHEAVE_H',	'Encoder_f4_1: CANID 6 added to CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT7'    ,16, 'TYP_CANID','%x',  'SHEAVE_H',	'Encoder_f4_1: CANID 7 added to CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('SHEAVE_H_CANID_HW_FILT8'    ,17, 'TYP_CANID','%x',  'SHEAVE_H',	'Encoder_f4_1: CANID 8 added to CAN hw filter to allow incoming msg');
+
 --
 -- Cansender 
 --                              Parameter name                 Code     Type  format Function_type       Description10
@@ -82,6 +83,9 @@ INSERT INTO PARAM_LIST VALUES ('SHAFT_CANID_HW_FILT5' ,17,'TYP_CANID','%x','DRIV
 INSERT INTO PARAM_LIST VALUES ('SHAFT_CANID_HW_FILT6' ,18,'TYP_CANID','%x','DRIVE_SHAFT','Shaft: CANID 6 added to CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('SHAFT_CANID_HW_FILT7' ,19,'TYP_CANID','%x','DRIVE_SHAFT','Shaft: CANID 7 added to CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('SHAFT_CANID_HW_FILT8' ,20,'TYP_CANID','%x','DRIVE_SHAFT','Shaft: CANID 8 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('SHAFT_IIR_HB_K'       ,21,'TYP_U32','%u',  'DRIVE_SHAFT','Shaft: IIR Filter factor: divisor sets time constant: reading for hb msg');
+INSERT INTO PARAM_LIST VALUES ('SHAFT_IIR_HB_SCALE'   ,22,'TYP_U32','%u',  'DRIVE_SHAFT','Shaft: IIR Filter scale : upscaling (due to integer math): for hb msg');
+
 --
 -- AD7799 Tension
 --                              Parameter name                Code     Type  format     Function_type            Description

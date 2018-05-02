@@ -41,7 +41,6 @@
 #include "../../../../svn_common/trunk/can_msg_reset.h"
 #include "libmiscstm32/DTW_counter.h"
 
-#include "canwinch_pod_common_systick2048_printerr.h"
 #include "../../../../svn_common/trunk/common_highflash.h"
 
 #include "fmtprint.h"
@@ -320,7 +319,8 @@ extern unsigned short adc3valbuff[2][ADCVALBUFFSIZE];
 #endif
 
 /* Green LED flashing */
-#define LEDPRINTFRINC 2000	// One per sec
+//#define LEDPRINTFRINC 2000	// One per sec
+#define LEDPRINTFRINC 1000	// two per sec
 uint32_t tim4_tim_ticks_next = tim4_tim_ticks + LEDPRINTFRINC;
 extern void testfoto(void);
 
@@ -334,11 +334,26 @@ int encoder_diff;
 extern int adcsensordb[5];
 //int adcsensordb_prev[5];
 
-
+uint32_t tfilt0 = 0;
+uint32_t tfilt1 = 0;
+ int32_t tfiltmax = 0;
 //canwinch_pod_common_systick2048_printerr_header();
 /* --------------------- Endless Stuff ----------------------------------------------- */
 	while (1==1)
 	{
+		if (iirflag != 0) // New rpm filtered data?
+		{
+tfilt0 = DTWTIME;
+			iirflag = 0;	// Reset flag
+			iir_filter_l_do(&iirhb, (int32_t*)&adcsensor_nrpmhb); // Run new data through filter
+			iir_filter_l_double(&iirhb);	  // Get filtered result as double
+			iirhb.d_out *= shaft_f.dk1;	  // Apply scale to yield rev per minute
+			shaft_f.frpm_hb  = iirhb.d_out; // Convert to float for hearbeat CAN msg
+			adcsensor_load_pay_hb_speed(shaft_f.frpm_hb); // Setup hb CAN msg (but not send)
+tfilt1 = DTWTIME;
+if ((int)(tfilt1 - tfilt0) > tfiltmax) tfiltmax =  (int)(tfilt1 - tfilt0);
+		}
+
 		/* Green LED OK flasher */
 		if ((int)(tim4_tim_ticks - tim4_tim_ticks_next) >= 0)
 		{
@@ -356,14 +371,20 @@ extern int adcsensordb[5];
 				printf(" %d",adcsensordb[j]);
 //				adcsensordb_prev[j] = adcsensordb[j];
 			} 
-			printf("\n\r");USART1_txint_send();
+			printf("\n\r");
 #endif
+			fpformatn(b,iirhb.d_out,10,1,10); // 
+			printf("iir ticks: %d %s\n\r",(int)tfiltmax,b);
+			tfiltmax = 0;	// Reset every second
+			USART1_txint_send();
 		}
+#ifdef FASTSTUFFLIST
 		if (adcsensordb[4] != 0)
 		{
 			adcsensordb[4] = 0;
 			printf("%5d %2d %7d %d\n\r",i++,adcsensordb[0],adcsensordb[1],adcsensordb[3]);
 		}
+#endif
 	}
 	return 0;	
 }

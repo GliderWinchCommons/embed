@@ -22,6 +22,7 @@
 #include "can_msg_reset.h"
 #include "CAN_poll_loop.h"
 #include "tim4_shaft.h"
+#include "iir_filter_l.h"
 
 
 #define TENAQUEUESIZE	3	// Queue size for passing values between levels
@@ -31,6 +32,9 @@
 		uint32_t ui;
 		float ft;
 	};
+struct IIR_L_PARAM iirprm;
+struct IIRFILTERL iirhb;	// IIR filtering of rpm for heartbeat msg
+
 
 /* CAN control block pointer. */
 extern struct CAN_CTLBLOCK* pctl1;
@@ -162,6 +166,13 @@ int shaft_function_init_all(void)
 
 	// Copy table entries to struct in sram from high flash.
 	  ret  = shaft_idx_v_struct_copy_shaft(&shaft_f.lc, shaft_f.cf.pparamflash);
+
+	// Copy IIR filter parameters to working filter struct
+	iirhb.pprm = & iirprm; // Pointer to fixed parameter pair
+	iirhb.sw   = 0;	     // One-time init switch
+	// IIR filter fixed parameter pair
+	iirprm.k     = shaft_f.lc.iir_k_hb;     // Cut-off factor
+	iirprm.scale = shaft_f.lc.iir_scale_hb; // Scale factor for integer math
 
 	// Add CAN IDs to incoming msgs passed by the CAN hardware filter. 
 	  ret2 = can_driver_filter_add_param_tbl(&shaft_f.lc.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);

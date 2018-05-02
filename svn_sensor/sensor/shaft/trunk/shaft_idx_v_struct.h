@@ -34,6 +34,8 @@
 	uint32_t cid_hb_ct;	   	// 11 Shaft running count, heartbeat
 	uint32_t num_seg;          // 12 Number of segments on code wheel
 	uint32_t code_CAN_filt[CANFILTMAX];// List of CAN ID's for setting up hw filter
+	uint32_t iir_k_hb;			// 21 Filter factor: divisor sets time constant: hb msg
+   uint32_t iir_scale_hb;		// 22 Filter scale : upscaling: hb msg
  };
  
 /* **************************************************************************************/

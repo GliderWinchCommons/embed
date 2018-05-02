@@ -127,10 +127,14 @@ NOTE: Some page number refer to the Ref Manual RM0008, rev 11 and some more rece
 #include "adcsensor_foto_h.h"
 #include "tim4_shaft.h"
 #include "IRQ_priority_shaft.h"
+#include "iir_filter_l.h"
 
 
 /* Pointer to control block for CAN1. */
 extern struct CAN_CTLBLOCK* pctl1;
+
+uint32_t adcsensor_nrpmhb;	// Latest nrpm buffered for 'main'
+uint8_t iirflag = 0;	// Flag 'main' for new rpm data in buffer
 
 /* Delay for CR2_ADON (adc power up) (about 1 us) */
 #define DELAYCOUNTCR2_ADON	2	// Delay in microseconds
@@ -989,6 +993,12 @@ static void load_payload_int(struct CANRCVBUF* pcan, uint8_t status, uint32_t ui
 	pcan->cd.uc[4] = uib.uc[3];
 	return;
 }
+void adcsensor_load_pay_hb_speed(float f)
+{
+	load_payload_fit(&shaft_f.can_hb_speed , shaft_f.status_speed, f);
+	return;
+}
+
 /* *************************************************************************************************
  * void adcsensor_rpm_compute(void);
  *	@brief	: Compute rpm based on differences from last call to this routine
@@ -1024,18 +1034,22 @@ void adcsensor_rpm_compute(void)
 	shaft_f.drpm *= shaft_f.dk1;	  // Apply scale to yield rev per minute
 	shaft_f.frpm  = shaft_f.drpm;	  // Convert to float for CAN msga
 
+	/* Additional filtering for heartbeat (slow) msg */
+	adcsensor_nrpmhb = shaft_f.nrpm;	// Save for 'main' for further filtering
+	iirflag = 1;	// Signal 'main' new data
+
 	/* Load CAN msgs with these latest readings */
 	load_payload_fit(&shaft_f.can_msg_speed, shaft_f.status_speed, shaft_f.frpm);
-	load_payload_fit(&shaft_f.can_hb_speed , shaft_f.status_speed, shaft_f.frpm);
 
 	load_payload_int(&shaft_f.can_msg_count, shaft_f.status_count, (uint32_t)encoder_ctr2);
 	load_payload_int(&shaft_f.can_hb_count , shaft_f.status_count, (uint32_t)encoder_ctr2);
 
 // debug
-adcsensordb[0] = adctim2[0].n;
-adcsensordb[1] = adctim2[0].tdiff;
-adcsensordb[2] = adctim2[0].tlast;
-adcsensordb[3] = adctim2[0].irecip;
+int k = 1;
+adcsensordb[0] = adctim3[k].n;
+adcsensordb[1] = adctim3[k].tdiff;
+adcsensordb[2] = adctim3[k].tlast;
+adcsensordb[3] = bave; //adctim3[k].irecip;
 adcsensordb[4] = 1;
 
 //adcsensordb[0] = adctim2[0].irecip;

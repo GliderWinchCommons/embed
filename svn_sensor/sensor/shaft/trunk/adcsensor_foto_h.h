@@ -101,6 +101,8 @@ void adcsensor_foto_h_enable_histogram(void);
 void adcsensor_rpm_compute(void);
 /*	@brief	: Compute rpm based on differences from last call to this routine
  ******************************************************************************/
+void adcsensor_load_pay_hb_speed(float f);
+
 
 extern long speed_filteredA2;		// Most recent computed & filtered rpm
 extern u32 encoder_ctrA2;		// Most recent encoder count
@@ -110,5 +112,6 @@ extern s32 encoder_ctr2;
 
 /* Error counters */
 extern u32 adcsensor_foto_err[ADCERRORCTRSIZE];	// Error counters
-
+extern uint32_t adcsensor_nrpmhb;	// Latest nrpm buffered for 'main'
+extern uint8_t iirflag;	// Flag 'main' for new rpm data in buffer
 #endif 

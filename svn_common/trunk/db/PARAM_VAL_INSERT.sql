@@ -222,6 +222,8 @@ INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CANID_HW_FILT5' ,'CANID_DUMMY', 'DR
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CANID_HW_FILT6' ,'CANID_DUMMY', 'DRIVE_SHAFT','Shaft1: CANID 6 added to CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CANID_HW_FILT7' ,'CANID_DUMMY', 'DRIVE_SHAFT','Shaft1: CANID 7 added to CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CANID_HW_FILT8' ,'CANID_DUMMY', 'DRIVE_SHAFT','Shaft1: CANID 8 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_IIR_HB_K'       , '4'     ,'DRIVE_SHAFT','Shaft1: IIR Filter factor: divisor sets time const: for heart-beat msg');
+INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_IIR_HB_SCALE'   , '64'    ,'DRIVE_SHAFT','Shaft1: IIR Filter scale : upscaling (integer math): for heart-beat msg');
 -- ===================================================================================================================================================================================
 -- CANSENDER_1
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL                FUNCTION_TYPE     DESCRIPTION11

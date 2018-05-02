@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2018-04-30 22:23:44.752
+// 2018-05-01 23:45:27.712
 
 #define CANID_COUNT 213
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -302,7 +302,7 @@
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
 
-#define PARAM_LIST_COUNT 292	// TOTAL COUNT OF PARAMETER LIST
+#define PARAM_LIST_COUNT 294	// TOTAL COUNT OF PARAMETER LIST
 
 #define  ENCODER_LIST_CRC        	1         // Encoder_f4_1: crc: CRC for tension list         
 #define  ENCODER_LIST_VERSION    	2         // Encoder_f4_1: version: Version number for Tension List
@@ -353,8 +353,10 @@
 #define  SHAFT_CANID_HW_FILT6    	18        // Shaft: CANID 6 added to CAN hw filter to allow incoming msg
 #define  SHAFT_CANID_HW_FILT7    	19        // Shaft: CANID 7 added to CAN hw filter to allow incoming msg
 #define  SHAFT_CANID_HW_FILT8    	20        // Shaft: CANID 8 added to CAN hw filter to allow incoming msg
+#define  SHAFT_IIR_HB_K          	21        // Shaft: IIR Filter factor: divisor sets time constant: reading for hb msg
+#define  SHAFT_IIR_HB_SCALE      	22        // Shaft: IIR Filter scale : upscaling (due to integer math): for hb msg
 
-#define PARAM_LIST_CT_DRIVE_SHAFT	20	// Count of same FUNCTION_TYPE in preceding list
+#define PARAM_LIST_CT_DRIVE_SHAFT	22	// Count of same FUNCTION_TYPE in preceding list
 
 #define  TENSION_a_LIST_CRC      	1         // Tension_a: crc: CRC for tension list            
 #define  TENSION_a_LIST_VERSION  	2         // Tension_a: version: Version number for Tension List
@@ -739,6 +741,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 677  */
+/* TOTAL COUNT OF #defines = 679  */
 /* Test 2016/06/12 */
 

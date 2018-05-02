@@ -65,7 +65,8 @@ struct SHAFT_FUNCTION
 	double   dk1;             // Scale factor (compute at init)
 	int32_t  nrpm;            // rpm (signed int)
 	double   drpm;            // rpm (double)
-	double   frpm;            // rpm (float)
+	float    frpm;            // rpm (float)
+	float    frpm_hb;         // rpm (float) additonal filtering for heartbeat msg 
 	
 	
 /* These were originally in the.c file */
@@ -128,10 +129,10 @@ void shaft_can_msg_poll_init(void);
  * @param	: pctl = pointer to CAN control block 
 ********************************************************************************/
 
-
-
 /* Holds parameters and associated computed values and readings for each instance. */
 extern struct SHAFT_FUNCTION shaft_f;
+
+extern struct IIRFILTERL iirhb;	// IIR filtering of rpm for heartbeat msg
 
 #endif 
 

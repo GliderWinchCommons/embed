@@ -319,8 +319,8 @@ extern unsigned short adc3valbuff[2][ADCVALBUFFSIZE];
 #endif
 
 /* Green LED flashing */
-//#define LEDPRINTFRINC 2000	// One per sec
-#define LEDPRINTFRINC 1000	// two per sec
+#define LEDPRINTTICKSPERSEC 2000
+#define LEDPRINTFRINC (LEDPRINTTICKSPERSEC/4)	// N per sec
 uint32_t tim4_tim_ticks_next = tim4_tim_ticks + LEDPRINTFRINC;
 extern void testfoto(void);
 
@@ -337,10 +337,21 @@ extern int adcsensordb[5];
 uint32_t tfilt0 = 0;
 uint32_t tfilt1 = 0;
  int32_t tfiltmax = 0;
+
+uint32_t ttot0 = 0;
+uint32_t ttot1 = 0;
+uint32_t ttotdiff;
+ int32_t ttotmax = 0;
+uint32_t ttotctr = 0;
+
 //canwinch_pod_common_systick2048_printerr_header();
 /* --------------------- Endless Stuff ----------------------------------------------- */
 	while (1==1)
 	{
+ttot1 = DTWTIME;
+ttotdiff = ttot1 - ttot0;
+if (ttotdiff > ttotmax) ttotmax = ttotdiff;
+ttot0 = DTWTIME;
 		if (iirflag != 0) // New rpm filtered data?
 		{
 tfilt0 = DTWTIME;
@@ -359,7 +370,8 @@ if ((int)(tfilt1 - tfilt0) > tfiltmax) tfiltmax =  (int)(tfilt1 - tfilt0);
 		{
 			tim4_tim_ticks_next += LEDPRINTFRINC;
 			TOGGLE_GREEN;	// Slow flash of green means "OK"
-#ifdef ZXCVB
+#define ZXCVB
+#ifdef  ZXCVB
 			fpformatn(a,shaft_f.drpm,10,1,10); // 
 			encoder_diff = encoder_ctr2 - encoder_prev;
 			encoder_prev = encoder_ctr2;
@@ -373,9 +385,10 @@ if ((int)(tfilt1 - tfilt0) > tfiltmax) tfiltmax =  (int)(tfilt1 - tfilt0);
 			} 
 			printf("\n\r");
 #endif
-			fpformatn(b,iirhb.d_out,10,1,10); // 
-			printf("iir ticks: %d %s\n\r",(int)tfiltmax,b);
+			fpformatn(b,iirhb.d_out,10,1,10); // Heavy filtered heartbeat RPM
+			printf("ticd iit %d tot %d %s\n\r",(int)tfiltmax,(int)ttotmax,b);
 			tfiltmax = 0;	// Reset every second
+if (ttotctr++ >= 8){ttotmax = 0; ttotctr = 0;}
 			USART1_txint_send();
 		}
 #ifdef FASTSTUFFLIST

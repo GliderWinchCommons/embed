@@ -415,9 +415,9 @@ inputs selected through the ADC_SQRx or ADC_JSQRx registers are converted."
 	ADC1_SQR3 = ( (2 << 0) ); // Conversion sequence number dummy
 
 	/* Set and enable interrupt controller for ADCs. */
-	NVICIPR (NVIC_ADC1_2_IRQ,ADC1_2_PRIORITY_FOTO );// Set interrupt priority
+	NVICIPR (NVIC_ADC1_2_IRQ,ADC1_2_PRIORITY_FOTO_SHAFT );// Set interrupt priority
 
-	NVICIPR (NVIC_ADC3_IRQ,ADC1_2_PRIORITY_FOTO );	// Set interrupt priority *SAME AS* ADC1|ADC2
+	NVICIPR (NVIC_ADC3_IRQ,ADC1_2_PRIORITY_FOTO_SHAFT );	// Set interrupt priority *SAME AS* ADC1|ADC2
 
 	/* Low level interrupt for doing adc filtering following DMA1 CH1 interrupt. */
 	NVICIPR (NVIC_FSMC_IRQ, ADC_FSMC_PRIORITY);	// Set low level interrupt priority for post DMA1 interrupt processing

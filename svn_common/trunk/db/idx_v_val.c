@@ -1,4 +1,4 @@
-// 2018-05-01 23:45:29.013
+// 2018-05-04 21:29:59.374
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -769,7 +769,7 @@ const struct FUNC_CANID func_canid08[] = {
 #ifdef CAN_UNIT_2	// a #define is used to select the following
 const struct FUNC_CANID func_canid09[] = {
 {   0x04000000, CAN_UNIT_2_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
-{1022,  0xA0600004 }, /*   1 CAN_UNIT_2           CANID_CMD_SHAFT1R	 Sensor, shaft1: R Drive shaft encoder*/
+{1022,  0xE2C00000 }, /*   1 CAN_UNIT_2           CANID_CMD_SHAFT1R	 Sensor, shaft1: R Drive shaft encoder*/
 {  22,  0xA0600000 }, /*   2 CAN_UNIT_2           CANID_CMD_SHAFT1I	 Sensor, shaft1: I Drive shaft encoder*/
 };
 #endif

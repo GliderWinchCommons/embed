@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2018-05-01 23:45:27.712
+// 2018-05-04 21:29:57.907
 
 #define CANID_COUNT 213
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -103,7 +103,7 @@
 #define  CANID_CP_CTL_IN_LCL      0x25000000  // CP             : Control Panel: Control lever  local: input
 #define  CANID_CP_CTL_OUT_RMT     0x2A000000  // CP             : Control Panel: Control lever output
 #define  CANID_CMD_SHAFT1I        0xA0600000  // DRIVE_SHAFT    : Shaft1: I Command CAN: incoming
-#define  CANID_CMD_SHAFT1R        0xA0600004  // DRIVE_SHAFT    : Shaft1: R Command CAN: repsonse
+#define  CANID_CMD_SHAFT1R        0xE2C00000  // DRIVE_SHAFT    : Shaft1: R Command CAN: repsonse
 #define  CANID_MSG_SHAFT1_SPEED   0x82A00000  // DRIVE_SHAFT    : Shaft1: Speed (RPM), polled msg
 #define  CANID_MSG_SHAFT1_COUNT   0x82E00000  // DRIVE_SHAFT    : Shaft1: Cumulative count, polled msg
 #define  CANID_HB_SHAFT1_SPEED    0xE2800000  // DRIVE_SHAFT    : Shaft1: Speed (RPM), hearbeat
@@ -235,7 +235,7 @@
 #define  TYP_ASC                 16        // 4           ascii chars
 #define  TYP_CANID               17        // 1           CANID (handled differently than a U32)
 
-#define CMD_CODES_COUNT 34
+#define CMD_CODES_COUNT 36
 #define  LDR_SET_ADDR            1         // 5 Set address pointer (not FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_SET_ADDR_FL         2         // 5 Set address pointer (FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_CRC                 3         // 8 Get CRC: 2-4 = count; 5-8 = start address; Reply CRC 2-4 na, 5-8 computed CRC 
@@ -270,8 +270,10 @@
 #define  CMD_GET_READING_BRD     37        // Send a reading for the code specified in byte [1] for board; common to functions
 #define  CMD_LAUNCH_PARM_HDSHK   38        // Send msg to handshake transferring launch parameters
 #define  CMD_SEND_LAUNCH_PARM    39        // Send msg to send burst of parameters
+#define  CMD_REQ_HISTOGRAM       40        // Request histogram: [1] ADC #: [2] # consecutive:[3]-[6] # DMA buffers accumuleted in bins
+#define  CMD_THISIS_HISTODATA    41        // Histogram data item: [1] ADC #:[2] bin # (0 - n), [3]-[6] bin count
 
-#define PAYLOAD_TYPE_COUNT 29
+#define PAYLOAD_TYPE_COUNT 30
 #define  NONE                    0         //  No payload bytes                               
 #define  FF                      1         //  [0]-[3]: Full Float                            
 #define  FF_FF                   2         //  [0]-[3]: Full Float[0]; [4]-[7]: Full Float[1] 
@@ -298,6 +300,7 @@
 #define  U8                      23        //  [0]: uint8_t                                   
 #define  UNIXTIME                24        //  [0]: U8_U32 with U8 bit field stuff            
 #define  U8_U8                   25        //  [0]:[1]: uint8_t[0],uint8[1]                   
+#define  U8_U8_U8_U32            26        //  [0]:[1]:[2]:[3]-[5]: uint8_t[0],uint8_t[0],uint8_t[1], int32_t,
 #define  LVL2B                   249       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
@@ -741,6 +744,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 679  */
+/* TOTAL COUNT OF #defines = 682  */
 /* Test 2016/06/12 */
 

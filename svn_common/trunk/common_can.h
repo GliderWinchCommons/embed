@@ -480,9 +480,9 @@ Program load addresses, or sequence number for other multi-msg data payloads
 /* Buffering incoming CAN messages */
 union CANDATA	// Unionize for easier cooperation amongst types
 {
-	unsigned long long ull;
-	signed long long   sll;
-        double             dbl;
+   unsigned long long ull;
+   signed long long   sll;
+   double             dbl;
 	u32 	   ui[2];
 	u16 	   us[4];
 	u8 	   uc[8];

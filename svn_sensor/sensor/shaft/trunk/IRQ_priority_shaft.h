@@ -10,6 +10,10 @@
 #define __IRQ_PRIORITIES_SE1
 
 #define ADC1_2_PRIORITY_FOTO_SHAFT       0x40  // ADC1_2 and ADC3 priority
+
+#define DMA1_CH1_PRIORITY	              0x60	// ADC circular buffering interrupts
+#define DMA2_CH5_PRIORITY	              0x60	// 
+
 #define TIM4_PRIORITY_SHAFT              0x70  // RPM input capture & timing
 
 #define NVIC_I2C1_ER_IRQ_PRIORITY_SE1    0xa0  // CAN_poll_loop_trigger

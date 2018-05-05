@@ -183,7 +183,7 @@ INSERT INTO CANID VALUES ('CANID_CP_CTL_OUT_RMT',	'2A000000', 'CP', 	'UNDEF','Co
 
 -- Sensor board reflective shaft encoder (../svn_sensor/sensor/shaft/trunk)
 INSERT INTO CANID VALUES ('CANID_CMD_SHAFT1I'      ,'A0600000', 'DRIVE_SHAFT','UNDEF' ,'Shaft1: I Command CAN: incoming');
-INSERT INTO CANID VALUES ('CANID_CMD_SHAFT1R'      ,'A0600004', 'DRIVE_SHAFT','UNDEF' ,'Shaft1: R Command CAN: repsonse');
+INSERT INTO CANID VALUES ('CANID_CMD_SHAFT1R'      ,'E2C00000', 'DRIVE_SHAFT','UNDEF' ,'Shaft1: R Command CAN: repsonse');
 INSERT INTO CANID VALUES ('CANID_MSG_SHAFT1_SPEED' ,'82A00000', 'DRIVE_SHAFT','U8_FF' ,'Shaft1: Speed (RPM), polled msg');
 INSERT INTO CANID VALUES ('CANID_MSG_SHAFT1_COUNT' ,'82E00000', 'DRIVE_SHAFT','U8_U32','Shaft1: Cumulative count, polled msg');
 INSERT INTO CANID VALUES ('CANID_HB_SHAFT1_SPEED'  ,'E2800000', 'DRIVE_SHAFT','U8_U32','Shaft1: Speed (RPM), hearbeat');

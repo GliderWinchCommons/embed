@@ -33,7 +33,6 @@
 
 #include "../../../sw_f103/trunk/lib/libsensormisc/canwinch_setup_F103_pod.h"
 #include "SENSORpinconfig.h"
-#include "sensor_threshold.h"
 #include "panic_leds.h"
 #include "adcsensor_foto_h.h"
 #include "common_highflash.h"
@@ -56,10 +55,10 @@ struct CAN_CTLBLOCK* pctl0;	// Some routines use 0 for CAN1 others use 1 (sigh)
 
 /* Specify msg buffer and max useage for TX, RX0, and RX1. */
 const struct CAN_INIT msginit = { \
-180,	/* Total number of msg blocks. */\
-140,	/* TX can use this huge ammount. */\
-40,	/* RX0 can use this many. */\
-8	/* RX1 can use this piddling amount. */\
+256, /* Total number of msg blocks. */\
+192, /* TX can use this huge ammount. */\
+40,  /* RX0 can use this many. */\
+8    /* RX1 can use this piddling amount. */\
 };
 
 /*******************************************************************************
@@ -318,10 +317,17 @@ extern union ADC12VAL adc12valbuff[2][ADCVALBUFFSIZE];
 extern unsigned short adc3valbuff[2][ADCVALBUFFSIZE];
 #endif
 
+#define TIM4TICKSPERSEC 2000
+
+/* while loop print line rate */
+#define PRINTLOOPINC (TIM4TICKSPERSEC/4)	// N per sec
+uint32_t tim4_tim_ticks_next = tim4_tim_ticks + PRINTLOOPINC;
+
 /* Green LED flashing */
-#define LEDPRINTTICKSPERSEC 2000
-#define LEDPRINTFRINC (LEDPRINTTICKSPERSEC/4)	// N per sec
-uint32_t tim4_tim_ticks_next = tim4_tim_ticks + LEDPRINTFRINC;
+#define GREENLEDFLASHINC (TIM4TICKSPERSEC/1)	// N per sec
+uint32_t tim4_tim_ticks_next2 = tim4_tim_ticks + PRINTLOOPINC;
+
+
 extern void testfoto(void);
 
 // Char buffer for fmtprint.c
@@ -341,7 +347,7 @@ uint32_t tfilt1 = 0;
 uint32_t ttot0 = 0;
 uint32_t ttot1 = 0;
 uint32_t ttotdiff;
- int32_t ttotmax = 0;
+uint32_t ttotmax = 0;
 uint32_t ttotctr = 0;
 
 //canwinch_pod_common_systick2048_printerr_header();
@@ -366,12 +372,18 @@ if ((int)(tfilt1 - tfilt0) > tfiltmax) tfiltmax =  (int)(tfilt1 - tfilt0);
 		}
 
 		/* Green LED OK flasher */
-		if ((int)(tim4_tim_ticks - tim4_tim_ticks_next) >= 0)
+		if ((int)(tim4_tim_ticks - tim4_tim_ticks_next2) >= 0)
 		{
-			tim4_tim_ticks_next += LEDPRINTFRINC;
+			tim4_tim_ticks_next2 += GREENLEDFLASHINC;
 			TOGGLE_GREEN;	// Slow flash of green means "OK"
+		}
+
+		/* Print line on serial port */
 #define ZXCVB
 #ifdef  ZXCVB
+		if ((int)(tim4_tim_ticks - tim4_tim_ticks_next) >= 0)
+		{
+			tim4_tim_ticks_next += PRINTLOOPINC;
 			fpformatn(a,shaft_f.drpm,10,1,10); // 
 			encoder_diff = encoder_ctr2 - encoder_prev;
 			encoder_prev = encoder_ctr2;
@@ -385,15 +397,22 @@ if ((int)(tfilt1 - tfilt0) > tfiltmax) tfiltmax =  (int)(tfilt1 - tfilt0);
 			} 
 			printf("\n\r");
 #endif
+
+		/* List time durations */
+//#define TIMINGTESTS
+#ifdef  TIMINGTESTS
 			fpformatn(b,iirhb.d_out,10,1,10); // Heavy filtered heartbeat RPM
 			printf("ticd iit %d tot %d %s\n\r",(int)tfiltmax,(int)ttotmax,b);
 			tfiltmax = 0;	// Reset every second
 if (ttotctr++ >= 8){ttotmax = 0; ttotctr = 0;}
 			USART1_txint_send();
+#endif
+
 		}
+
 #ifdef FASTSTUFFLIST
-		if (adcsensordb[4] != 0)
-		{
+		if (adcsensordb[4] != 0) // New data?
+		{ // Here, yes.
 			adcsensordb[4] = 0;
 			printf("%5d %2d %7d %d\n\r",i++,adcsensordb[0],adcsensordb[1],adcsensordb[3]);
 		}

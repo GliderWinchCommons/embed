@@ -16,6 +16,7 @@ w flag and have this routine pass that on to the CAN send routine.
 #include "can_driver.h"
 #include "db/gen_db.h"
 #include "tim4_shaft.h"
+#include "adcsensor_foto_h.h"
 
 extern void (*can_msg_reset_ptr)(void* pctl, struct CAN_POOLBLOCK* pblk);
 
@@ -98,6 +99,7 @@ void I2C1_ER_IRQHandler(void)
 		{ // Here yes.  Other functions may need this msg
 			sw = 1; // Set switch to cause loop again
 		}
+
 	} while ((can_hub_end() != 0) || (sw != 0)); // Repeat if msgs waiting or were added
 	return;
 }

@@ -18,11 +18,18 @@ half of the 32b ADC1 data register and the watchdog for ADC1 is 16b, the compari
 to the ADC1 DR no longer works.  Therefore, ADC1 is used for the DMA storing of ADC2, but
 ADC2 and ADC3 are used for the watchdog detection.
 
-
 11/15/2012 - POD prototype setup
 Emitter resistors--3.3K
 Diode resistors--330
 ADC voltage applied--3.3v
+
+05/03/2018
+Command CAN msg from PC:
+  SHAFT_CANID_HW_FILT3  (e.g. CANID_CMD_SHAFT1I for first instance)
+Payload for this CAN msg:
+ [0] command code: CMD_REQ_HISTOGRAM (e.g.40)
+ [1]-[4] Duration for building table with bin's
+
 
 */
 /* Define to prevent recursive inclusion -------------------------------------*/
@@ -39,11 +46,6 @@ ADC voltage applied--3.3v
 #include "common_misc.h"
 #include "common_highflash.h"
 #include "shaft_function.h"
-
-
-
-#define DMA1_CH1_PRIORITY	0x80	// 
-#define DMA2_CH5_PRIORITY	0x80	// 
 
 #define NUMBERADCCHANNELS_FOTO	1	// Number of channels each ADC is to scan
 #define DISCARD_FOTO		32	// Number of readings to discard before filtering starts
@@ -73,7 +75,8 @@ union ADC12VAL		// In dual mode: DMA stores pairs of ADC readings, two 16b readi
 };
 
 #define ADCVALBUFFSIZE	64	// Number of ADC readings in a *half* DMA buffer
-#define ADCHISTOSIZE 	64	// Number of histogram bins (that accumulate counts)
+#define ADCHISTOSIZEN      6 // Histogram bin size  2^N
+#define ADCHISTOSIZE (1 << ADCHISTOSIZEN)	// Number of histogram bins (that accumulate counts)
 #define THROTTLE	7	// Number of 1/2048 sec ticks between sending bin msgs
 #define THROTTLE2	64	// Number of 1/2048 sec ticks between sending bin msgs
 #define ADC3ADC2READCT	2048	// Number of readings output before shutting it off
@@ -83,11 +86,6 @@ union ADC12VAL		// In dual mode: DMA stores pairs of ADC readings, two 16b readi
 void adc_init_sequence_foto_h(struct SHAFT_FUNCTION* p);
 /* @brief 	: Call this routine to do a timed sequencing of power up and calibration
  * @param	: p = pointer to sram with variables and local copy of parameters
-*******************************************************************************/
-void adc_histo_cansend(struct CANRCVBUF* p);
-/* @brief 	: Send data in response to a CAN msg
- * @param	: p = pointer to 'struct' with CAN msg
- * @return	: ? 
 *******************************************************************************/
 void adcsensor_foto_h_enable_interrupts(void);
 /* @brief 	: do as the name says
@@ -102,6 +100,9 @@ void adcsensor_rpm_compute(void);
 /*	@brief	: Compute rpm based on differences from last call to this routine
  ******************************************************************************/
 void adcsensor_load_pay_hb_speed(float f);
+/*	@brief	: Assemble payload from input of status byte, and a unsigned int
+ * @param	: f = float to be loaded into CAN msg paylaod
+ ******************************************************************************/
 
 
 extern long speed_filteredA2;		// Most recent computed & filtered rpm
@@ -114,4 +115,50 @@ extern s32 encoder_ctr2;
 extern u32 adcsensor_foto_err[ADCERRORCTRSIZE];	// Error counters
 extern uint32_t adcsensor_nrpmhb;	// Latest nrpm buffered for 'main'
 extern uint8_t iirflag;	// Flag 'main' for new rpm data in buffer
+
+
+/* ============ Histogram related ======================*/
+/*
+CAN received: histogram request id: SHAFT_CANID_HW_FILT3 (e.g. CANID_CMD_SHAFT1I)
+ [0] CMD_REQ_HISTOGRAM (e.g. code = 40)
+ [1] ADC number ADC number (2, 3, or 4 for both)
+ [2] Number of consecutive histograms taken & sent
+ [3]-[6] Duration: number of DMA buffers in histogram
+
+CAN received: histogram request id: CANID_CMD_SHAFT1R
+ [0] CMD_THISIS_HISTODATA (e.g. code = 41)
+ [1] ADC number (2, 3)
+ [2] bin number (0-255)
+ [3]-[6] bin count
+
+*/
+#define HISTOBINBUFNUM 3 // Number of bin buffers
+struct ADCHISTO
+{
+	u32  bin[HISTOBINBUFNUM][ADCHISTOSIZE];	// Double buffer bin counts
+	u32* pbegin;   // Beginning of bin buffer
+	u32* pend;     // End of bin buffer
+	u32* ph;       // Working bin buffer ptr
+	int  idx_build;     // index: adding buffer
+	int  idx_send;      // index: sending buffer
+	int  ctr;           // Number of ADC buffers in histogram
+	int  dur;           // Number to accumulate
+	int  sw;            // Histogram request switch
+struct CANRCVBUF can_cmd_histo;	    // CAN msg: Histogram data
+struct CANRCVBUF can_cmd_histo_final;// CAN msg: Signal end of sending
+};
+extern u32 adchisto_complete_flag;   // Flag when duration count reached
+/******************************************************************************/
+void adc_histo_request(struct CANRCVBUF* p);
+/* @brief 	: Handle CAN msg request for histogram
+ * @param	: p = pointer to 'struct' with CAN msg
+*******************************************************************************/
+void adc_histo_send(struct ADCHISTO* p);
+/* @brief 	: Handle CAN msg request for histogram
+ * @param	: p = pointer to struct holding ADC bins
+*******************************************************************************/
+
+extern struct ADCHISTO adchisto2; // ADC2
+extern struct ADCHISTO adchisto3; // ADC3
+
 #endif 

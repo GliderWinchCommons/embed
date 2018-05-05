@@ -22,6 +22,7 @@
 
 #define PAYSIZE_U8_S32 5	// Payload size: status byte, 4 byte int
 #define PAYSIZE_U8_FF  5	// Payload size: status byte, 4 byte float
+#define PAYSIZE_U8_U8_U8_U32 7 // Payload size: uint8_t[3], 4 byte uint32_t
 
 /* Common to all functions */
 struct COMMONFUNCTION
@@ -77,14 +78,6 @@ struct SHAFT_FUNCTION
   struct CANRCVBUF can_msg_count;	// CAN msg. Drive Shaft--odometer
   struct CANRCVBUF can_hb_speed;	// CAN hearbeat. Drive Shaft--speed
   struct CANRCVBUF can_hb_count;	// CAN hearbeat. Drive Shaft--odometer
-  struct CANRCVBUF can_msg_ER1;	// CAN msg. Errors
-  struct CANRCVBUF can_msg_ER2;	// CAN msg. Errors
-  struct CANRCVBUF can_msg_histo31;	// CAN msg. Histogram tx: request count, switch buffers. rx: send count
-  struct CANRCVBUF can_msg_histo32;	// CAN msg. Histogram tx: bin number, rx: send bin count
-  struct CANRCVBUF can_msg_histo21;	// CAN msg. Histogram tx: request count, switch buffers; rx send count
-  struct CANRCVBUF can_msg_histo22;	// CAN msg. Histogram tx: bin number, rx: send bin count
-  struct CANRCVBUF* can_msg_ptr1;	// 1st can msg pointer
-  struct CANRCVBUF* can_msg_ptr2;	// 2nd can msg pointer
   /* ADC3 ADC2 readings readout */
   uint32_t adcreadings_ctr;
   struct CANRCVBUF can_msg_adc_5;	// CAN msg. Histogram tx: request count, switch buffers. rx: send count

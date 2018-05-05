@@ -44,8 +44,8 @@ __sizeof_flashp4 = 0x0800;
 __appjump    = 0x08005000;
 __appoffset  = 0x08005000;
 
-_MYHEAP_SIZE = 2048;
-__MSP = 0x20000000 + 96K - 2048;
+_MYHEAP_SIZE = 4096;
+__MSP = 0x20000000 + 96K - 4096;
 
 SECTIONS
 {

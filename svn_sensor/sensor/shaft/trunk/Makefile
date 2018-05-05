@@ -108,6 +108,8 @@ OBJS	+= CAN_filter_build.o
 OBJS	+= CAN_filter_list_printf.o
 OBJS  += shaft_printf.o
 OBJS  += tim4_shaft.o
+OBJS	+= cmd_code_dispatch.o
+OBJS	+= readings_dispatch.o
 
 # The following two are 'export'ed in .arm_tools via .profile
 #OPENOCD_BASE	= /usr/share

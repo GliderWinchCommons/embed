@@ -17,7 +17,7 @@
 #include "temp_calc_param.h"
 #include "poly_compute.h"
 #include "can_driver_filter.h"
-//#include "cmd_code_dispatch.h"
+#include "cmd_code_dispatch.h"
 
 #include "can_msg_reset.h"
 #include "CAN_poll_loop.h"
@@ -223,13 +223,18 @@ shaftDbghbct += 1;
 		can_hub_send(&p->can_msg_count,p->cf.phub); //  Send CAN msg
 			return 1;
 	}
-// TODO Command handling
 	/* Check drive shaft function command. */
 	if (pcan->id == *p->cf.pcanid_cmd_func_i)
 	{ // Here, we have a command msg for this function instance. 
-//$		cmd_code_dispatch(pcan, p); // Handle and send as necessary
+		cmd_code_dispatch(pcan, p); // Handle and send as necessary
 		return 0;	// No msgs passed to other ports
 	}
+
+	/* Histogram sending */
+	// Load can_driver with histogram msgs, if ready & active
+	adc_histo_send(&adchisto2); // Load ADC2 histogram 
+	adc_histo_send(&adchisto2); // Load ADC3 histogram
+
 	return ret;
 }
 /*##############################################################################################

@@ -128,6 +128,8 @@ NOTE: Some page number refer to the Ref Manual RM0008, rev 11 and some more rece
 #include "tim4_shaft.h"
 #include "IRQ_priority_shaft.h"
 #include "iir_filter_l.h"
+#include "db/gen_db.h"
+
 
 
 /* Pointer to control block for CAN1. */
@@ -215,10 +217,12 @@ static unsigned short usHtr2;// = ADC2_HTR_INITIAL;	// ADC2 High register initia
 static unsigned short usLtr2;// = ADC2_LTR_INITIAL;	// ADC2 Low  register initial value
 
 /* DMA circular buffered with 1/2 way interrupt double buffers ADC1,2 pairs. */
- //  [Double for DMA][pairs of 16b ADC readings with ADC1, ADC2]
+
+ //  DMA1 CH1 32b elements [pairs of 16b ADC readings with ADC1, ADC2]
  union ADC12VAL adc12valbuff[2][ADCVALBUFFSIZE];
 static volatile int adc12valbuffflag = 0;		// 0 = 1st half; 1 = 2nd half
- //  [Double for DMA][16b ADC readings with ADC3]
+
+ //  DMA2 CH5 buffer [16b ADC readings with ADC3]
 unsigned short adc3valbuff[2][ADCVALBUFFSIZE];
 static volatile int adc3valbuffflag = 0;	// 0 = 1st half; 1 = 2nd half
 
@@ -256,6 +260,10 @@ struct ADCTIMBUF
 /* Circular buffers for "up" and "down" transitions */
 static struct ADCTIMBUF adctim2[2]; // Photocell B up:down
 static struct ADCTIMBUF adctim3[2]; // Photocell A up:down
+
+/* Histogram bin counts plus related */
+struct ADCHISTO adchisto2; // ADC2
+struct ADCHISTO adchisto3; // ADC3
 
 /* ----------------------------------------------------------------------------- 
  * void timedelay (u32 ticks);
@@ -469,6 +477,7 @@ void adcsensor_foto_h_enable_interrupts(void)
 *******************************************************************************/
 void adcsensor_foto_h_disable_histogram(void)
 {	
+	/* Clear interrupt enable in NVIC */
 	NVICICER(NVIC_DMA1_CHANNEL1_IRQ);  // DMA ADC 3 store reading Photocell A
 	NVICICER(NVIC_DMA2_CHANNEL4_5_IRQ);// DMA ADC 1 & 2 store reading Photocell B
 	NVICICER(NVIC_FSMC_IRQ);			// Low level interrupt, build histogram
@@ -481,6 +490,7 @@ void adcsensor_foto_h_disable_histogram(void)
 *******************************************************************************/
 void adcsensor_foto_h_enable_histogram(void)
 {	
+	/* Enable interrupts in NVIC */
 	NVICISER(NVIC_DMA1_CHANNEL1_IRQ);  // DMA ADC 3 store reading Photocell A
 	NVICISER(NVIC_DMA2_CHANNEL4_5_IRQ);// DMA ADC 1 & 2 store reading Photocell B
 	NVICISER(NVIC_FSMC_IRQ);			// Enable low level interrupt, build histogram
@@ -712,26 +722,6 @@ void ADC3_IRQHandler(void)
 /* $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
          Below deals with the handling of the encoding done in the foregoing routines
    $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ */
-/******************************************************************************
- * static void compute_init(struct FLASHP_SE4* phfp);
- * @brief 	: Initialize for computations & sending CAN msg
- * @param	: pointer to highflashp with parameters.
-*******************************************************************************/
-/* **** CIC filtering stuff **** */
-/*
-struct CICLN2M3
-{
-	unsigned short	usDecimateNum;	// Downsampling number
-	unsigned short	usDiscard;	// Initial discard count
-	int		nIn;		// New reading to be filtered
-	long 		lIntegral[3];	// Three stages of Z^(-1) integrators
-	long		lDiff[3][2];	// Three stages of Z^(-2) delay storage
-	long		lout;		// Filtered/decimated data output
-	unsigned short	usDecimateCt;	// Downsampling counter
-	unsigned short	usFlag;		// Filtered/decimated data ready counter
-};
-*/
-
 #include "cic_filter_l_N2_M3.h"
 
 /* Pointers to functions to be executed under a low priority interrupt */
@@ -739,81 +729,71 @@ struct CICLN2M3
 void 	(*systickHIpriority3_ptr)(void) = 0;	// SYSTICK handler (very high priority) continuation
 void 	(*systickLOpriority3X_ptr)(void) = 0;	// SYSTICK handler (low high priority) continuation--1/64th
 
+/******************************************************************************
+ * static void  histo_init(struct ADCHISTO* pu, struct SHAFT_FUNCTION* p);
+ * @brief 	: Initialize for computations & sending CAN msg
+ * @param	: pu = pointer to histogram stuct for ADC3 or ADC12
+ * @param	: p = pointer to shaft function with parameters et al.
+*******************************************************************************/
+/*
+	u32  bin[HISTOBINBUFNUM][ADCHISTOSIZE];	// Double buffer bin counts
+	u32* pbegin;   // Beginning of bin buffer
+	u32* pend;     // End of bin buffer
+	u32* ph;       // Working bin buffer ptr
+	int  idx_build;     // index: adding buffer
+	int  idx_send;      // index: sending buffer
+	int  ctr;           // Number of ADC buffers in histogram
+	u32  dur;           // Number to accumulate
+	int  sw;            // Histogram request switch
+struct CANRCVBUF can_cmd_histo;	    // CAN msg: Histogram data
+struct CANRCVBUF can_cmd_histo_final;// CAN msg: Signal end of sending
+*/
+
+static void  histo_init(struct ADCHISTO* pu, struct SHAFT_FUNCTION* p, uint8_t adc)
+{
+	/* Preload: Histogram bin count CAN msg with fixed items */
+	pu->can_cmd_histo.id       = *p->cf.pcanid_cmd_func_r; // Response ID
+	pu->can_cmd_histo.dlc      = PAYSIZE_U8_U8_U8_U32;
+	pu->can_cmd_histo.cd.ull   = 0;	// Zero entire payload
+	pu->can_cmd_histo.cd.uc[0] = CMD_THISIS_HISTODATA; // Type of CMD msg
+	pu->can_cmd_histo.cd.uc[1] = adc; // ADC number
+
+	/* Preload: Final end CAN msg with fixed items */
+	pu->can_cmd_histo_final.id       = *p->cf.pcanid_cmd_func_r;
+	pu->can_cmd_histo_final.dlc      = PAYSIZE_U8_U8_U8_U32;
+	pu->can_cmd_histo_final.cd.ull   = 0;	// Zero entire payload
+	pu->can_cmd_histo_final.cd.uc[0] = CMD_THISIS_HISTODATA;
+	pu->can_cmd_histo_final.cd.uc[1] = adc; // ADC number
+	pu->can_cmd_histo_final.cd.uc[2] = 255; // Bin number signals last msg
+
+	pu->ctr       = 0;
+	pu->dur       = 0;
+	pu->idx_build = 0; // Head: bin buffer index
+	pu->idx_send  = 0; // Tail: bin buffer index
+	pu->sw        = 0;
+
+	return;
+}
+
 static void compute_init(struct SHAFT_FUNCTION* p)
 {
-	int j;
-
-	/* Initialize the structs that hold the CIC filtering intermediate values. */
-	p->rpm_cic.usDecimateNum = DECIMATION_FOTO; // Decimation number
-	p->rpm_cic.usDecimateCt = 0;		// Decimation counter
-	p->rpm_cic.usDiscard = DISCARD_FOTO;	// Initial discard count
-	p->rpm_cic.usFlag = 0;			// 1/2 buffer flag
-	for (j = 0; j < 3; j++)
-	{ // Very important that the integrators begin with zero.
-		p->rpm_cic.lIntegral[j] = 0;
-		p->rpm_cic.lDiff[j][0]  = 0;
-		p->rpm_cic.lDiff[j][1]  = 0;
-	}
-
-	/* Pre-load CAN messages wiht values from parameers for msgs sent periodically. */
+	/* Pre-load CAN messages wiht values from parameters for msgs sent periodically. */
 	// CAN id
-	p->can_msg_speed.id = p->lc.cid_msg_speed; //  8 Shaft speed, calibrated, response to poll
-	p->can_msg_count.id = p->lc.cid_msg_ct;    //  9 CAN msg. Drive Shaft--odometer
-	p->can_hb_speed.id  = p->lc.cid_hb_speed;  // 10 CAN hearbeat. Drive Shaft--speed
-	p->can_hb_count.id  = p->lc.cid_hb_ct;     // 11 CAN hearbeat. Drive Shaft--odometer
+	p->can_msg_speed.id = p->lc.cid_msg_speed; //  Shaft speed, calibrated, response to poll
+	p->can_msg_count.id = p->lc.cid_msg_ct;    //  CAN msg. Drive Shaft--odometer
+	p->can_hb_speed.id  = p->lc.cid_hb_speed;  //  CAN hearbeat. Drive Shaft--speed
+	p->can_hb_count.id  = p->lc.cid_hb_ct;     //  CAN hearbeat. Drive Shaft--odometer
 
 	// DLC set for status byte and four byte payload of int or float
-	p->can_msg_speed.dlc = PAYSIZE_U8_FF;  //  8 Shaft speed, calibrated, response to poll
-	p->can_msg_count.dlc = PAYSIZE_U8_S32; //  9 CAN msg. Drive Shaft--odometer
-	p->can_hb_speed.dlc  = PAYSIZE_U8_FF;  // 10 CAN hearbeat. Drive Shaft--speed
-	p->can_hb_count.dlc  = PAYSIZE_U8_S32; // 11 CAN hearbeat. Drive Shaft--odometer
+	p->can_msg_speed.dlc = PAYSIZE_U8_FF;  //  Shaft speed, calibrated, response to poll
+	p->can_msg_count.dlc = PAYSIZE_U8_S32; //  CAN msg. Drive Shaft--odometer
+	p->can_hb_speed.dlc  = PAYSIZE_U8_FF;  //  CAN hearbeat. Drive Shaft--speed
+	p->can_hb_count.dlc  = PAYSIZE_U8_S32; //  CAN hearbeat. Drive Shaft--odometer
 
+	// Histogram initializations
+	histo_init(&adchisto2, p, 2);
+	histo_init(&adchisto3, p, 3);
 
-
-#ifdef HISTOGRAM_SENDING_REQUIRES_MUCH_REWRITING
-	can_msg_ct.id  = phfp
-	can_msg_ER1.id = phfp->canid_error2;			// [0]encode_state er ct [1]adctick_diff<2000 ct
-	can_msg_ER2.id = phfp->canid_error1;			// [2]elapsed_ticks_no_adcticks<2000 ct  [3]cic not in sync
-
-	/* CAN messages for histogram readout. */
-	can_msg_histo31.id = phfp->canid_adc3_histogramA;	// ADC3 Histogram tx: request count, switch buffers. rx: send count
-	can_msg_histo32.id = phfp->canid_adc3_histogramB;	// ADC3 Histogram tx: bin number, rx: send bin count
-	can_msg_histo21.id = phfp->canid_adc2_histogramA;	// ADC2 Histogram tx: request count, switch buffers; rx send count
-	can_msg_histo22.id = phfp->canid_adc2_histogramB;	// ADC2 Histogram tx: bin number, rx: send bin count
-	can_msg_adc_5.id   = phfp->canid_adc3_adc2_readout;	// ADC3 ADC2 readings readout
-
-	can_msg_DS.dlc  = 8;
-	can_msg_ER1.dlc = 8;
-	can_msg_ER2.dlc = 
-
-	can_msg_histo31.dlc = 4;
-	can_msg_histo32.dlc = 8;
-	can_msg_histo21.dlc = 4;
-	can_msg_histo22.dlc = 8;
-	can_msg_adc_5.dlc   = 8;
-
-	can_msg_histo32.cd.ui[1] = ADCHISTOSIZE; // Set 'bin' number to max to indicated completed readout
-	can_msg_histo22.cd.ui[1] = ADCHISTOSIZE;
-	adcreadings_ctr = ADC3ADC2READCT;	// Shutdown count for limiting readings
-#endif
-
-	return;
-}
-/* *********************************************************************************
- * Place CAN msg in output queue
- ************************************************************************************/
-void can_msg_put(struct CANRCVBUF *pcan)
-{ // note: pctl1 via extern
-	can_driver_put(pctl1, pcan, 8, 0);
-	return;
-}
-/* *********************************************************************************
- * Set up payload with two signed ints and send
- ************************************************************************************/
-void canmsg_send(struct CANRCVBUF* pcan, int pay1, int pay2)
-{
-	pay_type_cnvt_S32_S32toPay_S32_S32(&pcan->cd.uc[0], pay1, pay2);
-	can_msg_put(pcan);
 	return;
 }
 /* **********************************************************************************
@@ -821,15 +801,7 @@ void canmsg_send(struct CANRCVBUF* pcan, int pay1, int pay2)
  ************************************************************************************/
 void testfoto(void)
 {
-can_msg_put(&shaft_f.can_msg_ER1);	// 1
-can_msg_put(&shaft_f.can_msg_ER2);	// 2
-can_msg_put(&shaft_f.can_msg_histo31);	// 3
-can_msg_put(&shaft_f.can_msg_histo32);	// 4
-can_msg_put(&shaft_f.can_msg_histo21);	// 5
-can_msg_put(&shaft_f.can_msg_histo22);	// 6
-can_msg_put(&shaft_f.can_msg_adc_5);	// 7
-};
-
+}
 /* ######################### tim4_tim subinterval in############################### 
  * Enter from EXI0 moderate level interrupt each interval
  * ############################################################################################### */
@@ -993,12 +965,16 @@ static void load_payload_int(struct CANRCVBUF* pcan, uint8_t status, uint32_t ui
 	pcan->cd.uc[4] = uib.uc[3];
 	return;
 }
+/* *************************************************************************************************
+ * void adcsensor_load_pay_hb_speed(float f);
+ *	@brief	: Assemble payload from input of status byte, and a unsigned int
+ * @param	: f = float to be loaded into CAN msg paylaod
+ **************************************************************************************************/
 void adcsensor_load_pay_hb_speed(float f)
 {
 	load_payload_fit(&shaft_f.can_hb_speed , shaft_f.status_speed, f);
 	return;
 }
-
 /* *************************************************************************************************
  * void adcsensor_rpm_compute(void);
  *	@brief	: Compute rpm based on differences from last call to this routine
@@ -1069,104 +1045,6 @@ adcsensordb[4] = 1;
 	return;
 }
 
-#ifdef HISTOGRAM_MAY_HAVE_SOME_USEFUL_CODE_USED_LATER
-/* ########################## UNDER LOW PRIORITY SYSTICK INTERRUPT ############################### 
- * Do the computations and send the CAN msg
- * ############################################################################################### */
-/* 
-   This routine is entered from the SYSTICK interrupt handler triggering I2C2_EV low priority interrupt. 
-*/
-static void compute_doit2(void)
-{
-	s32 	speed_filtered = 0;
-//	struct CANRCVTIMBUF* pcanrcvtim;
-
-	/* Handle all buffered sets of data.  Normally one, but could be more. */
-	while (idxsaveh != idxsavel)
-	{
-		/* Compute speed and load into filter struct. */
-		shaft_f.rpm_cic.nIn = compute_speed(encoder_ctrZ[idxsavel],adc_encode_timeZ[idxsavel],systicktimeZ[idxsavel]);
-
-		/* Run filter on the value just loaded into the struct. */
-		if ( cic_filter_l_N2_M3 (&shaft_f.rpm_cic) != 0) // Filtering complete?
-		{ // Here, yes.
-			speed_filtered = shaft_f.rpm_cic.lout >> CICSCALE_FOTO; // Scale and save
-			speed_filteredA2 = speed_filtered;	// Save for mainline monitoring
-		}
-		/* stk_32ctr == 31 on the last interrupt of the 32 comprising 1/64th sec.  It marks the 
-        	   end and beginning point between two 1/64th sec intervals. */
-		if (stk_32ctrZ[idxsavel] == 31)
-		{ // Here, yes.  Time to setup for sending
-
-			/* ========= Here is where adc readings get setup for sending ============ */
-			/* Setup counter and speed readings for sending */
-//			canmsg_send(&can_msg_DS, encoder_ctrZ[idxsavel], speed_filtered);
-//			encoder_ctrA2 = encoder_ctrZ[idxsavel];	// Save for mainline monitoring
-			
-			/* We should have come out even, but check jic. */
-			if (shaft_f.rpm_cic.usDecimateCt != 0)
-			{
-				adcsensor_foto_err[3] += 1;	// Count errors for cic not in sync with 1/64th sec end.
-				shaft_f.rpm_cic.usDecimateCt = 0; 	// Re-sync
-			}
-			
-			/* Send error msgs.  When the low order ticks of the time match our UNITID we can send one message. 
- 			   There are 64 "slots" in a second, so when the low order bits of the time tick are 32-63, then we
-                           can send another error message.  There are 32 possible UNITIDs, so if we only allow one error msg
-			   per 1/64th sec time slot, then two per sec is permissible. */
-//			pcanrcvtim = canrcvtim_get_sys();
-//			if (pcanrcvtim != 0) // If we have a time msg, display the 1/64th ticks
-//			{
-//				if ( (pcanrcvtim->R.cd.ui[0] & 0x3f) == iamunitnumbershifted)
-//					canmsg_send(&can_msg_ER1, adcsensor_foto_err[0],adcsensor_foto_err[1]);
-//				if ( (pcanrcvtim->R.cd.ui[0] & 0x3f) == (iamunitnumbershifted << 1))
-//					canmsg_send(&can_msg_ER2, adcsensor_foto_err[2],adcsensor_foto_err[3]);
-//			}
-
-			/* Call other routines if an address is set up. */
-//			if (systickLOpriority3X_ptr != 0)	// Having no address for the following is bad.
-//				(*systickLOpriority3X_ptr)();	// Go do something
-
-		}
-		/* Advance index for low priority processing. */
-		idxsavel = adv_index(idxsavel, RPMDATABUFFSIZE);
-		idxsavel += 1; if (idxsavel >= RPMDATABUFFSIZE) idxsavel = 0;
-	}
-
-	/* Setup histogram CAN msgs.  Msg #1 once, then next time Msg #2 'HISTO' times each pass until complete. */
-	if (shaft_f.can_msg_ptr1 != 0) // JIC
-	{ // Here, sent 1st msg (with total counts)
-		can_msg_put(shaft_f.can_msg_ptr1);
-		histthrottle = 0;
-	}
-	/* Send some 2nd msgs with bin counts, each pass, if ptr is setup and 1st msg has been sent. */
-	if ( (can_msg_histo_ptr != 0) && (shaft_f.can_msg_ptr1 == 0) && (shaft_f.can_msg_ptr2 != 0) )
-	{ // Here: valid ptrs and 1st msg has been sent.
-	  // can_msg_ptr2->cd.ui[1] has 'bin' number (0 - (ADCHISTOSIZE-1))
-		if ( (shaft_f.can_msg_ptr2->cd.ui[1] < ADCHISTOSIZE) && (histthrottle > THROTTLE) )
-		{
-			shaft_f.can_msg_ptr2->cd.ui[0] = *can_msg_histo_ptr++;	// Set count in payload
-			can_msg_put(shaft_f.can_msg_ptr2);			// Send msg2
-			shaft_f.can_msg_ptr2->cd.ui[1] += 1;			// Advance bin number
-			histthrottle = 0;
-		}
-	}
-	shaft_f.can_msg_ptr1 = 0; // Show that 1st msg has been sent.
-
-	if ((shaft_f.adcreadings_ctr < ADC3ADC2READCT) && (histthrottle > THROTTLE2))
-	{
-		histthrottle = 0;
-		shaft_f.can_msg_adc_5.cd.ui[0] = adc3valbuff[0][0];
-		shaft_f.can_msg_adc_5.cd.ui[1] = adc12valbuff[0][0].us[1];
-		can_msg_put(&shaft_f.can_msg_adc_5);			// Send msg5: ADC3, ADC2 readings
-		shaft_f.adcreadings_ctr += 1;
-	}
-	histthrottle += 1;
-
-	return;
-}
-#endif
-
 /*#######################################################################################
  * ISR routine for handling lower priority procesing
  *####################################################################################### */
@@ -1184,7 +1062,7 @@ void FSMC_IRQHandler(void)
 }
 /******************************************************************************
  * static void adc_histo_build_ADC12(void);
- * @brief 	: Add ADC readings from DMA buffer to histogram counts
+ * @brief 	: Add ADC2 readings from DMA1 CH1 buffer to histogram counts
  * WARNING: This is called from low priority level interrupt: FSMC_IRQHandler
 *******************************************************************************/
 /*  DMA1CH1 stores ADC1 & ADC2 upon each completion of ADC1 as two 16b readings.
@@ -1199,72 +1077,52 @@ calls the following routine to add to the 'bin' counts to make a histogram.  The
 histogram bins are double buffered, and 'adc2histo_build' points to the histogram buffer
 that is being built.
 */
-/* Double buffer histogram */
-//  [double buffer output][two ADCs][number of bins]
-//  Buffer indices: ADC3 = 0; ADC2 = 1;
- u32 adc2histo[2][ADCHISTOSIZE];
- u32 adc3histo[2][ADCHISTOSIZE];
- int adc2histo_build = 0;	// 0 = 1st half; 1 = 2nd half
- int adc3histo_build = 0;	// 0 = 1st half; 1 = 2nd half
- int adc2histo_send = 1;	// 0 = 1st half; 1 = 2nd half
- int adc3histo_send = 1;	// 0 = 1st half; 1 = 2nd half
- int adc2histoctr[2];		// Number of readings in histogram
- int adc3histoctr[2];		// Number of readings in histogram
- int adc2histo_sw = 0;		// Switch histogram buffer request switch
- int adc3histo_sw = 0;		// Switch histogram buffer request switch
-
-// Note: ADC range = 0-4095; 4096/64 -> 64; ADC = 0-63 goes into bin 0
 
 static void adc_histo_build_ADC12(void)
 {
-	u32* ph2a;
-	u32* pend1;
-	int x;
-
-	/* Switch histogram buffer request? */
-	if (adc2histo_sw != 0)
-	{ // Here yes.  Reset and zero next buffer
-		adc2histo_sw = 0;	// Reset switch
-		shaft_f.can_msg_histo21.cd.ui[0] = adc2histoctr[adc2histo_build]; // CAN msg payload
-		shaft_f.can_msg_ptr1 = &shaft_f.can_msg_histo21;
-
-		x = adc2histo_build;	// Swap buffer indices
-		adc2histo_build = adc2histo_send;
-		adc2histo_send = x;
-
-		/* Zero out buffer */
-		ph2a  = &adc2histo[adc2histo_build][0];
-		pend1 = &adc2histo[adc2histo_build][ADCVALBUFFSIZE];
-		while (ph2a < pend1)
-			*ph2a++ = 0;
-		adc2histoctr[adc2histo_build] = 0;
-
-		/* Set up for 2nd msg sending (after 1st msg is sent) */
-		shaft_f.can_msg_ptr2 = &shaft_f.can_msg_histo22; // Show systick entry, above, that CAN msg is ready to send
-		can_msg_histo_ptr = &adc2histo[adc3histo_send][0]; // Pointer into histo counts
-		// The following is the one that triggers off the sending
-		shaft_f.can_msg_histo22.cd.ui[1] = 0; // Reset bin number for responses with histogram counts
-	}
-
-	/* Use pointers to make a fast loop. */
-	union ADC12VAL* p    = &adc12valbuff[adc12valbuffflag][0];
-	union ADC12VAL* pend = &adc12valbuff[adc12valbuffflag][ADCVALBUFFSIZE];
-	u32* ph2 = &adc2histo[adc2histo_build][0];	// ADC2 histogram
+	struct ADCHISTO* p = &adchisto2; // Use ptr for convenience
 	u32 tmp;
 
-	/* Build bins */
-	while (p < pend)
-	{
-		tmp = ((p->us[1]) >> 6) & 63;	// ADC2 into 64 ranges
-		*(ph2 + tmp) += 1;		// Increment bin(n) count
-		p++;
+	// Note: DMA for ADC1/2 is 32b, hence union
+	union ADC12VAL* pdma_end;
+	union ADC12VAL* pdma;
+
+	/* duration = 0 signals skip processing. */
+	if (p->dur == 0) return; 	
+
+	/* Pointers to bin count buffer */
+	p->ph   = &p->bin[p->idx_build][0];	// begin
+	p->pend = &p->bin[p->idx_build][ADCHISTOSIZE]; // end
+
+	/* Pointer to DMA data (note ADC12 pairing with union) */
+	pdma     = &adc12valbuff[adc12valbuffflag][0];
+	pdma_end = &adc12valbuff[adc12valbuffflag][ADCVALBUFFSIZE];
+
+	/* Increment histogram bins from DMA stored ADC readings. */
+	while (pdma < pdma_end)
+	{ // 12b ADC collapsed to 64 bins
+		tmp = (pdma->us[1] >> ADCHISTOSIZEN);	// ADC2 into 64 ranges
+		*(p->ph + tmp) += 1;		// Increment bin(n) count
+		pdma ++;
 	}
 	/* Keep a count of total readings in the histogram. */
-	adc2histoctr[adc2histo_build] += 1;
-	
+	p->ctr += 1;
+
+	/* Cbeck for completion of accumulation */
+	if (p->ctr >= p->dur)
+	{ // Here, designated number of DMA buffers accumulated
+		p->idx_build += 1; // Advance bin buffer index
+		if(p->idx_build >= HISTOBINBUFNUM) p->idx_build = 0;
+
+/* When p->sw goes to zero, thus setting p->dur to zero the
+   accumulation of counts in the bin buffer stops, i.e. 
+   (p->dur == 0) causes an immediate return, above. */
+		p->sw -= 1;
+		if (p->sw <= 0)
+			p->dur = 0;		// Signal end of loading data
+	}
 	return;
 }
-
 /*#######################################################################################
  * ISR routine for handling lower priority processing
  *####################################################################################### */
@@ -1282,99 +1140,172 @@ void SDIO_IRQHandler(void)
 }
 /******************************************************************************
  * static void adc_histo_build_ADC3(void);
- * @brief 	: Add ADC readings from DMA buffer to histogram counts
- * WARNING: This is called from low priority level interrupt: FSMC_IRQHandler
+ * @brief 	: Add ADC3 readings from DMA2CH4_5 buffer to histogram counts
+ * WARNING: This is called from low priority level interrupt: SDIO_IRQHandler
 *******************************************************************************/
+/*
+#define HISTOBINBUFNUM 3 // Number of bin buffers
+struct ADCHISTO
+{
+	u32  bin[HISTOBINBUFNUM][ADCHISTOSIZE];	// Double buffer bin counts
+	u32* pbegin;   // Beginning of bin buffer
+	u32* pend;     // End of bin buffer
+	u32* ph;       // Working bin buffer ptr
+	int  idx_build;     // index: adding buffer
+	int  idx_send;      // index: sending buffer
+	int  ctr;           // Number of ADC buffers in histogram
+	u32  dur;           // Number to accumulate
+	int  sw;            // Histogram request switch
+struct CANRCVBUF can_cmd_histo;	    // CAN msg: Histogram data
+struct CANRCVBUF can_cmd_histo_final;// CAN msg: Signal end of sending
+};
+*/
 static void adc_histo_build_ADC3(void)
 {
-	u32* ph3;
-	u32* pend3;
-	int x;
-
-	/* Switch histogram buffer request? */
-	if (adc3histo_sw != 0)
-	{
-		adc3histo_sw = 0;	// Reset request
-		shaft_f.can_msg_histo31.cd.ui[0] = adc3histoctr[adc3histo_build]; // Respond with total ct.
-		shaft_f.can_msg_ptr1 = &shaft_f.can_msg_histo31;
-
-		x = adc3histo_build;	// Swap buffer indices
-		adc3histo_build = adc3histo_send;
-		adc3histo_send = x;
-
-		/* Zero out buffer */
-		ph3  = &adc3histo[adc3histo_build][0];
-		pend3 = &adc3histo[adc3histo_build][ADCVALBUFFSIZE];
-		while (ph3 < pend3)
-			*ph3++ = 0;
-		adc3histoctr[adc3histo_build] = 0; // Zero counter
-
-		/* Set up for 2nd msg sending (after 1st msg is sent) */
-		shaft_f.can_msg_ptr2 = &shaft_f.can_msg_histo32; // Show systick entry, above, that CAN msg1 is ready to send
-		can_msg_histo_ptr = &adc3histo[adc3histo_send][0]; // Pointer into 
-		// The following is the one that triggers off the sending
-		shaft_f.can_msg_histo32.cd.ui[1] = 0; // Reset bin number for responses with histogram counts
-	}
-
-	/* Use pointers to make a fast loop. */
-	unsigned short* p    = &adc3valbuff[adc3valbuffflag][0];
-	unsigned short* pend = &adc3valbuff[adc3valbuffflag][ADCVALBUFFSIZE];
-	ph3  = &adc3histo[adc3histo_build][0];	// ADC3 histogram
+	struct ADCHISTO* p = &adchisto3; // Use ptr for convenience
 	u32 tmp;
+	u16* pdma_end;  // Note: DMA for ADC3 is 16b
+	u16* pdma;
 
-	/* Increment histogram bins from ADC readings. */
-	while (p < pend)
-	{
-		tmp = (*p++ >> 6) & 63;	// ADC3 into 64 ranges
-		*(ph3 + tmp) += 1;	// Increment bin(n) count
+	/* duration = 0 signals skip processing. */
+	if (p->dur == 0) return; 	
+
+	/* Pointers to bin count buffer */
+	p->ph = &p->bin[p->idx_build][0];	// begin at
+
+	/* Pointer to DMA data (note ADC12 pairing with union) */
+	pdma     = &adc3valbuff[adc3valbuffflag][0];
+	pdma_end = &adc3valbuff[adc3valbuffflag][ADCVALBUFFSIZE];
+
+	/* Increment histogram bins from DMA stored ADC readings. */
+	while (pdma < pdma_end)
+	{ // 12b ADC collapsed to 64 bins
+		tmp = (*pdma >> ADCHISTOSIZEN);	// ADC2 into 64 ranges
+		*(p->ph + tmp) += 1;		// Increment bin(n) count
+		pdma ++;
 	}
 	/* Keep a count of total readings in the histogram. */
-	adc3histoctr[adc3histo_build] += 1;
-	
+	p->ctr += 1;
+
+	/* Cbeck for completion of accumulation */
+	if (p->ctr >= p->dur)
+	{ // Here, designated number of DMA buffers accumulated
+		p->idx_build += 1; // Advance bin buffer index
+		if (p->idx_build >= HISTOBINBUFNUM) p->idx_build = 0;
+
+/* When p->sw goes to zero, thus setting p->dur to zero the
+   accumulation of counts in the bin buffer stops, i.e. 
+   (p->dur == 0) causes an immediate return, above. */
+		p->sw -= 1;
+		if (p->sw <= 0)
+			p->dur = 0;		// Signal end of loading data
+	}
 	return;
 }
 /******************************************************************************
- * void adc_histo_cansend(struct CANRCVBUF* p);
- * @brief 	: Send data in response to a CAN msg
- * @param	: p = pointer to 'struct' with CAN msg
- * @return	: ? 
+ * static uint32_t pay(uint8_t* p);
+ * @brief 	: Extract payload bytes to unsigned int
+ * @param	: p = pointer to first of the four payload bytes
+ * @return	: uint32_t
 *******************************************************************************/
-/* Sequence:
-1) The PC sends a '1 msg id that requests the total count.
-   'adc?histo_sw' is set to 1.
-     the next DMA interrupt sets low priority interrupt
-       low priority interrupt sees 'adc?histo_sw' set, switches histo buffers, and zeroes "other" buffer,
-       and sets 'adc?histo_msg_flag' to 1.
-   next systick interrupt (64/sec) sees 'can_msg_ptr1' not zero and sends CAN msg1 with total count.
-   next systick interrupt sees 'can_msg_ptr1' zero and if 'can_msg_histo_ptr2' and 'can_msg_ptr2' bin count not still at max
-     sends a number of bin count msgs (the number defined by 'HISTO')
-     when the bin count (can_msg_ptr2->ui[1]) reaches max, then it stops.
+static uint32_t pay(uint8_t* p)
+{ 
+	union UCUI 
+	{
+		uint32_t ui;
+		uint8_t uc[8];
+	}ucui;
+	uint8_t* pu = &ucui.uc[0];
+	
+	// Extract four payload bytes into a uint32_t
+	*(pu+0) = *(p+0);	*(pu+1) = *(p+1);
+	*(pu+2) = *(p+2);	*(pu+3) = *(p+3);
 
+	return ucui.ui;
+}
+/******************************************************************************
+ * void adc_histo_request(struct CANRCVBUF* p);
+ * @brief 	: Handle CAN msg request for histogram
+ * @param	: p = pointer to 'struct' with CAN msg
+*******************************************************************************/
+/*
+CAN received: histogram request id: SHAFT_CANID_HW_FILT3 (e.g. CANID_CMD_SHAFT1I)
+ [0] CMD_REQ_HISTOGRAM (e.g. code = 40)
+ [1] ADC number ADC number (2, 3, or 4 for both)
+ [2] Number of consecutive histograms taken & sent
+ [3]-[6] Duration: number of DMA buffers in histogram
+
+CAN received: histogram request id: CANID_CMD_SHAFT1R
+ [0] CMD_THISIS_HISTODATA (e.g. code = 41)
+ [1] ADC number (2, 3)
+ [2] bin number (0-255)
+ [3]-[6] bin count
 */
-void adc_histo_cansend(struct CANRCVBUF* p)
-{
-	/* ADC3 */
-	if ((p->id & ~0x1) == shaft_f.can_msg_histo31.id)	// Request: switch buffers and send total bin count
-	{ // Set request to switch buffers (see 'adc_histo_build_ADC3')
-		adc3histo_sw = 1; // Set switch to cause 'build to switch buffers 
-		return;
-	}
+void adc_histo_request(struct CANRCVBUF* p)
+{	
+	uint8_t adc = p->cd.uc[1]; // Expect 2, 3, or 4
+	switch (adc)
+	{
+	case 2: // ADC2 only
+		adchisto2.sw  = p->cd.uc[2];      // Extract number consecutive bins
+		adchisto2.dur = pay(&p->cd.uc[3]); // Extract payload with duration		
+		break;
 
-	/* ADC2 */
-	if ((p->id & ~0x1) ==  shaft_f.can_msg_histo21.id)	// Request: switch buffers and send total bin count
-	{ // Set request to switch buffers (see 'adc_histo_build_ADC12')
-		adc2histo_sw = 1; 
-		return;
+	case 4: // ADC2 and ADC3
+		adchisto2.sw  = p->cd.uc[2];      // Extract number consecutive bins
+		adchisto2.dur = pay(&p->cd.uc[3]); // Extract payload with duration		
+	case 3: // ADC3 only
+		adchisto3.sw  = p->cd.uc[2];      // Extract number consecutive bins
+		adchisto3.dur = pay(&p->cd.uc[3]); // Extract payload with duration		
+		break;
 	}
+	adcsensor_foto_h_enable_histogram(); // Enable DMA interrupts
 
-	/* ADC3 ADC2 filtered readings command. */
-	if ((p->id & ~0x1) ==  shaft_f.can_msg_adc_5.id)	// Request: switch buffers and send total bin count
-	{ // Set request to switch buffers (see 'adc_histo_build_ADC12')
-		shaft_f.adcreadings_ctr = 0;
-		return;
-	}
 	return;
+}
+/******************************************************************************
+ * static void loadpay(uint8_t* pu, uint32_t* p);
+ * @brief 	: Load CAN msg payload bytes from uint32_t
+ * @param	: p = pointer 4 byte input
+ * @param	: pu = pointer to payload start position
+*******************************************************************************/
+static void loadpay(uint8_t* pu, uint32_t* p)
+{
+	*(pu+0) = *(p+0);
+	*(pu+1) = *(p+1);
+	*(pu+2) = *(p+2);
+	*(pu+3) = *(p+3);
+	return;
+}
+/******************************************************************************
+ * void adc_histo_send(struct ADCHISTO* p);
+ * @brief 	: Handle CAN msg request for histogram
+ * @param	: p = pointer to struct holding ADC bins
+*******************************************************************************/
+void adc_histo_send(struct ADCHISTO* p)
+{
+	int i;
+	
+	/* Check if sending has caught up with building */
+	if (p->idx_send == p->idx_build) return; // No new data
+	
+	uint32_t* pb = &p->bin[p->idx_send][0]; // Convenience and efficiency
+
+	/* Setup and send CAN msg for each hisogram bin */
+	for (i = 0; i < ADCHISTOSIZE; i++)
+	{ 
+		loadpay(&p->can_cmd_histo.cd.uc[3], pb++);   // Load bin count
+		can_driver_put(pctl1,&p->can_cmd_histo,4,0);	// Add/send to CAN driver
+	}	
+
+	/* Send a termination msg */
+	loadpay(&p->can_cmd_histo.cd.uc[3], (uint32_t*)&p->ctr);   // Load total count
+	can_driver_put(pctl1,&p->can_cmd_histo_final,4,0);	// Add/send to CAN driver
 
 
+	/* Advance index */
+	p->idx_send += 1; if (p->idx_send >= HISTOBINBUFNUM) p->idx_send = 0;
+
+	return;
 }
 

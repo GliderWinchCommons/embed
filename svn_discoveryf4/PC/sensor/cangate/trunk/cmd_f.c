@@ -18,7 +18,7 @@ This lifts & modifies some code from--
  * @brief 	: Output current msg ID's ('n' command)
 *******************************************************************************/
 #ifdef SAVES_LOOKING_UP_HOW_MSGS_ARE_CONSTRUCTED
-/*
+
 /******************************************************************************
  * static void gpsfix_msg(struct GPSFUNCTION* p, int n);
  * @brief 	: Setup and send FIX msgs
@@ -158,7 +158,7 @@ void cmd_f_do_msg(struct CANRCVBUF* p)
 		break;
 
 	default:
-		printf ("Bad type code: %d\n",type);
+		printf ("Bad type code: %d code: %d\n",type, code);
 	}
 
 	return;

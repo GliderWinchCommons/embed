@@ -213,27 +213,28 @@ shaftDbghbct += 1;
 		ret = 0;
 	}
 
-	/* Check if any incoming msgs were with the call to this routine */
-	if (pcan == NULL) return ret;	// No incoming msgs (just heartbeat polling)
-
 	if (p->cf.flag_msg != 0) // Poll response msg request?
 	{ // Here, yes.  Send regular reading response(s)
 		p->cf.flag_msg  = 0;	// Reset flag
 	   can_hub_send(&p->can_msg_speed,p->cf.phub); //  Send CAN msg
 		can_hub_send(&p->can_msg_count,p->cf.phub); //  Send CAN msg
-			return 1;
+			ret = 1;
 	}
 	/* Check drive shaft function command. */
-	if (pcan->id == *p->cf.pcanid_cmd_func_i)
-	{ // Here, we have a command msg for this function instance. 
-		cmd_code_dispatch(pcan, p); // Handle and send as necessary
-		return 0;	// No msgs passed to other ports
+	/* Check if any incoming msgs were with the call to this routine */
+	if (pcan != NULL)	// No incoming msgs (just heartbeat polling)
+	{
+		if (pcan->id == *p->cf.pcanid_cmd_func_i)
+		{ // Here, we have a command msg for this function instance. 
+			cmd_code_dispatch(pcan, p); // Handle and send as necessary
+			ret = 0;	// No msgs passed to other ports
+		}
 	}
 
 	/* Histogram sending */
 	// Load can_driver with histogram msgs, if ready & active
 	adc_histo_send(&adchisto2); // Load ADC2 histogram 
-	adc_histo_send(&adchisto2); // Load ADC3 histogram
+	adc_histo_send(&adchisto3); // Load ADC3 histogram
 
 	return ret;
 }

@@ -428,10 +428,10 @@ inputs selected through the ADC_SQRx or ADC_JSQRx registers are converted."
 	NVICIPR (NVIC_ADC3_IRQ,ADC1_2_PRIORITY_FOTO_SHAFT );	// Set interrupt priority *SAME AS* ADC1|ADC2
 
 	/* Low level interrupt for doing adc filtering following DMA1 CH1 interrupt. */
-	NVICIPR (NVIC_FSMC_IRQ, ADC_FSMC_PRIORITY);	// Set low level interrupt priority for post DMA1 interrupt processing
+	NVICIPR (NVIC_FSMC_IRQ, ADC_FSMC_PRIORITY_FOTO);	// Set low level interrupt priority for post DMA1 interrupt processing
 
 	/* Low level interrupt for doing adc filtering following DMA2 CH5 interrupt. */
-	NVICIPR (NVIC_SDIO_IRQ, ADC_FSMC_PRIORITY);// Set low level interrupt priority for post DMA2 interrupt processing
+	NVICIPR (NVIC_SDIO_IRQ, ADC_SDIO_PRIORITY_FOTO);// Set low level interrupt priority for post DMA2 interrupt processing
 
 	/* Setup DMA1 for storing data in the ADC_DR (with 32v ADC1|ADC2 pairs) */
 	RCC_AHBENR |= RCC_AHBENR_DMA1EN;      // Enable DMA1 clock
@@ -768,9 +768,10 @@ static void  histo_init(struct ADCHISTO* pu, struct SHAFT_FUNCTION* p, uint8_t a
 
 	pu->ctr       = 0;
 	pu->dur       = 0;
-	pu->idx_build = 0; // Head: bin buffer index
-	pu->idx_send  = 0; // Tail: bin buffer index
+	pu->idx_build = 1; // Head: bin buffer index
+	pu->idx_send  = 1; // Tail: bin buffer index
 	pu->sw        = 0;
+	pu->idx_tmp   = pu->idx_build + 1;
 
 	return;
 }
@@ -1082,44 +1083,47 @@ static void adc_histo_build_ADC12(void)
 {
 	struct ADCHISTO* p = &adchisto2; // Use ptr for convenience
 	u32 tmp;
+	int dmaidx;
 
 	// Note: DMA for ADC1/2 is 32b, hence union
 	union ADC12VAL* pdma_end;
 	union ADC12VAL* pdma;
 
 	/* duration = 0 signals skip processing. */
-	if (p->dur == 0) return; 	
+	if (p->dur == 0) return; 
+
+	/* Skip if we are in overrun situation */
+	if (p->idx_tmp == p->idx_send) return;	
 
 	/* Pointers to bin count buffer */
 	p->ph   = &p->bin[p->idx_build][0];	// begin
 	p->pend = &p->bin[p->idx_build][ADCHISTOSIZE]; // end
 
 	/* Pointer to DMA data (note ADC12 pairing with union) */
-	pdma     = &adc12valbuff[adc12valbuffflag][0];
-	pdma_end = &adc12valbuff[adc12valbuffflag][ADCVALBUFFSIZE];
+	dmaidx = adc12valbuffflag; // 'buffflag might change on us!
+	pdma     = &adc12valbuff[dmaidx][0];
+	pdma_end = &adc12valbuff[dmaidx][ADCVALBUFFSIZE];
 
 	/* Increment histogram bins from DMA stored ADC readings. */
 	while (pdma < pdma_end)
 	{ // 12b ADC collapsed to 64 bins
-		tmp = (pdma->us[1] >> ADCHISTOSIZEN);	// ADC2 into 64 ranges
+//		tmp = (pdma->us[1] >> ADCHISTOSIZEN)&63;	// ADC2 into 64 ranges
+		tmp = pdma->us[1];
+		tmp = tmp % 64;
 		*(p->ph + tmp) += 1;		// Increment bin(n) count
 		pdma ++;
 	}
-	/* Keep a count of total readings in the histogram. */
+
+	/* Count number of DMA buffers used in the histogram. */
 	p->ctr += 1;
-
-	/* Cbeck for completion of accumulation */
-	if (p->ctr >= p->dur)
-	{ // Here, designated number of DMA buffers accumulated
-		p->idx_build += 1; // Advance bin buffer index
-		if(p->idx_build >= HISTOBINBUFNUM) p->idx_build = 0;
-
-/* When p->sw goes to zero, thus setting p->dur to zero the
-   accumulation of counts in the bin buffer stops, i.e. 
-   (p->dur == 0) causes an immediate return, above. */
-		p->sw -= 1;
-		if (p->sw <= 0)
-			p->dur = 0;		// Signal end of loading data
+	if (p->ctr >= p->dur) // Completion?
+	{ // Here, designated number of DMA buffers have been accumulated
+		p->ctr = 0;
+		p->idx_build = p->idx_tmp;
+		p->idx_tmp += 1; if (p->idx_tmp >= HISTOBINBUFNUM) p->idx_tmp = 0;
+		p->sw -= 1;		    // Count down the number of consectuve histograms
+		if (p->sw <= 0) // End of histogramming?    
+			p->dur = 0;		 // Signal end of loading data
 	}
 	return;
 }
@@ -1160,45 +1164,56 @@ struct CANRCVBUF can_cmd_histo;	    // CAN msg: Histogram data
 struct CANRCVBUF can_cmd_histo_final;// CAN msg: Signal end of sending
 };
 */
+unsigned int adcDebug7;
+unsigned int adcDebug8;
+unsigned int adcDebug9;
+
 static void adc_histo_build_ADC3(void)
 {
 	struct ADCHISTO* p = &adchisto3; // Use ptr for convenience
 	u32 tmp;
 	u16* pdma_end;  // Note: DMA for ADC3 is 16b
 	u16* pdma;
+	int dmaidx;
+
 
 	/* duration = 0 signals skip processing. */
-	if (p->dur == 0) return; 	
+	if (p->dur == 0) return; 
+
+	/* Skip if we are in overrun situation */
+	if (p->idx_tmp == p->idx_send) return;	
 
 	/* Pointers to bin count buffer */
 	p->ph = &p->bin[p->idx_build][0];	// begin at
 
 	/* Pointer to DMA data (note ADC12 pairing with union) */
-	pdma     = &adc3valbuff[adc3valbuffflag][0];
-	pdma_end = &adc3valbuff[adc3valbuffflag][ADCVALBUFFSIZE];
+	dmaidx = adc12valbuffflag; // 'buffflag might change on us!
+	pdma     = &adc3valbuff[dmaidx][0];
+	pdma_end = &adc3valbuff[dmaidx][ADCVALBUFFSIZE];
 
 	/* Increment histogram bins from DMA stored ADC readings. */
 	while (pdma < pdma_end)
 	{ // 12b ADC collapsed to 64 bins
-		tmp = (*pdma >> ADCHISTOSIZEN);	// ADC2 into 64 ranges
+//		tmp = (*pdma >> ADCHISTOSIZEN)&63;	// ADC3 into 64 ranges
+		tmp = (*pdma % 64);
+adcDebug7 = (unsigned int)p->ph;
+adcDebug8 = tmp;
+adcDebug9 = (unsigned int)(p->ph + tmp);
+
 		*(p->ph + tmp) += 1;		// Increment bin(n) count
 		pdma ++;
 	}
-	/* Keep a count of total readings in the histogram. */
+
+	/* Count number of DMA buffers used in the histogram. */
 	p->ctr += 1;
-
-	/* Cbeck for completion of accumulation */
-	if (p->ctr >= p->dur)
-	{ // Here, designated number of DMA buffers accumulated
-		p->idx_build += 1; // Advance bin buffer index
-		if (p->idx_build >= HISTOBINBUFNUM) p->idx_build = 0;
-
-/* When p->sw goes to zero, thus setting p->dur to zero the
-   accumulation of counts in the bin buffer stops, i.e. 
-   (p->dur == 0) causes an immediate return, above. */
-		p->sw -= 1;
-		if (p->sw <= 0)
-			p->dur = 0;		// Signal end of loading data
+	if (p->ctr >= p->dur) // Completion?
+	{ // Here, designated number of DMA buffers have been accumulated
+		p->ctr = 0;
+		p->idx_build = p->idx_tmp;
+		p->idx_tmp += 1; if (p->idx_tmp >= HISTOBINBUFNUM) p->idx_tmp = 0;
+		p->sw -= 1;		    // Count down the number of consectuve histograms
+		if (p->sw <= 0) // End of histogramming?    
+			p->dur = 0;		 // Signal end of loading data
 	}
 	return;
 }
@@ -1248,15 +1263,26 @@ void adc_histo_request(struct CANRCVBUF* p)
 	{
 	case 2: // ADC2 only
 		adchisto2.sw  = p->cd.uc[2];      // Extract number consecutive bins
-		adchisto2.dur = pay(&p->cd.uc[3]); // Extract payload with duration		
+		adchisto2.dur = pay(&p->cd.uc[3]); // Extract payload with duration
+		adchisto2.ctr = 0;	
+		adchisto3.dur = 0; // jic	
+		break;
+
+	case 3: // ADC3 only
+		adchisto3.sw  = p->cd.uc[2];      // Extract number consecutive bins
+		adchisto3.dur = pay(&p->cd.uc[3]); // Extract payload with duration		
+		adchisto3.ctr = 0;	
+		adchisto2.dur = 0; // jic	
 		break;
 
 	case 4: // ADC2 and ADC3
 		adchisto2.sw  = p->cd.uc[2];      // Extract number consecutive bins
 		adchisto2.dur = pay(&p->cd.uc[3]); // Extract payload with duration		
-	case 3: // ADC3 only
+		adchisto2.ctr = 0;	
+
 		adchisto3.sw  = p->cd.uc[2];      // Extract number consecutive bins
 		adchisto3.dur = pay(&p->cd.uc[3]); // Extract payload with duration		
+		adchisto3.ctr = 0; // jic	
 		break;
 	}
 	adcsensor_foto_h_enable_histogram(); // Enable DMA interrupts
@@ -1283,19 +1309,22 @@ static void loadpay(uint8_t* pu, uint32_t* p)
  * @param	: p = pointer to struct holding ADC bins
 *******************************************************************************/
 void adc_histo_send(struct ADCHISTO* p)
-{
+{	
 	int i;
-	
+
 	/* Check if sending has caught up with building */
 	if (p->idx_send == p->idx_build) return; // No new data
-	
+
+
 	uint32_t* pb = &p->bin[p->idx_send][0]; // Convenience and efficiency
 
 	/* Setup and send CAN msg for each hisogram bin */
 	for (i = 0; i < ADCHISTOSIZE; i++)
 	{ 
-		loadpay(&p->can_cmd_histo.cd.uc[3], pb++);   // Load bin count
+		p->can_cmd_histo.cd.uc[2] = i;
+		loadpay(&p->can_cmd_histo.cd.uc[3], pb);   // Load bin count
 		can_driver_put(pctl1,&p->can_cmd_histo,4,0);	// Add/send to CAN driver
+		*pb++ = 0;	// Zero the count for thenext rount
 	}	
 
 	/* Send a termination msg */

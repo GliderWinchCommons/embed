@@ -9,15 +9,18 @@
 #ifndef __IRQ_PRIORITIES_SE1
 #define __IRQ_PRIORITIES_SE1
 
-#define ADC1_2_PRIORITY_FOTO_SHAFT       0x40  // ADC1_2 and ADC3 priority
+#define ADC1_2_PRIORITY_FOTO_SHAFT       0x40  // ADC1_2 *and* ADC3 priority
 
 #define DMA1_CH1_PRIORITY	              0x60	// ADC circular buffering interrupts
 #define DMA2_CH5_PRIORITY	              0x60	// 
 
 #define TIM4_PRIORITY_SHAFT              0x70  // RPM input capture & timing
 
-#define NVIC_I2C1_ER_IRQ_PRIORITY_SE1    0xa0  // CAN_poll_loop_trigger
-#define NVIC_EXTI0_IRQ_PRIORITY_SE1	NVIC_I2C1_ER_IRQ_PRIORITY_SE1 // TIM4 'rpmsensor.c' CH3 subinterval
+#define ADC_FSMC_PRIORITY_FOTO           0X80  // DMA1 CH1 post interrupt handling (ADC12)
+#define ADC_SDIO_PRIORITY_FOTO           0x80  // DMA2 CH5 post interrupt handling (ADC3)
+
+#define NVIC_I2C1_ER_IRQ_PRIORITY_FOTO   0xa0  // CAN poll loop
+#define NVIC_EXTI0_IRQ_PRIORITY_FOTO     0Xa0  // TIM4 'rpmsensor.c' CH3 subinterval
 
 #define NVIC_CAN_RX1_IRQ_PRIORITY		  0x70  // CAN1: Receive FIFO 1 (and related) [time sync]
 #define NVIC_CAN2_RX1_IRQ_PRIORITY		  0x70  // CAN2: Receive FIFO 1 (and related) [time sync]

@@ -77,9 +77,7 @@ union ADC12VAL		// In dual mode: DMA stores pairs of ADC readings, two 16b readi
 #define ADCVALBUFFSIZE	64	// Number of ADC readings in a *half* DMA buffer
 #define ADCHISTOSIZEN      6 // Histogram bin size  2^N
 #define ADCHISTOSIZE (1 << ADCHISTOSIZEN)	// Number of histogram bins (that accumulate counts)
-#define THROTTLE	7	// Number of 1/2048 sec ticks between sending bin msgs
-#define THROTTLE2	64	// Number of 1/2048 sec ticks between sending bin msgs
-#define ADC3ADC2READCT	2048	// Number of readings output before shutting it off
+
 
 
 /******************************************************************************/
@@ -132,13 +130,14 @@ CAN received: histogram request id: CANID_CMD_SHAFT1R
  [3]-[6] bin count
 
 */
-#define HISTOBINBUFNUM 3 // Number of bin buffers
+#define HISTOBINBUFNUM 4 // Number of bin buffers
 struct ADCHISTO
 {
 	u32  bin[HISTOBINBUFNUM][ADCHISTOSIZE];	// Double buffer bin counts
 	u32* pbegin;   // Beginning of bin buffer
 	u32* pend;     // End of bin buffer
 	u32* ph;       // Working bin buffer ptr
+	int  idx_tmp;       // index: Temporary
 	int  idx_build;     // index: adding buffer
 	int  idx_send;      // index: sending buffer
 	int  ctr;           // Number of ADC buffers in histogram

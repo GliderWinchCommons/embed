@@ -148,7 +148,7 @@ static void tim4_init(void)
 	TIM4_CR1 |= TIM_CR1_CEN; 			// Counter enable: counter begins counting (p 371,2)
 
 	/* Enable a lower priority interrupt for handling post-systick timing. */
-	NVICIPR (NVIC_EXTI0_IRQ, NVIC_EXTI0_IRQ_PRIORITY_SE1);	// Set interrupt priority
+	NVICIPR (NVIC_EXTI0_IRQ, NVIC_EXTI0_IRQ_PRIORITY_FOTO);	// Set interrupt priority
 
 	/* Set and enable interrupt controller for TIM4 interrupt */
 	NVICIPR (NVIC_TIM4_IRQ, TIM4_PRIORITY_SHAFT);	// Set interrupt priority

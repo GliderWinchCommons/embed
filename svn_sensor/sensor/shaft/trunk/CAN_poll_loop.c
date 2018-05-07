@@ -17,6 +17,7 @@ w flag and have this routine pass that on to the CAN send routine.
 #include "db/gen_db.h"
 #include "tim4_shaft.h"
 #include "adcsensor_foto_h.h"
+#include "IRQ_priority_shaft.h"
 
 extern void (*can_msg_reset_ptr)(void* pctl, struct CAN_POOLBLOCK* pblk);
 
@@ -38,7 +39,7 @@ int CAN_poll_loop_init(void)
 	/* Runs polling loop */
 	tim4_shaft_tim_oc_ptr = &CAN_poll_loop_trigger;	// 'rpmsensor.c' CH2 oc timer triggers poll
 
-	NVICIPR (NVIC_I2C1_ER_IRQ, NVIC_I2C1_ER_IRQ_PRIORITY );	// Set interrupt priority
+	NVICIPR (NVIC_I2C1_ER_IRQ, NVIC_I2C1_ER_IRQ_PRIORITY_FOTO);	// Set interrupt priority
 
 	/* Get a buffer for each "port" */
 	phub_app = can_hub_add_func();	// Get a hub port for dealing with commands

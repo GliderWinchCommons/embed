@@ -320,7 +320,7 @@ extern unsigned short adc3valbuff[2][ADCVALBUFFSIZE];
 #define TIM4TICKSPERSEC 2000
 
 /* while loop print line rate */
-#define PRINTLOOPINC (TIM4TICKSPERSEC/4)	// N per sec
+#define PRINTLOOPINC (TIM4TICKSPERSEC/1)	// N per sec
 uint32_t tim4_tim_ticks_next = tim4_tim_ticks + PRINTLOOPINC;
 
 /* Green LED flashing */
@@ -349,6 +349,15 @@ uint32_t ttot1 = 0;
 uint32_t ttotdiff;
 uint32_t ttotmax = 0;
 uint32_t ttotctr = 0;
+
+extern union ADC12VAL adc12valbuff[2][ADCVALBUFFSIZE];
+extern unsigned short adc3valbuff[2][ADCVALBUFFSIZE];
+unsigned int adc3x;
+unsigned int nidx = 0;
+
+extern unsigned int adcDebug7;
+extern unsigned int adcDebug8;
+extern unsigned int adcDebug9;
 
 //canwinch_pod_common_systick2048_printerr_header();
 /* --------------------- Endless Stuff ----------------------------------------------- */
@@ -387,6 +396,12 @@ if ((int)(tfilt1 - tfilt0) > tfiltmax) tfiltmax =  (int)(tfilt1 - tfilt0);
 			fpformatn(a,shaft_f.drpm,10,1,10); // 
 			encoder_diff = encoder_ctr2 - encoder_prev;
 			encoder_prev = encoder_ctr2;
+
+printf("%08X %u %08X ",adcDebug7,adcDebug8,adcDebug9);
+
+adc3x = adc3valbuff[1][(nidx++ % 64)];// short to long
+printf("%4u %4u %4u",adc12valbuff[0][2].us[0],adc12valbuff[1][63].us[1],adc3x);
+
 						
 			printf("%5d %s %5d %6d ",i++,a, encoder_diff, (int)encoder_ctr2);
 
@@ -396,7 +411,6 @@ if ((int)(tfilt1 - tfilt0) > tfiltmax) tfiltmax =  (int)(tfilt1 - tfilt0);
 //				adcsensordb_prev[j] = adcsensordb[j];
 			} 
 			printf("\n\r");
-#endif
 
 		/* List time durations */
 //#define TIMINGTESTS
@@ -409,6 +423,7 @@ if (ttotctr++ >= 8){ttotmax = 0; ttotctr = 0;}
 #endif
 
 		}
+#endif
 
 #ifdef FASTSTUFFLIST
 		if (adcsensordb[4] != 0) // New data?
@@ -417,6 +432,7 @@ if (ttotctr++ >= 8){ttotmax = 0; ttotctr = 0;}
 			printf("%5d %2d %7d %d\n\r",i++,adcsensordb[0],adcsensordb[1],adcsensordb[3]);
 		}
 #endif
+		CAN_poll_loop_trigger();
 	}
 	return 0;	
 }

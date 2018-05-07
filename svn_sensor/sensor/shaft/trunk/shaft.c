@@ -332,13 +332,14 @@ extern void testfoto(void);
 
 // Char buffer for fmtprint.c
 char a[16];	// RPM
-char b[32];
 
 int encoder_prev = encoder_ctr2;
 int encoder_diff;
 
+#ifdef DBGRPM_COMPUTATION
 extern int adcsensordb[5];
 //int adcsensordb_prev[5];
+#endif
 
 uint32_t tfilt0 = 0;
 uint32_t tfilt1 = 0;
@@ -348,16 +349,14 @@ uint32_t ttot0 = 0;
 uint32_t ttot1 = 0;
 uint32_t ttotdiff;
 uint32_t ttotmax = 0;
+
+//#define TIMINGTESTS
+#ifdef  TIMINGTESTS
 uint32_t ttotctr = 0;
+#endif
 
 extern union ADC12VAL adc12valbuff[2][ADCVALBUFFSIZE];
 extern unsigned short adc3valbuff[2][ADCVALBUFFSIZE];
-unsigned int adc3x;
-unsigned int nidx = 0;
-
-extern unsigned int adcDebug7;
-extern unsigned int adcDebug8;
-extern unsigned int adcDebug9;
 
 //canwinch_pod_common_systick2048_printerr_header();
 /* --------------------- Endless Stuff ----------------------------------------------- */
@@ -397,23 +396,25 @@ if ((int)(tfilt1 - tfilt0) > tfiltmax) tfiltmax =  (int)(tfilt1 - tfilt0);
 			encoder_diff = encoder_ctr2 - encoder_prev;
 			encoder_prev = encoder_ctr2;
 
-printf("%08X %u %08X ",adcDebug7,adcDebug8,adcDebug9);
-
-adc3x = adc3valbuff[1][(nidx++ % 64)];// short to long
-printf("%4u %4u %4u",adc12valbuff[0][2].us[0],adc12valbuff[1][63].us[1],adc3x);
-
-						
+			/* Counter, RPM, encoder count difference, encounder count */
 			printf("%5d %s %5d %6d ",i++,a, encoder_diff, (int)encoder_ctr2);
 
+			/* ADC2 ADC3 values in DMA buffer */
+			unsigned int v12 = adc12valbuff[1][63].us[1];
+			unsigned int v3  = adc3valbuff[1][13];
+			printf("%4u %4u ",v12,v3);
+			
+#ifdef DBGRPM_COMPUTATION
+			/* Debugging rpm computation */
 			for (j = 0; j < 4; j++)
 			{
 				printf(" %d",adcsensordb[j]);
 //				adcsensordb_prev[j] = adcsensordb[j];
 			} 
+#endif
 			printf("\n\r");
 
 		/* List time durations */
-//#define TIMINGTESTS
 #ifdef  TIMINGTESTS
 			fpformatn(b,iirhb.d_out,10,1,10); // Heavy filtered heartbeat RPM
 			printf("ticd iit %d tot %d %s\n\r",(int)tfiltmax,(int)ttotmax,b);

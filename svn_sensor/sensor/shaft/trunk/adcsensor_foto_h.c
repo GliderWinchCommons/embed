@@ -1100,7 +1100,7 @@ static void adc_histo_build_ADC12(void)
 	p->pend = &p->bin[p->idx_build][ADCHISTOSIZE]; // end
 
 	/* Pointer to DMA data (note ADC12 pairing with union) */
-	dmaidx = adc12valbuffflag; // 'buffflag might change on us!
+	dmaidx   =  adc12valbuffflag; // 'buffflag might change on us!
 	pdma     = &adc12valbuff[dmaidx][0];
 	pdma_end = &adc12valbuff[dmaidx][ADCVALBUFFSIZE];
 
@@ -1109,7 +1109,7 @@ static void adc_histo_build_ADC12(void)
 	{ // 12b ADC collapsed to 64 bins
 //		tmp = (pdma->us[1] >> ADCHISTOSIZEN)&63;	// ADC2 into 64 ranges
 		tmp = pdma->us[1];
-		tmp = tmp % 64;
+		tmp = tmp / 64;
 		*(p->ph + tmp) += 1;		// Increment bin(n) count
 		pdma ++;
 	}
@@ -1164,10 +1164,6 @@ struct CANRCVBUF can_cmd_histo;	    // CAN msg: Histogram data
 struct CANRCVBUF can_cmd_histo_final;// CAN msg: Signal end of sending
 };
 */
-unsigned int adcDebug7;
-unsigned int adcDebug8;
-unsigned int adcDebug9;
-
 static void adc_histo_build_ADC3(void)
 {
 	struct ADCHISTO* p = &adchisto3; // Use ptr for convenience
@@ -1187,19 +1183,14 @@ static void adc_histo_build_ADC3(void)
 	p->ph = &p->bin[p->idx_build][0];	// begin at
 
 	/* Pointer to DMA data (note ADC12 pairing with union) */
-	dmaidx = adc12valbuffflag; // 'buffflag might change on us!
+	dmaidx   =  adc3valbuffflag; // 'buffflag might change on us!
 	pdma     = &adc3valbuff[dmaidx][0];
 	pdma_end = &adc3valbuff[dmaidx][ADCVALBUFFSIZE];
 
 	/* Increment histogram bins from DMA stored ADC readings. */
-	while (pdma < pdma_end)
+	while (pdma != pdma_end)
 	{ // 12b ADC collapsed to 64 bins
-//		tmp = (*pdma >> ADCHISTOSIZEN)&63;	// ADC3 into 64 ranges
-		tmp = (*pdma % 64);
-adcDebug7 = (unsigned int)p->ph;
-adcDebug8 = tmp;
-adcDebug9 = (unsigned int)(p->ph + tmp);
-
+		tmp = (*pdma >> ADCHISTOSIZEN);	// ADC3 into 64 ranges
 		*(p->ph + tmp) += 1;		// Increment bin(n) count
 		pdma ++;
 	}
@@ -1237,6 +1228,27 @@ static uint32_t pay(uint8_t* p)
 	*(pu+2) = *(p+2);	*(pu+3) = *(p+3);
 
 	return ucui.ui;
+}
+/******************************************************************************
+ * static void loadpay(u8* pu, uint32_t* p);
+ * @brief 	: Load CAN msg payload bytes from uint32_t
+ * @param	: p = pointer 4 byte input
+ * @param	: pu = pointer to payload start position
+*******************************************************************************/
+static void loadpay(u8* pu, uint32_t* p)
+{
+	union ITOB
+	{
+		uint32_t ui;
+		u8 uc[4];
+	}itob;
+	itob.ui = *p;
+ 	*(pu+0) = itob.uc[0];
+	*(pu+1) = itob.uc[1];
+	*(pu+2) = itob.uc[2];
+	*(pu+3) = itob.uc[3];
+	
+	return;
 }
 /******************************************************************************
  * void adc_histo_request(struct CANRCVBUF* p);
@@ -1285,24 +1297,15 @@ void adc_histo_request(struct CANRCVBUF* p)
 		adchisto3.ctr = 0; // jic	
 		break;
 	}
+	/* Save duration count in 'final CAN msg (since dur sets to zero when histo complete */
+	loadpay(&adchisto2.can_cmd_histo_final.cd.uc[3], (uint32_t*)&adchisto2.dur);   // Load total count
+	loadpay(&adchisto3.can_cmd_histo_final.cd.uc[3], (uint32_t*)&adchisto3.dur);   // Load total count
+
 	adcsensor_foto_h_enable_histogram(); // Enable DMA interrupts
 
 	return;
 }
-/******************************************************************************
- * static void loadpay(uint8_t* pu, uint32_t* p);
- * @brief 	: Load CAN msg payload bytes from uint32_t
- * @param	: p = pointer 4 byte input
- * @param	: pu = pointer to payload start position
-*******************************************************************************/
-static void loadpay(uint8_t* pu, uint32_t* p)
-{
-	*(pu+0) = *(p+0);
-	*(pu+1) = *(p+1);
-	*(pu+2) = *(p+2);
-	*(pu+3) = *(p+3);
-	return;
-}
+
 /******************************************************************************
  * void adc_histo_send(struct ADCHISTO* p);
  * @brief 	: Handle CAN msg request for histogram
@@ -1322,15 +1325,13 @@ void adc_histo_send(struct ADCHISTO* p)
 	for (i = 0; i < ADCHISTOSIZE; i++)
 	{ 
 		p->can_cmd_histo.cd.uc[2] = i;
-		loadpay(&p->can_cmd_histo.cd.uc[3], pb);   // Load bin count
+		loadpay(&p->can_cmd_histo.cd.uc[3], (uint32_t*)pb);   // Load bin count
 		can_driver_put(pctl1,&p->can_cmd_histo,4,0);	// Add/send to CAN driver
-		*pb++ = 0;	// Zero the count for thenext rount
+		*pb++ = 0;	// Zero the count for the next round
 	}	
 
 	/* Send a termination msg */
-	loadpay(&p->can_cmd_histo.cd.uc[3], (uint32_t*)&p->ctr);   // Load total count
 	can_driver_put(pctl1,&p->can_cmd_histo_final,4,0);	// Add/send to CAN driver
-
 
 	/* Advance index */
 	p->idx_send += 1; if (p->idx_send >= HISTOBINBUFNUM) p->idx_send = 0;

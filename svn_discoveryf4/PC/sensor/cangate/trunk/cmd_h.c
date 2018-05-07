@@ -170,7 +170,7 @@ void cmd_h_do_msg(struct CANRCVBUF* p)
 			ub.b[2] = p->cd.uc[5];
 			ub.b[3] = p->cd.uc[6];
 
-			printf("# %2d %1d %3d %5u %15.0f %8u\n",p->cd.uc[0],p->cd.uc[1],p->cd.uc[2],p->cd.uc[2]*64,(double)ub.ui/15000,ub.ui);
+			printf("# %2d %1d %3d %5u %8u\n",p->cd.uc[0],p->cd.uc[1],p->cd.uc[2],p->cd.uc[2]*64,ub.ui);
 		}
   return;
 }

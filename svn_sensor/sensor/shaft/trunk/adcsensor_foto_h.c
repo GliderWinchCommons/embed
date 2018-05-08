@@ -1,6 +1,6 @@
 /******************************************************************************
 * File Name          : adcsensor_foto_h.c
-* Date First Issued  : 01/31/2014
+* Date First Issued  : 05/07/2018
 * Board              : RxT6
 * Description        : ADC routines for f103 sensor--sensor board histogram collection
 *******************************************************************************/
@@ -119,7 +119,6 @@ NOTE: Some page number refer to the Ref Manual RM0008, rev 11 and some more rece
 #include "SENSORpinconfig.h"
 
 #include "libopenstm32/scb.h"
-#include "libopenstm32/systick.h"
 
 #include "../../../../svn_common/trunk/pay_type_cnvt.h"
 #include "CANascii.h"
@@ -129,6 +128,7 @@ NOTE: Some page number refer to the Ref Manual RM0008, rev 11 and some more rece
 #include "IRQ_priority_shaft.h"
 #include "iir_filter_l.h"
 #include "db/gen_db.h"
+#include "libmiscstm32/DTW_counter.h"
 
 
 
@@ -417,21 +417,23 @@ inputs selected through the ADC_SQRx or ADC_JSQRx registers are converted."
 	ADC1_SQR1 = ( ( (NUMBERADCCHANNELS_FOTO-1) << 20) );	// Chan count, sequences 16 - 13
 
 	/* This maps the ADC channel number to the position in the conversion sequence */
-	// Load channels IN11,IN10, for conversions sequences (p 240)
+	// Load channels IN11,IN10, for conversions sequences
 	ADC3_SQR3 = ( (0 << 0) ); // Conversion sequence number one sensor photocell A emitter measurement
 	ADC2_SQR3 = ( (1 << 0) ); // Conversion sequence number one sensor photocell B emitter measurement
 	ADC1_SQR3 = ( (2 << 0) ); // Conversion sequence number dummy
 
 	/* Set and enable interrupt controller for ADCs. */
-	NVICIPR (NVIC_ADC1_2_IRQ,ADC1_2_PRIORITY_FOTO_SHAFT );// Set interrupt priority
+	NVICIPR (NVIC_ADC1_2_IRQ,ADC1_2_PRIORITY_FOTO_SHAFT );// Set priority ADC1/2
 
-	NVICIPR (NVIC_ADC3_IRQ,ADC1_2_PRIORITY_FOTO_SHAFT );	// Set interrupt priority *SAME AS* ADC1|ADC2
+	NVICIPR (NVIC_ADC3_IRQ,ADC1_2_PRIORITY_FOTO_SHAFT );	// Set priority  *SAME AS* ADC1|ADC2
 
 	/* Low level interrupt for doing adc filtering following DMA1 CH1 interrupt. */
-	NVICIPR (NVIC_FSMC_IRQ, ADC_FSMC_PRIORITY_FOTO);	// Set low level interrupt priority for post DMA1 interrupt processing
+	// Set low level interrupt priority for post DMA1 interrupt processing
+	NVICIPR (NVIC_FSMC_IRQ, ADC_FSMC_PRIORITY_FOTO);	
 
 	/* Low level interrupt for doing adc filtering following DMA2 CH5 interrupt. */
-	NVICIPR (NVIC_SDIO_IRQ, ADC_SDIO_PRIORITY_FOTO);// Set low level interrupt priority for post DMA2 interrupt processing
+	// Set low level interrupt priority for post DMA2 interrupt processing
+	NVICIPR (NVIC_SDIO_IRQ, ADC_SDIO_PRIORITY_FOTO);
 
 	/* Setup DMA1 for storing data in the ADC_DR (with 32v ADC1|ADC2 pairs) */
 	RCC_AHBENR |= RCC_AHBENR_DMA1EN;      // Enable DMA1 clock
@@ -439,7 +441,7 @@ inputs selected through the ADC_SQRx or ADC_JSQRx registers are converted."
 	DMA1_CPAR1 = (u32)&ADC1_DR;           // DMA1 channel 1 peripheral address (adc1|2 data register)
 	DMA1_CMAR1 = (u32)&adc12valbuff[0][0];// Memory address of first buffer array for storing data
 
-	// Channel configurion reg (p 209)
+	// Channel configurion reg (ADC1 & ADC2 store together in 32b)
 	//          priority high  | 32b mem xfrs | 32b adc xfrs | mem increment | circular mode | half xfr     | xfr complete   | dma chan 1 enable
 	DMA1_CCR1 =  ( 0x02 << 12) | (0x02 << 10) |  (0x02 << 8) | DMA_CCR1_MINC | DMA_CCR1_CIRC |DMA_CCR1_HTIE | DMA_CCR1_TCIE  | 0 ;
 
@@ -452,7 +454,7 @@ inputs selected through the ADC_SQRx or ADC_JSQRx registers are converted."
 	DMA2_CPAR5 = (u32)&ADC3_DR;           // DMA2 channel 5 peripheral address (adc3 data register)
 	DMA2_CMAR5 = (u32)&adc3valbuff[0][0]; // Memory address of first buffer array for storing data
 
-	// Channel configurion reg (p 209)
+	// Channel configurion reg (ADC3 stores as 16b) 
 	//          priority high  | 16b mem xfrs | 16b adc xfrs | mem increment | circular mode | half xfr     | xfr complete   | dma chan 1 enable
 	DMA2_CCR5 =  ( 0x02 << 12) | (0x01 << 10) |  (0x01 << 8) | DMA_CCR5_MINC | DMA_CCR5_CIRC |DMA_CCR5_HTIE | DMA_CCR5_TCIE  | 0 ;
 
@@ -548,8 +550,17 @@ should allow a delay of tSTAB between power up and start of conversion. Refer to
 /*#######################################################################################
  * ISR routine for DMA1 Channel1 reading ADC regular sequence of adc channels
  *####################################################################################### */
+/* Timing test
+System ticks between interrupt entries: 3634 +/- 3 
+*/
+uint32_t adcbuild0;
+uint32_t adcbuild1;
+ int32_t adcbuildmax;
 void DMA1CH1_IRQHandler(void)
 {
+adcbuild1 = DTWTIME;
+if ((int)(adcbuild1 - adcbuild0) > adcbuildmax) adcbuildmax = (adcbuild1 - adcbuild0);
+adcbuild0 = DTWTIME;
 /* Double buffer the sequence of channels converted.  When the DMA goes from the first
 to the second buffer a half complete interrupt is generated.  When it completes the
 storing of two buffers full a transfer complete interrut is issued, and the DMA address
@@ -576,6 +587,10 @@ pointer is automatically reloaded with the beginning of the buffer space (i.e. c
 /*#######################################################################################
  * ISR routine for DMA2 Channel5 reading ADC regular sequence of adc channels on ADC3
  *####################################################################################### */
+/* Timing test
+System ticks between interrupt entries: 5126 +/- 5 
+*/
+
 void DMA2CH4_5_IRQHandler(void)
 {
 /* Double buffer the sequence of channels converted.  When the DMA goes from the first
@@ -1078,6 +1093,12 @@ calls the following routine to add to the 'bin' counts to make a histogram.  The
 histogram bins are double buffered, and 'adc2histo_build' points to the histogram buffer
 that is being built.
 */
+/* Execution time test:
+ Shaft stopped: 1779 - 1878 (cycles at 64E6 per sec)
+ Shaft @ approx 1200 rpm: 2068
+One would expect the running situation to be longer as the ADC watchdog interrupts
+have a higher priority than the interrupt for this routine.
+*/
 
 static void adc_histo_build_ADC12(void)
 {
@@ -1125,6 +1146,7 @@ static void adc_histo_build_ADC12(void)
 		if (p->sw <= 0) // End of histogramming?    
 			p->dur = 0;		 // Signal end of loading data
 	}
+
 	return;
 }
 /*#######################################################################################
@@ -1164,8 +1186,16 @@ struct CANRCVBUF can_cmd_histo;	    // CAN msg: Histogram data
 struct CANRCVBUF can_cmd_histo_final;// CAN msg: Signal end of sending
 };
 */
+/* Execution time test:
+ Shaft stopped: 1630 - 1733 (cycles at 64E6 per sec)
+ Shaft @ approx 1200 rpm: 1829
+One would expect the running situation to be longer as the ADC watchdog interrupts
+have a higher priority than the interrupt for this routine.
+*/
 static void adc_histo_build_ADC3(void)
 {
+
+
 	struct ADCHISTO* p = &adchisto3; // Use ptr for convenience
 	u32 tmp;
 	u16* pdma_end;  // Note: DMA for ADC3 is 16b
@@ -1216,18 +1246,12 @@ static void adc_histo_build_ADC3(void)
 *******************************************************************************/
 static uint32_t pay(uint8_t* p)
 { 
-	union UCUI 
-	{
-		uint32_t ui;
-		uint8_t uc[8];
-	}ucui;
-	uint8_t* pu = &ucui.uc[0];
-	
-	// Extract four payload bytes into a uint32_t
-	*(pu+0) = *(p+0);	*(pu+1) = *(p+1);
-	*(pu+2) = *(p+2);	*(pu+3) = *(p+3);
-
-	return ucui.ui;
+	uint32_t tmp;
+	tmp  = *(p+0) <<  0;
+	tmp |= *(p+1) <<  8;
+	tmp |= *(p+2) << 16;
+	tmp |= *(p+3) << 24;
+	return tmp;
 }
 /******************************************************************************
  * static void loadpay(u8* pu, uint32_t* p);
@@ -1237,17 +1261,10 @@ static uint32_t pay(uint8_t* p)
 *******************************************************************************/
 static void loadpay(u8* pu, uint32_t* p)
 {
-	union ITOB
-	{
-		uint32_t ui;
-		u8 uc[4];
-	}itob;
-	itob.ui = *p;
- 	*(pu+0) = itob.uc[0];
-	*(pu+1) = itob.uc[1];
-	*(pu+2) = itob.uc[2];
-	*(pu+3) = itob.uc[3];
-	
+ 	*(pu+0) = *p;
+	*(pu+1) = *p >>  8;
+	*(pu+2) = *p >> 16;
+	*(pu+3) = *p >> 24;	
 	return;
 }
 /******************************************************************************

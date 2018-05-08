@@ -31,7 +31,7 @@ static struct PCTOGATEWAY pctogateway;
 #define REQUEST_ID  0xA0600000 // 05/05/2018 CANID_UNIT_2:CANID_CMD_SHAFT1R
 #define ADCNUM 4			// This must be 2,3, or 4 (both)
 #define SWCT 1				// Number of consecutive histograms sent
-#define DUR  10000		// Number of DMA buffers used in histogram
+#define DUR  17000		// Number of DMA buffers used in histogram
 static int otosw = 0;	// One time default
 
 /* Keyboard entered */
@@ -52,7 +52,7 @@ static void printerror(char *p)
 	printf("  zzzzzzzz = Command CAN id (suffix I)\n");
 	printf("  a = ADC number: 2, 3 or 4 for both\n");
 	printf("  b = Number of consecutive histograms sent (e.g. 1)\n");
-	printf("  ccccc = Number of DMA buffers accumulated (e.g. 10000 approx 1 sec)\n");
+	printf("  ccccc = Number of DMA buffers accumulated (e.g. 17000 approx 1 sec for ADC2)\n");
 	return;
 }
 static void printcommand(char *p)
@@ -68,6 +68,7 @@ static void printcommand(char *p)
  * static void canmsg_load(struct CANRCVBUF* pcan);
  * @brief 	: One-Time-Only populate CAN msgs with defaults
 *******************************************************************************/
+
 static void canmsg_default(void)
 {
 	if (otosw != 0) return;
@@ -78,6 +79,7 @@ static void canmsg_default(void)
 	dur = DUR;	
 	response_id = RESPONSE_ID;
 	otosw = 1;
+
 	return;
 }
 /******************************************************************************

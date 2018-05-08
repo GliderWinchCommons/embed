@@ -355,6 +355,8 @@ uint32_t ttotmax = 0;
 uint32_t ttotctr = 0;
 #endif
 
+extern int32_t adcbuildmax;
+
 extern union ADC12VAL adc12valbuff[2][ADCVALBUFFSIZE];
 extern unsigned short adc3valbuff[2][ADCVALBUFFSIZE];
 
@@ -403,6 +405,10 @@ if ((int)(tfilt1 - tfilt0) > tfiltmax) tfiltmax =  (int)(tfilt1 - tfilt0);
 			unsigned int v12 = adc12valbuff[1][63].us[1];
 			unsigned int v3  = adc3valbuff[1][13];
 			printf("%4u %4u ",v12,v3);
+
+			/* ADC 'build' timing */
+			printf("%u ",(unsigned int)adcbuildmax);
+			adcbuildmax = 0; // Reset
 			
 #ifdef DBGRPM_COMPUTATION
 			/* Debugging rpm computation */

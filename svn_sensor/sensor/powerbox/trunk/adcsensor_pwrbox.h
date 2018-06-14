@@ -23,32 +23,28 @@
 
 #define DMA1_CH1_PRIORITY	0x60	// * ### Lower than SYSTICK (ADC filtering after DMA interrupt)
 
-#define NUMBERADCTHERMISTER_TEN	4	// Number of Thermistor channels
-#define NUMBERADCCHANNELS_TEN	4	// Number of channels to scan
-#define NUMBERSEQUENCES		16	// Number of sequences in 1/2 of the buffer
-#define DECIMATION_TEN		16	// Decimation ratio
-#define DISCARD_TEN		8	// Number of readings to discard before filtering starts
-#define CICSCALE		12	// Right shift count to scale result
+#define NUMBERADCCHANNELS_PWR	8	// Number of channels in one scan cycle
+#define NUMBERSEQUENCES		8	   // Number of sequences in 1/2 of the DMA buffer
 
-/* ADC usage
-PA 3 ADC123-IN3	Thermistor on 32 KHz xtal..Thermistor: AD7799 #2
-PB 0 ADC12 -IN8	Bottom cell of battery.....Not scanned
-PB 1 ADC12 -IN9	Top cell of battery........Not scanned
-PC 0 ADC12 -IN10	Accelerometer X....Thermistor: load-cell #1
-PC 1 ADC12 -IN11	Accelerometer Y....Thermistor: load-cell #2
-PC 2 ADC12 -IN12	Accelerometer Z....Thermistor: AD7799 #1
-PC 3 ADC12 -IN13	Op-amp.............Not scanned
--- - ADC1  -IN16	                   Internal temp ref
--- - ADC1  -IN17	                   Internal voltage ref (Vrefint)
+/* input-(3)---diode-(2)--resistor-(1)--CAN bus pwr--switcher:5V--(0) */
 
+/* ADC usage on Arduino Blue Pill F103 board
+PA 0 ADC12-IN0	 Grn 5V power supply
+PA 1 ADC12-IN1	 Yel Capacitor/bus voltage, .22 ohm output side
+PA 2 ADC12-IN2	 Blu 0.22 ohm resistor, input side, after diodes
+PA 3 ADC12-IN3	 Wht Input voltage (before diodes)
+PA 4 ADC12-IN4	 Spare divider
+PA 5 ADC12-IN5	 Spare divider
+     ADC1 -IN16 Internal temp ref
+     ADC1 -IN17 Internal voltage ref (Vrefint)
 */
 
 /* DMA double buffer ADC readings. */
-struct ADCDR_TENSION
+struct ADCDR_PWRBOX
 {
-	uint32_t in[2][NUMBERSEQUENCES][NUMBERADCCHANNELS_TEN];	// ADC_DR is stored for each channel in the regular sequence
-	unsigned int cnt;		// DMA interrupt counter
-	unsigned short flg;		// Index of buffer that is not busy (0, or 1)
+	uint32_t in[2][NUMBERSEQUENCES][NUMBERADCCHANNELS_PWR];	// ADC_DR is stored for each channel in the regular sequence
+	unsigned int cnt;       // DMA interrupt counter
+	unsigned short flg;     // Index of buffer that is not busy (0, or 1)
 };
 
 /******************************************************************************/
@@ -61,10 +57,9 @@ void adcsensor_pwrbox_sequence(void);
 // These hold the address of the function that will be called
 extern void 	(*dma_ll_ptr)(void);		// DMA -> FSMC  (low priority)
 
-extern uint32_t	adc_readings_cic[2][NUMBERADCCHANNELS_TEN];	// Last computed & doubly filtered value for each channel
+extern uint32_t	adc_readings_cic[2][NUMBERADCCHANNELS_PWR];	// Last computed & doubly filtered value for each channel
 
-extern int32_t	adc_temp_flag[NUMBERADCCHANNELS_TEN];	// Signal main new filtered reading ready
+extern int32_t	adc_temp_flag[NUMBERADCCHANNELS_PWR];	// Signal main new filtered reading ready
 
-extern unsigned int cicdebug0,cicdebug1;
 
 #endif 

@@ -1,6 +1,6 @@
 /******************************************************************************
-* File Name          : tension_idx_v_struct.h
-* Date First Issued  : 07/15/2015
+* File Name          : pwrbox_idx_v_struct.h
+* Date First Issued  : 07/15/2015,06/13/2018
 * Board              :
 * Description        : Translate parameter index into pointer into struct
 *******************************************************************************/
@@ -13,17 +13,15 @@ AD7799 on the POD board).
 #include "common_can.h"
 #include "iir_filter_l.h"
 
-#ifndef __TENSION_IDX_V_STRUCT
-#define __TENSION_IDX_V_STRUCT
+#ifndef __PWRBOX_IDX_V_STRUCT
+#define __PWRBOX_IDX_V_STRUCT
 
-#define NIIR	2	// Number of IIR filters for one AD779
-
-/* POD board currently only supports two AD7799 tension functions. */
-#define NUMTENSIONFUNCTIONS	2	// Number of tension functions
+#define NIIR	4	// Number of IIR filters
 
 /* The parameter list supplies the CAN IDs for the hardware filter setup. */
 #define CANFILTMAX	8	// Max number of CAN IDs in parameter list
 
+#define NUMADCPARAM	8	// Number of ADC for which we use parameters
 
  // Thermistor parameters for converting ADC readings to temperature
   struct THERMPARAM
@@ -35,46 +33,39 @@ AD7799 on the POD board).
 	float offset;		//      0.0	// Therm temp correction offset	1.0 Therm correction scale
 	float scale;		//      1.0	// Therm temp correction scale	1.0 Therm correction scale
  };
- 
-// Each AD7799 has the following parameters
- struct AD7799PARAM
- {
-	int32_t  offset;	// AD7799 offset (note: fixed)
-	float 	 scale;		// AD7799 scale	 (note: float)
-	struct THERMPARAM tp[2];// Two thermistor parameter sets
-	float	comp_t1[4];	// AD7799 Temp compensation for thermistor 1
-	float	comp_t2[4];	// AD7799 Temp compensation for thermistor 2
- };
 
- // Tension 
+struct ADCCALPWRBOX
+{
+	uint32_t accum;	// Accumulate for averaging
+	uint32_t n;			// Counts comprising average
+	double	offset;	//	Offset
+	double	scale;	//	Scale
+
+};
+ 
 // Naming convention--"cid" - CAN ID
- struct TENSIONLC
+ struct PWRBOXLC
  {
 	uint32_t size;			// Number of items in struct
  	uint32_t crc;			// crc-32 placed by loader
 	uint32_t version;		// struct version number
-	struct AD7799PARAM ad;		// Parameters for one AD7799 (w thermistors)
 	uint32_t hbct;			// Heartbeat ct: ticks between sending msgs
-	uint32_t drum;			// Drum number
 	uint32_t f_pollbit;		// Instance bit (bit position)(2nd byte)
 	uint32_t p_pollbit;		// Poll response bit (bit position)(1st byte)
-	uint32_t cid_ten_msg;		// CANID-Fully calibrated tension msg
-	uint32_t cid_ten_poll;		// CANID-MC poll msg
+	uint32_t cid_pwr_msg;		// CANID-Fully calibrated tension msg
+	uint32_t cid_pwr_poll;		// CANID-MC poll msg
 	uint32_t cid_gps_sync;		// CANID-GPS time sync msg
 	uint32_t cid_heartbeat;		// CANID-Heartbeat msg
-	uint32_t cid_tst_ten_a;		// CANID-for testing/debugging .sql files
-	struct IIR_L_PARAM iir[NIIR];	// IIR Filter for IIR filters 
-	uint32_t useme;			// Bits for using this instance
+	uint32_t cid_tst_pwr;		// CANID-for testing/debugging .sql files
+	struct ADCCALPWRBOX adc[NUMADCPARAM];	// ADC measurements
+	struct IIR_L_PARAM iir[NIIR];	   // IIR Filter for IIR filters 
 	struct IIR_L_PARAM iir_z_recal;	// IIR Filter: zero recalibration
-	uint32_t z_recal_ct;		// Conversion counts between zero recalibrations
-	float limit_hi;			// Exceeding this limit (+) means bogus reading
-	float limit_lo;			// Exceeding this limit (-) means bogus reading
+
 	uint32_t code_CAN_filt[CANFILTMAX];// List of CAN ID's for setting up hw filter
  };
  
-
 /* **************************************************************************************/
-int tension_idx_v_struct_copy(struct TENSIONLC* p, uint32_t* ptbl);
+int pwrbox_idx_v_struct_copy(struct PWRBOXLC* p, uint32_t* ptbl);
 /* @brief	: Copy the flat array in high flash with parameters into the struct
  * @param	: p = pointer struct with parameters to be loaded
  * @param	: ptbl = pointer to flat table array

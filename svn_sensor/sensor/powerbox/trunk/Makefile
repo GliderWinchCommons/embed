@@ -87,6 +87,7 @@ AFLAGS  = -mcpu=cortex-m3 -mthumb
 # Linker script which has the definition of memory layout and "sections"
 #LDSCRIPT	= $(NAME).ld
 LDSCRIPT	= $(LIBCOMMONALL)/$(LDRAPPLD)
+LDSCRIPT	= f103Ard.ld
 
 # Libraries (.a), script (.ld), (.map) for the linker
 LDFLAGS  = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles -lc 
@@ -106,20 +107,20 @@ LDFLAGS  += -L$(LOTHER)
 OBJS	 = vector.o $(SRCNAME).o 
 OBJS	+= newlib_support.o
 OBJS	+= pwrbox_idx_v_struct.o
-OBJS	+= adcsensor_tension.o
+OBJS	+= adcsensor_pwrbox.o
 OBJS	+= CAN_poll_loop.o 
 OBJS	+= temp_calc_param.o
 OBJS	+= p1_initialization.o
-OBJS	+= pwrbox_function.o
 OBJS	+= pwrbox_printf.o
 OBJS	+= fmtprint.o
+OBJS	+= pwrbox_function.o
 #OBJS	+= tension_readings_ptr.o
 #OBJS	+= tension_readingsboard_ptr.o
 OBJS	+= tim3_ten2.o
 OBJS	+= can_filter_print.o
 OBJS	+= can_driver_errors_printf.o
-#OBJS	+= cmd_code_dispatch.o
-#OBJS	+= readings_dispatch.o
+OBJS	+= cmd_code_dispatch.o
+OBJS	+= readings_dispatch.o
 
 
 # The following two are 'export'ed in .arm_tools via .profile
@@ -127,9 +128,9 @@ OBJS	+= can_driver_errors_printf.o
 #OPENOCD		   = /usr/bin/openocd
 
 OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
-OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
+OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/stlink-v2.cfg
 OPENOCD_BOARD	   = $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
-OPENOCD_TARGET		= $(OPENOCD_SCRIPTS)/stm32f1x.cfg
+OPENOCD_TARGET		= $(OPENOCD_SCRIPTS)/target/stm32f1x.cfg
 
 # Be silent per default, but 'make V=1' will show all compiler calls.
 ifneq ($(V),1)
@@ -138,8 +139,6 @@ NULL := 2>/dev/null
 endif
 
 all: images
-
-
 
 images: $(NAME)
 	@printf "  OBJCOPY $(NAME).bin\n"
@@ -177,7 +176,6 @@ clean:
 	$(Q)rm -f $(NAME).list
 	@printf " .map\n "
 	$(Q)rm -f $(NAME).map
-
 
 flash: images
 	@printf "  FLASH   $(NAME).srec\n"

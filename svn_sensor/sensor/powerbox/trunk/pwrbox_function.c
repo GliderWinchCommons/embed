@@ -1,19 +1,23 @@
 /******************************************************************************
-* File Name          : tension_a_functionS.c
-* Date First Issued  : 05/29/2016
+* File Name          : pwrbox_function.c
+* Date First Issued  : 06/11/2018
 * Board              : f103
-* Description        : Tension function_a for both AD7799s  Capital "S" for plural!
+* Description        : Power monitoring
 *******************************************************************************/
 
+/*
+06/11/2018 Hack of tension_functionS
+05/29/2016
+*/
 #include <stdint.h>
 #include "can_hub.h"
 #include "DTW_counter.h"
-#include "tension_idx_v_struct.h"
+#include "pwrbox_idx_v_struct.h"
 #include "db/gen_db.h"
 #include "tim3_ten2.h"
 #include "../../../../svn_common/trunk/common_highflash.h"
-#include "tension_a_functionS.h"
-#include "adcsensor_tension.h"
+#include "pwrbox_function.h"
+#include "adcsensor_pwrbox.h"
 #include "temp_calc_param.h"
 #include "PODpinconfig.h"
 #include "poly_compute.h"
@@ -22,6 +26,8 @@
 #include "cmd_code_dispatch.h"
 
 #define TENAQUEUESIZE	3	// Queue size for passing values between levels
+
+#define NUMPWRBOXFUNCTIONS 1
 
 /* CAN control block pointer. */
 extern struct CAN_CTLBLOCK* pctl1;
@@ -32,30 +38,24 @@ extern void* __paramflash1;	// High flash address of 1st parameter table (.ld de
 extern void* __paramflash2;	// High flash address of 2nd parameter table (.ld defined)
 
 /* Holds parameters and associated computed values and readings for each instance. */
-struct TENSIONFUNCTION ten_f[NUMTENSIONFUNCTIONS];
+struct PWRBOXFUNCTION pwr_f;
 
-const uint32_t* pparamflash[NUMTENSIONFUNCTIONS] = { \
- (uint32_t*)&__paramflash1,
- (uint32_t*)&__paramflash2,
-};
+const uint32_t* pparamflash = {(uint32_t*)&__paramflash1};
 
 /* Base pointer adjustment for idx->struct table. */
-struct TENSIONLC* plc[NUMTENSIONFUNCTIONS];
-
+struct PWRBOXLC* plc;
+#define FUNCTION_TYPE_PWRBOX 45 // ########### <=============================
 /* Highflash command CAN id table lookup mapping. */
-const uint32_t myfunctype[NUMTENSIONFUNCTIONS] = { \
- FUNCTION_TYPE_TENSION_a,
- FUNCTION_TYPE_TENSION_a2 ,
-};
+const uint32_t myfunctype = {FUNCTION_TYPE_PWRBOX};
 /* **************************************************************************************
- * static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct TENSIONFUNCTION* p); 
+ * static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct PWRBOXFUNCTION* p); 
  * @brief	: Setup CAN msg with reading
  * @param	: canid = CAN ID
  * @param	: status = status of reading
  * @param	: pv = pointer to a 4 byte value (little Endian) to be sent
  * @param	: p = pointer to a bunch of things for this function instance
  * ************************************************************************************** */
-static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct TENSIONFUNCTION* p)
+static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct PWRBOXFUNCTION* p)
 {
 	struct CANRCVBUF can;
 	can.id = canid;
@@ -65,14 +65,14 @@ static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct TE
 	can.cd.uc[2] = (*pv >>  8);
 	can.cd.uc[3] = (*pv >> 16);
 	can.cd.uc[4] = (*pv >> 24);
-	can_hub_send(&can, p->phub_tension);// Send CAN msg to 'can_hub'
-	p->hbct_ticks = (p->ten_a.hbct * tim3_ten2_rate) / 1000; // Convert ms to timer ticks
+	can_hub_send(&can, p->phub_pwrbox);// Send CAN msg to 'can_hub'
+	p->hbct_ticks = (p->pwrbox.hbct * tim3_ten2_rate) / 1000; // Convert ms to timer ticks
 	p->hb_t = tim3_ten2_ticks + p->hbct_ticks;	 // Reset heart-beat time duration each time msg sent
 	return;
 }
 
 /* **************************************************************************************
- * int tension_a_functionS_init_all(void);
+ * int pwrbox_function_init_all(void);
  * @brief	: Initialize all 'tension_a' functions
  * @return	:  + = table size
  *		:  0 = error
@@ -83,39 +83,25 @@ static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct TE
  *		: -996 = Adding CAN IDs to hw filter failed
  *		: -995 = "i" command can id not found for this function
  *
- * static int tension_a_functionS_init(int n, struct TENSIONFUNCTION* p );
+ * static int tension_a_functionS_init(int n, struct PWRBOXFUNCTION* p );
  * @brief	: Initialize all 'tension_a' functions
  * @param	: n = instance index
  * @param	: p = pointer to things needed for this function
  * @return	: Same as above
  * ************************************************************************************** */
 //  Declaration
-static int tension_a_functionS_init(int n, struct TENSIONFUNCTION* p );
-
+static int pwrbox_function_init(int n, struct PWRBOXFUNCTION* p );
 /* *************************************************** */
 /* Init all instances of tension_a_function supported. */
 /* *************************************************** */
-int tension_a_functionS_init_all(void)
+int pwrbox_function_init_all(void)
 {
-	int i;
-	int ret;
-
-	/* Do the initialization mess for each instance possible with this program/board */
-	for (i = 0; i < NUMTENSIONFUNCTIONS; i++)
-	{
-		ret = tension_a_functionS_init(i, &ten_f[i]);
-		if (ret < 0) return ret;
-	}
-
-	/* Setup incoming CAN msg hardware filters for each function instance */
-	
-
-	return ret;
+	return pwrbox_function_init(0, &pwr_f);
 }
 /* *********************************************************** */
-/* Do the initialization mess for a single tension_a function. */
+/* Do the initialization mess for a single function. */
 /* *********************************************************** */
-static int tension_a_functionS_init(int n, struct TENSIONFUNCTION* p )
+static int pwrbox_function_init(int n, struct PWRBOXFUNCTION* p )
 {
 	int ret;
 	int ret2;
@@ -126,30 +112,20 @@ static int tension_a_functionS_init(int n, struct TENSIONFUNCTION* p )
 	p->pparamflash = (uint32_t*)pparamflash[n];
 
 	/* Copy table entries to struct in sram from high flash. */
-	ret = tension_idx_v_struct_copy(&p->ten_a, p->pparamflash);
+	ret = pwrbox_idx_v_struct_copy(&p->pwrbox, p->pparamflash);
 
-	/* Set pointers to struct holding the constants for iir filters. */
-	for (i = 0; i < NIIR; i++)
-	{
-		p->iir_filtered[i].pprm = &p->ten_a.iir[i]; // iir filter pointer to filter constants
-		p->iir_filtered[i].sw = 0; // Init switch causes iir routine to init upon first call
-	}
-
-	/* Setup mask for checking if this function responds to a poll msg. */
-	// Combine so the polling doesn't have to do two tests
-	p->poll_mask = (p->ten_a.p_pollbit << 8) || (p->ten_a.f_pollbit & 0xff);
 
 	/* First heartbeat time */
 	// Convert heartbeat time (ms) to timer ticks (recompute for online update)
-	p->hbct_ticks = (p->ten_a.hbct * tim3_ten2_rate) / 1000;
+	p->hbct_ticks = (p->pwrbox.hbct * tim3_ten2_rate) / 1000;
 	p->hb_t = tim3_ten2_ticks + p->hbct_ticks;	
 
 	/* Add this function (tension_a) to the "hub-server" msg distribution. */
-	p->phub_tension = can_hub_add_func();	// Set up port/connection to can_hub
-	if (p->phub_tension == NULL) return -997;	// Failed
+	p->phub_pwrbox = can_hub_add_func();	// Set up port/connection to can_hub
+	if (p->phub_pwrbox == NULL) return -997;	// Failed
 
 	/* Add CAN IDs to incoming msgs passed by the CAN hardware filter. */ 
-	ret2 = can_driver_filter_add_param_tbl(&p->ten_a.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);
+	ret2 = can_driver_filter_add_param_tbl(&p->pwrbox.code_CAN_filt[0], 0, CANFILTMAX, CANID_DUMMY);
 	if (ret2 != 0) return -996;	// Failed
 	
 	/* Find command CAN id for this function in table. (__paramflash0a supplied by .ld file) */
@@ -165,7 +141,7 @@ static int tension_a_functionS_init(int n, struct TENSIONFUNCTION* p )
 	/* Check if function type code in the table matches our function */
 	for (i = 0; i < p0a->size; i++)
 	{ 
-		if (p0a->slot[i].func == myfunctype[n])
+		if (p0a->slot[i].func == myfunctype)
 		{
 			p->pcanid_cmd_func_i = &p0a->slot[i].canid; // Save pointer
 			break;
@@ -176,7 +152,7 @@ static int tension_a_functionS_init(int n, struct TENSIONFUNCTION* p )
 	/* Look up "R" (response) command CAN ID */
 	for (i = 0; i < p0a->size; i++)
 	{ 
-		if (p0a->slot[i].func == (myfunctype[n] + CMD_IR_OFFSET))
+		if (p0a->slot[i].func == (myfunctype + CMD_IR_OFFSET))
 		{
 			p->pcanid_cmd_func_r = &p0a->slot[i].canid; // Save pointer
 			return ret;
@@ -191,7 +167,7 @@ static int tension_a_functionS_init(int n, struct TENSIONFUNCTION* p )
  * return	: float with value
  * ************************************************************************************** */
 #ifdef USECICCALIBRATIONSEQUENCE
-static float tension_a_scalereading(struct TENSIONFUNCTION* p)
+static float pwrbox_scalereading(struct PWRBOXFUNCTION* p)
 {
 	int ntmp1;
 	long long lltmp;
@@ -199,19 +175,20 @@ static float tension_a_scalereading(struct TENSIONFUNCTION* p)
 
 	lltmp = cic[0][0].llout_save;
 	ntmp1 = lltmp/(1<<22);
-	ntmp1 += p->ten_a.ad.offset * 4;
+	ntmp1 += p->pwr.ad.offset * 4;
 	scaled1 = ntmp1;
-	scaled1 *= p->ten_a.ad.scale;
+	scaled1 *= p->pwr.ad.scale;
 	return scaled1;
 }
 #endif
 /* **************************************************************************************
- * double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n); 
+ * double iir_filtered_calib(struct PWRBOXFUNCTION* p, uint32_t n); 
  * @brief	: Convert integer IIR filtered value to offset & scaled double
  * @param	: p = pointer to struct with "everything" for this AD7799
  * @return	: offset & scaled
  * ************************************************************************************** */
-double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n)
+#ifdef IMPLMENTIIRFILTEREDCALIBRATION
+double iir_filtered_calib(struct PWRBOXFUNCTION* p, uint32_t n)
 {
 	double d;
 	double s;
@@ -221,11 +198,11 @@ double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n)
 	int32_t tmp = p->iir_filtered[n].z / p->iir_filtered[n].pprm->scale;
 	
 	/* Apply offset. */
-	tmp += p->ten_a.ad.offset;
+	tmp += p->pwr.ad.offset;
 	
 	/* Convert to double and scale. */
 	d = tmp; 		// Convert scaled, filtered int to double
-	s = p->ten_a.ad.scale; 	// Convert float to double
+	s = p->pwr.ad.scale; 	// Convert float to double
 	dcal = d * s;		// Calibrated reading
 	p->dcalib_lgr = dcal;	// Save calibrated last good reading
 	p->fcalib_lgr = p->dcalib_lgr; // Save float version for CAN bus
@@ -240,20 +217,21 @@ double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n)
 	}
 
 	/* Check reading against limits. */
-	if (dcal > p->ten_a.limit_hi)
+	if (dcal > p->pwr.limit_hi)
 	{
 		p->status_byte |= STATUS_TENSION_BIT_EXCEEDHI;
 		return dcal;
 	}
-	if (dcal < p->ten_a.limit_lo)
+	if (dcal < p->pwr.limit_lo)
 	{
 		p->status_byte |= STATUS_TENSION_BIT_EXCEEDLO;
 		return dcal;
 	}
 	return dcal;		// Return scaled value
 }
+#endif
 /* **************************************************************************************
- * int tension_a_functionS_temperature_poll(void);
+ * int pwrbox_function_temperature_poll(void);
  * @brief	: Handler for thermistor-to-temperature conversion, and AD7799 temperature correction.
  * @return	: 0 = no update; 1 = temperature readings updated
  * ************************************************************************************** */
@@ -261,7 +239,6 @@ double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n)
    This routine is called from 'main' since the thermistor formulas use functions 
    with doubles.
 */
-
 /* Thermistor conversion things. */
 static int adc_temp_flag_prev = 0; // Thermistor readings ready counter
 
@@ -275,7 +252,8 @@ void toggle_1led(int led);	// Routine is in 'tension.c'
 2 PC 1 ADC12 -IN11	Accelerometer Y....Thermistor: load-cell #2
 3 PC 2 ADC12 -IN12	Accelerometer Z....Thermistor: AD7799 #1
 */
-int tension_a_functionS_temperature_poll(void)
+#ifdef WEWILLBEUSINGTEMPERATURE
+int pwrbox_function_temperature_poll(void)
 {
 	int i,j;	// One would expect FORTRAN, but alas it is only C
 	double therm[NUMBERADCTHERMISTER_TEN];	// Floating pt of thermistors readings
@@ -296,15 +274,15 @@ int tension_a_functionS_temperature_poll(void)
 		/* Convert ADC readings into uncalibrated degrees Centigrade. */
 		/* Then, apply calibration to temperature. */
 		j = 0;	// Index input of readings
-		for (i = 0; i < NUMTENSIONFUNCTIONS; i++)
+		for (i = 0; i < NUMPWRBOXFUNCTIONS; i++)
 		{ 
 			ten_f[i].thrm[0] = therm[j];	// Raw thermistor ADC reading
-			ten_f[i].degX[0] = temp_calc_param_dbl(therm[j++], &ten_f[i].ten_a.ad.tp[0]); // Apply formula
-			ten_f[i].degC[0] = compensation_dbl(&ten_f[i].ten_a.ad.comp_t1[0], 4, ten_f[i].degX[0]);// Adjustment
+			ten_f[i].degX[0] = temp_calc_param_dbl(therm[j++], &ten_f[i].pwr.ad.tp[0]); // Apply formula
+			ten_f[i].degC[0] = compensation_dbl(&ten_f[i].pwr.ad.comp_t1[0], 4, ten_f[i].degX[0]);// Adjustment
 
 			ten_f[i].thrm[1] = therm[j];
-			ten_f[i].degX[1] = temp_calc_param_dbl(therm[j++], &ten_f[i].ten_a.ad.tp[1]);
-			ten_f[i].degC[1] = compensation_dbl(&ten_f[i].ten_a.ad.comp_t2[0], 4, ten_f[i].degX[1]);
+			ten_f[i].degX[1] = temp_calc_param_dbl(therm[j++], &ten_f[i].pwr.ad.tp[1]);
+			ten_f[i].degC[1] = compensation_dbl(&ten_f[i].pwr.ad.comp_t2[0], 4, ten_f[i].degX[1]);
 		}
 
 		// TODO compute AD7799 temperature offset/scale factors
@@ -315,8 +293,9 @@ int tension_a_functionS_temperature_poll(void)
 	}
 	return 0;	// No update
 }
+#endif
 /* ######################################################################################
- * int tension_a_functionS_poll(struct CANRCVBUF* pcan, struct TENSIONFUNCTION* p);
+ * int pwrbox_function_poll(struct CANRCVBUF* pcan, struct PWRBOXFUNCTION* p);
  * @brief	: Handle incoming CAN msgs ### under interrupt ###
  * @param	; pcan = pointer to CAN msg buffer
  * @param	: p = pointer to struct with "everything" for this instance of tension_a function
@@ -326,7 +305,7 @@ int tension_a_functionS_temperature_poll(void)
 /* *** NOTE ***
    This routine is called from CAN_poll_loop.c which runs under I2C1_ER_IRQ
 */
-int tension_a_functionS_poll(struct CANRCVBUF* pcan, struct TENSIONFUNCTION* p)
+int pwrbox_function_poll(struct CANRCVBUF* pcan, struct PWRBOXFUNCTION* p)
 {
 	int ret = 0;
 	union FTINT	// Union for sending float as 4 byte uint32_t
@@ -335,18 +314,15 @@ int tension_a_functionS_poll(struct CANRCVBUF* pcan, struct TENSIONFUNCTION* p)
 		float ft;
 	}ui; ui.ui = 0; // (initialize to get rid of ui.ft warning)
 
-	/* Check if this instance is used. */
-	if ((p->ten_a.useme & 1) != 1) return 0;
-
 	/* Check for need to send  heart-beat. */
 	 if ( ( (int)tim3_ten2_ticks - (int)p->hb_t) > 0  )	// Time to send heart-beat?
 	{ // Here, yes.
-		iir_filtered_calib(p, 1);	// Slow (long time constant) filter the reading
-		ui.ft = p->fcalib_lgr;		// Float version of calibrated last good reading
+//$		iir_filtered_calib(p, 1);	// Slow (long time constant) filter the reading
+//$		ui.ft = p->fcalib_lgr;		// Float version of calibrated last good reading
 		
 		/* Send heartbeat and compute next hearbeat time count. */
 		//      Args:  CAN id, status of reading, reading pointer instance pointer
-		send_can_msg(p->ten_a.cid_heartbeat, p->status_byte, &ui.ui, p); 
+//$		send_can_msg(p->pwrbox.cid_heartbeat, p->status_byte, &ui.ui, p); 
 		ret = 1;
 	}
 
@@ -354,21 +330,21 @@ int tension_a_functionS_poll(struct CANRCVBUF* pcan, struct TENSIONFUNCTION* p)
 	if (pcan == NULL) return ret;
 
 	/* Check for group poll, and send msg if it is for us. */
-//$	if (pcan->id == p->ten_a.cid_ten_poll) // Correct ID?
-//if (pcan->id == p->ten_a.cid_gps_sync) // ##### TEST #########
+//$	if (pcan->id == p->pwr.cid_ten_poll) // Correct ID?
+//if (pcan->id == p->pwr.cid_gps_sync) // ##### TEST #########
 if (pcan->id == 0x00400000) // ##### TEST #########
 	{ // Here, group poll msg.  Check if poll and function bits are for us
-//$		if ( ((pcan->cd.uc[0] & p->ten_a.p_pollbit) != 0) && \
-		     ((pcan->cd.uc[1] & p->ten_a.f_pollbit) != 0) )
+//$		if ( ((pcan->cd.uc[0] & p->pwr.p_pollbit) != 0) && \
+		     ((pcan->cd.uc[1] & p->pwr.f_pollbit) != 0) )
 		{ // Here, yes.  Send our precious msg.
 			/* Send tension msg and re-compute next hearbeat time count. */
 			//      Args:  CAN id, status of reading, reading pointer instance pointer
-			send_can_msg(p->ten_a.cid_ten_msg, p->status_byte, &ui.ui, p); 
+//			send_can_msg(p->pwrbox.cid_pwr_msg, p->status_byte, &ui.ui, p); 
 			return 1;
 		}
 	}
 	
-	/* Check for tension function command. */
+	/* Check for function command. */
 	if (pcan->id == *p->pcanid_cmd_func_i)
 	{ // Here, we have a command msg for this function instance. 
 		cmd_code_dispatch(pcan, p); // Handle and send as necessary

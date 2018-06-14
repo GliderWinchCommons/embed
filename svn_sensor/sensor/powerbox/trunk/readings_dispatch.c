@@ -19,7 +19,7 @@ instance of tension_a.
 extern struct CAN_CTLBLOCK* pctl0;
 
 /* **************************************************************************************
- * unsigned int readings_dispatch(struct CANRCVBUF* pcan, struct TENSIONFUNCTION* p);
+ * unsigned int readings_dispatch(struct CANRCVBUF* pcan, struct PWRBOXFUNCTION* p);
  * @brief	: Handle command code msg
  * @param	: pcan = pointer to command msg received
  * @param	: p = pointer to struct with values for this instance
@@ -28,8 +28,9 @@ extern struct CAN_CTLBLOCK* pctl0;
  *		: 253 = dlc less than 2 (no readings code)
  *		: 252 = code not in table
  * ************************************************************************************** */
-unsigned int readings_dispatch(struct CANRCVBUF* pcan, struct TENSIONFUNCTION* p)
+unsigned int readings_dispatch(struct CANRCVBUF* pcan, struct PWRBOXFUNCTION* p)
 {
+#ifdef THISWILLBECOMPLETELYREVISED
 	union FT
 	{
 		float f;	// Union needed to use floats as four bytes
@@ -112,6 +113,7 @@ default:
 	pcan->cd.uc[4] = (ft.i >> 16) & 0x0ff;
 	pcan->cd.uc[5] = (ft.i >> 24) & 0x0ff;
 	can_driver_put(pctl0,pcan,4,0);	// Add/send to CAN driver
+#endif
 	return 0;
 }
 

@@ -31,7 +31,6 @@ extern unsigned int pclk1_freq;	// ABP1 bus clock frequency, e.g. 32000000
 /* Calls upon interrupt of timer. */
 void 	(*tim3_ten2_ptr)(void) = NULL;	// Address of function to call upon CH1 interrupt
 void 	(*tim3_ten2_ll_ptr)(void) = NULL;	// Low level function call every 'n' CH1's
-#include "ad7799_filter_ten2.h"	// Rather than use a pointer for CH2 interrupt
 
 /* Reduce the rate for low level interrupt triggering. */
 #define TIM3LLTHROTTLE	4 	// Trigger count
@@ -115,10 +114,10 @@ void TIM3_IRQHandler(void)
 			NVICISPR(NVIC_I2C1_ER_IRQ);	// Set pending (low priority) interrupt ('../lib/libusartstm32/nvicdirect.h')
 		}
 	}
-	if ((sr & (1<<2)) != 0)
+	if ((sr & (1<<2)) != 0) // CH2 flag
 	{ // Here, CH2 flag is on.  Variable interval timing
-		vinc = ad7799_poll_rdy_ten2_both();
-		TIM3_CCR2 += vinc; 	// Compute next next interrupt time
+//		vinc = ad7799_poll_rdy_ten2_both();
+		TIM3_CCR2 += inc; //vinc; 	// Compute next next interrupt time
 		TIM3_SR &= ~(1<<2);	// Reset CH2 flag
 	}
 	temp = TIM3_SR;	// Avoid any tail-chaining

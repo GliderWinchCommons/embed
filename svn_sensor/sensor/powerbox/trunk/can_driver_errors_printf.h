@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "tension_idx_v_struct.h"
+#include "pwrbox_idx_v_struct.h"
 #include "can_driver.h"
 
 /* ************************************************************************************** */

@@ -77,6 +77,7 @@ OBJS	+= packet_mgr.o
 OBJS	+= panic_leds.o 
 OBJS	+= panic_leds_Olimex.o 
 OBJS	+= panic_leds_pod.o
+OBJS	+= panic_leds_Ard.o
 OBJS	+= pay_flt_cnv.o 
 OBJS	+= poly_compute_dbl.o
 OBJS	+= poly_compute_flt.o  

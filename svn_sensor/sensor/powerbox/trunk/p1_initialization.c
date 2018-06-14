@@ -35,7 +35,7 @@ adc initialization is all that is needed.
 #include "tim3_ten2.h"
 #include "adcsensor_pwrbox.h"
 #include "DTW_counter.h"
-#include "panic_leds_pod.h"
+#include "panic_leds_Ard.h"
 #include "pwrbox_function.h"
 
 /* TIM3 interrupt/tick rate */
@@ -58,15 +58,14 @@ static void timedelay_usec (unsigned int usec)
 *******************************************************************************/
 void p1_initialization(void)
 {
-	int ret;	// Return code from function call
 
 	/* Get SAR ADC initialized and calibrated */
 	adcsensor_pwrbox_sequence();	// Initialization sequence for the adc
 
 	/* Timer interrupt callback -> ad7799_poll (in 'ad7799_filter.c'). */
-	tim3_ten2_ptr = &ad7799_poll_rdy_ten2_cic;
+//	tim3_ten2_ptr = &ad7799_poll_rdy_ten2_cic;
 
-	/* Poll AD7799 for ready at 2048/sec using this timer. ! */
+	/* Poll 2048/sec using this timer. ! */
 	tim3_ten2_rate = 4096;//2048;
 
 	return;

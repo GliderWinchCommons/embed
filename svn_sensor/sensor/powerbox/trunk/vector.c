@@ -3,7 +3,7 @@
 ...
 10/02/2012 - CAN interrupts
 *************************************************************/
-#include "panic_leds_pod.h"
+#include "panic_leds_Ard.h"
 #include "libopenstm32/scb.h"
 #include "libopenstm32/nvic.h"
 
@@ -59,7 +59,7 @@ void WEAK exti1_isr(void);
 void WEAK exti2_isr(void);
 void WEAK exti3_isr(void);
 void WEAK exti4_isr(void);
-void WEAK DMA1CH1_IRQHandler_tension(void);	//DMA1CH1_IRQHandler(void);	// dma1_channel1_isr(void);
+void WEAK DMA1CH1_IRQHandler_pwrbox(void);	//DMA1CH1_IRQHandler(void);	// dma1_channel1_isr(void);
 void WEAK DMA1CH2_IRQHandler(void); 	// dma1_channel2_isr(void);
 void WEAK dma1_channel3_isr(void);
 void WEAK DMA1CH4_IRQHandler(void); 	// dma1_channel4_isr(void);
@@ -80,7 +80,7 @@ void WEAK TIM2_IRQHandler(void);	// tim2_isr(void);
 void WEAK TIM3_IRQHandler(void);	// tim3_isr(void);
 void WEAK TIM4_IRQHandler(void);	// tim4_isr(void);
 void WEAK I2C1_EV_IRQHandler(void);	// i2c1_ev_isr(void);
-void WEAK I2C1_ER_IRQHandler_ten(void);	// i2c1_er_isr(void);
+void WEAK I2C1_ER_IRQHandler_pwr(void);	// i2c1_er_isr(void);
 void WEAK I2C2_EV_IRQHandler(void);	// i2c2_ev_isr(void);
 void WEAK I2C2_ER_IRQHandler(void);	// i2c2_er_isr(void);
 void WEAK SPI1_TEN_IRQHandler(void);	// spi1_isr(void);
@@ -96,9 +96,9 @@ void WEAK tim8_up_isr(void);
 void WEAK tim8_trg_com_isr(void);
 void WEAK tim8_cc_isr(void);
 void WEAK ADC3_IRQHandler(void);	// adc3_isr(void);
-void WEAK FSMC_IRQHandler_ten(void);	//fsmc_isr(void);
+void WEAK FSMC_IRQHandler_pwr(void);	//fsmc_isr(void);
 void WEAK sdio_isr(void);
-void WEAK TIM5_IRQHandler_ten(void);	//TIM5_IRQHandler(void);
+void WEAK TIM5_IRQHandler_pwr(void);	//TIM5_IRQHandler(void);
 void WEAK spi3_isr(void);
 void WEAK UART4_IRQHandler(void);	// usart4_isr(void);
 void WEAK UART5_IRQHandler(void);	// usart5_isr(void);
@@ -111,7 +111,6 @@ void WEAK DMA2CH4_IRQHandler(void);	// dma2_channel4_5_isr(void);
 
 __attribute__ ((section(".vectors")))
 void (*const vector_table[]) (void) = {
-//	(void *)0x20000800,	/* Use 2KB stack (0x800 bytes). */
 	(void *)(0x20000000+(20*1024)-4),/* Put stack at top */
 //	main,			/* Use main() as reset vector for now. */
 	Reset_Handler,		/* Either this of main */
@@ -137,7 +136,7 @@ void (*const vector_table[]) (void) = {
 	exti2_isr,
 	exti3_isr,
 	exti4_isr,
-	DMA1CH1_IRQHandler_tension, //DMA1CH1_IRQHandler,	//dma1_channel1_isr,
+	DMA1CH1_IRQHandler_pwrbox, //DMA1CH1_IRQHandler,	//dma1_channel1_isr,
 	DMA1CH2_IRQHandler,	//dma1_channel2_isr
 	dma1_channel3_isr,
 	DMA1CH4_IRQHandler,	//dma1_channel4_isr
@@ -158,7 +157,7 @@ void (*const vector_table[]) (void) = {
 	TIM3_IRQHandler,	//tim3_isr,
 	TIM4_IRQHandler,	//tim4_isr,
 	I2C1_EV_IRQHandler,	//i2c1_ev_isr,
-	I2C1_ER_IRQHandler_ten,	//i2c1_er_isr,
+	I2C1_ER_IRQHandler_pwr,	//i2c1_er_isr,
 	I2C2_EV_IRQHandler,	//i2c2_ev_isr,
 	I2C2_ER_IRQHandler,	//i2c2_er_isr,
 	SPI1_TEN_IRQHandler,	//spi1_isr,
@@ -174,9 +173,9 @@ void (*const vector_table[]) (void) = {
 	tim8_trg_com_isr,
 	tim8_cc_isr,
 	ADC3_IRQHandler,	// adc3_isr,
-	FSMC_IRQHandler_ten,	//fsmc_isr,
+	FSMC_IRQHandler_pwr,	//fsmc_isr,
 	sdio_isr,
-	TIM5_IRQHandler_ten,	// tim5_isr,
+	TIM5_IRQHandler_pwr,	// tim5_isr,
 	spi3_isr,
 	UART4_IRQHandler,	// usart4_isr,
 	UART5_IRQHandler,	// usart5_isr,
@@ -191,29 +190,29 @@ void (*const vector_table[]) (void) = {
 void hard_fault_handler(void)
 {
 while(1==1);
-	panic_leds_pod(1);
+	panic_leds_Ard(1);
 //	while (1) ;
 }
 void mem_manage_handler(void)
 {
-	panic_leds_pod(2);
+	panic_leds_Ard(2);
 //	while (1) ;
 }
 void bus_fault_handler(void)
 {
-	panic_leds_pod(3);
+	panic_leds_Ard(3);
 //	while (1) ;
 }
 void usage_fault_handler(void)
 {
-	panic_leds_pod(4);
+	panic_leds_Ard(4);
 //	while (1) ;
 }
 
 void null_handler(void)
 {
 while (1==1) ;
-	panic_leds_pod(5);
+	panic_leds_Ard(5);
 }
 /* **************************************************************************************
  * void relocate_vector(void);
@@ -264,7 +263,7 @@ void relocate_vector(void)
 #pragma weak exti2_isr = null_handler
 #pragma weak exti3_isr = null_handler
 #pragma weak exti4_isr = null_handler
-#pragma weak DMA1CH1_IRQHandler_tension = null_handler //dma1_channel1_isr = null_handler
+#pragma weak DMA1CH1_IRQHandler_pwrbox = null_handler //dma1_channel1_isr = null_handler
 #pragma weak dDMA1CH2_IRQHandler = null_handler
 #pragma weak dma1_channel3_isr = null_handler
 #pragma weak DMA1CH4_IRQHandler = null_handler
@@ -285,7 +284,7 @@ void relocate_vector(void)
 #pragma weak tim3_isr = null_handler
 #pragma weak TIM4_IRQHandler = null_handler
 #pragma weak I2C1_EV_IRQHandler = null_handler
-#pragma weak I2C1_ER_IRQHandler_ten = null_handler
+#pragma weak I2C1_ER_IRQHandler_pwr = null_handler
 #pragma weak I2C2_EV_IRQHandler = null_handler
 #pragma weak I2C2_ER_IRQHandler = null_handler
 #pragma weak SPI1_TEN_IRQHandler = null_handler	//spi1_isr = null_handler
@@ -301,9 +300,9 @@ void relocate_vector(void)
 #pragma weak tim8_trg_com_isr = null_handler
 #pragma weak tim8_cc_isr = null_handler
 #pragma weak ADC3_IRQHandler = null_handler
-#pragma weak FSMC_IRQHandler_ten = null_handler	//fsmc_isr = null_handler
+#pragma weak FSMC_IRQHandler_pwr = null_handler	//fsmc_isr = null_handler
 #pragma weak sdio_isr = null_handler
-#pragma weak TIM5_IRQHandler_ten //TIM5_IRQHandler = null_handler
+#pragma weak TIM5_IRQHandler_pwr //TIM5_IRQHandler = null_handler
 #pragma weak spi3_isr = null_handler
 #pragma weak usart4_isr = null_handler
 #pragma weak usart5_isr = null_handler

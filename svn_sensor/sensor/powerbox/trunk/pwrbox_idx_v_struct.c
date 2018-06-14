@@ -1,5 +1,5 @@
 /******************************************************************************
-* File Name          : tension_idx_v_struct.c
+* File Name          : pwrbox_idx_v_struct.c
 * Date First Issued  : 07/15/2015,06/04/2016
 * Board              :
 * Description        : Translate parameter index into pointer into struct
@@ -16,14 +16,14 @@ If the number of entries in this file differs the initialization of 'tension.c' 
 bomb with a mis-match error.
 */
 #include <stdint.h>
-#include "tension_idx_v_struct.h"
-#include "tension_a_functionS.h"
+#include "pwrbox_idx_v_struct.h"
+#include "pwrbox_function.h"
 #include "db/gen_db.h"
 
 #define NULL 0
 
 /* **************************************************************************************
- * int tension_idx_v_struct_copy2(struct TENSIONLC* p, uint32_t* ptbl);
+ * int pwrbox_idx_v_struct_copy2(struct PWRBOXLC* p, uint32_t* ptbl);
  * @brief	: Copy the flat array in high flash with parameters into the struct
  * @param	: p = pointer struct with parameters to be loaded
  * @param	: ptbl = pointer to flat table array
@@ -31,14 +31,14 @@ bomb with a mis-match error.
  *		:  0 = error
  *		:  - = -(size of struct table count)
  * ************************************************************************************** */
-int tension_idx_v_struct_copy(struct TENSIONLC* p, uint32_t* ptbl)
+int pwrbox_idx_v_struct_copy(struct PWRBOXLC* p, uint32_t* ptbl)
 {
 	union {
 	float f;
 	uint32_t ui;
 	int32_t n;
 	}u;
-
+#ifdef IDXVSTRUCTUSE
 /* NOTE: values that are not uint32_t  */
 p->size            = ptbl[0];		 			  /*  0 Tension: Number of elements in the following list */
 p->crc             = ptbl[TENSION_a_LIST_CRC];		 	  /*  1 Tension: CRC for tension list */
@@ -94,6 +94,7 @@ p->code_CAN_filt[6] = ptbl[TENSION_a_CANID_HW_FILT7];		 /* 50 Tension: CAN ID 7 
 p->code_CAN_filt[7] = ptbl[TENSION_a_CANID_HW_FILT8];		 /* 51 Tension: CAN ID 8 for setting up CAN hardware filter */
 
 return PARAM_LIST_CT_TENSION_a;
+#endif
 }
 
 

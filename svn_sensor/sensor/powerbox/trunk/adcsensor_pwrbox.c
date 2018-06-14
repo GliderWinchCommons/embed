@@ -40,21 +40,19 @@ at the end of the buffer.  The code for DMA interrupts is not used.
 #include "DTW_counter.h"
 #include "cic_filter_l_N2_M3.h"
 
-/* ADC usage on POD board--
-This routine is for measuring two load-cells.  For temp compensation
-testing the temp is measured at the load-cell and AD7799 for each of the two.
+static void adc_accum(void);
 
-PA 3 ADC123-IN3	Thermistor on 32 KHz xtal..Thermistor: AD7799 #2
-PB 0 ADC12 -IN8	Bottom cell of battery.....Not scanned
-PB 1 ADC12 -IN9	Top cell of battery........Not scanned
-PC 0 ADC12 -IN10	Accelerometer X....Thermistor: load-cell #1
-PC 1 ADC12 -IN11	Accelerometer Y....Thermistor: load-cell #2
-PC 2 ADC12 -IN12	Accelerometer Z....Thermistor: AD7799 #1
-PC 3 ADC12 -IN13	Op-amp.............Not scanned
--- - ADC1  -IN16	                   Internal temp ref
--- - ADC1  -IN17	                   Internal voltage ref (Vrefint)
-
+/* ADC usage on Arduino Blue Pill F103 board
+PA 0 ADC12-IN0	 Grn 5V power supply
+PA 1 ADC12-IN1	 Yel Capacitor/bus voltage
+PA 2 ADC12-IN2	 Blu 0.22 ohm resistor
+PA 3 ADC12-IN3	 Wht Input voltage
+PA 4 ADC12-IN4	 Spare divider
+PA 5 ADC12-IN5	 Spare divider
+     ADC1 -IN16 Internal temp ref
+     ADC1 -IN17 Internal voltage ref (Vrefint)
 */
+
 /*
 Bits 29:0 SMPx[2:0]: Channel x Sample time selection for less than 1/4 LSB of 12 bit conversion.
            These bits are written by software to select the sample time individually for each channel.
@@ -70,36 +68,41 @@ Bits 29:0 SMPx[2:0]: Channel x Sample time selection for less than 1/4 LSB of 12
 
 With system clock of 64 MHz and p2 clock of 32 MHz, the ADC clock
 will be 32/4 = 8 MHz (max freq must be less than 14 MHz)
+
 With an ADC clock of 4 MHz the total conversion time--
-12.5 + SMPx time
-At 0.125 us per adc clock cycle 
-(1) Thermistor AD7799 #2   : 	12.5 + 55.5 = 68; * 0.125 us =  8.50 us per conversion
-(2) Thermistor load-cell #1: 	12.5 + 55.5 = 68; * 0.125 us =  8.50 us per conversion
-(3) Thermistor load-cell #2: 	12.5 + 55.5 = 68; * 0.125 us =  8.50 us per conversion
-(4) Thermistor AD7799 #1   : 	12.5 + 55.5 = 68; * 0.125 us =  8.50 us per conversion
-Total for sequence of four .......................  =  34.00 us
-For 16 sequences per DMA interrupt................. = 544.00 us
-The logging/message sample rate (1/2048)........... = 488.28125 us
+  12.5 + SMPx time
+
+13.5 + 12.5 = 26.0 us per External ADC
+28.5 + 12.5 = 41.0 us for Internal temp
+28.5 + 12.5 = 41.0 us for Internal V ref
+
+6 External input     6 *  26 = 208
+1 Internal temp      1 *  41 =  41
+1 Internal volt ref  1 *  41 =  41
+     Total per scan cycle    = 290
+
+DMA 1/2 buffer holds 5 scan cycles--
+  8 * 290 = 2320 us between DMA interrupts
 
 */
 // *CODE* for number of cycles in conversion on each adc channel
-#define SMP1	7
-#define SMP2	1
-#define SMP3	7 // Thermistor AD7799 #2
-#define SMP4	1
-#define SMP5	1
-#define SMP6	1
-#define SMP7	1
-#define SMP8	1
-#define SMP9	1
-#define SMP10	7 // Thermistor load-cell #1
-#define SMP11	7 // Thermistor load-cell #2
-#define SMP12	7 // Thermistor AD7799 #1
-#define SMP13	1
-#define SMP14	1
-#define SMP15	1
-#define SMP16	7 // Internal temp ref
-#define SMP17	7 // Internal voltage ref (Vrefint)
+#define SMP1	2
+#define SMP2	2
+#define SMP3	2
+#define SMP4	2
+#define SMP5	2
+#define SMP6	2
+#define SMP7	2
+#define SMP8	2
+#define SMP9	2
+#define SMP10	2
+#define SMP11	2
+#define SMP12	2
+#define SMP13	2
+#define SMP14	2
+#define SMP15	2
+#define SMP16	3
+#define SMP17	3
 
 
 /* ********** Static routines **************************************************/
@@ -107,10 +110,6 @@ static void adcsensor_pwrbox_init(void);
 static void adcsensor_pwrbox_start_conversion(void);
 static void adcsensor_pwrbox_start_cal_register_reset(void);
 static void adcsensor_pwrbox_start_calibration(void);
-
-/* CIC routines buried somewhere below */
-static void adc_cic_filtering_tension(void);
-static void adc_cic_init_tension(void);
 
 /* Pointers to functions to be executed under a low priority interrupt */
 // These hold the address of the function that will be called
@@ -125,8 +124,8 @@ extern unsigned int	pclk2_freq;	// APB2 bus frequency in Hz (see 'lib/libmiscstm
 /* SYSCLK frequency is used to time delays. */
 extern unsigned int	sysclk_freq;	// SYSCLK freq in Hz (see 'lib/libmiscstm32/clockspecifysetup.c')
 
-	struct ADCDR_TENSION  strADC1dr;	// Double buffer array of ints for ADC readings, plus count and index
-static struct ADCDR_TENSION *strADC1resultptr;	// Pointer to struct holding adc data stored by DMA
+	struct ADCDR_PWRBOX  strADC1dr;	// Double buffer array of ints for ADC readings, plus count and index
+static struct ADCDR_PWRBOX *strADC1resultptr;	// Pointer to struct holding adc data stored by DMA
 
 /* ----------------------------------------------------------------------------- 
  * void timedelay (u32 ticks);
@@ -145,13 +144,6 @@ static void timedelay (unsigned int ticks)
 void adcsensor_pwrbox_sequence(void)
 {
 	u32 ticksperus = (sysclk_freq/1000000);	// Number of ticks in one microsecond
-
-	/* Setup for lower level filtering of ADC readings buffered by DMA. */
-	adc_cic_init_tension();
-
-	/* Wait for previously switched-on voltages to stabilize. */
-	u32 t1 = DTWTIME + (500 * (sysclk_freq/1000));	// 500 ms delay
-	WAITDTW(t1);
 
 	/* Initialize ADC1 */
 	adcsensor_pwrbox_init();	// Initialize ADC1 registers.
@@ -174,18 +166,24 @@ void adcsensor_pwrbox_sequence(void)
  * static void adcsensor_pwrbox_init(void);
  * @brief 	: Initialize adc for dma channel 1 transfer
 *******************************************************************************/
-const struct PINCONFIGALL pin_accel_x = {(volatile u32 *)GPIOC, 0, IN_ANALOG, 0};
-const struct PINCONFIGALL pin_accel_y = {(volatile u32 *)GPIOC, 1, IN_ANALOG, 0};
-const struct PINCONFIGALL pin_accel_z = {(volatile u32 *)GPIOC, 2, IN_ANALOG, 0};
+const struct PINCONFIGALL pin_adc_0 = {(volatile u32 *)GPIOA, 0, IN_ANALOG, 0};
+const struct PINCONFIGALL pin_adc_1 = {(volatile u32 *)GPIOA, 1, IN_ANALOG, 0};
+const struct PINCONFIGALL pin_adc_2 = {(volatile u32 *)GPIOA, 2, IN_ANALOG, 0};
+const struct PINCONFIGALL pin_adc_3 = {(volatile u32 *)GPIOA, 3, IN_ANALOG, 0};
+const struct PINCONFIGALL pin_adc_4 = {(volatile u32 *)GPIOA, 4, IN_ANALOG, 0};
+const struct PINCONFIGALL pin_adc_5 = {(volatile u32 *)GPIOA, 5, IN_ANALOG, 0};
 
 static void adcsensor_pwrbox_init(void)
 {
 	u32 ticksperus = (sysclk_freq/1000000);	// Number of ticks in one microsecond
 
-	/*  Setup ADC pins for ANALOG INPUT (p 148) */
-	pinconfig_all( (struct PINCONFIGALL *)&pin_accel_x);
-	pinconfig_all( (struct PINCONFIGALL *)&pin_accel_y);
-	pinconfig_all( (struct PINCONFIGALL *)&pin_accel_z);
+	/*  Setup ADC pins for ANALOG INPUT */
+	pinconfig_all( (struct PINCONFIGALL *)&pin_adc_0);
+	pinconfig_all( (struct PINCONFIGALL *)&pin_adc_1);
+	pinconfig_all( (struct PINCONFIGALL *)&pin_adc_2);
+	pinconfig_all( (struct PINCONFIGALL *)&pin_adc_3);
+	pinconfig_all( (struct PINCONFIGALL *)&pin_adc_4);
+	pinconfig_all( (struct PINCONFIGALL *)&pin_adc_5);
 
 	/* Find prescalar divider code for the highest permitted ADC freq (which is 14 MHz) */
 	unsigned char ucPrescalar = 0;			// Division by 2	
@@ -197,33 +195,35 @@ static void adcsensor_pwrbox_init(void)
 	ucPrescalar = 3;
 
 	/* Set APB2 bus divider for ADC clock */
-	RCC_CFGR |= ( (ucPrescalar & 0x3) << 14); // Set code for bus division (p 98)
+	RCC_CFGR |= ( (ucPrescalar & 0x3) << 14); // Set code for bus division
 
 	/* Enable bus clocking for ADC */
-	RCC_APB2ENR |= RCC_APB2ENR_ADC1EN;	// Enable ADC1 clocking (see p 104)
+	RCC_APB2ENR |= RCC_APB2ENR_ADC1EN;	// Enable ADC1 clocking
 	
 	//         (   scan      | watchdog enable | watchdog interrupt enable | watchdog channel number )
 	ADC1_CR1 = (ADC_CR1_SCAN ); 	// Scan mode
 
-	/*               use DMA   |  Continuous   | Power ON 	*/
-	ADC1_CR2  = (  ADC_CR2_DMA | ADC_CR2_CONT  | ADC_CR2_ADON ); 
-	/* 1 us Tstab time is required before writing a second 1 to ADON to start conversions */
+	/*           Use Internals   |    use DMA   |  Continuous   | Power ON 	*/
+	ADC1_CR2  = (ADC_CR2_TSVREFE |  ADC_CR2_DMA | ADC_CR2_CONT  | ADC_CR2_ADON ); 
+
+	/* 1 us Tstab time is required before writing a second "1" to ADON to start conversions */
 	timedelay(2 * ticksperus);	// Wait
 
-	/* Set sample times for channels used on POD board */
-	ADC1_SMPR2 = ( (SMP3  << 9) );	
-	ADC1_SMPR1 = ( (SMP12 << 6) | (SMP11 << 3) | (SMP10 << 0) );
+	/* Set sample times for channels */
+	ADC1_SMPR2 = ((SMP1  <<  0)|(SMP2  <<  3)|(SMP3 << 6)|(SMP4 << 9)|(SMP5 << 12)|(SMP6 << 15));
+	ADC1_SMPR1 = ((SMP16 << 18)|(SMP17 << 21));	// Internal temp and v reference
 
 	/* Setup the number of channels scanned */
-	ADC1_SQR1 =  ((NUMBERADCCHANNELS_TEN-1) << 20);	// Channel count
+	ADC1_SQR1 =  ((NUMBERADCCHANNELS_PWR-1) << 20);	// Channel count
 
 	/* This maps the ADC channel number to the position in the conversion sequence */
-	// Load channels IN0, IN10, IN11, IN12, for conversions sequences
-	ADC1_SQR3 = (3 << 0) | (10 << 5) | (11 << 10) | (12 << 15); 
+	// Load channels IN0 - IN5, IN16, IN17 for conversions sequences
+	ADC1_SQR3 = ( 0 << 0) | ( 1 << 5) | (2 << 10) | (3 << 15) | (4 << 20) | (5 << 25);
+	ADC1_SQR2 = (16 << 0) | (17 << 5);
 
 	/* Setup DMA for storing data in the ADC_DR as the channels in the sequence are converted */
-	RCC_AHBENR |= RCC_AHBENR_DMA1EN;			// Enable DMA1 clock (p 102)
-	DMA1_CNDTR1 = (2 * NUMBERSEQUENCES * NUMBERADCCHANNELS_TEN);// Number of data items before wrap-around
+	RCC_AHBENR |= RCC_AHBENR_DMA1EN;			// Enable DMA1 clock
+	DMA1_CNDTR1 = (2 * NUMBERSEQUENCES * NUMBERADCCHANNELS_PWR);// Number of data items before wrap-around
 	DMA1_CPAR1 = (u32)&ADC1_DR;				// DMA channel 1 peripheral address (adc1 data register)
 	DMA1_CMAR1 = (u32)&strADC1dr.in[0][0][0];		// Memory address of first buffer array for storing data 
 
@@ -295,7 +295,7 @@ should allow a delay of tSTAB between power up and start of conversion. Refer to
 /*#######################################################################################
  * ISR routine for DMA1 Channel1 reading ADC regular sequence of adc channels
  *####################################################################################### */
-void DMA1CH1_IRQHandler_tension(void)
+void DMA1CH1_IRQHandler_pwrbox(void)
 {
 /* Double buffer the sequence of channels converted.  When the DMA goes from the first
 to the second buffer a half complete interrupt is generated.  When it completes the
@@ -333,8 +333,10 @@ pointer is automatically reloaded with the beginning of the buffer space (i.e. c
 /* Pointer to functions to be executed under a low priority interrupt, forced by DMA interrupt. */
 void 	(*dma_ll_ptr)(void) = 0;		// DMA -> FSMC  (low priority)
 
-void TIM5_IRQHandler_ten(void)
+void TIM5_IRQHandler_pwr(void)
 {
+	adc_accum();	// Accumulate readings 1/2 DMA buffer
+
 	/* Call other routines if an address is set up */
 	if (dma_ll_ptr != NULL)	// Skip subroutine call if pointer not intialized
 		(*dma_ll_ptr)();	// Go do something
@@ -343,127 +345,42 @@ void TIM5_IRQHandler_ten(void)
 /* $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
          Below is CIC Filtering of DMA stored ADC readings 
  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ */
-/* **** CIC filtering stuff **** */
-#include "cic_filter_l_N2_M3.h"
-
 /* This flag increments and the low order bit is the index of the double buffered array 'adc_readings_cic'.  
    Filtering is being done in index =  (0x1 & adc_temp_flag)
    Users use the opposite index  */
-int32_t	adc_temp_flag[NUMBERADCCHANNELS_TEN];	// Signal main new filtered reading ready
+int32_t	adc_temp_flag[NUMBERADCCHANNELS_PWR];	// Signal main new filtered reading ready
 
-/* Last computed & doubly filtered value for each channel */
-uint32_t	adc_readings_cic[2][NUMBERADCCHANNELS_TEN];	// NOT SCALED
+uint32_t	adc_readings_accum[2][NUMBERADCCHANNELS_PWR];	// Accum one 1/2 DMA buffer
+uint32_t adc_readings_flag;	// 0 = currently being accumulated; 1 = previously accumulated
+uint32_t adc_readings_rdy;		// 0 = not ready, 1 = ready
 
-static struct CICLN2M3 adc_cic_1st[NUMBERADCCHANNELS_TEN];// CIC intermediate storage adc readings
-static struct CICLN2M3 adc_cic_2nd[NUMBERADCCHANNELS_TEN];// CIC intermediate storage for second filter/decimiation
-static struct CICLN2M3 adc_cic_3rd[NUMBERADCCHANNELS_TEN];// CIC intermediate storage for second filter/decimiation
 
-/******************************************************************************
- * static void adc_cic_init_tension(void);
- * @brief 	: Setup for cic filtering of adc readings buffered by dma
- * @param	: iamunitnumber = CAN unit id for this unit, see 'common_can.h'
-*******************************************************************************/
-/*
-struct CICLN2M3
-{
-	unsigned short	usDecimateNum;	// Downsampling number
-	unsigned short	usDiscard;	// Initial discard count
-	int		nIn;		// New reading to be filtered
-	long 		lIntegral[3];	// Three stages of Z^(-1) integrators
-	long		lDiff[3][2];	// Three stages of Z^(-2) delay storage
-	long		lout;		// Filtered/decimated data output
-	unsigned short	usDecimateCt;	// Downsampling counter
-	unsigned short	usFlag;		// Filtered/decimated data ready counter
-};
-*/
-
-static void adc_cic_init_tension(void)
-{
-	int i,j;
-
-	/* Initialize the structs that hold the CIC filtering intermediate values. */
-	strADC1dr.cnt = 0;
-	strADC1dr.flg = 0;
-	for (i = 0; i < NUMBERADCCHANNELS_TEN; i++)	
-	{
-		adc_cic_1st[i].usDecimateNum = DECIMATION_TEN; // Decimation number
-		adc_cic_1st[i].usDecimateCt = 0;		// Decimation counter
-		adc_cic_1st[i].usDiscard = DISCARD_TEN;	// Initial discard count
-		adc_cic_1st[i].usFlag = 0;			// 1/2 buffer flag
-		for (j = 0; j < 3; j++)
-		{ // Very important that the integrators begin with zero.
-			adc_cic_1st[i].lIntegral[j] = 0;
-			adc_cic_1st[i].lDiff[j][0] = 0;
-			adc_cic_1st[i].lDiff[j][1] = 0;
-		}	
-		/* adc_cic_temp filters/decimates the 64/sec thermistor adc reading to 2/sec */
-		adc_cic_2nd[i].usDecimateNum = DECIMATION_TEN; // Decimation number
-		adc_cic_2nd[i].usDecimateCt = 0;		// Decimation counter
-		adc_cic_2nd[i].usDiscard = DISCARD_TEN;	// Initial discard count
-		adc_cic_2nd[i].usFlag = 0;			// 1/2 buffer flag
-		for (j = 0; j < 3; j++)
-		{ // Very important that the integrators begin with zero.
-			adc_cic_2nd[i].lIntegral[j] = 0;
-			adc_cic_2nd[i].lDiff[j][0] = 0;
-			adc_cic_2nd[i].lDiff[j][1] = 0;
-		}
-		/* adc_cic_temp filters/decimates the 64/sec thermistor adc reading to 2/sec */
-		adc_cic_3rd[i].usDecimateNum = DECIMATION_TEN; // Decimation number
-		adc_cic_3rd[i].usDecimateCt = 0;		// Decimation counter
-		adc_cic_3rd[i].usDiscard = DISCARD_TEN;	// Initial discard count
-		adc_cic_3rd[i].usFlag = 0;			// 1/2 buffer flag
-		for (j = 0; j < 3; j++)
-		{ // Very important that the integrators begin with zero.
-			adc_cic_3rd[i].lIntegral[j] = 0;
-			adc_cic_3rd[i].lDiff[j][0] = 0;
-			adc_cic_3rd[i].lDiff[j][1] = 0;
-		}
-	}	
-
-	/* Following DMA interrupt do filtering. */
-	dma_ll_ptr = &adc_cic_filtering_tension;
-
-	return;
-}
-/* ########################## UNDER LOW PRIORITY SYSTICK INTERRUPT ############################### 
- * Run the latest adc readings through the cic filter.
+/* ########################## UNDER LOW PRIORITY INTERRUPT ############################### 
+ * Accumulate ADC readings
  * ############################################################################################### */
 /* 
-   This routine is entered from  'FSMC_IRQHandler' via 'dma_ll_ptr' triggered by 'DMA1CH1_IRQHandler_tension'
+   This routine is entered from  'TIM5_IRQHandler' via 'dma_ll_ptr' triggered by 'DMA1CH1_IRQHandler_tension'
 */
-unsigned int cicdebug0,cicdebug1;
-
-static void adc_cic_filtering_tension(void)
+static void adc_accum(void)
 {
-	int i,j,k;	// FORTRAN variables, of course
-	uint32_t* p;		// Ptr to raw double buffered DMA'd readings
+	int i;	// FORTRAN variables, of course
+	uint32_t *pdma = &strADC1dr.in[strADC1resultptr->flg][0][0];
+	uint32_t *pacc = &adc_readings_accum[adc_readings_flag][0];
 
-cicdebug0 += 1;
 	for (i = 0; i < NUMBERSEQUENCES; i++)
-	{ // First level of CIC filtering
-
-		p = &strADC1dr.in[strADC1resultptr->flg][i][0];
-		for (j = 0; j < NUMBERADCCHANNELS_TEN; j++)	
-		{
-			adc_cic_1st[j].nIn = *p; 	// Load reading to filter struct
-			if (cic_filter_l_N2_M3 (&adc_cic_1st[j]) != 0) // Filtering complete?
-			{ // Here, yes.  Pass first level filter results through a second time.
-				adc_cic_2nd[j].nIn = adc_cic_1st[j].lout >> CICSCALE; // Scale
-				if (cic_filter_l_N2_M3 (&adc_cic_2nd[j]) != 0) // Filtering complete?
-				{ // Here, two CIC filtering passes complete.
-					adc_cic_3rd[j].nIn = adc_cic_2nd[j].lout >> (CICSCALE+3); // Scale
-					if (cic_filter_l_N2_M3 (&adc_cic_3rd[j]) != 0) // Filtering complete?
-					{ // Here, three CIC filtering passes complete.
-						k = (0x1 & adc_temp_flag[j]);	// Get current double buffer index
-						adc_readings_cic[k][j] = adc_cic_3rd[j].lout; // Save for mainline NOT SCALED
-						adc_temp_flag[j] +=1;	// Signal main readings are ready for computation
-cicdebug1 += 1;
-					}
-				}
-			}
-			p++;	// Use pointer to avoid multiplies with triple index array
-		}
+	{
+		*(pacc+0) += *(pdma+0);
+		*(pacc+1) += *(pdma+1);
+		*(pacc+2) += *(pdma+2);
+		*(pacc+3) += *(pdma+3);
+		*(pacc+4) += *(pdma+4);
+		*(pacc+5) += *(pdma+5);
+		*(pacc+6) += *(pdma+6);
+		*(pacc+7) += *(pdma+7);
+		pacc += NUMBERADCCHANNELS_PWR; pdma += NUMBERADCCHANNELS_PWR;
 	}
+	adc_readings_flag ^= 0x1;
+
 	return;
 }
 

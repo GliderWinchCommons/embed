@@ -10,7 +10,7 @@
 
 #include "common_misc.h"
 #include "common_can.h"
-#include "tension_idx_v_struct.h"
+#include "pwrbox_idx_v_struct.h"
 
 /* **************************************************************************************/
 double temp_calc_param_dbl(double adcreading, struct THERMPARAM *p);

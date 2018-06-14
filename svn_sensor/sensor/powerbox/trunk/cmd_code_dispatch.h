@@ -13,10 +13,10 @@
 #define __CMD_CODE_DISPATCH
 
 #include "../../../../svn_common/trunk/common_can.h"
-#include "tension_a_functionS.h"
+#include "pwrbox_function.h"
 
 /* ************************************************************************************** */
-unsigned int cmd_code_dispatch(struct CANRCVBUF* pcan, struct TENSIONFUNCTION* p);
+unsigned int cmd_code_dispatch(struct CANRCVBUF* pcan, struct PWRBOXFUNCTION* p);
 /* @brief	: Handle command code msg
  * @param	: pcan = pointer to command msg received
  * @param	: p = pointer to struct with values for this instance

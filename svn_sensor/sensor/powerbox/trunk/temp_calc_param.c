@@ -1,6 +1,6 @@
 /******************************************************************************
 * File Name          : temp_calc_param.c
-* Date First Issued  : 02/14/2015
+* Date First Issued  : 02/14/2015,06/13/2018
 * Board              : ...
 * Description        : Computer deg C from filtered thermistor reading (double)
 *******************************************************************************/

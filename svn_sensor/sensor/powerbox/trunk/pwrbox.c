@@ -75,7 +75,7 @@ extern int errno;
 
 //#include "canwinch_pod_common_systick2048_printerr.h"
 #include "pwrbox_idx_v_struct.h"
-#include "pwrbox_functionS.h"
+#include "pwrbox_function.h"
 #include "pwrbox_printf.h"
 #include "temp_calc_param.h"
 #include "CAN_poll_loop.h"
@@ -88,10 +88,10 @@ extern int errno;
 #include "can_msg_reset.h"
 #include "can_gps_phasing.h"
 #include "sensor_threshold.h"
-#include "panic_leds_pod.h"
+#include "panic_leds_Ard.h"
 #include "db/gen_db.h"
 #include "CAN_poll_loop.h"
-#include "adcsensor_tension.h"
+#include "adcsensor_pwrbox.h"
 #include "../../../../svn_common/trunk/common_highflash.h"
 
 #include "fmtprint.h"
@@ -101,7 +101,7 @@ extern int errno;
 #include "can_filter_print.h"
 
 // Float to ascii (since %f is not working)
-char s[NUMBERADCTHERMISTER_TEN][32];
+//char s[NUMBERADCTHERMISTER_TEN][32];
 
 /* Print out line count */
 static unsigned int linect;
@@ -269,14 +269,13 @@ int main(void)
 
 /* $$$$$$$$$$$$ Relocate the interrupt vectors from the loader to this program $$$$$$$$$$$$$$$$$$$$ */
 extern void relocate_vector(void);
-	relocate_vector();
+//$	relocate_vector();
 /* --------------------- Begin setting things up -------------------------------------------------- */ 
 	// Start system clocks using parameters matching CAN setup parameters for POD board
 	clockspecifysetup(canwinch_setup_F103_pod_clocks() );
 /* ---------------------- Set up pins ------------------------------------------------------------- */
-	PODgpiopins_default();	// Set gpio port register bits for low power
-	PODgpiopins_Config();	// Now, configure pins
-	MAX3232SW_on;		// Turn on RS-232 level converter (if doesn't work--no RS-232 chars seen)
+//	PODgpiopins_default();	// Set gpio port register bits for low power
+//	PODgpiopins_Config();	// Now, configure pins
 
 	/* Use DTW_CYCCNT counter for startup timing */
 	DTW_counter_init();
@@ -304,7 +303,7 @@ setbuf(stdout, NULL);
 	printf (" pclk1_freq (MHz) : %9u\n\r", pclk1_freq/1000000);
 	printf (" pclk2_freq (MHz) : %9u\n\r", pclk2_freq/1000000);
 	printf ("sysclk_freq (MHz) : %9u\n\r",sysclk_freq/1000000);	USART1_txint_send();
-
+while(1==1);
 #ifdef TESTINGTHEFPMESS
 unsigned int k1,k2;
 char ttbuf[96];
@@ -459,11 +458,8 @@ ret = 0;
 /* ----------------- CAN filter registers ------------------------------------------------------------- */
 	can_filter_print(14);	// Print the CAN filter registers
 /* ----------------- Debug parameters ----------------------------------------------------------------- */
-for (i = 0; i < NUMTENSIONFUNCTIONS; i++)
-{
-	printf("\n\rAD7799 #%1d values\n\r",i+1);
-	pwrbox_printf(&ten_f[i].ten_a);	// Printf first AD7799 set of parameters
-}
+	printf("\n\rPWRBOX values\n\r");
+	pwrbox_printf(&pwr_f.pwrbox);	// Printf set of parameters
 /* ------------------------ Various and sundry ------------------------------------------------------- */
 	p1_initialization();
 /* ------------------------ CAN msg loop (runs under interrupt) --------------------------------------- */
@@ -485,11 +481,11 @@ u32 ledtime = DTWTIME + FLASHTIMEINC;	// Init the first timeout
 //double therm[NUMBERADCTHERMISTER_TEN];	// Floating pt of thermistors readings
 
 
-for (i = 0; i < NUMBERADCTHERMISTER_TEN; i++){s[i][0]= '.'; s[i][1]=0;}
+//for (i = 0; i < NUMBERADCTHERMISTER_TEN; i++){s[i][0]= '.'; s[i][1]=0;}
 
 /* Start average */
-ten_f[0].ave.run = 1;
-ten_f[1].ave.run = 1;
+//ten_f[0].ave.run = 1;
+//ten_f[1].ave.run = 1;
 
 #define CANDRIVERPRINTFCT 10	// Number of LED ticks between printing can_driver error counts
 unsigned int cdect = 0;		// Counter for timing printing of can_driver errors
@@ -557,8 +553,8 @@ unsigned int cdect = 0;		// Counter for timing printing of can_driver errors
 		}
 #endif
 		/* ---------- Check and update thermistor temperature readings. ---------- */
-		ret =  tension_a_functionS_temperature_poll();
-		if (ret != 0)
+//		ret =  tension_a_functionS_temperature_poll();
+//		if (ret != 0)
 		{ // Here, there was an update.  Format for a later printf.
 #ifdef DEBUGCICFILTERING
 extern struct ADCDR_TENSION  strADC1dr;
@@ -572,10 +568,10 @@ printf("T %d %d %d %d\n\r",adc_readings_cic[r][0]/262144,adc_readings_cic[r][1]/
 r += 1; if ( r >=2) r = 0;
 #endif
 			/* Setup temperatures in ascii strings for later printf'g. */
-			fpformat(&s[0][0],ten_f[0].degC[0]);	// Float-to-ascii (%6.3f)
-			fpformat(&s[1][0],ten_f[0].degC[1]);	// Float-to-ascii (%6.3f)
-			fpformat(&s[2][0],ten_f[1].degC[0]);	// Float-to-ascii (%6.3f)
-			fpformat(&s[3][0],ten_f[1].degC[1]);	// Float-to-ascii (%6.3f)
+//			fpformat(&s[0][0],ten_f[0].degC[0]);	// Float-to-ascii (%6.3f)
+	//		fpformat(&s[1][0],ten_f[0].degC[1]);	// Float-to-ascii (%6.3f)
+		//	fpformat(&s[2][0],ten_f[1].degC[0]);	// Float-to-ascii (%6.3f)
+//			fpformat(&s[3][0],ten_f[1].degC[1]);	// Float-to-ascii (%6.3f)
 		}
 #ifdef ONCEPERSECONDALTERNATIVE
 		/* ---------- CIC Filtered AD7799 readings ----------*/
@@ -596,17 +592,17 @@ r += 1; if ( r >=2) r = 0;
 	return 0;	
 }
 /* **************************************************************************************
- * double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n); 
+ * double iir_filtered_calib(struct PWRBOXFUNCTION* p, uint32_t n); 
  * @brief	: Convert integer IIR filtered value to offset & scaled double
- * @param	: p = pointer to struct with "everything" for this AD7799
+ * @param	: p = pointer to struct with "everything"
  * @return	: offset & scaled
  * ************************************************************************************** */
-static double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n)
+static double iir_filtered_calib(struct PWRBOXFUNCTION* p, uint32_t n)
 {
 	double d;
 	double s;
 	double dcal;
-
+#ifdef THISGETSFIXEDUPLATER
 	/* Scale filter Z^-1 accumulator. */
 	int32_t tmp = p->iir_filtered[n].z / p->iir_filtered[n].pprm->scale;
 	
@@ -639,6 +635,7 @@ static double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n)
 		p->status_byte |= STATUS_TENSION_BIT_EXCEEDLO;
 		return dcal;
 	}
+#endif
 	return dcal;		// Return scaled value
 }
 /* **************************************************************************************
@@ -646,6 +643,7 @@ static double iir_filtered_calib(struct TENSIONFUNCTION* p, uint32_t n)
  * @brief	: CIC reading calibration and printout
  * @param	: n = tension_a instance index 0 or 1
  * ************************************************************************************** */
+#ifdef ONCEPERSECONDALTERNATIVE
 extern unsigned int debug9;
 
 #define AVEACCUMLIMIT 16
@@ -695,3 +693,5 @@ void ciccalibrateprint(int n)
 
 	return;
 }
+#endif
+

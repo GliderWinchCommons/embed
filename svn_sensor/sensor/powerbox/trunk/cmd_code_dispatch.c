@@ -17,7 +17,7 @@
 extern struct CAN_CTLBLOCK* pctl0;
 
 /* **************************************************************************************
- * unsigned int cmd_code_dispatch(struct CANRCVBUF* pcan, struct TENSIONFUNCTION* p);
+ * unsigned int cmd_code_dispatch(struct CANRCVBUF* pcan, struct PWRBOXFUNCTION* p);
  * @brief	: Handle command code msg
  * @param	: pcan = pointer to command msg received
  * @param	: p = pointer to struct with values for this instance
@@ -26,7 +26,7 @@ extern struct CAN_CTLBLOCK* pctl0;
  *		: 255 = dlc less than 1
  *		: 254 = code not in table
  * ************************************************************************************** */
-unsigned int cmd_code_dispatch(struct CANRCVBUF* pcan, struct TENSIONFUNCTION* p)
+unsigned int cmd_code_dispatch(struct CANRCVBUF* pcan, struct PWRBOXFUNCTION* p)
 {
 	/* Use the response command CANID to the incoming "i" commmand CAN ID. */
 	pcan->id = *p->pcanid_cmd_func_r; // "r" = response

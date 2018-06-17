@@ -150,38 +150,29 @@ const struct CAN_INIT msginit = { \
 8	/* RX1 can use this piddling amount. */
 };
 
-/* ------- LED identification ----------- 
-|-number on pc board below LEDs
-| color   ADCx codewheel  bit number
-3 green   ADC2   black    0   LED3
-4 red	  ADC2   white    1   LED4
-5 green   ADC1   black    0   LED5
-6 yellow  ADC1   white    1   LED6
-  --------------------------------------*/
-static int lednum = LED3;	// Lowest port bit numbered LED
-void toggle_4leds (void)
+#define GRNLED 13		// PC13 is one and only green led on Blue Pill
+#define GRNLEDPORT GPIOC
+const struct PINCONFIGALL pin_led1 = {(volatile u32 *)GRNLEDPORT, GRNLED, OUT_OD, MHZ_2};
+static pinconfigA()
 {
-	if ((GPIO_ODR(GPIOE) & (1<<lednum)) == 0)
-	{ // Here, LED bit was off
-		GPIO_BSRR(GPIOE) = (1<<lednum);	// Set bits = all four LEDs off
-	}
-	else
-	{ // HEre, LED bit was on
-		GPIO_BRR(GPIOE) = (1<<lednum);	// Reset bits = all four LEDs on
-	}
-	lednum += 1;		// Step through all four LEDs
-	if (lednum > LED6) lednum = LED3;
+	/* Enable all the ports */
+	RCC_APB2ENR |= (0x7 << 2) | (0x1); // Enable Ports A,B,C and AFIO
+
+	/* On-board LED */
+	pinconfig_all( (struct PINCONFIGALL *)&pin_led1);	
+
 	return;
 }
-void toggle_1led(int led)
+
+void toggle_1led(void)
 {
-	if ((GPIO_ODR(GPIOE) & (1<<led)) == 0)
+	if ((GPIO_ODR(GPIOC) & (1<<GRNLED)) == 0)
 	{ // Here, LED bit was off
-		GPIO_BSRR(GPIOE) = (1<<led);	// Set bits = all four LEDs off
+		GPIO_BSRR(GPIOC) = (1<<GRNLED);	// Set bit
 	}
 	else
 	{ // HEre, LED bit was on
-		GPIO_BRR(GPIOE) = (1<<led);	// Reset bits = all four LEDs on
+		GPIO_BRR(GPIOC) = (1<<GRNLED);	// Reset bit
 	}
 	return;	
 }
@@ -276,6 +267,7 @@ extern void relocate_vector(void);
 /* ---------------------- Set up pins ------------------------------------------------------------- */
 //	PODgpiopins_default();	// Set gpio port register bits for low power
 //	PODgpiopins_Config();	// Now, configure pins
+	pinconfigA();	// Enable ports and setup RED led
 
 	/* Use DTW_CYCCNT counter for startup timing */
 	DTW_counter_init();
@@ -303,8 +295,10 @@ setbuf(stdout, NULL);
 	printf (" pclk1_freq (MHz) : %9u\n\r", pclk1_freq/1000000);
 	printf (" pclk2_freq (MHz) : %9u\n\r", pclk2_freq/1000000);
 	printf ("sysclk_freq (MHz) : %9u\n\r",sysclk_freq/1000000);	USART1_txint_send();
-while(1==1);
+
+//#define TESTINGTHEFPMESS
 #ifdef TESTINGTHEFPMESS
+toggle_1led();
 unsigned int k1,k2;
 char ttbuf[96];
 double ttf = -0.49999;
@@ -352,8 +346,9 @@ printf("TTF: %s\n\r",ttbuf);USART1_txint_send();
 k1 = DTWTIME;fpformat(&ttbuf[0],ttf);k2 = (int)DTWTIME-(int)k1;
 printf("TT1: %s %10d\n\r",ttbuf, k2);USART1_txint_send();
 
-
 printf("DONE\n\r");USART1_txint_send();
+
+toggle_1led();
 while(1==1);
 
 #endif
@@ -451,7 +446,7 @@ ret = 0;
 	if (ret <= 0)
 	{
 		printf("pwrbox_function: table size mismatch count: %d\n\r", ret);USART1_txint_send(); 
-		while(1==1);
+//$		while(1==1);
 	}
 	printf("pwrbox_function: table size : %d\n\r", ret);USART1_txint_send();
 
@@ -470,228 +465,131 @@ ret = 0;
 		while (1==1);		
 	}
 /* ---------------- When CAN interrupts are enabled reception of msgs begins! ------------------------ */
+USART1_txint_puts("\n\rTestPt 1 p1_initialization and CAN init\n\r");USART1_txint_send();
+
 	can_driver_enable_interrupts();	// Enable CAN interrupts
 
+USART1_txint_puts("\n\rTestPt 2 CAN interrupts now enabled\n\r");USART1_txint_send();toggle_1led();
 /* ---------------- Some vars associated with endless loop ------------------------------------------- */
-#define FLASHTIMEINC (64000000/1)	// Yellow LED flash tick duration
+#define FLASHTIMEINC (64000000/1)	   // Green on-board LED flash tick duration
 u32 ledtime = DTWTIME + FLASHTIMEINC;	// Init the first timeout
 
-//extern uint32_t	adc_readings_cic[2][NUMBERADCTHERMISTER_TEN]; // Filtered/decimated ADC readings
-//int adc_temp_flag_prev = adc_temp_flag[0]; // Thermistor readings ready counter
-//double therm[NUMBERADCTHERMISTER_TEN];	// Floating pt of thermistors readings
+/* --------------- ADC startup ----------------------------------------------------------------------- */
+	adcsensor_pwrbox_sequence();
 
-
-//for (i = 0; i < NUMBERADCTHERMISTER_TEN; i++){s[i][0]= '.'; s[i][1]=0;}
-
-/* Start average */
-//ten_f[0].ave.run = 1;
-//ten_f[1].ave.run = 1;
-
-#define CANDRIVERPRINTFCT 10	// Number of LED ticks between printing can_driver error counts
-unsigned int cdect = 0;		// Counter for timing printing of can_driver errors
-
-
-//3 unsigned int tim3_ten2_ticks_prev = 0;
-//#define READINGSINC	470	// Number of readings between recalibrations
-//uint32_t readingsct_next = ten_f[0].readingsct + READINGSINC;
-//unsigned int tsec = 0;
-
+USART1_txint_puts("\n\rTestPt 3 ADC initialized\n\r");USART1_txint_send();
 /* --------------- Start TIM3 CH1 and CH2 interrupts ------------------------------------------------- */
 	tim3_ten2_init(pclk1_freq/2048);	// 64E6/2048
+
+USART1_txint_puts("\n\rTestPt 4 tim3_ten2 initialized\n\r");USART1_txint_send();
+
+
+extern uint32_t	adc_readings_accum[2][NUMBERADCCHANNELS_PWR];
+uint32_t *padc;
+extern uint32_t adc_readings_flag;	// 0 = currently being accumulated; 1 = previously accumulated
+extern uint32_t adc_readings_buf[RBUFSIZE][NUMBERADCCHANNELS_PWR];
+extern uint32_t adc_readings_buf_idx_i;
+extern uint32_t adc_readings_buf_idx_o;
+extern struct ADCDR_PWRBOX  strADC1dr;	// Double buffer array
+uint32_t cnt_prev = strADC1dr.cnt;
+extern uint32_t adc_ovr_cnt;
+uint32_t adc_ovr_cnt_prev = adc_ovr_cnt;
+extern uint32_t dmatdiff;
+extern uint32_t adc_ave[NUMBERADCCHANNELS_PWR];
+extern uint32_t adc_ave_ct;
+uint32_t *pave;
+uint32_t *pbuf;
+double dave[NUMBERADCCHANNELS_PWR];
+double dvol[NUMBERADCCHANNELS_PWR];
+char dbuf[96];
+double dcur;
+double dGR = 1000.0/0.22;	// Reciprocal of series resistor
+double dcurcal = (dGR * 6.95) / (3338.8 - 3260.2);	// R ma/count
+uint32_t tmpcur;
+
+struct ADCCALIB
+{
+	double volts_in;
+	double volts_adc;
+	double ave_count;
+
+};
+#define ADCEXT 6	// Number of external ADC inputs
+#define ADCINT 2	// Number of internal ADC inputs
+struct ADCCALIB adc_ext[NUMBERADCCHANNELS_PWR] =
+{
+	{    0   ,    0,      1 }, /* Internal temperature       IN16 */
+	{ 3.30   , 1.26, 1563.5 }, /* Internal voltage reference IN17 */
+	{ 5.06   , 1.79, 2226.7 }, /* Switcher DC output voltage A0   */
+	{13.1300 , 2.65, 3338.8 }, /* CAN bus/capacitor voltage  A1   */
+   {13.13695, 2.60, 3260.9 }, /* Diode/resistor voltage     A2   */
+	{13.79   , 2.78, 3466.8 }, /* Input power source voltage A3   */
+	{       0,    0,     .2 }, /* Spare                      A4   */
+	{       0,    0,     .2 }, /* Spare                      A5   */
+};
+
+
+/* Convert voltage & count to a ratio for calibration */
+double dcal[ADCEXT];
+for ( i = 0; i < NUMBERADCCHANNELS_PWR; i++)
+{
+	dcal[i] = adc_ext[i].volts_in / adc_ext[i].ave_count;
+}
+
 
 /* --------------------- Endless Stuff ----------------------------------------------- */
 	while (1==1)
 	{
-		/* ---------- Tick time flashing (in case 'ad7799_ten_flag' not working) ---------- */
+		/* ---------- Tick time flashing ---------- */
 		if ( ((int)ledtime - (int)DTWTIME) < 0) 
 		{
 			ledtime += FLASHTIMEINC;
-			toggle_1led(LEDYELLOW);
+			toggle_1led();
 
-			/* Display can_driver error counts periodically. */
-			cdect += 1;
-			if (cdect >= CANDRIVERPRINTFCT)
+			for (i = 0; i < NUMBERADCCHANNELS_PWR; i++)
 			{
-				cdect = 0;
-				can_driver_errors_printf(pctl0);
-				can_driver_errortotal_printf(pctl0);
-			}
+				dave[i] = adc_ave[i];
+				dave[i] /= (NUMBERSEQUENCES*adc_ave_ct);
+				
+				dvol[i] = dave[i] * dcal[i]; 
+				fpformat(&dbuf[0],dvol[i]);
+				printf(" %s", dbuf);
 
-//$			printf("SEC %6d\n\r",tsec++);
-//3			printf("TIC %d\n\r",(tim3_ten2_ticks-tim3_ten2_ticks_prev));USART1_txint_send();
-//3			tim3_ten2_ticks_prev = tim3_ten2_ticks;
-#ifdef ONCEPERSECONDMONITORING
-			/* Once per second output. */
-			ciccalibrateprint(0);		// Calibrate and print 1st AD7799
-			if ( AD7799_num != 1)	// Just one AD7799?
-			{ // No.  Two AD7799s initialized OK
-				ciccalibrateprint(1);	// Calibrate and print 2nd AD7799
+				fpformat(&dbuf[0],dave[i])	;
+				printf(" %s", dbuf);
+
+//				printf("%6d ", adc_ave[i]/(NUMBERSEQUENCES*adc_ave_ct));
+				adc_ave[i] = 0;					
 			}
-			/* Add thermistor temperatures and line count (seconds) to line and start it printing. */
-			printf("%s %s %s %s",&s[0][0],&s[1][0],&s[2][0],&s[3][0]);
-			printf("%8d\n\r", linect++);
+			dcur = (dvol[4]-dvol[3])*dGR;
+			fpformat(&dbuf[0],dcur)	;
+			printf("\n\r %s %d\n\r",dbuf, adc_ave_ct);
+
 			USART1_txint_send();
-#endif
+			adc_ave_ct = 0;
 		}
 
-//		/* ------------ Periodically execute a recalibration ------------------------ */
-//		if (ten_f[0].readingsct >= readingsct_next)
-//		{
-//			readingsct_next += READINGSINC;
-//			ad7799_poll_rdy_ten2_req_calib(0);	// Request a re-calib sequence
-//			ad7799_poll_rdy_ten2_req_calib(1);	// Request a re-calib sequence
-//		}
-#ifdef OFFSETMONITORINGONTHECONSOLE
-		for (i = 0; i < NADCS; i++)
+		pave = &adc_ave[0];
+		while (adc_readings_buf_idx_o != adc_readings_buf_idx_i)
 		{
-			if (ten_f[i].zero_flag != 0)
-			{
-				ten_f[i].zero_flag = 0;
-				printf ("OFFREG%1d %4d %8d %8d %8d\n\r",i, (int)(ten_f[i].offset_reg - 0x00800000),(int)(ten_f[i].iir_z_recal_w.z / ten_f[i].iir_z_recal_w.pprm->scale),\
-				(int)(ten_f[i].offset_reg_filt - 0x00800000), (int)(ten_f[i].offset_reg_rdbk - 0x00800000) );
-			}
+			pbuf = &adc_readings_buf[adc_readings_buf_idx_o][0];
+			*(pave+0) += *(pbuf+0);
+			*(pave+1) += *(pbuf+1);
+			*(pave+2) += *(pbuf+2);
+			*(pave+3) += *(pbuf+3);
+			*(pave+4) += *(pbuf+4);
+			*(pave+5) += *(pbuf+5);
+			*(pave+6) += *(pbuf+6);
+			*(pave+7) += *(pbuf+7);
+			adc_ave_ct += 1;
+			adc_readings_buf_idx_o += 1;
+			if (adc_readings_buf_idx_o >= RBUFSIZE) adc_readings_buf_idx_o = 0;
 		}
-#endif
-		/* ---------- Check and update thermistor temperature readings. ---------- */
-//		ret =  tension_a_functionS_temperature_poll();
-//		if (ret != 0)
-		{ // Here, there was an update.  Format for a later printf.
-#ifdef DEBUGCICFILTERING
-extern struct ADCDR_TENSION  strADC1dr;
-int w = adc_temp_flag[0] & 0x1;
-w ^= 0x1;
-static int b;
-int r=0;
-printf("W %d %d %d %d\n\r",strADC1dr.in[w][b][0],strADC1dr.in[w][b][1],strADC1dr.in[w][b][2],strADC1dr.in[w][b][3]);
-b += 1; if (b >= 16) b = 0;
-printf("T %d %d %d %d\n\r",adc_readings_cic[r][0]/262144,adc_readings_cic[r][1]/262144,adc_readings_cic[r][2]/262144,adc_readings_cic[r][3]/262144);
-r += 1; if ( r >=2) r = 0;
-#endif
-			/* Setup temperatures in ascii strings for later printf'g. */
-//			fpformat(&s[0][0],ten_f[0].degC[0]);	// Float-to-ascii (%6.3f)
-	//		fpformat(&s[1][0],ten_f[0].degC[1]);	// Float-to-ascii (%6.3f)
-		//	fpformat(&s[2][0],ten_f[1].degC[0]);	// Float-to-ascii (%6.3f)
-//			fpformat(&s[3][0],ten_f[1].degC[1]);	// Float-to-ascii (%6.3f)
-		}
-#ifdef ONCEPERSECONDALTERNATIVE
-		/* ---------- CIC Filtered AD7799 readings ----------*/
-		if (cic[0][1].Flag != cic[0][1].Flag_prev) // Use 2nd CIC flag
-		{
-			cic[0][1].Flag_prev = cic[0][1].Flag; // Reset flag
-			ciccalibrateprint(0);		// Calibrate and print
 
-			if ( AD7799_num != 1)	// Just one AD7799?
-			{ // No.  Two AD7799s initialized OK
-				ciccalibrateprint(1);	// Calibrate and print
-			}
-		}
-#endif
 	/* ---------- Trigger a pass through 'CAN_poll' to poll msg handling & sending. ---------- */
-	CAN_poll_loop_trigger();
+//	CAN_poll_loop_trigger();
 	}
 	return 0;	
 }
-/* **************************************************************************************
- * double iir_filtered_calib(struct PWRBOXFUNCTION* p, uint32_t n); 
- * @brief	: Convert integer IIR filtered value to offset & scaled double
- * @param	: p = pointer to struct with "everything"
- * @return	: offset & scaled
- * ************************************************************************************** */
-static double iir_filtered_calib(struct PWRBOXFUNCTION* p, uint32_t n)
-{
-	double d;
-	double s;
-	double dcal;
-#ifdef THISGETSFIXEDUPLATER
-	/* Scale filter Z^-1 accumulator. */
-	int32_t tmp = p->iir_filtered[n].z / p->iir_filtered[n].pprm->scale;
-	
-	/* Apply offset. */
-	tmp += p->ten_a.ad.offset;
-	
-	/* Convert to double and scale. */
-	d = tmp; 		// Convert scaled, filtered int to double
-	s = p->ten_a.ad.scale; 	// Convert float to double
-	dcal = d * s;		// Calibrated reading
-	p->dcalib_lgr = dcal;	// Save calibrated last good reading
 
-	/* Set up status byte for reading. */
-	p->status_byte = STATUS_TENSION_BIT_NONEW; // Show no new readings
-	
-	/* New readings flag. */
-	if (p->readingsct != p->readingsct_lastpoll)
-	{ // Here, there was a new reading since last poll
-		p->status_byte = 0;	// Turn (all) flags off
-	}
-
-	/* Check reading against limits. */
-	if (dcal > p->ten_a.limit_hi)
-	{
-		p->status_byte |= STATUS_TENSION_BIT_EXCEEDHI;
-		return dcal;
-	}
-	if (dcal < p->ten_a.limit_lo)
-	{
-		p->status_byte |= STATUS_TENSION_BIT_EXCEEDLO;
-		return dcal;
-	}
-#endif
-	return dcal;		// Return scaled value
-}
-/* **************************************************************************************
- * void ciccalibrateprint(int n); 
- * @brief	: CIC reading calibration and printout
- * @param	: n = tension_a instance index 0 or 1
- * ************************************************************************************** */
-#ifdef ONCEPERSECONDALTERNATIVE
-extern unsigned int debug9;
-
-#define AVEACCUMLIMIT 16
-void ciccalibrateprint(int n)
-{
-	int ntmp;
-	long long lltmp;
-	double scaled;
-	char sss[32];
-
-	lltmp 	= cic[n][1].llout_save; 	// [AD7799 #n][2nd cic stage]
-	ntmp 	= lltmp/(1<<19);		// Filter rescaling
-
-	if (ten_f[n].ave.run != 0)
-	{
-		if ((ten_f[n].ave.run_prev == 0) || (ten_f[n].ave.n >= AVEACCUMLIMIT))
-		{ // Here, changed from not run to run. Initialize
-			ten_f[n].ave.run_prev = ten_f[n].ave.run;
-			ten_f[n].ave.sum = 0;
-			ten_f[n].ave.n = 0;
-//	printf("AD%1d %8d %8d %8d %8d\n\r",(n+1),(int)ten_f[n].cicraw, ntmp,(int)ten_f[n].ave.a, (int)ten_f[n].ave.n );
-
-		}
-		ten_f[n].ave.sum += ntmp;	// Sum readings
-		ten_f[n].ave.n += 1;	// Count number
-		lltmp = ten_f[n].ave.sum/ten_f[n].ave.n;
-		ten_f[n].ave.a = lltmp;	// Convert to int and save in struct
-	}
-
-	/* CIC filtered tension reading. */
-	ten_f[n].cicraw = ntmp;			// AD7799 #n raw reading
-	ntmp 	+= ten_f[n].ten_a.ad.offset;
-	scaled 	= ntmp;				// Convert int to double
-	scaled *= ten_f[n].ten_a.ad.scale;
-	fpformat(&sss[0],scaled);	// Float-to-ascii (%6.3f)
-
-	/* IIR filtered tension reading. */
-	char ssd[32];
-	double diir;
-	diir = iir_filtered_calib(&ten_f[n], 1); // Calibrate IIR (n=1 for slow)
-	fpformat(&ssd[0],diir);	// Float-to-ascii (%6.3f)
-	
-//	printf("-%1d- %8d %8d %s %8d %4d ",(n+1),(int)ten_f[n].cicraw,ntmp,&sss[0], (int)ten_f[n].ave.a, (int)ten_f[n].ave.n );
-//	printf("%1d %8d %8d %s \t",(n+1),(int)ten_f[n].cicraw,ntmp,&sss[0]);
-//	printf("%1d %8d %8d %s %s\t",(n+1),(int)ten_f[n].cicraw,ntmp,&sss[0],&ssd[0]); // w CIC
-	printf("%1d %8d %8d %s %02x\t",(n+1),(int)ten_f[n].cicraw,ntmp,&ssd[0],ten_f[n].status_byte); // w/o CIC
-
-	return;
-}
-#endif
 

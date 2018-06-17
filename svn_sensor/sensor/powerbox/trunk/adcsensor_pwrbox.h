@@ -24,7 +24,8 @@
 #define DMA1_CH1_PRIORITY	0x60	// * ### Lower than SYSTICK (ADC filtering after DMA interrupt)
 
 #define NUMBERADCCHANNELS_PWR	8	// Number of channels in one scan cycle
-#define NUMBERSEQUENCES		8	   // Number of sequences in 1/2 of the DMA buffer
+#define NUMBERSEQUENCES		32	   // Number of scan cycle sequences in 1/2 of the DMA buffer
+#define RBUFSIZE 64	// Number of buffers
 
 /* input-(3)---diode-(2)--resistor-(1)--CAN bus pwr--switcher:5V--(0) */
 

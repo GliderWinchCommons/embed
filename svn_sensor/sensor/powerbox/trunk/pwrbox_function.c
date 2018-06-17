@@ -323,7 +323,7 @@ int pwrbox_function_poll(struct CANRCVBUF* pcan, struct PWRBOXFUNCTION* p)
 		/* Send heartbeat and compute next hearbeat time count. */
 		//      Args:  CAN id, status of reading, reading pointer instance pointer
 //$		send_can_msg(p->pwrbox.cid_heartbeat, p->status_byte, &ui.ui, p); 
-		ret = 1;
+//$		ret = 1;
 	}
 
 	/* Check if any incoming msgs. */

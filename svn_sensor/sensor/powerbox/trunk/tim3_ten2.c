@@ -128,7 +128,7 @@ void TIM3_IRQHandler(void)
 /*#######################################################################################
  * ISR routine for FIFO 0 low priority level
  *####################################################################################### */
-void I2C1_ER_IRQHandler_ten(void)
+void I2C1_ER_IRQHandler_pwr(void)
 {
 	/* Call other routines if an address is set up */
 	if (tim3_ten2_ll_ptr != 0)	// Having no address for the following is bad.

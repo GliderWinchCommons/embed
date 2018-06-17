@@ -78,7 +78,7 @@ void WEAK p1_TIM1_TRG_COM_IRQHandler(void);// tim1_trg_com_isr(void);
 void WEAK p1_TIM1_CC_IRQHandler(void);	// tim1_cc_isr(void);
 void WEAK TIM2_IRQHandler(void);	// tim2_isr(void);
 void WEAK TIM3_IRQHandler(void);	// tim3_isr(void);
-void WEAK TIM4_IRQHandler(void);	// tim4_isr(void);
+void WEAK TIM4_IRQHandler_pwr(void);	// tim4_isr(void);
 void WEAK I2C1_EV_IRQHandler(void);	// i2c1_ev_isr(void);
 void WEAK I2C1_ER_IRQHandler_pwr(void);	// i2c1_er_isr(void);
 void WEAK I2C2_EV_IRQHandler(void);	// i2c2_ev_isr(void);
@@ -98,7 +98,7 @@ void WEAK tim8_cc_isr(void);
 void WEAK ADC3_IRQHandler(void);	// adc3_isr(void);
 void WEAK FSMC_IRQHandler_pwr(void);	//fsmc_isr(void);
 void WEAK sdio_isr(void);
-void WEAK TIM5_IRQHandler_pwr(void);	//TIM5_IRQHandler(void);
+void WEAK TIM5_IRQHandler(void);	//TIM5_IRQHandler(void);
 void WEAK spi3_isr(void);
 void WEAK UART4_IRQHandler(void);	// usart4_isr(void);
 void WEAK UART5_IRQHandler(void);	// usart5_isr(void);
@@ -155,7 +155,7 @@ void (*const vector_table[]) (void) = {
 	p1_TIM1_CC_IRQHandler,	//tim1_cc_isr,
 	TIM2_IRQHandler,	//tim2_isr,
 	TIM3_IRQHandler,	//tim3_isr,
-	TIM4_IRQHandler,	//tim4_isr,
+	TIM4_IRQHandler_pwr,	//tim4_isr,
 	I2C1_EV_IRQHandler,	//i2c1_ev_isr,
 	I2C1_ER_IRQHandler_pwr,	//i2c1_er_isr,
 	I2C2_EV_IRQHandler,	//i2c2_ev_isr,
@@ -175,7 +175,7 @@ void (*const vector_table[]) (void) = {
 	ADC3_IRQHandler,	// adc3_isr,
 	FSMC_IRQHandler_pwr,	//fsmc_isr,
 	sdio_isr,
-	TIM5_IRQHandler_pwr,	// tim5_isr,
+	TIM5_IRQHandler,	// tim5_isr,
 	spi3_isr,
 	UART4_IRQHandler,	// usart4_isr,
 	UART5_IRQHandler,	// usart5_isr,
@@ -189,29 +189,23 @@ void (*const vector_table[]) (void) = {
 
 void hard_fault_handler(void)
 {
-while(1==1);
 	panic_leds_Ard(1);
-//	while (1) ;
 }
 void mem_manage_handler(void)
 {
 	panic_leds_Ard(2);
-//	while (1) ;
 }
 void bus_fault_handler(void)
 {
 	panic_leds_Ard(3);
-//	while (1) ;
 }
 void usage_fault_handler(void)
 {
 	panic_leds_Ard(4);
-//	while (1) ;
 }
 
 void null_handler(void)
 {
-while (1==1) ;
 	panic_leds_Ard(5);
 }
 /* **************************************************************************************
@@ -282,7 +276,7 @@ void relocate_vector(void)
 #pragma weak p1_TIM1_CC_IRQHandler = null_handler
 #pragma weak TIM2_IRQHandler = null_handler
 #pragma weak tim3_isr = null_handler
-#pragma weak TIM4_IRQHandler = null_handler
+#pragma weak TIM4_IRQHandler_pwr = null_handler
 #pragma weak I2C1_EV_IRQHandler = null_handler
 #pragma weak I2C1_ER_IRQHandler_pwr = null_handler
 #pragma weak I2C2_EV_IRQHandler = null_handler
@@ -302,7 +296,7 @@ void relocate_vector(void)
 #pragma weak ADC3_IRQHandler = null_handler
 #pragma weak FSMC_IRQHandler_pwr = null_handler	//fsmc_isr = null_handler
 #pragma weak sdio_isr = null_handler
-#pragma weak TIM5_IRQHandler_pwr //TIM5_IRQHandler = null_handler
+#pragma weak TIM5_IRQHandler = null_handler//TIM5_IRQHandler = null_handler
 #pragma weak spi3_isr = null_handler
 #pragma weak usart4_isr = null_handler
 #pragma weak usart5_isr = null_handler

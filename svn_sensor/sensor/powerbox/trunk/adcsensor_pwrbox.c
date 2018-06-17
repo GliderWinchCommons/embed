@@ -33,12 +33,14 @@ at the end of the buffer.  The code for DMA interrupts is not used.
 #include "libopenstm32/rcc.h"
 #include "libopenstm32/adc.h"
 #include "libopenstm32/dma.h"
+#include "libmiscstm32/DTW_counter.h"
 #include "common.h"
 #include "common_can.h"
 #include "pinconfig_all.h"
 #include "adcsensor_pwrbox.h"
 #include "DTW_counter.h"
 #include "cic_filter_l_N2_M3.h"
+#include "IRQ_priority_powerbox.h"
 
 static void adc_accum(void);
 
@@ -72,17 +74,18 @@ will be 32/4 = 8 MHz (max freq must be less than 14 MHz)
 With an ADC clock of 4 MHz the total conversion time--
   12.5 + SMPx time
 
-13.5 + 12.5 = 26.0 us per External ADC
-28.5 + 12.5 = 41.0 us for Internal temp
-28.5 + 12.5 = 41.0 us for Internal V ref
+13.5 + 12.5 = 26.0 adc cycles per External ADC
+28.5 + 12.5 = 41.0 adc cycles for Internal temp
+28.5 + 12.5 = 41.0 adc cycles for Internal V ref
 
-6 External input     6 *  26 = 208
+6 External input     6 *  41 = 246
 1 Internal temp      1 *  41 =  41
 1 Internal volt ref  1 *  41 =  41
-     Total per scan cycle    = 290
+     Total per scan cycle    = 328
+	  Total us per scan cycle = 328 / 4MHz = 82
 
-DMA 1/2 buffer holds 5 scan cycles--
-  8 * 290 = 2320 us between DMA interrupts
+Supose DMA 1/2 buffer holds 32 scan cycles--
+  32 * 82 = 2624 us between DMA interrupts
 
 */
 // *CODE* for number of cycles in conversion on each adc channel
@@ -94,13 +97,13 @@ DMA 1/2 buffer holds 5 scan cycles--
 #define SMP6	2
 #define SMP7	2
 #define SMP8	2
-#define SMP9	2
-#define SMP10	2
-#define SMP11	2
-#define SMP12	2
-#define SMP13	2
-#define SMP14	2
-#define SMP15	2
+#define SMP9	3
+#define SMP10	3
+#define SMP11	3
+#define SMP12	3
+#define SMP13	3
+#define SMP14	3
+#define SMP15	3
 #define SMP16	3
 #define SMP17	3
 
@@ -194,12 +197,30 @@ static void adcsensor_pwrbox_init(void)
 	/* ==>Override the above<==  32 MHz pclk2, divide by 4 -> 8 MHz. */
 	ucPrescalar = 3;
 
+	/* Enable bus clocking for ADC */
+	RCC_APB2ENR |= RCC_APB2ENR_ADC1EN;	// Enable ADC1 clocking
+
+	RCC_AHBENR |= RCC_AHBENR_DMA1EN;			// Enable DMA1 clock
+
 	/* Set APB2 bus divider for ADC clock */
 	RCC_CFGR |= ( (ucPrescalar & 0x3) << 14); // Set code for bus division
 
-	/* Enable bus clocking for ADC */
-	RCC_APB2ENR |= RCC_APB2ENR_ADC1EN;	// Enable ADC1 clocking
-	
+	// Channel configuration register
+	//          priority high  | 32b mem xfrs | 16b adc xfrs | mem increment | circular mode | half xfr     | xfr complete   | dma chan 1 enable
+	DMA1_CCR1 =  ( 0x02 << 12) | (0x02 << 10) |  (0x01 << 8) | DMA_CCR1_MINC | DMA_CCR1_CIRC |DMA_CCR1_HTIE | DMA_CCR1_TCIE;//  | DMA_CCR1_EN;
+
+	/* Setup DMA for storing data in the ADC_DR as the channels in the sequence are converted */
+	DMA1_CPAR1 = (u32)&ADC1_DR;				// DMA channel 1 peripheral address (adc1 data register)
+	DMA1_CMAR1 = (u32)&strADC1dr.in[0][0][0];		// Memory address of first buffer array for storing data 
+	DMA1_CNDTR1 = (2 * NUMBERSEQUENCES * NUMBERADCCHANNELS_PWR);// Number of data items before wrap-around
+
+
+	/* Set and enable interrupt controller for DMA transfer complete interrupt handling */
+	NVICIPR (NVIC_DMA1_CHANNEL1_IRQ, DMA1_CH1_PRIORITY_PWR );	// Set interrupt priority
+	NVICISER(NVIC_DMA1_CHANNEL1_IRQ);
+	DMA1_CCR1 |= DMA_CCR1_EN;
+
+
 	//         (   scan      | watchdog enable | watchdog interrupt enable | watchdog channel number )
 	ADC1_CR1 = (ADC_CR1_SCAN ); 	// Scan mode
 
@@ -209,7 +230,7 @@ static void adcsensor_pwrbox_init(void)
 	/* 1 us Tstab time is required before writing a second "1" to ADON to start conversions */
 	timedelay(2 * ticksperus);	// Wait
 
-	/* Set sample times for channels */
+	/* Set sample times for channels in scan sequence */
 	ADC1_SMPR2 = ((SMP1  <<  0)|(SMP2  <<  3)|(SMP3 << 6)|(SMP4 << 9)|(SMP5 << 12)|(SMP6 << 15));
 	ADC1_SMPR1 = ((SMP16 << 18)|(SMP17 << 21));	// Internal temp and v reference
 
@@ -218,30 +239,12 @@ static void adcsensor_pwrbox_init(void)
 
 	/* This maps the ADC channel number to the position in the conversion sequence */
 	// Load channels IN0 - IN5, IN16, IN17 for conversions sequences
-	ADC1_SQR3 = ( 0 << 0) | ( 1 << 5) | (2 << 10) | (3 << 15) | (4 << 20) | (5 << 25);
-	ADC1_SQR2 = (16 << 0) | (17 << 5);
-
-	/* Setup DMA for storing data in the ADC_DR as the channels in the sequence are converted */
-	RCC_AHBENR |= RCC_AHBENR_DMA1EN;			// Enable DMA1 clock
-	DMA1_CNDTR1 = (2 * NUMBERSEQUENCES * NUMBERADCCHANNELS_PWR);// Number of data items before wrap-around
-	DMA1_CPAR1 = (u32)&ADC1_DR;				// DMA channel 1 peripheral address (adc1 data register)
-	DMA1_CMAR1 = (u32)&strADC1dr.in[0][0][0];		// Memory address of first buffer array for storing data 
-
-	// Channel configuration register
-	//          priority high  | 32b mem xfrs | 16b adc xfrs | mem increment | circular mode | half xfr     | xfr complete   | dma chan 1 enable
-	DMA1_CCR1 =  ( 0x02 << 12) | (0x02 << 10) |  (0x01 << 8) | DMA_CCR1_MINC | DMA_CCR1_CIRC |DMA_CCR1_HTIE | DMA_CCR1_TCIE  | DMA_CCR1_EN;
+	ADC1_SQR3 = ( 0 << 0) | ( 1 << 5) | (2 << 10) | (3 << 15) | (4 << 20) | (5 << 25);// Seq 1 - 5
+	ADC1_SQR2 = (16 << 0) | (17 << 5); // Seq 7, 8
 
 	/* Low level interrupt for doing adc filtering following DMA1 CH1 interrupt. */
-	NVICIPR (NVIC_TIM5_IRQ, ADC_TIM5_PRIORITY);	// Set low level interrupt priority for post DMA1 interrupt processing
-	NVICISER(NVIC_TIM5_IRQ);			// Enable low level interrupt
-
-	/* Low level interrupt for doing adc filtering following DMA1 CH1 interrupt. */
-//$	NVICIPR (NVIC_FSMC_IRQ, ADC_FSMC_PRIORITY);	// Set low level interrupt priority for post DMA1 interrupt processing
-//$	NVICISER(NVIC_FSMC_IRQ);			// Enable low level interrupt
-
-	/* Set and enable interrupt controller for DMA transfer complete interrupt handling */
-	NVICIPR (NVIC_DMA1_CHANNEL1_IRQ, DMA1_CH1_PRIORITY );	// Set interrupt priority
-	NVICISER(NVIC_DMA1_CHANNEL1_IRQ);
+	NVICIPR (NVIC_TIM4_IRQ, TIM4_PRIORITY_ADC);	// Set low level interrupt priority for post DMA1 interrupt processing
+	NVICISER(NVIC_TIM4_IRQ);			// Enable low level interrupt
 
 
 	return;
@@ -295,6 +298,10 @@ should allow a delay of tSTAB between power up and start of conversion. Refer to
 /*#######################################################################################
  * ISR routine for DMA1 Channel1 reading ADC regular sequence of adc channels
  *####################################################################################### */
+uint32_t dmat1;
+uint32_t dmat2;
+uint32_t dmatdiff;
+
 void DMA1CH1_IRQHandler_pwrbox(void)
 {
 /* Double buffer the sequence of channels converted.  When the DMA goes from the first
@@ -316,14 +323,17 @@ pointer is automatically reloaded with the beginning of the buffer space (i.e. c
 	{
 		if ( (DMA1_ISR & DMA_ISR_HTIF1) != 0 )	// Is this a half transfer complete interrupt?
 		{ // Here, yes.  The first sequence has been converted and stored in the first buffer
+dmat1 = DTWTIME;
+dmatdiff = dmat1 - dmat2;
+dmat2 = dmat1;
 			strADC1resultptr->flg  = 0;	// Set index to the first buffer.  It is ready.
 			strADC1resultptr->cnt += 1;	// Running count of sequences completed
-			DMA1_IFCR = DMA_IFCR_CHTIF1;	// Clear transfer complete flag (p 208)
+			DMA1_IFCR = DMA_IFCR_CHTIF1;	// Clear half transfer complete flag (p 208)
 		}
 	}
 
 	/* Trigger a pending interrupt that will handle filter the ADC readings. */
-	NVICISPR(NVIC_TIM5_IRQ);	// Set pending (low priority) interrupt
+	NVICISPR(NVIC_TIM4_IRQ);	// Set pending (low priority) interrupt
 
 	return;
 }
@@ -333,7 +343,7 @@ pointer is automatically reloaded with the beginning of the buffer space (i.e. c
 /* Pointer to functions to be executed under a low priority interrupt, forced by DMA interrupt. */
 void 	(*dma_ll_ptr)(void) = 0;		// DMA -> FSMC  (low priority)
 
-void TIM5_IRQHandler_pwr(void)
+void TIM4_IRQHandler_pwr(void)
 {
 	adc_accum();	// Accumulate readings 1/2 DMA buffer
 
@@ -342,46 +352,55 @@ void TIM5_IRQHandler_pwr(void)
 		(*dma_ll_ptr)();	// Go do something
 	return;
 }
-/* $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-         Below is CIC Filtering of DMA stored ADC readings 
- $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ */
-/* This flag increments and the low order bit is the index of the double buffered array 'adc_readings_cic'.  
-   Filtering is being done in index =  (0x1 & adc_temp_flag)
-   Users use the opposite index  */
-int32_t	adc_temp_flag[NUMBERADCCHANNELS_PWR];	// Signal main new filtered reading ready
-
-uint32_t	adc_readings_accum[2][NUMBERADCCHANNELS_PWR];	// Accum one 1/2 DMA buffer
-uint32_t adc_readings_flag;	// 0 = currently being accumulated; 1 = previously accumulated
-uint32_t adc_readings_rdy;		// 0 = not ready, 1 = ready
 
 
-/* ########################## UNDER LOW PRIORITY INTERRUPT ############################### 
+/* ########################## UNDER LOW PRIORITY INTERRUPT ###################################### 
  * Accumulate ADC readings
+ * This routine is entered from  'TIM4_IRQHandler' triggered by 'DMA1CH1_IRQHandler_tension'
  * ############################################################################################### */
-/* 
-   This routine is entered from  'TIM5_IRQHandler' via 'dma_ll_ptr' triggered by 'DMA1CH1_IRQHandler_tension'
-*/
+
+/* Circular buffer ADC readings accumulated in 1/2 of the DMA buffer */
+uint32_t adc_readings_buf[RBUFSIZE][NUMBERADCCHANNELS_PWR]; // Accumulated readings buffer
+uint32_t adc_readings_buf_idx_i = 0; // Buffer index: in
+uint32_t adc_readings_buf_idx_o = 0; // Buffer index: out	
+
+uint32_t adc_ave[NUMBERADCCHANNELS_PWR];
+uint32_t adc_ave_ct = 0;
+
 static void adc_accum(void)
 {
-	int i;	// FORTRAN variables, of course
+	int i;	// FORTRAN variable, of course
 	uint32_t *pdma = &strADC1dr.in[strADC1resultptr->flg][0][0];
-	uint32_t *pacc = &adc_readings_accum[adc_readings_flag][0];
+	uint32_t *pbuf;
 
-	for (i = 0; i < NUMBERSEQUENCES; i++)
+		pbuf = &adc_readings_buf[adc_readings_buf_idx_i][0];
+
+		*(pbuf+0) = *(pdma+0);
+		*(pbuf+1) = *(pdma+1);
+		*(pbuf+2) = *(pdma+2);
+		*(pbuf+3) = *(pdma+3);
+		*(pbuf+4) = *(pdma+4);
+		*(pbuf+5) = *(pdma+5);
+		*(pbuf+6) = *(pdma+6);
+		*(pbuf+7) = *(pdma+7);
+		pdma += NUMBERADCCHANNELS_PWR;
+
+	/* Accumulate remaining sequences */
+	for (i = 1; i < NUMBERSEQUENCES; i++)
 	{
-		*(pacc+0) += *(pdma+0);
-		*(pacc+1) += *(pdma+1);
-		*(pacc+2) += *(pdma+2);
-		*(pacc+3) += *(pdma+3);
-		*(pacc+4) += *(pdma+4);
-		*(pacc+5) += *(pdma+5);
-		*(pacc+6) += *(pdma+6);
-		*(pacc+7) += *(pdma+7);
-		pacc += NUMBERADCCHANNELS_PWR; pdma += NUMBERADCCHANNELS_PWR;
+		*(pbuf+0) += *(pdma+0);
+		*(pbuf+1) += *(pdma+1);
+		*(pbuf+2) += *(pdma+2);
+		*(pbuf+3) += *(pdma+3);
+		*(pbuf+4) += *(pdma+4);
+		*(pbuf+5) += *(pdma+5);
+		*(pbuf+6) += *(pdma+6);
+		*(pbuf+7) += *(pdma+7);
+		pdma += NUMBERADCCHANNELS_PWR;
 	}
-	adc_readings_flag ^= 0x1;
-
+	adc_readings_buf_idx_i += 1;
+	if (adc_readings_buf_idx_i >= RBUFSIZE) adc_readings_buf_idx_i = 0;
+		
 	return;
 }
-
 

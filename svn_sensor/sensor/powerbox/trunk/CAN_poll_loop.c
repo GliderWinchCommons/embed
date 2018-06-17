@@ -91,10 +91,10 @@ void CAN_poll(void)
 		/* pwrbox: get msgs from pwrbox buffer */
   		pcan = can_hub_get(pwr_f.phub_pwrbox); 	// Get ptr to CAN msg
  		ret = pwrbox_function_poll(pcan,&pwr_f); 	// function poll
-		if (ret != 0)	// Did function send & buffer a msg?
-		{ // Here yes.  Other functions may need this msg
-			sw = 1; // Set switch to cause loop again
-		}
+//		if (ret != 0)	// Did function send & buffer a msg?
+//		{ // Here yes.  Other functions may need this msg
+//			sw = 1; // Set switch to cause loop again
+//		}
 	/* Loop until no msgs were handled. */
 	} while ((can_hub_end() != 0) || (sw != 0)); // Repeat if msgs waiting or were added
 	return;

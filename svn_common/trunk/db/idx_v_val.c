@@ -1,4 +1,4 @@
-// 2018-05-04 21:29:59.374
+// 2018-06-17 22:54:46.479
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -16,7 +16,8 @@
 #define GPS_2_PARAM_SIZE 9
 #define LOGGER_1_PARAM_SIZE 4
 #define LOGGER_2_PARAM_SIZE 4
-#define MCL_PARAM_SIZE 22
+#define MCL_PARAM_SIZE 21
+#define PWRBOX1_PARAM_SIZE 40
 #define SHAFT1_PARAM_SIZE 22
 #define SHEAVE_1LO_PARAM_SIZE 17
 #define SHEAVE_1UP_PARAM_SIZE 17
@@ -268,14 +269,60 @@ const uint32_t paramval12[] = {
  0x40200000 , /*  18 2.5                 11  mcl: end of climb taper down: release delta: Master Controller Launch parameter */
  0x42480000 , /*  19 50.0                11  mcl: parachute tension taper: max parachute tension (KGF): Master Controller Launch parameter*/
  0x42820000 , /*  20 65.0                11  mcl: parachute tension taper: parachute taper speed (M/S): Master Controller Launch parameter*/
- 0x42A00000 , /*  21 80.0                11  mcl: parachute tension taper: max chute cable speed (M/S): Master Controller Launch param*/
- 0x3F8CCCCD , /*  22 1.1                 11  mcl: parachute tension taper: const k5: Master Controller Launch parameter      */
+ 0x3F8CCCCD , /*  21 1.1                 11  mcl: parachute tension taper: const k5: Master Controller Launch parameter      */
+};
+#endif
+
+// =====================================================================
+#ifdef PWRBOX1	// Include following parameters?
+const uint32_t paramval13[] = {
+ PWRBOX1_PARAM_SIZE,	/* Number of param entries that follow */
+ 0x00000000 , /*   1 0                    6   1 Pwrbox1: CRC                                                                 */
+ 0x00000001 , /*   2 1                    5   2 Pwrbox1: Version number                                                      */
+ 0x000003E8 , /*   3 1000                 5   3 Pwrbox1: Time (ms) between HB msg                                            */
+ 0x00000000 , /*   4 0.0                 11   4 Pwrbox1: ADC reading 1 offset                                                */
+ 0x3E4CCCCD , /*   5 0.200000000         11   5 Pwrbox1: ADC reading 1  scale                                                */
+ 0x00000000 , /*   6 0.0                 11   6 Pwrbox1: ADC reading 2 offset                                                */
+ 0x3B0AE9CF , /*   7 0.002119649         11   7 Pwrbox1: ADC reading 2  scale                                                */
+ 0x00000000 , /*   8 0.0                 11   8 Pwrbox1: ADC reading 3 offset                                                */
+ 0x3B14ECE6 , /*   9 0.002272421         11   9 Pwrbox1: ADC reading 3  scale                                                */
+ 0x00000000 , /*  10 0.0                 11  10 Pwrbox1: ADC reading 4 offset                                                */
+ 0x3B80DCA1 , /*  11 0.003932551         11  11 Pwrbox1: ADC reading 4  scale                                                */
+ 0x00000000 , /*  12 0.0                 11  12 Pwrbox1: ADC reading 5 offset                                                */
+ 0x3B840985 , /*  13 0.004029455         11  13 Pwrbox1: ADC reading 5  scale                                                */
+ 0x00000000 , /*  14 0.0                 11  14 Pwrbox1: ADC reading 6 offset                                                */
+ 0x3B8257A2 , /*  15 0.003977732         11  15 Pwrbox1: ADC reading 6  scale                                                */
+ 0x00000000 , /*  16 0.0                 11  16 Pwrbox1: ADC reading 7 offset                                                */
+ 0x3E4CCCCD , /*  17 0.200000000         11  17 Pwrbox1: ADC reading 7  scale                                                */
+ 0x00000000 , /*  18 0.0                 11  18 Pwrbox1: ADC reading 8 offset                                                */
+ 0x3E4CCCCD , /*  19 0.200000000         11  19 Pwrbox1: ADC reading 8  scale                                                */
+ 0x0000000A , /*  20 10                   6  20 Pwrbox1: IIR1 Filter factor                                                  */
+ 0x00000080 , /*  21 128                  6  21 Pwrbox1: IIR1 Filter scale                                                   */
+ 0x0000000A , /*  22 10                   6  22 Pwrbox1: IIR2 Filter factor                                                  */
+ 0x00000080 , /*  23 128                  6  23 Pwrbox1: IIR2 Filter scale                                                   */
+ 0x0000000A , /*  24 10                   6  24 Pwrbox1: IIR3 Filter factor                                                  */
+ 0x00000080 , /*  25 128                  6  25 Pwrbox1: IIR3 Filter scale                                                   */
+ 0x0000000A , /*  26 10                   6  26 Pwrbox1: IIR4 Filter factor                                                  */
+ 0x00000080 , /*  27 128                  6  27 Pwrbox1: IIR4 Filter scale                                                   */
+ 0xFF200000 , /*  28 CANID_HB_PWRBOX1    17  28 Pwrbox: CANID: Heartbeat: input voltage, bus voltage                         */
+ 0xE3000000 , /*  29 CANID_MSG_PWRBOX1   17  29 Pwrbox: CANID: Msg: input voltage, bus voltage                               */
+ 0x00800000 , /*  30 CANID_ALM_PWRBOX1   17  30 Pwrbox: CANID: Alarm: input voltage, bus voltage                             */
+ 0x00000032 , /*  31 50                   6  31 Pwrbox: Time (ms) between alarm msgs, when below threshold                   */
+ 0x41280000 , /*  32 10.5                11  32 Pwrbox: Voltage threshold for alarm msgs                                     */
+ 0x00400000 , /*  33 CANID_HB_TIMESYNC   17  33 EPS_1: CANID 1: GPS time sync distribution msg                               */
+ 0x20000000 , /*  34 CANID_MSG_TIME_POLL  17  34 MC: CANID 2:Time msg/Group polling                                           */
+ 0xFFFFFFFC , /*  35 CANID_DUMMY         17  35 Pwrbox1: CANID 3: command                                                    */
+ 0xFFFFFFFC , /*  36 CANID_DUMMY         17  36 Pwrbox1: CANID 4 add CAN hw filter for incoming msg                          */
+ 0xFFFFFFFC , /*  37 CANID_DUMMY         17  37 Pwrbox1: CANID 5 add CAN hw filter for incoming msg                          */
+ 0xFFFFFFFC , /*  38 CANID_DUMMY         17  38 Pwrbox1: CANID 6 add CAN hw filter for incoming msg                          */
+ 0xFFFFFFFC , /*  39 CANID_DUMMY         17  39 Pwrbox1: CANID 7 add CAN hw filter for incoming msg                          */
+ 0xFFFFFFFC , /*  40 CANID_DUMMY         17  40 Pwrbox1: CANID 8 add CAN hw filter for incoming msg                          */
 };
 #endif
 
 // =====================================================================
 #ifdef SHAFT1	// Include following parameters?
-const uint32_t paramval13[] = {
+const uint32_t paramval14[] = {
  SHAFT1_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Shaft1: CRC                                                                     */
  0x00000001 , /*   2 1                    5  Shaft1: Version number                                                          */
@@ -304,7 +351,7 @@ const uint32_t paramval13[] = {
 
 // =====================================================================
 #ifdef SHEAVE_1LO	// Include following parameters?
-const uint32_t paramval14[] = {
+const uint32_t paramval15[] = {
  SHEAVE_1LO_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Encoder_f4_1lo: 1 CRC                                                           */
  0x00000001 , /*   2 1                    5  Encoder_f4_1lo: 2 Version number                                                */
@@ -328,7 +375,7 @@ const uint32_t paramval14[] = {
 
 // =====================================================================
 #ifdef SHEAVE_1UP	// Include following parameters?
-const uint32_t paramval15[] = {
+const uint32_t paramval16[] = {
  SHEAVE_1UP_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Encoder_f4_1up: 1 CRC                                                           */
  0x00000001 , /*   2 1                    5  Encoder_f4_1up: 2 Version number                                                */
@@ -352,7 +399,7 @@ const uint32_t paramval15[] = {
 
 // =====================================================================
 #ifdef TENSION_a11	// Include following parameters?
-const uint32_t paramval16[] = {
+const uint32_t paramval17[] = {
  TENSION_a11_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a11: 1 CRC for tension list                                             */
  0x00000001 , /*   2 1                    5  Tension_a11: 2 Version number for Tension List                                  */
@@ -410,7 +457,7 @@ const uint32_t paramval16[] = {
 
 // =====================================================================
 #ifdef TENSION_a12	// Include following parameters?
-const uint32_t paramval17[] = {
+const uint32_t paramval18[] = {
  TENSION_a12_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a12:   1 CRC for tension list                                           */
  0x00000001 , /*   2 1                    5  Tension_a12:   2 Version number for Tension List                                */
@@ -468,7 +515,7 @@ const uint32_t paramval17[] = {
 
 // =====================================================================
 #ifdef TENSION_a21	// Include following parameters?
-const uint32_t paramval18[] = {
+const uint32_t paramval19[] = {
  TENSION_a21_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a21:   1 CRC for tension list                                           */
  0x00000001 , /*   2 1                    5  Tension_a21:   2 Version number for Tension List                                */
@@ -526,7 +573,7 @@ const uint32_t paramval18[] = {
 
 // =====================================================================
 #ifdef TENSION_a22	// Include following parameters?
-const uint32_t paramval19[] = {
+const uint32_t paramval20[] = {
  TENSION_a22_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a22:   1 CRC for tension list                                           */
  0x00000001 , /*   2 1                    5  Tension_a22:   2 Version number for Tension List                                */
@@ -584,7 +631,7 @@ const uint32_t paramval19[] = {
 
 // =====================================================================
 #ifdef YOGURT_1	// Include following parameters?
-const uint32_t paramval20[] = {
+const uint32_t paramval21[] = {
  YOGURT_1_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Yogurt_1:  1 CRC for this list                                                  */
  0x00000001 , /*   2 1                    5  Yogurt_1:  2 Version number for Tension List                                    */
@@ -663,7 +710,9 @@ const uint32_t paramval20[] = {
 
 #define CAN_UNIT_1B_CMDID_TABLE_SIZE 2	// Shaft encoder_a1: R lower
 
-#define CAN_UNIT_1E_CMDID_TABLE_SIZE 4	// Sensor, shaft1: R Drive shaft encoder
+#define CAN_UNIT_1E_CMDID_TABLE_SIZE 4	// Pwrbox1: R lower
+
+#define CAN_UNIT_1F_CMDID_TABLE_SIZE 2	// Sensor, shaft1: R Drive shaft encoder
 
 #define CAN_UNIT_2_CMDID_TABLE_SIZE 2	//  Sensor, engine: R temperature #1
 
@@ -766,8 +815,17 @@ const struct FUNC_CANID func_canid08[] = {
 #endif
 
 // =====================================================================
-#ifdef CAN_UNIT_2	// a #define is used to select the following
+#ifdef CAN_UNIT_1F	// a #define is used to select the following
 const struct FUNC_CANID func_canid09[] = {
+{   0x04A00000, CAN_UNIT_1F_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
+{1023,  0xE3200000 }, /*   1 CAN_UNIT_1F          CANID_CMD_PWRBOX1R	 Pwrbox1: R lower              */
+{  23,  0xE320000C }, /*   2 CAN_UNIT_1F          CANID_CMD_PWRBOX1I	 Pwrbox1: I lower              */
+};
+#endif
+
+// =====================================================================
+#ifdef CAN_UNIT_2	// a #define is used to select the following
+const struct FUNC_CANID func_canid10[] = {
 {   0x04000000, CAN_UNIT_2_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1022,  0xE2C00000 }, /*   1 CAN_UNIT_2           CANID_CMD_SHAFT1R	 Sensor, shaft1: R Drive shaft encoder*/
 {  22,  0xA0600000 }, /*   2 CAN_UNIT_2           CANID_CMD_SHAFT1I	 Sensor, shaft1: I Drive shaft encoder*/
@@ -776,7 +834,7 @@ const struct FUNC_CANID func_canid09[] = {
 
 // =====================================================================
 #ifdef CAN_UNIT_3	// a #define is used to select the following
-const struct FUNC_CANID func_canid10[] = {
+const struct FUNC_CANID func_canid11[] = {
 {   0x03800000, CAN_UNIT_3_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1020,  0x81E00000 }, /*   1 CAN_UNIT_3           CANID_CMD_ENG1_T1R	  Sensor, engine: R temperature #1*/
 {  20,  0x81A00000 }, /*   2 CAN_UNIT_3           CANID_CMD_ENG1_T1I	  Sensor, engine: I temperature #1*/
@@ -791,7 +849,7 @@ const struct FUNC_CANID func_canid10[] = {
 
 // =====================================================================
 #ifdef CAN_UNIT_E	// a #define is used to select the following
-const struct FUNC_CANID func_canid11[] = {
+const struct FUNC_CANID func_canid12[] = {
 {   0x01C0000C, CAN_UNIT_E_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1013,  0xD1C0005C }, /*   1 CAN_UNIT_E           CANID_CMD_LOGGER_1R	 Logger_1: R                   */
 {  13,  0xD1C00054 }, /*   2 CAN_UNIT_E           CANID_CMD_LOGGER_1I	 Logger_1: I                   */
@@ -802,7 +860,7 @@ const struct FUNC_CANID func_canid11[] = {
 
 // =====================================================================
 #ifdef CAN_UNIT_F	// a #define is used to select the following
-const struct FUNC_CANID func_canid12[] = {
+const struct FUNC_CANID func_canid13[] = {
 {   0x01E0000C, CAN_UNIT_F_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
 {1005,  0x0620000C }, /*   1 CAN_UNIT_F           CANID_CMD_CABLE_ANGLE_1R	 Cable angle: R AD7799 #2 drum #1*/
 {   5,  0x06200000 }, /*   2 CAN_UNIT_F           CANID_CMD_CABLE_ANGLE_1I	 Cable angle: I AD7799 #2 drum #1*/

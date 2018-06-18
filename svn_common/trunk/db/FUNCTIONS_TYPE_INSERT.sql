@@ -37,4 +37,5 @@ INSERT INTO FUNCTIONS_TYPE VALUES ('ENG_THROTTLE', 19,	'Sensor, engine: throttle
 INSERT INTO FUNCTIONS_TYPE VALUES ('ENG_T1',       20,	'Sensor, engine: temperature 1' );
 INSERT INTO FUNCTIONS_TYPE VALUES ('ENG_T2',       21,	'Sensor, engine: temperature 2' );
 INSERT INTO FUNCTIONS_TYPE VALUES ('DRIVE_SHAFT',  22,	'Sensor, shaft: ../sensor/shaft/trunk version' );
+INSERT INTO FUNCTIONS_TYPE VALUES ('PWRBOX',       23,	'Pwrbox, input power voltage monitor' );
 

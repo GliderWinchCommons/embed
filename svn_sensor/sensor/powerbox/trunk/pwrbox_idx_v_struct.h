@@ -18,6 +18,15 @@ AD7799 on the POD board).
 
 #define NIIR	4	// Number of IIR filters
 
+/*
+// IIR filter (int) parameters
+struct IIR_L_PARAM
+{
+	int32_t k;		// Filter parameter for setting time constant
+	int32_t scale;		// Scaling improve spare bits with integer math
+};
+*/
+
 /* The parameter list supplies the CAN IDs for the hardware filter setup. */
 #define CANFILTMAX	8	// Max number of CAN IDs in parameter list
 
@@ -36,11 +45,8 @@ AD7799 on the POD board).
 
 struct ADCCALPWRBOX
 {
-	uint32_t accum;	// Accumulate for averaging
-	uint32_t n;			// Counts comprising average
 	double	offset;	//	Offset
 	double	scale;	//	Scale
-
 };
  
 // Naming convention--"cid" - CAN ID
@@ -50,17 +56,13 @@ struct ADCCALPWRBOX
  	uint32_t crc;			// crc-32 placed by loader
 	uint32_t version;		// struct version number
 	uint32_t hbct;			// Heartbeat ct: ticks between sending msgs
-	uint32_t f_pollbit;		// Instance bit (bit position)(2nd byte)
-	uint32_t p_pollbit;		// Poll response bit (bit position)(1st byte)
-	uint32_t cid_pwr_msg;		// CANID-Fully calibrated tension msg
-	uint32_t cid_pwr_poll;		// CANID-MC poll msg
-	uint32_t cid_gps_sync;		// CANID-GPS time sync msg
-	uint32_t cid_heartbeat;		// CANID-Heartbeat msg
-	uint32_t cid_tst_pwr;		// CANID-for testing/debugging .sql files
 	struct ADCCALPWRBOX adc[NUMADCPARAM];	// ADC measurements
 	struct IIR_L_PARAM iir[NIIR];	   // IIR Filter for IIR filters 
-	struct IIR_L_PARAM iir_z_recal;	// IIR Filter: zero recalibration
-
+	uint32_t cid_heartbeat; // CANID-Heartbeat msg
+	uint32_t cid_pwr_msg;   // CANID-voltage msg
+	uint32_t cid_pwr_alarm; // CANID-low voltage alarm msg
+   uint32_t alarm_rate;    // Time between alarm msgs (ms)
+   float  alarm_thres;     // Voltage threshold for low volt alarm msgs    
 	uint32_t code_CAN_filt[CANFILTMAX];// List of CAN ID's for setting up hw filter
  };
  

@@ -21,12 +21,11 @@
 struct ACCUMAVE
 {
 	int64_t sum;		// Sum readings
-	int32_t n;		// Keep track of number of readings
-	int32_t a;		// Computed average
-	uint8_t run;		// Switch: 0 = skip; not zero = build average
-	uint8_t run_prev;	// Previous state of run
+	int32_t n;        // Keep track of number of readings
+	int32_t a;        // Computed average
+	uint8_t run;      // Switch: 0 = skip; not zero = build average
+	uint8_t run_prev; // Previous state of run
 };
-
 
 /* This is the working struct */
 struct PWRBOXFUNCTION

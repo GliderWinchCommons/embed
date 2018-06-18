@@ -77,3 +77,5 @@ INSERT INTO FUNCTION_CODES VALUES ('ENG1_THROTTLE' ,'ENG_THROTTLE','UNIT_3',	29,
 INSERT INTO FUNCTION_CODES VALUES ('ENG1_T1'       ,'ENG_T1',	    'UNIT_3',	30,	'Sensor, engine: temperature 1' );
 INSERT INTO FUNCTION_CODES VALUES ('ENG1_T2'       ,'ENG_T2',	    'UNIT_3',	31,	'Sensor, engine: temperature 2' );
 
+INSERT INTO FUNCTION_CODES VALUES ('PWRBOX1'       ,'PWRBOX',	    'UNIT_1F',	32,	'Pwrbox: CAN bus Blue Pill voltage monitor' );
+

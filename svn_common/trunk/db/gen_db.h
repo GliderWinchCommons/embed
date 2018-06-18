@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2018-05-04 21:29:57.907
+// 2018-06-17 22:54:44.99
 
-#define CANID_COUNT 213
+#define CANID_COUNT 219
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -148,7 +148,7 @@
 #define  CANID_HB_LOWER1_H_RAW    0xD1800000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: heartbeat--lower raw count and delta time
 #define  CANID_HB_LOWER1_H_CAL    0xD1C00000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: heartbeat--lower calibrated--distance and speed
 #define  CANID_TST_SHEAVE_1LO     0xD2200004  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: testing poll LO
-#define  CANID_TILT_ALARM         0x04600000  // TILT_SENSE     : Tilt: alarm: Vector angle exceeds limit
+#define  CANID_TILT_ALARM         0x00A00000  // TILT_SENSE     : Tilt: alarm: Vector angle exceeds limit
 #define  CANID_TILT_ANGLE         0x42E00000  // TILT_SENSE     : Tilt: Calibrated angles (X & Y)
 #define  CANID_TILT_XYZ           0x42800000  // TILT_SENSE     : Tilt: Calibrated to angle: x,y,z tilt readings
 #define  CANID_TILT_XYZ_CAL       0xFFFFFFCC  // TILT_SENSE     : Tilt: CANID: Raw tilt ADC readings
@@ -179,6 +179,11 @@
 #define  CANID_POLL_CANSENDER     0xE2000000  // CANSENDER      : Cansender: Poll cansenders
 #define  CANID_POLLR_CANSENDER_1  0xE2200000  // CANSENDER      : Cansender_1: Response to POLL
 #define  CANID_POLLR_CANSENDER_2  0xE2400000  // CANSENDER      : Cansender_2: Response to POLL
+#define  CANID_CMD_PWRBOX1I       0xE320000C  // PWRBOX         : Pwrbox1: I Command CANID
+#define  CANID_CMD_PWRBOX1R       0xE3200000  // PWRBOX         : Pwrbox1: R Command CANID
+#define  CANID_HB_PWRBOX1         0xFF200000  // PWRBOX         : Pwrbox1: Heartbeat w input voltage
+#define  CANID_MSG_PWRBOX1        0xE3000000  // PWRBOX         : Pwrbox1: Polled msg
+#define  CANID_ALM_PWRBOX1        0x00800000  // PWRBOX         : Pwrbox1: Input voltage low alarm msg
 #define  CANID_CMD_SANDBOX_1I     0x28E00000  // SANDBOX_1      : HC: SANDBOX_1: I Launch parameters
 #define  CANID_CMD_SANDBOX_1R     0x28E00004  // SANDBOX_1      : HC: SANDBOX_1: R Launch parameters
 #define  CANID_CMD_YOGURT_1I      0x29800000  // YOGURT_1       : Yogurt: YOGURT_1: I Yogurt maker parameters
@@ -212,6 +217,7 @@
 #define  CANID_UNIT_1C            0x04200000  // UNIT_1C        : Sensor board: DEH spare 1
 #define  CANID_UNIT_1D            0x04400000  // UNIT_1D        : Sensor board: DEH spare 2
 #define  CANID_UNIT_1E            0x04800000  // UNIT_1E        : DiscoveryF4 shaft encoder unit 1
+#define  CANID_UNIT_1F            0x04A00000  // UNIT_1F        : Pwrbox: Blue Pill board
 #define  CANID_UNIT_99            0xFFFFFF14  // UNIT_99        : Dummy for missing CAN IDs
 #define  CANID_DUMMY              0xFFFFFFFC  // UNIT_NU        : Dummy ID: Lowest priority possible (Not Used)
 #define  CANID_MSG_DUMMY          0xFFFFFF16  // ANY            : Dummy ID: Polled Msg dummy
@@ -305,7 +311,50 @@
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
 
-#define PARAM_LIST_COUNT 294	// TOTAL COUNT OF PARAMETER LIST
+#define PARAM_LIST_COUNT 334	// TOTAL COUNT OF PARAMETER LIST
+
+#define  PWRBOX_CRC              	1         // Pwrbox:: CRC                                    
+#define  PWRBOX_VERSION          	2         // Pwrbox:: Version number                         
+#define  PWRBOX_HEARTBEAT_TIME_CT	3         // Pwrbox:: Time (ms) between HB msg               
+#define  PWRBOX_CAL_OFFSET1      	4         // Pwrbox: ADC reading[0] offset                   
+#define  PWRBOX_CAL_SCALE1       	5         // Pwrbox: ADC reading[0] scale                    
+#define  PWRBOX_CAL_OFFSET2      	6         // Pwrbox: ADC reading[1] offset                   
+#define  PWRBOX_CAL_SCALE2       	7         // Pwrbox: ADC reading[1] scale                    
+#define  PWRBOX_CAL_OFFSET3      	8         // Pwrbox: ADC reading[2] offset                   
+#define  PWRBOX_CAL_SCALE3       	9         // Pwrbox: ADC reading[2] scale                    
+#define  PWRBOX_CAL_OFFSET4      	10        // Pwrbox: ADC reading[3] offset                   
+#define  PWRBOX_CAL_SCALE4       	11        // Pwrbox: ADC reading[3] scale                    
+#define  PWRBOX_CAL_OFFSET5      	12        // Pwrbox: ADC reading[4] offset                   
+#define  PWRBOX_CAL_SCALE5       	13        // Pwrbox: ADC reading[4] scale                    
+#define  PWRBOX_CAL_OFFSET6      	14        // Pwrbox: ADC reading[5] offset                   
+#define  PWRBOX_CAL_SCALE6       	15        // Pwrbox: ADC reading[5] scale                    
+#define  PWRBOX_CAL_OFFSET7      	16        // Pwrbox: ADC reading[6] offset                   
+#define  PWRBOX_CAL_SCALE7       	17        // Pwrbox: ADC reading[6] scale                    
+#define  PWRBOX_CAL_OFFSET8      	18        // Pwrbox: ADC reading[7] offset                   
+#define  PWRBOX_CAL_SCALE8       	19        // Pwrbox: ADC reading[7] scale                    
+#define  PWRBOX_IIR0_K           	20        // Pwrbox: IIR0 Filter factor: divisor sets time constant
+#define  PWRBOX_IIR0_SCALE       	21        // Pwrbox: IIR0 Filter scale : upscaling (due to integer math)
+#define  PWRBOX_IIR1_K           	22        // Pwrbox: IIR1 Filter factor: divisor sets time constant
+#define  PWRBOX_IIR1_SCALE       	23        // Pwrbox: IIR1 Filter scale : upscaling (due to integer math)
+#define  PWRBOX_IIR2_K           	24        // Pwrbox: IIR2 Filter factor: divisor sets time constant
+#define  PWRBOX_IIR2_SCALE       	25        // Pwrbox: IIR2 Filter scale : upscaling (due to integer math)
+#define  PWRBOX_IIR3_K           	26        // Pwrbox: IIR3 Filter factor: divisor sets time constant
+#define  PWRBOX_IIR3_SCALE       	27        // Pwrbox: IIR3 Filter scale : upscaling (due to integer math)
+#define  PWRBOX_HB_R             	28        // Pwrbox:: CANID: Heartbeat: input voltage, bus voltage
+#define  PWRBOX_MSG_R            	29        // Pwrbox:: CANID: Msg: input voltage, bus voltage 
+#define  PWRBOX_ALARM_R          	30        // Pwrbox:: CANID: Alarm: input voltage, bus voltage
+#define  PWRBOX_ALARM_RATE       	31        // Pwrbox:: Time (ms) between alarm msgs, when below threshold
+#define  PWRBOX_ALARM_THRES      	32        // Pwrbox:: Voltage threshold for alarm msgs       
+#define  PWRBOX_CANID_HW_FILT1   	33        // Pwrbox: CANID 1 added to CAN hw filter to allow incoming msg
+#define  PWRBOX_CANID_HW_FILT2   	34        // Pwrbox: CANID 2 added to CAN hw filter to allow incoming msg
+#define  PWRBOX_CANID_HW_FILT3   	35        // Pwrbox: CANID 3 added to CAN hw filter to allow incoming msg
+#define  PWRBOX_CANID_HW_FILT4   	36        // Pwrbox: CANID 4 added to CAN hw filter to allow incoming msg
+#define  PWRBOX_CANID_HW_FILT5   	37        // Pwrbox: CANID 5 added to CAN hw filter to allow incoming msg
+#define  PWRBOX_CANID_HW_FILT6   	38        // Pwrbox: CANID 6 added to CAN hw filter to allow incoming msg
+#define  PWRBOX_CANID_HW_FILT7   	39        // Pwrbox: CANID 7 added to CAN hw filter to allow incoming msg
+#define  PWRBOX_CANID_HW_FILT8   	40        // Pwrbox: CANID 8 added to CAN hw filter to allow incoming msg
+
+#define PARAM_LIST_CT_PWRBOX	40	// Count of same FUNCTION_TYPE in preceding list
 
 #define  ENCODER_LIST_CRC        	1         // Encoder_f4_1: crc: CRC for tension list         
 #define  ENCODER_LIST_VERSION    	2         // Encoder_f4_1: version: Version number for Tension List
@@ -636,10 +685,10 @@
 #define  MCL_TAPERTIME           	16        // mcl: end of climb taper down: taper time: Master Controller Launch parameterS 
 #define  MCL_K4                  	17        // mcl: end of climb taper down: constant k4: Master Controller Launch parameterS 
 #define  MCL_RELEASEDELTA        	18        // mcl: end of climb taper down: release delta: Master Controller Launch parameterS 
-#define  MCL_MAX_PARACHUTE_TENSION	19        // mcl: parachute tension taper: max parachute tension: Master Controller Launch parameterS 
-#define  MCL_PARACHUTE_TAPER_SPEED	20        // mcl: parachute tension taper: parachute taper speed: Master Controller Launch parameterS 
-#define  MCL_MAX_PARACHUTE_CABLE_SPEED	21        // mcl: parachute tension taper: max parachute cable speed: Master Controller Launch parameterS 
-#define  MCL_K5                  	22        // mcl: parachute tension taper: constant k5: Master Controller Launch parameterS 
+#define  MCL_MAX_PARACHUTE_TENSION	19        // mcl: parachute tension taper: max parachute tension: MC Launch parameterS
+#define  MCL_PARACHUTE_TAPER_SPEED	20        // mcl: parachute tension taper: taper speed: Master Controller Launch parameterS
+#define  MCL_MAX_CHUTE_CABLE_SPEED	21        // mcl: parachute tension taper: max hute cable speed: Master Controller Launch parameterS
+#define  MCL_K5                  	22        // mcl: parachute tension taper: constant k5: Master Controller Launch parameterS
 
 #define PARAM_LIST_CT_MCL	22	// Count of same FUNCTION_TYPE in preceding list
 
@@ -703,7 +752,7 @@
 #define  USEME_TENSION_BIT_7     	0x40      // TENSION             useme: spare 0x40                               
 #define  USEME_TENSION_BIT_8     	0x80      // TENSION             useme: spare 0x80                               
 
-#define FUNCTION_TYPE_COUNT 22
+#define FUNCTION_TYPE_COUNT 23
 #define  FUNCTION_TYPE_SHAFT_ENCODER           	1         // Sensor, shaft: Drive shaft encoder              
 #define  FUNCTION_TYPE_ENGINE_SENSOR           	2         // Sensor, engine: rpm, manifold pressure, throttle setting, temperature
 #define  FUNCTION_TYPE_TENSION_a               	3         // Tension_a: Tension AD7799 #1                    
@@ -726,6 +775,7 @@
 #define  FUNCTION_TYPE_ENG_T1                  	20        // Sensor, engine: temperature 1                   
 #define  FUNCTION_TYPE_ENG_T2                  	21        // Sensor, engine: temperature 2                   
 #define  FUNCTION_TYPE_DRIVE_SHAFT             	22        // Sensor, shaft: ../sensor/shaft/trunk version    
+#define  FUNCTION_TYPE_PWRBOX                  	23        // Pwrbox, input power voltage monitor             
 
 #define READINGS_BOARD_COUNT 15
 #define  PROG_TENSION_READINGS_BOARD_NUM_AD7799	1         // Number of AD7799 that successfully initialized  
@@ -744,6 +794,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 682  */
+/* TOTAL COUNT OF #defines = 729  */
 /* Test 2016/06/12 */
 

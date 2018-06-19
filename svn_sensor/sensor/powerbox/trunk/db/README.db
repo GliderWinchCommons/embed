@@ -1,0 +1,18 @@
+README.db
+08/13/2017
+
+The stm32F405/7 has bigger sectors than
+the stm32F103.  
+
+For high flash the F4 has 128K sectors and the
+F103 2K sectors.
+
+Rather than storing a table in each sector, since
+the F4 sectors are large, they are compiled and stored
+at the same offsets from the top of flash as the F103.
+
+Updating the tables is not completely independent since
+all the tables have to be read into the sram even though
+only one table might be updated.
+
+

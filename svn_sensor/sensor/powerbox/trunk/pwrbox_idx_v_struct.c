@@ -104,9 +104,9 @@ int pwrbox_idx_v_struct_copy(struct PWRBOXLC* p, uint32_t* ptbl)
 	int32_t n;
 	}u;
 
-p->size            = ptbl[0];		 			           /*  0 Tension: Number of elements in the following list */
-p->crc             = ptbl[PWRBOX_CRC];		 	        /*  1 Tension: CRC for tension list */
-p->version         = ptbl[PWRBOX_VERSION];		     /*  2 Version number */	
+p->size            = ptbl[0];		 			           /*  0 Pwrbox: Number of elements in the following list */
+p->crc             = ptbl[PWRBOX_CRC];		 	        /*  1 Pwrbox: CRC for tension list */
+p->version         = ptbl[PWRBOX_VERSION];		     /*  2 Pwrbox: Version number */	
 p->hbct            = ptbl[PWRBOX_HEARTBEAT_TIME_CT]; /* 3 Pwrbox1: Time (ms) between HB msg */
 
 u.ui = ptbl[PWRBOX_CAL_OFFSET1];  p->adc[0].offset = u.f; /* 4 Pwrbox: ADC reading 1 offset */

@@ -40,8 +40,6 @@ extern void* __paramflash2;	// High flash address of 2nd parameter table (.ld de
 /* Holds parameters and associated computed values and readings for each instance. */
 struct PWRBOXFUNCTION pwr_f;
 
-const uint32_t* pparamflash = {(uint32_t*)&__paramflash1};
-
 /* Base pointer adjustment for idx->struct table. */
 struct PWRBOXLC* plc;
 #define FUNCTION_TYPE_PWRBOX 45 // ########### <=============================
@@ -109,10 +107,10 @@ static int pwrbox_function_init(int n, struct PWRBOXFUNCTION* p )
 
 	/* Set pointer to table in highflash.  Base address provided by .ld file */
 // TODO routine to find latest updated table in this flash section
-	p->pparamflash = (uint32_t*)pparamflash[n];
+	p->pparamflash = (uint32_t*)&__paramflash1;
 
 	/* Copy table entries to struct in sram from high flash. */
-	ret = pwrbox_idx_v_struct_copy(&p->pwrbox, p->pparamflash);
+	ret = pwrbox_idx_v_struct_copy(&p->pwrbox, (uint32_t*)&__paramflash1);
 
 
 	/* First heartbeat time */

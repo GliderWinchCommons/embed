@@ -35,16 +35,13 @@ make clean
 # following compiles both versions from the same .c source code,
 # but with different high flash defines in the .ld files.
 #
-# VC version--
-export LDRAPPLD=ldrapp_VC.ld
-export PWRBOXNAME=pwrbox_VC
+# C8 version--64K|20K
+export LDRAPPLD=ldrapp_V8.ld
+export PWRBOXNAME=pwrbox_V8
 make
 make flash
-
-# VE versions--
-# TODO
-
-# C8 versions--
-# TODO
+cd db
+./mmtest_1F
+cd ..
 
 exit

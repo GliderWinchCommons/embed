@@ -17,61 +17,54 @@ void pwrbox_printf(struct PWRBOXLC* ppwr)
 {
 int i = 0;
 printf("PWRBOX: values: pointer = %08X\n\r",(int)ppwr);
-#if USETHISMESSYPRINTFSTUFF
 // NOTE: fmtprint is a fixed format conversion to setup at string to print %8.3f
-printf("%2d	%d	%s\n\r",   i + 0, (unsigned int)ppwr->size,     "  0 Number of elements in the following list");
-printf("%2d	%d	%s\n\r",   i + 1, (unsigned int)ppwr->crc,      "  1 Tension_1: CRC for tension list");
-printf("%2d	%d	%s\n\r",   i + 2, (unsigned int)ppwr->version,  "  2 Version number");
-printf("%2d	%d	%s\n\r",   i + 3, (unsigned int)ppwr->ad.offset,"  3 TENSION_AD7799_1_OFFSET,	Tension: AD7799 offset");
-fmtprint(i+ 4, ppwr->ad.scale * 100, "  4 TENSION_AD7799_1_SCALE,	Tension: AD7799 #1 Scale (convert to kgf)");
-fmtprint(i+ 5, ppwr->ad.tp[0].B,     "  5 TENSION_THERM1_CONST_B,	Tension: Thermistor1 param: constant B");
-fmtprint(i+ 6, ppwr->ad.tp[0].R0,    "  6 TENSION_THERM1_R_SERIES,	Tension: Thermistor1 param: Series resistor, fixed (K ohms)");
-fmtprint(i+ 7, ppwr->ad.tp[0].RS,    "  7 TENSION_THERM1_R_ROOMTMP,	Tension: Thermistor1 param: Thermistor room temp resistance (K ohms)");
-fmtprint(i+ 8, ppwr->ad.tp[0].TREF,  "  8 TENSION_THERM1_REF_TEMP,	Tension: Thermistor1 param: Reference temp for thermistor");
-fmtprint(i+ 9, ppwr->ad.tp[0].offset,"  9 TENSION_THERM1_TEMP_OFFSET,	Tension: Thermistor1 param: Thermistor temp offset correction (deg C)");
-fmtprint(i+10, ppwr->ad.tp[0].scale, " 10 TENSION_THERM1_TEMP_SCALE,	Tension: Thermistor1 param: Thermistor temp scale correction");
-fmtprint(i+11, ppwr->ad.tp[1].B,     " 11 TENSION_THERM2_CONST_B,	Tension: Thermistor2 param: constant B");
-fmtprint(i+12, ppwr->ad.tp[1].RS,    " 12 TENSION_THERM2_R_SERIES,	Tension: Thermistor2 param: Series resistor, fixed (K ohms)");
-fmtprint(i+13, ppwr->ad.tp[1].R0,    " 13 TENSION_THERM2_R_ROOMTMP,	Tension: Thermistor2 param: Thermistor room temp resistance (K ohms)");
-fmtprint(i+14, ppwr->ad.tp[1].TREF,  " 14 TENSION_THERM2_REF_TEMP,	Tension: Thermistor2 param: Thermistor temp offset correction (deg C)");
-fmtprint(i+15, ppwr->ad.tp[1].offset," 15 TENSION_THERM2_TEMP_OFFSET,	Tension: Thermistor2 param: Thermistor temp offset correction (deg C)");
-fmtprint(i+16, ppwr->ad.tp[1].scale, " 16 TENSION_THERM2_TEMP_SCALE,	Tension: Thermistor2 param: Thermistor temp scale correction");
-fmtprint(i+17, ppwr->ad.comp_t1[0],  " 17 TENSION_THERM1_LC_COEF_0,	Tension: Thermistor1 param: Load-Cell polynomial coefficient 0 (offset)");
-fmtprint(i+18, ppwr->ad.comp_t1[1],  " 18 TENSION_THERM1_LC_COEF_1,	Tension: Thermistor1 param: Load-Cell polynomial coefficient 1 (scale)");
-fmtprint(i+19, ppwr->ad.comp_t1[2],  " 19 TENSION_THERM1_LC_COEF_2,	Tension: Thermistor1 param: Load-Cell polynomial coefficient 2 (x^2)");
-fmtprint(i+20, ppwr->ad.comp_t1[3],  " 20 TENSION_THERM1_LC_COEF_3,	Tension: Thermistor1 param: Load-Cell polynomial coefficient 3 (x^3)");
-fmtprint(i+21, ppwr->ad.comp_t2[0],  " 21 TENSION_THERM2_LC_COEF_0,	Tension: Thermistor2 param: Load-Cell polynomial coefficient 0 (offset)");
-fmtprint(i+22, ppwr->ad.comp_t2[1],  " 22 TENSION_THERM2_LC_COEF_1,	Tension: Thermistor2 param: Load-Cell polynomial coefficient 1 (scale)");
-fmtprint(i+23, ppwr->ad.comp_t2[2],  " 23 TENSION_THERM2_LC_COEF_2,	Tension: Thermistor2 param: Load-Cell polynomial coefficient 2 (x^2)");
-fmtprint(i+24, ppwr->ad.comp_t2[3],  " 24 TENSION_THERM2_LC_COEF_3,	Tension: Thermistor2 param: Load-Cell polynomial coefficient 3 (x^3)");
-printf("%2d	%d	%s\n\r",i+25, (unsigned int)ppwr->hbct,          " 25 TENSION_HEARTBEAT_CT	Tension: hbct: Heart-Beat Count of time ticks between autonomous msgs");
-printf("%2d	%d	%s\n\r",i+26, (unsigned int)ppwr->drum,          " 26 TENSION_DRUM_NUMBER	Tension: drum: Drum system number for this function instance");
-printf("%2d	0x%02X	%s\n\r",i+27, (unsigned int)ppwr->f_pollbit,     " 27 TENSION_DRUM_FUNCTION_BIT	Tension: bit: f_pollbit: Drum system poll 1st byte bit for function instance");
-printf("%2d	0x%02X	%s\n\r",i+28, (unsigned int)ppwr->p_pollbit,     " 28 TENSION_DRUM_POLL_BIT	Tension: bit: p_pollbit: Drum system poll 2nd byte bit for this type of function");
-printf("%2d	0x%08X	%s\n\r",i+29, (unsigned int)ppwr->cid_ten_msg,   " 29 CANID_MSG_TENSION_a 	Tension_a: 29 CANID: can msg tension");
-printf("%2d	0x%08X	%s\n\r",i+30, (unsigned int)ppwr->cid_ten_poll,  " 30 CANID_MSG_TIME_POLL 	Tension_a: 30 CANID: MC: Time msg/Group polling");
-printf("%2d	0x%08X	%s\n\r",i+31, (unsigned int)ppwr->cid_gps_sync,  " 31 CANID_HB_TIMESYNC   	Tension_a: 31 CANID: GPS time sync distribution msg");
-printf("%2d	0x%08X	%s\n\r",i+32, (unsigned int)ppwr->cid_heartbeat, " 32 CANID_HB_TENSION_a   	Tension_a: 32 Heartbeat");
-printf("%2d	0x%08X	%s\n\r",i+33, (unsigned int)ppwr->cid_tst_ten_a, " 33 CANID_TST_TENSION_a, 	Tension_a: 33 Test");
-printf("%2d	%d	%s\n\r",i+34, (unsigned int)ppwr->iir[0].k,      " 34 TENSION_a_IIR_POLL_K 	Tension_a: IIR Filter factor: divisor sets time constant: reading for polled msg");
-printf("%2d	%d	%s\n\r",i+35, (unsigned int)ppwr->iir[0].scale,  " 35 TENSION_a_IIR_POLL_SCALE Tension_a: IIR Filter scale : upscaling (due to integer math): for polled msg");
-printf("%2d	%d	%s\n\r",i+36, (unsigned int)ppwr->iir[1].k,      " 36 TENSION_a_IIR_HB_K IR Filter factor: divisor sets time constant: reading for heart-beat msg");
-printf("%2d	%d	%s\n\r",i+37, (unsigned int)ppwr->iir[1].scale,  " 37 TENSION_a_IIR_HB_SCALE 	Tension_a: IIR Filter scale : upscaling (due to integer math): for heart-beat msg");
-printf("%2d	%d	%s\n\r",i+38, (unsigned int)ppwr->useme,         " 38 TENSION_a_USEME 	Tension_a: Function instance bits. 0x1 = first ad7799; 0x3 - two AD779");
-printf("%2d	%d	%s\n\r",i+39, (unsigned int)ppwr->iir_z_recal.k, " 39 TENSION_a_IIR_Z_RECAL_K Tension_a: IIR Filter factor: divisor sets time constant: zero recalibration");
-printf("%2d	%d	%s\n\r",i+40, (unsigned int)ppwr->iir_z_recal.scale," 40 TENSION_a_IIR_Z_RECAL_SCALE 	Tension_a: IIR Filter scale : upscaling: zero recalibration");
-printf("%2d	%d	%s\n\r",i+41, (unsigned int)ppwr->z_recal_ct,    " 41 TENSION_a_Z_RECAL_CT 	Tension_a: ADC conversion counts between zero recalibrations");
-fmtprint(i+42, ppwr->limit_hi,       " 42 TENSION_a_LIMIT_HI	Tension_a: Exceeding this limit (+) means invalid reading");
-fmtprint(i+43, ppwr->limit_lo,       " 43 TENSION_a_LIMIT_LO	Tension_a: Exceeding this limit (-) means invalid reading");
-printf("%2d	0x%08X	%s\n\r",i+44, (unsigned int)ppwr->code_CAN_filt[0], " 44 Tension: CANID 1 for setting up CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+45, (unsigned int)ppwr->code_CAN_filt[1], " 45 Tension: CANID 2 for setting up CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+46, (unsigned int)ppwr->code_CAN_filt[2], " 46 Tension: CANID 3 for setting up CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+47, (unsigned int)ppwr->code_CAN_filt[3], " 47 Tension: CANID 4 for setting up CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+48, (unsigned int)ppwr->code_CAN_filt[4], " 48 Tension: CANID 5 for setting up CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+49, (unsigned int)ppwr->code_CAN_filt[5], " 49 Tension: CANID 6 for setting up CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+50, (unsigned int)ppwr->code_CAN_filt[6], " 50 Tension: CANID 7 for setting up CAN hardware filter");
-printf("%2d	0x%08X	%s\n\r",i+51, (unsigned int)ppwr->code_CAN_filt[7], " 51 Tension: CANID 8 for setting up CAN hardware filter");
-#endif
+printf("%2d	%d	%s\n\r",i+ 0, (unsigned int)ppwr->size,     "  0 Number of elements in the following list");
+printf("%2d	%d	%s\n\r",i+ 1, (unsigned int)ppwr->crc,      "  1 Pwrbox: CRC");
+printf("%2d	%d	%s\n\r",i+ 2, (unsigned int)ppwr->version,  "  2 Pwrbox: Version number");
+printf("%2d	%d	%s\n\r",i+ 3, (unsigned int)ppwr->hbct,     "  3 Pwrbox: Heartbeat ct: ticks between sending msgs");
+
+fmtprint(i+ 4, ppwr->adc[0].offset*10000, " 4 Pwrbox: ADC 0 offset*10000");
+fmtprint(i+ 5, ppwr->adc[0].scale*10000,  " 5 Pwrbox: ADC 0 scale*10000");
+fmtprint(i+ 6, ppwr->adc[1].offset*10000, " 6 Pwrbox: ADC 1 offset*10000");
+fmtprint(i+ 7, ppwr->adc[1].scale*10000,  " 7 Pwrbox: ADC 1 scale*10000");
+fmtprint(i+ 8, ppwr->adc[2].offset*10000, " 8 Pwrbox: ADC 2 offset*10000");
+fmtprint(i+ 9, ppwr->adc[2].scale*10000,  " 9 Pwrbox: ADC 2 scale*10000");
+fmtprint(i+10, ppwr->adc[3].offset*10000, "10 Pwrbox: ADC 3 offset*10000");
+fmtprint(i+11, ppwr->adc[3].scale*10000,  "11 Pwrbox: ADC 3 scale*10000");
+fmtprint(i+12, ppwr->adc[4].offset*10000, "12 Pwrbox: ADC 4 offset*10000");
+fmtprint(i+13, ppwr->adc[4].scale*10000,  "13 Pwrbox: ADC 4 scale*10000");
+fmtprint(i+14, ppwr->adc[5].offset*10000, "14 Pwrbox: ADC 5 offset*10000");
+fmtprint(i+15, ppwr->adc[5].scale*10000,  "15 Pwrbox: ADC 5 scale*10000");
+fmtprint(i+16, ppwr->adc[6].offset*10000, "16 Pwrbox: ADC 6 offset*10000");
+fmtprint(i+17, ppwr->adc[6].scale*10000,  "17 Pwrbox: ADC 6 scale*10000");
+fmtprint(i+18, ppwr->adc[7].offset*10000, "18 Pwrbox: ADC 7 offset*10000");
+fmtprint(i+19, ppwr->adc[7].scale*10000,  "19 Pwrbox: ADC 7 scale*10000");
+
+fmtprint(i+20, ppwr->iir[0].k,     "20 Pwrbox: filter 0 factor k");
+fmtprint(i+21, ppwr->iir[0].scale, "21 Pwrbox: filter 0 scale");
+fmtprint(i+22, ppwr->iir[1].k,     "22 Pwrbox: filter 1 factor k");
+fmtprint(i+23, ppwr->iir[1].scale, "23 Pwrbox: filter 1 scale");
+fmtprint(i+24, ppwr->iir[2].k,     "24 Pwrbox: filter 2 factor k");
+fmtprint(i+25, ppwr->iir[2].scale, "25 Pwrbox: filter 2 scale");
+fmtprint(i+26, ppwr->iir[3].k,     "26 Pwrbox: filter 3 factor k");
+fmtprint(i+27, ppwr->iir[3].scale, "27 Pwrbox: filter 3 scale");
+
+printf("%2d	0x%08X	%s\n\r",i+28, (unsigned int)ppwr->cid_heartbeat,"28 Pwrbox: CANID: heartbeat");
+printf("%2d	0x%08X	%s\n\r",i+29, (unsigned int)ppwr->cid_pwr_msg,  "29 Pwrbox: CANID: poll msg");
+printf("%2d	0x%08X	%s\n\r",i+30, (unsigned int)ppwr->cid_pwr_alarm,"30 Pwrbox: CANID: alarm");
+
+printf("%2d	%d	%s\n\r",i+ 3, (unsigned int)ppwr->alarm_rate,  "31 Pwrbox: Time between alarm msgs (ms)");
+fmtprint(i+32, ppwr->alarm_thres, "32 Pwrbox: alarm msg threshold voltage");
+
+printf("%2d	0x%08X	%s\n\r",i+44, (unsigned int)ppwr->code_CAN_filt[0], " 33 CANID_HB_TIMESYNC");
+printf("%2d	0x%08X	%s\n\r",i+45, (unsigned int)ppwr->code_CAN_filt[1], " 34 CANID_MSG_TIME_POLL");
+printf("%2d	0x%08X	%s\n\r",i+46, (unsigned int)ppwr->code_CAN_filt[2], " 35 Dummy");
+printf("%2d	0x%08X	%s\n\r",i+47, (unsigned int)ppwr->code_CAN_filt[3], " 36 Dummy");
+printf("%2d	0x%08X	%s\n\r",i+48, (unsigned int)ppwr->code_CAN_filt[4], " 37 Dummy");
+printf("%2d	0x%08X	%s\n\r",i+49, (unsigned int)ppwr->code_CAN_filt[5], " 38 Dummy");
+printf("%2d	0x%08X	%s\n\r",i+50, (unsigned int)ppwr->code_CAN_filt[6], " 39 Dummy");
+printf("%2d	0x%08X	%s\n\r",i+51, (unsigned int)ppwr->code_CAN_filt[7], " 40 Dummy");
 	USART1_txint_send(); 
 	return;
 }
+

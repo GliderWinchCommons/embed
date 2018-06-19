@@ -377,7 +377,6 @@ while(1==1);
 	printf("CANID_LDR  : 0x%08X\n\r", (unsigned int)canid_ldr );
 	printf("TBL SIZE   : %d\n\r",(unsigned int)pfunc[0].canid);
 	USART1_txint_send();
-
 /* --------------------- CAN setup ---------------------------------------------------------------------- */
 	/* Configure and set MCP 2551 driver: RS pin (PD 11) on POD board */
 	can_nxp_setRS_sys(0,0); // (1st arg) 0 = high speed mode; 1 = standby mode (Sets yellow led on)

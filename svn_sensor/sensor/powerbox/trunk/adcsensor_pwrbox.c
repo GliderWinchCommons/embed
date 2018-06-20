@@ -42,6 +42,9 @@ at the end of the buffer.  The code for DMA interrupts is not used.
 #include "cic_filter_l_N2_M3.h"
 #include "IRQ_priority_powerbox.h"
 
+#include "iir_filter_l.h"
+#include "pwrbox_function.h"
+
 static void adc_accum(void);
 
 /* ADC usage on Arduino Blue Pill F103 board
@@ -354,24 +357,26 @@ void TIM4_IRQHandler_pwr(void)
 }
 
 
-/* ########################## UNDER LOW PRIORITY INTERRUPT ###################################### 
+/* ########################## UNDER MODERATE PRIORITY INTERRUPT ###################################### 
  * Accumulate ADC readings
  * This routine is entered from  'TIM4_IRQHandler' triggered by 'DMA1CH1_IRQHandler_tension'
  * ############################################################################################### */
+uint32_t adcdb0;
+uint32_t adcdb1;
+/* Execution cycles: 1650 - 1778 every 60945 */
 
 /* Circular buffer ADC readings accumulated in 1/2 of the DMA buffer */
 uint32_t adc_readings_buf[RBUFSIZE][NUMBERADCCHANNELS_PWR]; // Accumulated readings buffer
 uint32_t adc_readings_buf_idx_i = 0; // Buffer index: in
 uint32_t adc_readings_buf_idx_o = 0; // Buffer index: out	
 
-uint32_t adc_ave[NUMBERADCCHANNELS_PWR];
-uint32_t adc_ave_ct = 0;
-
 static void adc_accum(void)
 {
+
 	int i;	// FORTRAN variable, of course
 	uint32_t *pdma = &strADC1dr.in[strADC1resultptr->flg][0][0];
 	uint32_t *pbuf;
+adcdb0 = DTWTIME; // Execution time check
 
 		pbuf = &adc_readings_buf[adc_readings_buf_idx_i][0];
 
@@ -400,6 +405,15 @@ static void adc_accum(void)
 	}
 	adc_readings_buf_idx_i += 1;
 	if (adc_readings_buf_idx_i >= RBUFSIZE) adc_readings_buf_idx_i = 0;
+adcdb1 = DTWTIME - adcdb0; 
+
+
+	/* IIR filter readings for selected ADC readings execution: 515 cycles */
+	iir_filter_l_do(&pwr_f.adc_iir[0], (int32_t*)(pbuf+0) ); // Internal temp
+	iir_filter_l_do(&pwr_f.adc_iir[1], (int32_t*)(pbuf+7) ); // Internal Vref
+	iir_filter_l_do(&pwr_f.adc_iir[2], (int32_t*)(pbuf+2) ); // CAN bus (output)
+	iir_filter_l_do(&pwr_f.adc_iir[3], (int32_t*)(pbuf+4) ); // Power source (input)
+
 		
 	return;
 }

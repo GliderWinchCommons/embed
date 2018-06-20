@@ -62,9 +62,6 @@ void p1_initialization(void)
 	/* Get SAR ADC initialized and calibrated */
 	adcsensor_pwrbox_sequence();	// Initialization sequence for the adc
 
-	/* Timer interrupt callback -> ad7799_poll (in 'ad7799_filter.c'). */
-//	tim3_ten2_ptr = &ad7799_poll_rdy_ten2_cic;
-
 	/* Poll 2048/sec using this timer. ! */
 	tim3_ten2_rate = 4096;//2048;
 

@@ -14,8 +14,11 @@
 #include "pwrbox_idx_v_struct.h"
 #include "iir_filter_l.h"
 #include "queue_dbl.h"
+#include "adcsensor_pwrbox.h"
 
 #define CMD_IR_OFFSET 1000	// Command CAN function ID table offset for "R" CAN ID
+
+#define CALIBSCALEB 9	// Shift count for scaling calibration double to uint	
 
 /* Accumulating average (useful for determining offset). */
 struct ACCUMAVE
@@ -33,7 +36,7 @@ struct PWRBOXFUNCTION
 	/* The following is the sram copy of the fixed (upper flash) parameters */
 	struct PWRBOXLC pwrbox;		// Flash table copied to sram struct
 	/* The following are working/computed values */
-	struct IIRFILTERL iir_filtered[NIIR]; // IIR filters for one AD7799
+	struct IIRFILTERL adc_iir[NIIR]; // IIR filters for a few ADCs
 	struct CANHUB* phub_pwrbox;	// Pointer: CAN hub buffer
 	void* ppwrbox_idx_struct;	// Pointer to table of pointers for idx->struct 
 	void* pparamflash;		// Pointer to flash area with flat array of parameters
@@ -41,6 +44,7 @@ struct PWRBOXFUNCTION
 	uint32_t* pcanid_cmd_func_r;	// Pointer into high flash for command can id (response)
 	uint32_t hb_t;			// tim3 tick counter for next heart-beat CAN msg
 	uint32_t hbct_ticks;		// ten_a.hbct (ms) converted to timer ticks
+	uint32_t ical[NUMADCPARAM];   // Scale (for int math) calibration (from param doubles)
 };
 
 /* **************************************************************************************/
@@ -62,7 +66,6 @@ int pwrbox_function_temperature_poll(void);
 /* @brief	: Handler for thermistor-to-temperature conversion, and AD7799 temperature correction.
  * @return	: 0 = no update; 1 = temperature readings updated
  * ************************************************************************************** */
-
 
 /* Holds parameters and associated computed values and readings for each instance. */
 extern struct PWRBOXFUNCTION pwr_f;

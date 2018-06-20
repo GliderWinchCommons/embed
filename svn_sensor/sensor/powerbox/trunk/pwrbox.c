@@ -82,7 +82,7 @@ extern int errno;
 #include "libmiscstm32/DTW_counter.h"
 #include "adcsensor_pwrbox.h"
 #include "can_nxp_setRS.h"
-#include "p1_initialization.h"
+//#include "p1_initialization.h"
 #include "can_driver.h"
 #include "can_driver_filter.h"
 #include "can_msg_reset.h"
@@ -100,12 +100,12 @@ extern int errno;
 #include "tim3_ten2.h"
 #include "can_filter_print.h"
 
+/* TIM3 interrupt/tick rate */
+unsigned int tim3_ten2_rate ; // ticks per second
+
+
 // Float to ascii (since %f is not working)
 //char s[NUMBERADCTHERMISTER_TEN][32];
-
-/* Print out line count */
-static unsigned int linect;
-
 
 /* ############################################################################# */
 #define USEDEFAULTPARAMETERS	0	// 0 = Initialize sram struct with default parameters
@@ -153,7 +153,8 @@ const struct CAN_INIT msginit = { \
 #define GRNLED 13		// PC13 is one and only green led on Blue Pill
 #define GRNLEDPORT GPIOC
 const struct PINCONFIGALL pin_led1 = {(volatile u32 *)GRNLEDPORT, GRNLED, OUT_OD, MHZ_2};
-static pinconfigA()
+
+static void pinconfigA(void)
 {
 	/* Enable all the ports */
 	RCC_APB2ENR |= (0x7 << 2) | (0x1); // Enable Ports A,B,C and AFIO
@@ -265,8 +266,6 @@ extern void relocate_vector(void);
 	// Start system clocks using parameters matching CAN setup parameters for POD board
 	clockspecifysetup(canwinch_setup_F103_pod_clocks() );
 /* ---------------------- Set up pins ------------------------------------------------------------- */
-//	PODgpiopins_default();	// Set gpio port register bits for low power
-//	PODgpiopins_Config();	// Now, configure pins
 	pinconfigA();	// Enable ports and setup RED led
 
 	/* Use DTW_CYCCNT counter for startup timing */
@@ -334,7 +333,6 @@ printf("TTF: %s\n\r",ttbuf);USART1_txint_send();
 
 k1 = DTWTIME;fpformat(&ttbuf[0],ttf);k2 = (int)DTWTIME-(int)k1;
 printf("TT1: %s %10d\n\r",ttbuf, k2);USART1_txint_send();
-
 
 ttf = 0;
 
@@ -455,7 +453,13 @@ ret = 0;
 	printf("\n\rPWRBOX values\n\r");
 	pwrbox_printf(&pwr_f.pwrbox);	// Printf set of parameters
 /* ------------------------ Various and sundry ------------------------------------------------------- */
-	p1_initialization();
+	// The following replaces the hacked: p1_initialization();
+	/* Get SAR ADC initialized and calibrated */
+	adcsensor_pwrbox_sequence();	// Initialization sequence for the adc
+
+	/* Poll 2048/sec using this timer. ! */
+	tim3_ten2_rate = 4096;//2048;
+
 /* ------------------------ CAN msg loop (runs under interrupt) --------------------------------------- */
 	ret = CAN_poll_loop_init();
 	if (ret != 0)
@@ -482,20 +486,12 @@ USART1_txint_puts("\n\rTestPt 3 ADC initialized\n\r");USART1_txint_send();
 
 USART1_txint_puts("\n\rTestPt 4 tim3_ten2 initialized\n\r");USART1_txint_send();
 
-
-extern uint32_t	adc_readings_accum[2][NUMBERADCCHANNELS_PWR];
-uint32_t *padc;
-extern uint32_t adc_readings_flag;	// 0 = currently being accumulated; 1 = previously accumulated
 extern uint32_t adc_readings_buf[RBUFSIZE][NUMBERADCCHANNELS_PWR];
 extern uint32_t adc_readings_buf_idx_i;
 extern uint32_t adc_readings_buf_idx_o;
-extern struct ADCDR_PWRBOX  strADC1dr;	// Double buffer array
-uint32_t cnt_prev = strADC1dr.cnt;
-extern uint32_t adc_ovr_cnt;
-uint32_t adc_ovr_cnt_prev = adc_ovr_cnt;
-extern uint32_t dmatdiff;
-extern uint32_t adc_ave[NUMBERADCCHANNELS_PWR];
-extern uint32_t adc_ave_ct;
+
+uint32_t adc_ave[NUMBERADCCHANNELS_PWR];
+uint32_t adc_ave_ct;
 uint32_t *pave;
 uint32_t *pbuf;
 double dave[NUMBERADCCHANNELS_PWR];
@@ -503,8 +499,9 @@ double dvol[NUMBERADCCHANNELS_PWR];
 char dbuf[96];
 double dcur;
 double dGR = 1000.0/0.22;	// Reciprocal of series resistor
-double dcurcal = (dGR * 6.95) / (3338.8 - 3260.2);	// R ma/count
-uint32_t tmpcur;
+
+extern uint32_t adcdb0;
+extern uint32_t adcdb1;
 
 struct ADCCALIB
 {
@@ -527,14 +524,12 @@ struct ADCCALIB adc_ext[NUMBERADCCHANNELS_PWR] =
 	{       0,    0,     .2 }, /* Spare                      A5   */
 };
 
-
 /* Convert voltage & count to a ratio for calibration */
-double dcal[ADCEXT];
+double dcal[NUMBERADCCHANNELS_PWR];
 for ( i = 0; i < NUMBERADCCHANNELS_PWR; i++)
 {
 	dcal[i] = adc_ext[i].volts_in / adc_ext[i].ave_count;
 }
-
 
 /* --------------------- Endless Stuff ----------------------------------------------- */
 	while (1==1)
@@ -552,20 +547,34 @@ for ( i = 0; i < NUMBERADCCHANNELS_PWR; i++)
 				
 				dvol[i] = dave[i] * dcal[i]; 
 				fpformat(&dbuf[0],dvol[i]);
-				printf(" %s", dbuf);
+//				printf(" %s", dbuf);
 
-				fpformat(&dbuf[0],dave[i])	;
-				printf(" %s", dbuf);
+				fpformat(&dbuf[0],dave[i]);
+//				printf(" %s", dbuf);
 
 //				printf("%6d ", adc_ave[i]/(NUMBERSEQUENCES*adc_ave_ct));
 				adc_ave[i] = 0;					
 			}
-			dcur = (dvol[4]-dvol[3])*dGR;
-			fpformat(&dbuf[0],dcur)	;
-			printf("\n\r %s %d\n\r",dbuf, adc_ave_ct);
 
-			USART1_txint_send();
+//			dcur = (dvol[4]-dvol[3])*dGR;
+//			fpformat(&dbuf[0],dcur);
+//			printf("\n\r");
+//			printf("%s %d\n\r",dbuf, (int)adc_ave_ct);
+//			USART1_txint_send();
 			adc_ave_ct = 0;
+
+				i = 4;
+				fpformat(&dbuf[0],dave[i]);
+				printf(" %s", dbuf);
+			
+				dvol[i] = dave[i] * dcal[i]; 
+				fpformat(&dbuf[0],dvol[i]);
+				printf(" %s", dbuf);
+
+				printf(" %d",(int)pwr_f.adc_iir[3].z/((1<<CALIBSCALEB)*8) );
+printf(" %d",adcdb1);
+
+				printf("\n\r");
 		}
 
 		pave = &adc_ave[0];
@@ -586,7 +595,7 @@ for ( i = 0; i < NUMBERADCCHANNELS_PWR; i++)
 		}
 
 	/* ---------- Trigger a pass through 'CAN_poll' to poll msg handling & sending. ---------- */
-//	CAN_poll_loop_trigger();
+	CAN_poll_loop_trigger();
 	}
 	return 0;	
 }

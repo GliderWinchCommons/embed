@@ -141,14 +141,14 @@ p->cid_pwr_alarm = ptbl[PWRBOX_ALARM_R];   /* 30 CANID-low voltage alarm msg */
 p->alarm_rate   = ptbl[PWRBOX_ALARM_RATE]; /* 31 Pwrbox: Time (ms) between alarm msgs, when below threshold */
 u.ui = ptbl[PWRBOX_ALARM_THRES];  p->alarm_thres = u.f;/* 32 Voltage threshold for low volt alarm msgs  */
 
-p->code_CAN_filt[0] = ptbl[TENSION_a_CANID_HW_FILT1];		 /* 44 Tension: CAN ID 1 for setting up CAN hardware filter */
-p->code_CAN_filt[1] = ptbl[TENSION_a_CANID_HW_FILT2];		 /* 45 Tension: CAN ID 2 for setting up CAN hardware filter */
-p->code_CAN_filt[2] = ptbl[TENSION_a_CANID_HW_FILT3];		 /* 46 Tension: CAN ID 3 for setting up CAN hardware filter */
-p->code_CAN_filt[3] = ptbl[TENSION_a_CANID_HW_FILT4];		 /* 47 Tension: CAN ID 4 for setting up CAN hardware filter */
-p->code_CAN_filt[4] = ptbl[TENSION_a_CANID_HW_FILT5];		 /* 48 Tension: CAN ID 5 for setting up CAN hardware filter */
-p->code_CAN_filt[5] = ptbl[TENSION_a_CANID_HW_FILT6];		 /* 49 Tension: CAN ID 6 for setting up CAN hardware filter */
-p->code_CAN_filt[6] = ptbl[TENSION_a_CANID_HW_FILT7];		 /* 50 Tension: CAN ID 7 for setting up CAN hardware filter */
-p->code_CAN_filt[7] = ptbl[TENSION_a_CANID_HW_FILT8];		 /* 51 Tension: CAN ID 8 for setting up CAN hardware filter */
+p->code_CAN_filt[0] = ptbl[PWRBOX_CANID_HW_FILT1];		 /* 44 Tension: CAN ID 1 for setting up CAN hardware filter */
+p->code_CAN_filt[1] = ptbl[PWRBOX_CANID_HW_FILT2];		 /* 45 Tension: CAN ID 2 for setting up CAN hardware filter */
+p->code_CAN_filt[2] = ptbl[PWRBOX_CANID_HW_FILT3];		 /* 46 Tension: CAN ID 3 for setting up CAN hardware filter */
+p->code_CAN_filt[3] = ptbl[PWRBOX_CANID_HW_FILT4];		 /* 47 Tension: CAN ID 4 for setting up CAN hardware filter */
+p->code_CAN_filt[4] = ptbl[PWRBOX_CANID_HW_FILT5];		 /* 48 Tension: CAN ID 5 for setting up CAN hardware filter */
+p->code_CAN_filt[5] = ptbl[PWRBOX_CANID_HW_FILT6];		 /* 49 Tension: CAN ID 6 for setting up CAN hardware filter */
+p->code_CAN_filt[6] = ptbl[PWRBOX_CANID_HW_FILT7];		 /* 50 Tension: CAN ID 7 for setting up CAN hardware filter */
+p->code_CAN_filt[7] = ptbl[PWRBOX_CANID_HW_FILT8];		 /* 51 Tension: CAN ID 8 for setting up CAN hardware filter */
 
 return PARAM_LIST_CT_PWRBOX;
 }

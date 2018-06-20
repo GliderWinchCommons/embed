@@ -40,14 +40,14 @@ fmtprint(i+17, ppwr->adc[6].scale*10000,  "17 Pwrbox: ADC 6 scale*10000");
 fmtprint(i+18, ppwr->adc[7].offset*10000, "18 Pwrbox: ADC 7 offset*10000");
 fmtprint(i+19, ppwr->adc[7].scale*10000,  "19 Pwrbox: ADC 7 scale*10000");
 
-fmtprint(i+20, ppwr->iir[0].k,     "20 Pwrbox: filter 0 factor k");
-fmtprint(i+21, ppwr->iir[0].scale, "21 Pwrbox: filter 0 scale");
-fmtprint(i+22, ppwr->iir[1].k,     "22 Pwrbox: filter 1 factor k");
-fmtprint(i+23, ppwr->iir[1].scale, "23 Pwrbox: filter 1 scale");
-fmtprint(i+24, ppwr->iir[2].k,     "24 Pwrbox: filter 2 factor k");
-fmtprint(i+25, ppwr->iir[2].scale, "25 Pwrbox: filter 2 scale");
-fmtprint(i+26, ppwr->iir[3].k,     "26 Pwrbox: filter 3 factor k");
-fmtprint(i+27, ppwr->iir[3].scale, "27 Pwrbox: filter 3 scale");
+fmtprint(i+20, ppwr->iir[0].k,     "20 Pwrbox: filter 0 factor k: internal temp");
+fmtprint(i+21, ppwr->iir[0].scale, "21 Pwrbox: filter 0 scale   : internal temp");
+fmtprint(i+22, ppwr->iir[1].k,     "22 Pwrbox: filter 1 factor k: internal Vref");
+fmtprint(i+23, ppwr->iir[1].scale, "23 Pwrbox: filter 1 scale   : internal Vref");
+fmtprint(i+24, ppwr->iir[2].k,     "24 Pwrbox: filter 2 factor k: CAN bus V");
+fmtprint(i+25, ppwr->iir[2].scale, "25 Pwrbox: filter 2 scale   : CAN bus V");
+fmtprint(i+26, ppwr->iir[3].k,     "26 Pwrbox: filter 3 factor k: Power input V");
+fmtprint(i+27, ppwr->iir[3].scale, "27 Pwrbox: filter 3 scale   : Power input V");
 
 printf("%2d	0x%08X	%s\n\r",i+28, (unsigned int)ppwr->cid_heartbeat,"28 Pwrbox: CANID: heartbeat");
 printf("%2d	0x%08X	%s\n\r",i+29, (unsigned int)ppwr->cid_pwr_msg,  "29 Pwrbox: CANID: poll msg");
@@ -56,14 +56,14 @@ printf("%2d	0x%08X	%s\n\r",i+30, (unsigned int)ppwr->cid_pwr_alarm,"30 Pwrbox: C
 printf("%2d	%d	%s\n\r",i+ 3, (unsigned int)ppwr->alarm_rate,  "31 Pwrbox: Time between alarm msgs (ms)");
 fmtprint(i+32, ppwr->alarm_thres, "32 Pwrbox: alarm msg threshold voltage");
 
-printf("%2d	0x%08X	%s\n\r",i+44, (unsigned int)ppwr->code_CAN_filt[0], " 33 CANID_HB_TIMESYNC");
-printf("%2d	0x%08X	%s\n\r",i+45, (unsigned int)ppwr->code_CAN_filt[1], " 34 CANID_MSG_TIME_POLL");
-printf("%2d	0x%08X	%s\n\r",i+46, (unsigned int)ppwr->code_CAN_filt[2], " 35 Dummy");
-printf("%2d	0x%08X	%s\n\r",i+47, (unsigned int)ppwr->code_CAN_filt[3], " 36 Dummy");
-printf("%2d	0x%08X	%s\n\r",i+48, (unsigned int)ppwr->code_CAN_filt[4], " 37 Dummy");
-printf("%2d	0x%08X	%s\n\r",i+49, (unsigned int)ppwr->code_CAN_filt[5], " 38 Dummy");
-printf("%2d	0x%08X	%s\n\r",i+50, (unsigned int)ppwr->code_CAN_filt[6], " 39 Dummy");
-printf("%2d	0x%08X	%s\n\r",i+51, (unsigned int)ppwr->code_CAN_filt[7], " 40 Dummy");
+printf("%2d	0x%08X	%s\n\r",i+33, (unsigned int)ppwr->code_CAN_filt[0], " 33 CANID_HB_TIMESYNC");
+printf("%2d	0x%08X	%s\n\r",i+34, (unsigned int)ppwr->code_CAN_filt[1], " 34 CANID_MSG_TIME_POLLs");
+printf("%2d	0x%08X	%s\n\r",i+35, (unsigned int)ppwr->code_CAN_filt[2], " 35 Dummy");
+printf("%2d	0x%08X	%s\n\r",i+36, (unsigned int)ppwr->code_CAN_filt[3], " 36 Dummy");
+printf("%2d	0x%08X	%s\n\r",i+37, (unsigned int)ppwr->code_CAN_filt[4], " 37 Dummy");
+printf("%2d	0x%08X	%s\n\r",i+38, (unsigned int)ppwr->code_CAN_filt[5], " 38 Dummy");
+printf("%2d	0x%08X	%s\n\r",i+39, (unsigned int)ppwr->code_CAN_filt[6], " 39 Dummy");
+printf("%2d	0x%08X	%s\n\r",i+40, (unsigned int)ppwr->code_CAN_filt[7], " 40 Dummy");
 	USART1_txint_send(); 
 	return;
 }

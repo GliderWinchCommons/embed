@@ -42,7 +42,7 @@ struct PWRBOXFUNCTION pwr_f;
 
 /* Base pointer adjustment for idx->struct table. */
 struct PWRBOXLC* plc;
-#define FUNCTION_TYPE_PWRBOX 45 // ########### <=============================
+
 /* Highflash command CAN id table lookup mapping. */
 const uint32_t myfunctype = {FUNCTION_TYPE_PWRBOX};
 /* **************************************************************************************
@@ -88,18 +88,18 @@ static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct PW
  * @return	: Same as above
  * ************************************************************************************** */
 //  Declaration
-static int pwrbox_function_init(int n, struct PWRBOXFUNCTION* p );
+static int pwrbox_function_init(struct PWRBOXFUNCTION* p );
 /* *************************************************** */
 /* Init all instances of tension_a_function supported. */
 /* *************************************************** */
 int pwrbox_function_init_all(void)
 {
-	return pwrbox_function_init(0, &pwr_f);
+	return pwrbox_function_init(&pwr_f);
 }
 /* *********************************************************** */
 /* Do the initialization mess for a single function. */
 /* *********************************************************** */
-static int pwrbox_function_init(int n, struct PWRBOXFUNCTION* p )
+static int pwrbox_function_init(struct PWRBOXFUNCTION* p )
 {
 	int ret;
 	int ret2;
@@ -111,14 +111,27 @@ static int pwrbox_function_init(int n, struct PWRBOXFUNCTION* p )
 
 	/* Copy table entries to struct in sram from high flash. */
 	ret = pwrbox_idx_v_struct_copy(&p->pwrbox, (uint32_t*)&__paramflash1);
+	
+	/* Convert parameters stated as floats to uints, scaled */
+	for (i = 0; i < NUMADCPARAM; i++)
+	{
+		p->ical[i] = (p->pwrbox.adc[i].scale * (1<<CALIBSCALEB)); // Float to uinit
+	}
 
+	/* Set IIR filters with parameter pointer */
+	
+	for (i = 0; i < NIIR; i++)
+	{
+		p->adc_iir[i].pprm = &p->pwrbox.iir[i]; // Parameter pointer
+		p->adc_iir[i].sw = 0;	// Init switch
+	}
 
 	/* First heartbeat time */
 	// Convert heartbeat time (ms) to timer ticks (recompute for online update)
 	p->hbct_ticks = (p->pwrbox.hbct * tim3_ten2_rate) / 1000;
 	p->hb_t = tim3_ten2_ticks + p->hbct_ticks;	
 
-	/* Add this function (tension_a) to the "hub-server" msg distribution. */
+	/* Add this function to the "hub-server" msg distribution. */
 	p->phub_pwrbox = can_hub_add_func();	// Set up port/connection to can_hub
 	if (p->phub_pwrbox == NULL) return -997;	// Failed
 
@@ -159,26 +172,7 @@ static int pwrbox_function_init(int n, struct PWRBOXFUNCTION* p )
 
 	return -998;	// Argh! Table size reasonable, but didn't find it.
 }
-/* **************************************************************************************
- * static float tension_a_scalereading(void);
- * @brief	: Apply offset, scale and corrections to tension_a, last reading
- * return	: float with value
- * ************************************************************************************** */
-#ifdef USECICCALIBRATIONSEQUENCE
-static float pwrbox_scalereading(struct PWRBOXFUNCTION* p)
-{
-	int ntmp1;
-	long long lltmp;
-	float scaled1;
 
-	lltmp = cic[0][0].llout_save;
-	ntmp1 = lltmp/(1<<22);
-	ntmp1 += p->pwr.ad.offset * 4;
-	scaled1 = ntmp1;
-	scaled1 *= p->pwr.ad.scale;
-	return scaled1;
-}
-#endif
 /* **************************************************************************************
  * double iir_filtered_calib(struct PWRBOXFUNCTION* p, uint32_t n); 
  * @brief	: Convert integer IIR filtered value to offset & scaled double
@@ -214,82 +208,7 @@ double iir_filtered_calib(struct PWRBOXFUNCTION* p, uint32_t n)
 		p->status_byte = 0;	// Turn (all) flags off
 	}
 
-	/* Check reading against limits. */
-	if (dcal > p->pwr.limit_hi)
-	{
-		p->status_byte |= STATUS_TENSION_BIT_EXCEEDHI;
-		return dcal;
-	}
-	if (dcal < p->pwr.limit_lo)
-	{
-		p->status_byte |= STATUS_TENSION_BIT_EXCEEDLO;
-		return dcal;
-	}
 	return dcal;		// Return scaled value
-}
-#endif
-/* **************************************************************************************
- * int pwrbox_function_temperature_poll(void);
- * @brief	: Handler for thermistor-to-temperature conversion, and AD7799 temperature correction.
- * @return	: 0 = no update; 1 = temperature readings updated
- * ************************************************************************************** */
-/* *** NOTE ***
-   This routine is called from 'main' since the thermistor formulas use functions 
-   with doubles.
-*/
-/* Thermistor conversion things. */
-static int adc_temp_flag_prev = 0; // Thermistor readings ready counter
-
-double dscale = (1.0 / (1 << 18));	// ADC filtering scale factor (reciprocal multiply)
-
-void toggle_1led(int led);	// Routine is in 'tension.c'
-
-/* ADC SEQUENCE: ADC of thermistors
-0 PA 3 ADC123-IN3	Thermistor on 32 KHz xtal..Thermistor: AD7799 #2
-1 PC 0 ADC12 -IN10	Accelerometer X....Thermistor: load-cell #1
-2 PC 1 ADC12 -IN11	Accelerometer Y....Thermistor: load-cell #2
-3 PC 2 ADC12 -IN12	Accelerometer Z....Thermistor: AD7799 #1
-*/
-#ifdef WEWILLBEUSINGTEMPERATURE
-int pwrbox_function_temperature_poll(void)
-{
-	int i,j;	// One would expect FORTRAN, but alas it is only C
-	double therm[NUMBERADCTHERMISTER_TEN];	// Floating pt of thermistors readings
-
-	/* Check if 'adcsensor_tension' has a new, filtered, reading for us. */
-	if (adc_temp_flag[0] != adc_temp_flag_prev)
-	{ // Here, a new set of thermistor readings are ready
-		j = (0x1 & adc_temp_flag_prev);		// Get current double buffer index
-		adc_temp_flag_prev = adc_temp_flag[0];	// Reset flag
-
-		/* Convert filtered long long to double. */
-		for (i = 0; i < NUMBERADCTHERMISTER_TEN; i++)
-		{	
-			therm[i] = adc_readings_cic[j][i]; // Convert to double
-			therm[i] = therm[i] * dscale;	   // Scale to 0-4095
-		}
-
-		/* Convert ADC readings into uncalibrated degrees Centigrade. */
-		/* Then, apply calibration to temperature. */
-		j = 0;	// Index input of readings
-		for (i = 0; i < NUMPWRBOXFUNCTIONS; i++)
-		{ 
-			ten_f[i].thrm[0] = therm[j];	// Raw thermistor ADC reading
-			ten_f[i].degX[0] = temp_calc_param_dbl(therm[j++], &ten_f[i].pwr.ad.tp[0]); // Apply formula
-			ten_f[i].degC[0] = compensation_dbl(&ten_f[i].pwr.ad.comp_t1[0], 4, ten_f[i].degX[0]);// Adjustment
-
-			ten_f[i].thrm[1] = therm[j];
-			ten_f[i].degX[1] = temp_calc_param_dbl(therm[j++], &ten_f[i].pwr.ad.tp[1]);
-			ten_f[i].degC[1] = compensation_dbl(&ten_f[i].pwr.ad.comp_t2[0], 4, ten_f[i].degX[1]);
-		}
-
-		// TODO compute AD7799 temperature offset/scale factors
-		// Timing: End of main's loop trigger will pick these up before this recomputes.
-
-//toggle_1led(LEDGREEN2);	// Let the puzzled programmer know the ADC stuff is alive
-		return 1;	// Let 'main' know there was an update
-	}
-	return 0;	// No update
 }
 #endif
 /* ######################################################################################

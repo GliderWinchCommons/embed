@@ -131,6 +131,10 @@ static int pwrbox_function_init(struct PWRBOXFUNCTION* p )
 	p->hbct_ticks = (p->pwrbox.hbct * tim3_ten2_rate) / 1000;
 	p->hb_t = tim3_ten2_ticks + p->hbct_ticks;	
 
+	// Convert alarm time (ms) to timer ticks (recompute for online update)
+	p->alarmct_ticks = (p->pwrbox.alarmct * tim3_ten2_rate) / 1000;
+	p->alarm_t = tim3_ten2_ticks;	
+
 	/* Add this function to the "hub-server" msg distribution. */
 	p->phub_pwrbox = can_hub_add_func();	// Set up port/connection to can_hub
 	if (p->phub_pwrbox == NULL) return -997;	// Failed
@@ -174,43 +178,39 @@ static int pwrbox_function_init(struct PWRBOXFUNCTION* p )
 }
 
 /* **************************************************************************************
- * double iir_filtered_calib(struct PWRBOXFUNCTION* p, uint32_t n); 
- * @brief	: Convert integer IIR filtered value to offset & scaled double
- * @param	: p = pointer to struct with "everything" for this AD7799
- * @return	: offset & scaled
+ * static void filtered_calibrate(struct PWRBOXFUNCTION *p, int i, int j);
+ * @brief	: Calibration
+ * @param	: i = index of ADC reading
+ * @param	: j = index of iir filter associated with ADC (see adcsensor_pwrbox.c)
+ * @param	: p = pointer to struct with "everything" for this pwrbox function instance
  * ************************************************************************************** */
-#ifdef IMPLMENTIIRFILTEREDCALIBRATION
-double iir_filtered_calib(struct PWRBOXFUNCTION* p, uint32_t n)
+static void filtered_calibrate(struct PWRBOXFUNCTION *p, int i, int j)
 {
-	double d;
-	double s;
-	double dcal;
+	/* Calibrate iir filtered reading--beware indices */
+	p->diir[i]  = p->adc_iir[j].z;   // Convert filtered reading to double
+	p->diir[i] /= (NUMBERSEQUENCES*p->adc_iir[j].pprm->scale); // De-scale
+	p->diir[i]  = p->diir[i] * p->pwrbox.adc[i].scale;    // Apply calibration
+	p->fiir[i]  = p->diir[i];	// Convert to float
 
-	/* Scale filter Z^-1 accumulator. */
-	int32_t tmp = p->iir_filtered[n].z / p->iir_filtered[n].pprm->scale;
-	
-	/* Apply offset. */
-	tmp += p->pwr.ad.offset;
-	
-	/* Convert to double and scale. */
-	d = tmp; 		// Convert scaled, filtered int to double
-	s = p->pwr.ad.scale; 	// Convert float to double
-	dcal = d * s;		// Calibrated reading
-	p->dcalib_lgr = dcal;	// Save calibrated last good reading
-	p->fcalib_lgr = p->dcalib_lgr; // Save float version for CAN bus
-
-	/* Set up status byte for reading. */
-	p->status_byte = STATUS_TENSION_BIT_NONEW; // Show no new readings
-	
-	/* New readings flag. */
-	if (p->readingsct != p->readingsct_lastpoll)
-	{ // Here, there was a new reading since last poll
-		p->status_byte = 0;	// Turn (all) flags off
-	}
-
-	return dcal;		// Return scaled value
+	/* Convert to integer: volts * 10 */
+//	p->dvolbyte[i] = ((p->diir[i] + 0.05)* 10.0);
+	return;
 }
-#endif
+/* **************************************************************************************
+ * static void unfiltered_calibrate(struct PWRBOXFUNCTION *p, int i);
+ * @brief	: Calibration
+ * @param	: i = index of ADC reading in accumulated/unfiltered buffer
+ * @param	: p = pointer to struct with "everything" for this pwrbox function instance
+ * ************************************************************************************** */
+static void unfiltered_calibrate(struct PWRBOXFUNCTION *p, int i)
+{
+	/* Calibrate iir filtered reading--beware indices */
+	p->dunf[i]  = p->iunf[i];        // Convert filtered reading to double
+	p->dunf[i] /= (NUMBERSEQUENCES); // De-scale
+	p->dunf[i]  = p->dunf[i] * p->pwrbox.adc[i].scale;  // Apply calibration
+	p->funf[i]  = p->dunf[i];	      // Convert to float
+	return;
+}
 /* ######################################################################################
  * int pwrbox_function_poll(struct CANRCVBUF* pcan, struct PWRBOXFUNCTION* p);
  * @brief	: Handle incoming CAN msgs ### under interrupt ###
@@ -234,39 +234,53 @@ int pwrbox_function_poll(struct CANRCVBUF* pcan, struct PWRBOXFUNCTION* p)
 	/* Check for need to send  heart-beat. */
 	 if ( ( (int)tim3_ten2_ticks - (int)p->hb_t) > 0  )	// Time to send heart-beat?
 	{ // Here, yes.
-//$		iir_filtered_calib(p, 1);	// Slow (long time constant) filter the reading
-//$		ui.ft = p->fcalib_lgr;		// Float version of calibrated last good reading
+
+		filtered_calibrate(p, ADCX_INPWR, IIRX_INPWR); // Input power voltage
+		ui.ft = p->fiir[ADCX_INPWR];
+//		p->dvolbyte[ADCX_INPWR] = ((p->diir[ADCX_INPWR] + 0.05)* 10.0);
 		
 		/* Send heartbeat and compute next hearbeat time count. */
 		//      Args:  CAN id, status of reading, reading pointer instance pointer
-//$		send_can_msg(p->pwrbox.cid_heartbeat, p->status_byte, &ui.ui, p); 
-//$		ret = 1;
+		send_can_msg(p->pwrbox.cid_heartbeat, p->status_byte, &ui.ui, p); 
+	}
+
+	/* Check if a low input voltage alarm msg should be sent */
+	unfiltered_calibrate(p, ADCX_INPWR); // Calibrate latest accumulated reading
+	ui.ft = p->funf[ADCX_INPWR];         // In case used later
+	if (ui.ft < p->pwrbox.alarm_thres)   // Below threshold?
+	{ // Yes
+		if ( ( (int)tim3_ten2_ticks - (int)p->alarm_t) > 0  )	// Time to send alarm?
+		{ // Yes, time to send
+			send_can_msg(p->pwrbox.cid_pwr_alarm, p->status_byte, &ui.ui, p);
+			p->alarm_t = tim3_ten2_ticks + p->alarmct_ticks;	 // Reset heart-beat time duration each time msg sent					
+		}
+	}
+	else
+	{ // Not below threshold. Update so first below threshold case goes out immediately
+		p->alarm_t = tim3_ten2_ticks; // Prevent wrap-around
 	}
 
 	/* Check if any incoming msgs. */
 	if (pcan == NULL) return ret;
 
 	/* Check for group poll, and send msg if it is for us. */
-//$	if (pcan->id == p->pwr.cid_ten_poll) // Correct ID?
-//if (pcan->id == p->pwr.cid_gps_sync) // ##### TEST #########
-if (pcan->id == 0x00400000) // ##### TEST #########
+	if (pcan->id == p->pwrbox.code_CAN_filt[0]) // Time sync msg (0x00400000)
 	{ // Here, group poll msg.  Check if poll and function bits are for us
-//$		if ( ((pcan->cd.uc[0] & p->pwr.p_pollbit) != 0) && \
-		     ((pcan->cd.uc[1] & p->pwr.f_pollbit) != 0) )
 		{ // Here, yes.  Send our precious msg.
-			/* Send tension msg and re-compute next hearbeat time count. */
+//		filtered_calibrate(p, ADCX_INPWR, IIRX_INPWR); // Input power voltage
+//		ui.ft = p->fiir[ADCX_INPWR];
 			//      Args:  CAN id, status of reading, reading pointer instance pointer
-//			send_can_msg(p->pwrbox.cid_pwr_msg, p->status_byte, &ui.ui, p); 
-			return 1;
+			send_can_msg(p->pwrbox.cid_pwr_msg, p->status_byte, &ui.ui, p); 
+			return 0;
 		}
 	}
 	
 	/* Check for function command. */
-	if (pcan->id == *p->pcanid_cmd_func_i)
-	{ // Here, we have a command msg for this function instance. 
-		cmd_code_dispatch(pcan, p); // Handle and send as necessary
-		return 0;	// No msgs passed to other ports
-	}
+//	if (pcan->id == *p->pcanid_cmd_func_i)
+//	{ // Here, we have a command msg for this function instance. 
+//		cmd_code_dispatch(pcan, p); // Handle and send as necessary
+//		return 0;	// No msgs passed to other ports
+//	}
 	return ret;
 }
 

@@ -138,7 +138,7 @@ p->iir[3].scale = ptbl[PWRBOX_IIR3_SCALE]; /* 27 Pwrbox: IIR4 Filter scale  */
 p->cid_heartbeat = ptbl[PWRBOX_HB_R];		 /* 28 CANID-Heartbeat msg     */
 p->cid_pwr_msg   = ptbl[PWRBOX_MSG_R];		 /* 29 CANID-voltage msg       */
 p->cid_pwr_alarm = ptbl[PWRBOX_ALARM_R];   /* 30 CANID-low voltage alarm msg */
-p->alarm_rate   = ptbl[PWRBOX_ALARM_RATE]; /* 31 Pwrbox: Time (ms) between alarm msgs, when below threshold */
+p->alarmct       = ptbl[PWRBOX_ALARM_RATE]; /* 31 Pwrbox: Time (ms) between alarm msgs, when below threshold */
 u.ui = ptbl[PWRBOX_ALARM_THRES];  p->alarm_thres = u.f;/* 32 Voltage threshold for low volt alarm msgs  */
 
 p->code_CAN_filt[0] = ptbl[PWRBOX_CANID_HW_FILT1];		 /* 44 Tension: CAN ID 1 for setting up CAN hardware filter */

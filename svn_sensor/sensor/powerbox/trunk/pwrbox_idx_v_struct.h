@@ -11,7 +11,7 @@ AD7799 on the POD board).
 
 #include <stdint.h>
 #include "common_can.h"
-#include "iir_filter_l.h"
+#include "iir_filter_lx.h"
 
 #ifndef __PWRBOX_IDX_V_STRUCT
 #define __PWRBOX_IDX_V_STRUCT
@@ -61,7 +61,7 @@ struct ADCCALPWRBOX
 	uint32_t cid_heartbeat; // CANID-Heartbeat msg
 	uint32_t cid_pwr_msg;   // CANID-voltage msg
 	uint32_t cid_pwr_alarm; // CANID-low voltage alarm msg
-   uint32_t alarm_rate;    // Time between alarm msgs (ms)
+   uint32_t alarmct;       // Time between alarm msgs (ms)
    float  alarm_thres;     // Voltage threshold for low volt alarm msgs    
 	uint32_t code_CAN_filt[CANFILTMAX];// List of CAN ID's for setting up hw filter
  };

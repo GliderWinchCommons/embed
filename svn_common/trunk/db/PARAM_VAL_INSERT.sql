@@ -52,28 +52,28 @@ INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_HEARTBEAT_TIME_CT','1000',  'PWR
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET1'     ,'0.0'        ,'PWRBOX',' 4 Pwrbox1: ADC reading 1 offset na');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE1'      ,'0.200000000','PWRBOX',' 5 Pwrbox1: ADC reading 1  scale internal Temp');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET2'     ,'0.0'        ,'PWRBOX',' 6 Pwrbox1: ADC reading 2 offset na');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE2'      ,'0.002119649','PWRBOX',' 7 Pwrbox1: ADC reading 2  scale 5v ');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE2'      ,'0.002272421','PWRBOX',' 7 Pwrbox1: ADC reading 2  scale 5v ');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET3'     ,'0.0'        ,'PWRBOX',' 8 Pwrbox1: ADC reading 3 offset na');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE3'      ,'0.002272421','PWRBOX',' 9 Pwrbox1: ADC reading 3  scale CAN bus');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE3'      ,'0.003934033','PWRBOX',' 9 Pwrbox1: ADC reading 3  scale CAN bus');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET4'     ,'0.0'        ,'PWRBOX','10 Pwrbox1: ADC reading 4 offset na');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE4'      ,'0.003932551','PWRBOX','11 Pwrbox1: ADC reading 4  scale diode');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE4'      ,'0.003982408','PWRBOX','11 Pwrbox1: ADC reading 4  scale diode');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET5'     ,'0.0'        ,'PWRBOX','12 Pwrbox1: ADC reading 5 offset na');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE5'      ,'0.004029455','PWRBOX','13 Pwrbox1: ADC reading 5  scale input');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE5'      ,'0.003974613','PWRBOX','13 Pwrbox1: ADC reading 5  scale input power');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET6'     ,'0.0'        ,'PWRBOX','14 Pwrbox1: ADC reading 6 offset spare');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE6'      ,'0.003977732','PWRBOX','15 Pwrbox1: ADC reading 6  scale spare');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET7'     ,'0.0'        ,'PWRBOX','16 Pwrbox1: ADC reading 7 offset spare');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE7'      ,'0.200000000','PWRBOX','17 Pwrbox1: ADC reading 7  scale spare');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET8'     ,'0.0'        ,'PWRBOX','18 Pwrbox1: ADC reading 8 offset na');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE8'      ,'0.200000000','PWRBOX','19 Pwrbox1: ADC reading 8  scale internal Vref');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE8'      ,'0.001947059','PWRBOX','19 Pwrbox1: ADC reading 8  scale internal Vref');
 
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR0_K'     ,'10'  ,'PWRBOX','20 Pwrbox1: IIR1 Filter factor: internal temp');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR0_SCALE' ,'1'   ,'PWRBOX','21 Pwrbox1: IIR1 Filter scale : internal temp');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR0_K'     ,'10'  ,'PWRBOX','20 Pwrbox1: IIR1 Filter factor: 5v regulator');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR0_SCALE' ,'1'   ,'PWRBOX','21 Pwrbox1: IIR1 Filter scale : 5v regulator');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR1_K'     ,'10'  ,'PWRBOX','22 Pwrbox1: IIR2 Filter factor: internal Vref');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR1_SCALE' ,'1'   ,'PWRBOX','23 Pwrbox1: IIR2 Filter scale : internal Vref');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR2_K'     ,'10'  ,'PWRBOX','24 Pwrbox1: IIR3 Filter factor: CAN bus volts');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR2_SCALE' ,'1'   ,'PWRBOX','25 Pwrbox1: IIR3 Filter scale : CAN bus volts');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR3_K'     ,'10'  ,'PWRBOX','26 Pwrbox1: IIR4 Filter factor: Power source volts');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR3_SCALE' ,'1'   ,'PWRBOX','27 Pwrbox1: IIR4 Filter scale : Power source volts');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR3_K'     ,'128'  ,'PWRBOX','26 Pwrbox1: IIR4 Filter factor: Power source volts');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR3_SCALE' ,'2'   ,'PWRBOX','27 Pwrbox1: IIR4 Filter scale : Power source volts');
 
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_HB_R'    ,'CANID_HB_PWRBOX1' ,'PWRBOX','28 Pwrbox: CANID: Heartbeat: input voltage, bus voltage');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_MSG_R'   ,'CANID_MSG_PWRBOX1','PWRBOX','29 Pwrbox: CANID: Msg: input voltage, bus voltage ');
@@ -82,14 +82,14 @@ INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_ALARM_RATE'  ,'50'           ,'P
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_ALARM_THRES' ,'10.5'         ,'PWRBOX','32 Pwrbox: Voltage threshold for alarm msgs');
 
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT1','CANID_HB_TIMESYNC'  ,'PWRBOX','33 EPS_1: CANID 1: GPS time sync distribution msg');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT2','CANID_MSG_TIME_POLL','PWRBOX','34 MC: CANID 2:Time msg/Group polling');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT3','CANID_DUMMY'        ,'PWRBOX','35 Pwrbox1: CANID 3: command');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT4','CANID_DUMMY'        ,'PWRBOX','36 Pwrbox1: CANID 4 add CAN hw filter for incoming msg');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT5','CANID_DUMMY'        ,'PWRBOX','37 Pwrbox1: CANID 5 add CAN hw filter for incoming msg');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT6','CANID_DUMMY'        ,'PWRBOX','38 Pwrbox1: CANID 6 add CAN hw filter for incoming msg');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT7','CANID_DUMMY'        ,'PWRBOX','39 Pwrbox1: CANID 7 add CAN hw filter for incoming msg');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT8','CANID_DUMMY'        ,'PWRBOX','40 Pwrbox1: CANID 8 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT1','CANID_HB_TIMESYNC'  ,'PWRBOX','33 Pwrbox1: CANID 0: GPS time sync distribution msg');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT2','CANID_MSG_TIME_POLL','PWRBOX','34 Pwrbox1: CANID 1: Time msg/Group polling');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT3','CANID_DUMMY'        ,'PWRBOX','35 Pwrbox1: CANID 2 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT4','CANID_DUMMY'        ,'PWRBOX','36 Pwrbox1: CANID 3 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT5','CANID_DUMMY'        ,'PWRBOX','37 Pwrbox1: CANID 4 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT6','CANID_DUMMY'        ,'PWRBOX','38 Pwrbox1: CANID 5 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT7','CANID_DUMMY'        ,'PWRBOX','39 Pwrbox1: CANID 6 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT8','CANID_DUMMY'        ,'PWRBOX','40 Pwrbox1: CANID 7 add CAN hw filter for incoming msg');
 
 --
 -- ===========================================================================================================================================================================

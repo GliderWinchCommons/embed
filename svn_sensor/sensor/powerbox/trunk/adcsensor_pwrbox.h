@@ -27,6 +27,23 @@
 #define NUMBERSEQUENCES		32	   // Number of scan cycle sequences in 1/2 of the DMA buffer
 #define RBUFSIZE 64	// Number of buffers
 
+/* Indices: Readings arrays */
+#define ADCX_IVREF	7	// Index in readings array: Internal Vref
+#define ADCX_SPAR1	6	// Index in readings array: spare
+#define ADCX_SPAR2	5	// Index in readings array: spare
+#define ADCX_INPWR	4	// Index in readings array: Input power voltage
+#define ADCX_DIODE	3	// Index in readings array: Diode
+#define ADCX_CANVB	2	// Index in readings array: CAN bus voltage
+#define ADCX_5VREG	1	// Index in readings array: 5v regulator
+#define ADCX_ITEMP	0	// Index in readings array: Internal temp
+
+/* Indices: IIR filter array */
+#define IIRX_INPWR	3	// Index in iir filter array: Input power voltage
+#define IIRX_CANBV	2	// Index in iir filter array: CAN bus voltage voltage
+#define IIRX_IVREF	1	// Index in iir filter array: Internal Vref
+#define IIRX_5VREG	0	// Index in iir filter array: 5v regulator
+
+
 /* input-(3)---diode-(2)--resistor-(1)--CAN bus pwr--switcher:5V--(0) */
 
 /* ADC usage on Arduino Blue Pill F103 board

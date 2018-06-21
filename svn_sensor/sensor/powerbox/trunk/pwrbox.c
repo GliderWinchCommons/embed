@@ -95,17 +95,16 @@ extern int errno;
 #include "../../../../svn_common/trunk/common_highflash.h"
 
 #include "fmtprint.h"
-#include "iir_filter_l.h"
+#include "iir_filter_lx.h"
 #include "pwrbox_idx_v_struct.h"
 #include "tim3_ten2.h"
 #include "can_filter_print.h"
 
+/* Prototypes */
+static void filtered_calibrate(int i, int j);
+
 /* TIM3 interrupt/tick rate */
 unsigned int tim3_ten2_rate ; // ticks per second
-
-
-// Float to ascii (since %f is not working)
-//char s[NUMBERADCTHERMISTER_TEN][32];
 
 /* ############################################################################# */
 #define USEDEFAULTPARAMETERS	0	// 0 = Initialize sram struct with default parameters
@@ -473,17 +472,19 @@ USART1_txint_puts("\n\rTestPt 1 p1_initialization and CAN init\n\r");USART1_txin
 	can_driver_enable_interrupts();	// Enable CAN interrupts
 
 USART1_txint_puts("\n\rTestPt 2 CAN interrupts now enabled\n\r");USART1_txint_send();toggle_1led();
+
 /* ---------------- Some vars associated with endless loop ------------------------------------------- */
-#define FLASHTIMEINC (64000000/1)	   // Green on-board LED flash tick duration
+#define FLASHTIMEINC (64000000/2)	   // Green on-board LED flash tick duration
 u32 ledtime = DTWTIME + FLASHTIMEINC;	// Init the first timeout
 
 /* --------------- ADC startup ----------------------------------------------------------------------- */
 	adcsensor_pwrbox_sequence();
-
 USART1_txint_puts("\n\rTestPt 3 ADC initialized\n\r");USART1_txint_send();
+
 /* --------------- Start TIM3 CH1 and CH2 interrupts ------------------------------------------------- */
 	tim3_ten2_init(pclk1_freq/2048);	// 64E6/2048
 
+/* --------------- Local things for endless loop tinkering ------------------------------------------- */
 USART1_txint_puts("\n\rTestPt 4 tim3_ten2 initialized\n\r");USART1_txint_send();
 
 extern uint32_t adc_readings_buf[RBUFSIZE][NUMBERADCCHANNELS_PWR];
@@ -496,11 +497,12 @@ uint32_t *pave;
 uint32_t *pbuf;
 double dave[NUMBERADCCHANNELS_PWR];
 double dvol[NUMBERADCCHANNELS_PWR];
+double diir[NUMBERADCCHANNELS_PWR];
+uint8_t dvolbyte[NUMBERADCCHANNELS_PWR];
 char dbuf[96];
 double dcur;
 double dGR = 1000.0/0.22;	// Reciprocal of series resistor
 
-extern uint32_t adcdb0;
 extern uint32_t adcdb1;
 
 struct ADCCALIB
@@ -510,8 +512,11 @@ struct ADCCALIB
 	double ave_count;
 
 };
+
 #define ADCEXT 6	// Number of external ADC inputs
 #define ADCINT 2	// Number of internal ADC inputs
+
+/* Local ADC calibration for quick testing */
 struct ADCCALIB adc_ext[NUMBERADCCHANNELS_PWR] =
 {
 	{    0   ,    0,      1 }, /* Internal temperature       IN16 */
@@ -528,7 +533,8 @@ struct ADCCALIB adc_ext[NUMBERADCCHANNELS_PWR] =
 double dcal[NUMBERADCCHANNELS_PWR];
 for ( i = 0; i < NUMBERADCCHANNELS_PWR; i++)
 {
-	dcal[i] = adc_ext[i].volts_in / adc_ext[i].ave_count;
+//	dcal[i] = adc_ext[i].volts_in / adc_ext[i].ave_count; // Local definition
+   dcal[i] = pwr_f.pwrbox.adc[i].scale; // Flashed parameter
 }
 
 /* --------------------- Endless Stuff ----------------------------------------------- */
@@ -552,7 +558,7 @@ for ( i = 0; i < NUMBERADCCHANNELS_PWR; i++)
 				fpformat(&dbuf[0],dave[i]);
 //				printf(" %s", dbuf);
 
-//				printf("%6d ", adc_ave[i]/(NUMBERSEQUENCES*adc_ave_ct));
+				printf("%6d ", adc_ave[i]/(NUMBERSEQUENCES*adc_ave_ct));
 				adc_ave[i] = 0;					
 			}
 
@@ -563,20 +569,16 @@ for ( i = 0; i < NUMBERADCCHANNELS_PWR; i++)
 //			USART1_txint_send();
 			adc_ave_ct = 0;
 
-				i = 4;
-				fpformat(&dbuf[0],dave[i]);
-				printf(" %s", dbuf);
-			
-				dvol[i] = dave[i] * dcal[i]; 
-				fpformat(&dbuf[0],dvol[i]);
-				printf(" %s", dbuf);
-
-				printf(" %d",(int)pwr_f.adc_iir[3].z/((1<<CALIBSCALEB)*8) );
-printf(" %d",adcdb1);
-
-				printf("\n\r");
+			/* Calibrated iir filtered reading--beware indices */
+			filtered_calibrate(4, 3); // Input power
+			filtered_calibrate(2, 2); // CAN bus
+			filtered_calibrate(7, 1); // Vref
+			filtered_calibrate(1, 0); // 5V regulator
+	
+			printf("\n\r"); // Last but not least
 		}
 
+		/* Further accumulate accumlated readings until time to printf */
 		pave = &adc_ave[0];
 		while (adc_readings_buf_idx_o != adc_readings_buf_idx_i)
 		{
@@ -598,6 +600,28 @@ printf(" %d",adcdb1);
 	CAN_poll_loop_trigger();
 	}
 	return 0;	
+}
+/* **************************************************************************************
+ * static void filtered_calibrate(int i, int j);
+ * @brief	: Calibration
+ * @param	: i = index of ADC reading
+ * @param	: j = index of iir filter associated with ADC (see adcsensor_pwrbox.c)
+ * ************************************************************************************** */
+static void filtered_calibrate(int i, int j)
+{
+	char dbut[32];
+	struct PWRBOXFUNCTION *p = &pwr_f;
+
+			/* Calibrate iir filtered reading--beware indices */
+				p->diir[i]  = p->adc_iir[j].z;   // Convert filtered reading to double
+				p->diir[i] /= (NUMBERSEQUENCES*p->adc_iir[j].pprm->scale); // De-scale
+				p->diir[i]  = p->diir[i] * p->pwrbox.adc[i].scale;    // Apply calibration
+				fpformat(&dbut[0],p->diir[i]);printf(" %s", dbut); // print
+
+				/* Convert to integer: volts * 10 */
+				p->dvolbyte[i] = ((p->diir[i] + 0.05)* 10.0);
+				printf("% 5d", p->dvolbyte[i]);
+	return;
 }
 
 

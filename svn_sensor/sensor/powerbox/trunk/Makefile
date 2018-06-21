@@ -121,6 +121,7 @@ OBJS	+= can_filter_print.o
 OBJS	+= can_driver_errors_printf.o
 OBJS	+= cmd_code_dispatch.o
 OBJS	+= readings_dispatch.o
+OBJS	+= iir_filter_lx.o
 
 
 # The following two are 'export'ed in .arm_tools via .profile

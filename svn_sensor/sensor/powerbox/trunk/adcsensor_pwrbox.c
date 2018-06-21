@@ -42,7 +42,7 @@ at the end of the buffer.  The code for DMA interrupts is not used.
 #include "cic_filter_l_N2_M3.h"
 #include "IRQ_priority_powerbox.h"
 
-#include "iir_filter_l.h"
+#include "iir_filter_lx.h"
 #include "pwrbox_function.h"
 
 static void adc_accum(void);
@@ -372,12 +372,13 @@ uint32_t adc_readings_buf_idx_o = 0; // Buffer index: out
 
 static void adc_accum(void)
 {
+adcdb0 = DTWTIME; // Execution time check
 
 	int i;	// FORTRAN variable, of course
 	uint32_t *pdma = &strADC1dr.in[strADC1resultptr->flg][0][0];
 	uint32_t *pbuf;
-adcdb0 = DTWTIME; // Execution time check
-
+	uint32_t *punf;
+	
 		pbuf = &adc_readings_buf[adc_readings_buf_idx_i][0];
 
 		*(pbuf+0) = *(pdma+0);
@@ -403,17 +404,46 @@ adcdb0 = DTWTIME; // Execution time check
 		*(pbuf+7) += *(pdma+7);
 		pdma += NUMBERADCCHANNELS_PWR;
 	}
+
+	/* Copy accumulated readings to a single buffer for fast CAN msg */
+	punf = &pwr_f.iunf[0];
+		*(punf+0) = *(pbuf+0);
+		*(punf+1) = *(pbuf+1);
+		*(punf+2) = *(pbuf+2);
+		*(punf+3) = *(pbuf+3);
+		*(punf+4) = *(pbuf+4);
+		*(punf+5) = *(pbuf+5);
+		*(punf+6) = *(pbuf+6);
+		*(punf+7) = *(pbuf+7);
+
+	/* Advance circular buffer with accumulated readings */
 	adc_readings_buf_idx_i += 1;
 	if (adc_readings_buf_idx_i >= RBUFSIZE) adc_readings_buf_idx_i = 0;
-adcdb1 = DTWTIME - adcdb0; 
 
+/* #defines reproduced here for convenient reference--
+// Indices: Readings arrays
+#define ADCX_IVREF	7	// Index in readings array: Internal Vref
+#define ADCX_SPAR1	6	// Index in readings array: spare
+#define ADCX_SPAR2	5	// Index in readings array: spare
+#define ADCX_INPWR	4	// Index in readings array: Input power voltage
+#define ADCX_DIODE	3	// Index in readings array: Diode
+#define ADCX_CANVB	2	// Index in readings array: CAN bus voltage
+#define ADCX_5VREG	1	// Index in readings array: 5v regulator
+#define ADCX_ITEMP	0	// Index in readings array: Internal temp
 
+// Indices: IIR filter array
+#define IIRX_INPWR	3	// Index in iir filter array: Input power voltage
+#define IIRX_CANBV	2	// Index in iir filter array: CAN bus voltage voltage
+#define IIRX_IVREF	1	// Index in iir filter array: Internal Vref
+#define IIRX_5VREG	0	// Index in iir filter array: 5v regulator
+*/
 	/* IIR filter readings for selected ADC readings execution: 515 cycles */
-	iir_filter_l_do(&pwr_f.adc_iir[0], (int32_t*)(pbuf+0) ); // Internal temp
-	iir_filter_l_do(&pwr_f.adc_iir[1], (int32_t*)(pbuf+7) ); // Internal Vref
-	iir_filter_l_do(&pwr_f.adc_iir[2], (int32_t*)(pbuf+2) ); // CAN bus (output)
-	iir_filter_l_do(&pwr_f.adc_iir[3], (int32_t*)(pbuf+4) ); // Power source (input)
+	iir_filter_lx_do(&pwr_f.adc_iir[IIRX_5VREG], (int32_t*)(pbuf+ADCX_5VREG) ); // 5v regulator
+	iir_filter_lx_do(&pwr_f.adc_iir[IIRX_IVREF], (int32_t*)(pbuf+ADCX_IVREF) ); // Internal Vref
+	iir_filter_lx_do(&pwr_f.adc_iir[IIRX_CANBV], (int32_t*)(pbuf+ADCX_CANVB) ); // CAN bus (output)
+	iir_filter_lx_do(&pwr_f.adc_iir[IIRX_INPWR], (int32_t*)(pbuf+ADCX_INPWR) ); // Power source (input)
 
+adcdb1 = DTWTIME - adcdb0; 
 		
 	return;
 }

@@ -37,7 +37,10 @@ void 	(*tim3_ten2_ll_ptr)(void) = NULL;	// Low level function call every 'n' CH1
 unsigned int throttlect = 0;
 
 /* Running count of timer ticks. */					
-unsigned int tim3_ten2_ticks;	// Running count of timer ticks
+volatile unsigned int tim3_ten2_ticks;	// Running count of timer ticks
+
+/* TIM3 interrupt/tick rate */
+unsigned int tim3_ten2_rate = 4096; // ticks per second
 
 /* Ch2 interrupt calls a routine that returns the increment for the next interval. */
 static uint16_t inc; 	// Timer tick increment for regular interrupts
@@ -47,8 +50,12 @@ static uint16_t inc; 	// Timer tick increment for regular interrupts
  * @brief	: Initialize TIM3 that produces interrupts used for timing measurements
  * @param	: t = number of timer ticks between regular interrupts
 *******************************************************************************/
-void tim3_ten2_init(uint16_t t)
+void tim3_ten2_init(void)
 {
+
+	/* Poll 2048/sec using this timer. ! */
+	tim3_ten2_rate = 4096;//2048;
+
 	/* ----------- TIM3 ------------------------------------------------------------------------*/
 	/* Enable bus clocking for TIM3 */
 	RCC_APB1ENR |= RCC_APB1ENR_TIM3EN;		// (p 105) 
@@ -57,7 +64,7 @@ void tim3_ten2_init(uint16_t t)
 	RCC_APB2ENR |= (RCC_APB2ENR_AFIOEN);		// (p 103) 
 
 	/* Save time tick increment. */
-	inc = t;
+	inc = pclk1_freq/2048;
 
 	/* Auto reload. */
 	TIM3_ARR =  0xffff;// Default count

@@ -64,7 +64,7 @@ static void send_can_msg(uint32_t canid, uint8_t status, uint32_t* pv, struct PW
 	can.cd.uc[3] = (*pv >> 16);
 	can.cd.uc[4] = (*pv >> 24);
 	can_hub_send(&can, p->phub_pwrbox);// Send CAN msg to 'can_hub'
-	p->hbct_ticks = (p->pwrbox.hbct * tim3_ten2_rate) / 1000; // Convert ms to timer ticks
+//	p->hbct_ticks = (p->pwrbox.hbct * tim3_ten2_rate) / 1000; // Convert ms to timer ticks
 	p->hb_t = tim3_ten2_ticks + p->hbct_ticks;	 // Reset heart-beat time duration each time msg sent
 	return;
 }
@@ -252,6 +252,7 @@ int pwrbox_function_poll(struct CANRCVBUF* pcan, struct PWRBOXFUNCTION* p)
 		if ( ( (int)tim3_ten2_ticks - (int)p->alarm_t) > 0  )	// Time to send alarm?
 		{ // Yes, time to send
 			send_can_msg(p->pwrbox.cid_pwr_alarm, p->status_byte, &ui.ui, p);
+//			p->alarmct_ticks = (p->pwrbox.alarmct * tim3_ten2_rate) / 1000; // Convert ms to timer ticks
 			p->alarm_t = tim3_ten2_ticks + p->alarmct_ticks;	 // Reset heart-beat time duration each time msg sent					
 		}
 	}

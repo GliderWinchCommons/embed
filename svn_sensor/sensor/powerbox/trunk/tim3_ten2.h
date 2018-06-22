@@ -12,14 +12,14 @@
 #define TIM3LLTHROTTLE	4 	// Trigger count
 
 /******************************************************************************/
-void tim3_ten2_init(uint16_t t);
+void tim3_ten2_init(void);
 /* @brief	: Initialize TIM3 that produces interrupts used for timing measurements
- * @param	: t = number of APB1 bus ticks to count down
 *******************************************************************************/
 
 
 extern void (*tim3_ten2_ptr)(void);	// Address of function to call at timer complete tick
 extern void (*tim3_ten2_ll_ptr)(void);	// Low level interrupt trigger function callback
-extern unsigned int tim3_ten2_ticks;	// Running count of timer ticks
+extern volatile unsigned int tim3_ten2_ticks;	// Running count of timer ticks
+extern unsigned int tim3_ten2_rate; // tim3_ten2_ticks ticks per second
 
 #endif 

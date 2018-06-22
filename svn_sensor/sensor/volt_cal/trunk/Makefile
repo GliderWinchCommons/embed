@@ -52,8 +52,11 @@ LIBF4D	  = $(CURDIR)/../../../../sw_discoveryf4/trunk
 # Library directory path--compile and stuff
 #LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
 #LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
-LGCC	= /opt/launchpad/gcc-arm-none-eabi-4_9-2015q2/lib/gcc/arm-none-eabi/4.9.3/armv7-m
-LOTHER	= /opt/launchpad/gcc-arm-none-eabi-4_9-2015q2/arm-none-eabi/lib/armv7-m
+#LGCC	= /opt/launchpad/gcc-arm-none-eabi-4_9-2015q2/lib/gcc/arm-none-eabi/4.9.3/armv7-m
+#LOTHER	= /opt/launchpad/gcc-arm-none-eabi-4_9-2015q2/arm-none-eabi/lib/armv7-m
+# The following is setup in ~/.arm_tools when ~/.profile opens a terminal
+LGCC = $(ARM_PREFIX_GCCLIB)
+LOTHER = $(ARM_PREFIX_OTHER)
 
 # Compiler directories for .h files
 CFLAGS	+= -I$(LIBDEVICEF103SE) 

@@ -103,9 +103,6 @@ extern int errno;
 /* Prototypes */
 static void filtered_calibrate(int i, int j);
 
-/* TIM3 interrupt/tick rate */
-unsigned int tim3_ten2_rate ; // ticks per second
-
 /* ############################################################################# */
 #define USEDEFAULTPARAMETERS	0	// 0 = Initialize sram struct with default parameters
 /* ############################################################################# */
@@ -456,9 +453,6 @@ ret = 0;
 	/* Get SAR ADC initialized and calibrated */
 	adcsensor_pwrbox_sequence();	// Initialization sequence for the adc
 
-	/* Poll 2048/sec using this timer. ! */
-	tim3_ten2_rate = 4096;//2048;
-
 /* ------------------------ CAN msg loop (runs under interrupt) --------------------------------------- */
 	ret = CAN_poll_loop_init();
 	if (ret != 0)
@@ -476,13 +470,14 @@ USART1_txint_puts("\n\rTestPt 2 CAN interrupts now enabled\n\r");USART1_txint_se
 /* ---------------- Some vars associated with endless loop ------------------------------------------- */
 #define FLASHTIMEINC (64000000/2)	   // Green on-board LED flash tick duration
 u32 ledtime = DTWTIME + FLASHTIMEINC;	// Init the first timeout
+u32 tim3_ten2_ticks_prev = tim3_ten2_ticks;
 
 /* --------------- ADC startup ----------------------------------------------------------------------- */
 	adcsensor_pwrbox_sequence();
 USART1_txint_puts("\n\rTestPt 3 ADC initialized\n\r");USART1_txint_send();
 
 /* --------------- Start TIM3 CH1 and CH2 interrupts ------------------------------------------------- */
-	tim3_ten2_init(pclk1_freq/2048);	// 64E6/2048
+	tim3_ten2_init();	// 64E6/2048
 
 /* --------------- Local things for endless loop tinkering ------------------------------------------- */
 USART1_txint_puts("\n\rTestPt 4 tim3_ten2 initialized\n\r");USART1_txint_send();
@@ -492,7 +487,7 @@ extern uint32_t adc_readings_buf_idx_i;
 extern uint32_t adc_readings_buf_idx_o;
 
 uint32_t adc_ave[NUMBERADCCHANNELS_PWR];
-uint32_t adc_ave_ct;
+uint32_t adc_ave_ct = 0;
 uint32_t *pave;
 uint32_t *pbuf;
 double dave[NUMBERADCCHANNELS_PWR];
@@ -516,24 +511,11 @@ struct ADCCALIB
 #define ADCEXT 6	// Number of external ADC inputs
 #define ADCINT 2	// Number of internal ADC inputs
 
-/* Local ADC calibration for quick testing */
-struct ADCCALIB adc_ext[NUMBERADCCHANNELS_PWR] =
-{
-	{    0   ,    0,      1 }, /* Internal temperature       IN16 */
-	{ 3.30   , 1.26, 1563.5 }, /* Internal voltage reference IN17 */
-	{ 5.06   , 1.79, 2226.7 }, /* Switcher DC output voltage A0   */
-	{13.1300 , 2.65, 3338.8 }, /* CAN bus/capacitor voltage  A1   */
-   {13.13695, 2.60, 3260.9 }, /* Diode/resistor voltage     A2   */
-	{13.79   , 2.78, 3466.8 }, /* Input power source voltage A3   */
-	{       0,    0,     .2 }, /* Spare                      A4   */
-	{       0,    0,     .2 }, /* Spare                      A5   */
-};
 
 /* Convert voltage & count to a ratio for calibration */
 double dcal[NUMBERADCCHANNELS_PWR];
 for ( i = 0; i < NUMBERADCCHANNELS_PWR; i++)
 {
-//	dcal[i] = adc_ext[i].volts_in / adc_ext[i].ave_count; // Local definition
    dcal[i] = pwr_f.pwrbox.adc[i].scale; // Flashed parameter
 }
 
@@ -545,6 +527,9 @@ for ( i = 0; i < NUMBERADCCHANNELS_PWR; i++)
 		{
 			ledtime += FLASHTIMEINC;
 			toggle_1led();
+
+			printf("%d ", (int)(tim3_ten2_ticks - tim3_ten2_ticks_prev));
+			tim3_ten2_ticks_prev = tim3_ten2_ticks;
 
 			for (i = 0; i < NUMBERADCCHANNELS_PWR; i++)
 			{
@@ -583,16 +568,12 @@ for ( i = 0; i < NUMBERADCCHANNELS_PWR; i++)
 		while (adc_readings_buf_idx_o != adc_readings_buf_idx_i)
 		{
 			pbuf = &adc_readings_buf[adc_readings_buf_idx_o][0];
-			*(pave+0) += *(pbuf+0);
-			*(pave+1) += *(pbuf+1);
-			*(pave+2) += *(pbuf+2);
-			*(pave+3) += *(pbuf+3);
-			*(pave+4) += *(pbuf+4);
-			*(pave+5) += *(pbuf+5);
-			*(pave+6) += *(pbuf+6);
-			*(pave+7) += *(pbuf+7);
-			adc_ave_ct += 1;
-			adc_readings_buf_idx_o += 1;
+			for (i = 0; i < NUMBERADCCHANNELS_PWR; i++)
+			{
+				*(pave+i) += *(pbuf+i);
+			}
+			adc_ave_ct += 1;	// divisor for averaging
+			adc_readings_buf_idx_o += 1; // Circular buffer index
 			if (adc_readings_buf_idx_o >= RBUFSIZE) adc_readings_buf_idx_o = 0;
 		}
 

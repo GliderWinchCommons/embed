@@ -11,7 +11,7 @@ MEMORY
 	RAM      (RWX) : ORIGIN = 0x20000000, LENGTH = 20K
 
 	/* Flash for program (.text) */
-	FLASH    (RX)  : ORIGIN = 0x08005000, LENGTH = 128K - 0x5000 - 0x0800 - 0x0800 - 0x0800 - 0x0800 - 0x0800 - 0x0800
+	FLASH    (RX)   : ORIGIN = 0x08000000, LENGTH = 128K - 0x5000 - 0x0800 - 0x0800 - 0x0800 - 0x0800 - 0x0800 - 0x0800
 
         /* Short tables, e.g. command CAN ids for functions, app program crc check */
 	FLASHP0a  (RX)  : ORIGIN = 0x08000000 + 128K - 0x0200, LENGTH = 0x0200 /* Command CAN ID table */
@@ -38,9 +38,11 @@ __sizeof_flashp2 = 0x0800;
 __sizeof_flashp3 = 0x0800;
 __sizeof_flashp4 = 0x0800;
 
-/* Address of application jump address */
+/* Address of application jump address
 __appjump    = 0x08005000;
 __appoffset  = 0x08005000;
+
+*/
 
 _MYHEAP_SIZE = 1024;
 __MSP = 0x20000000 + 20K - 2048;

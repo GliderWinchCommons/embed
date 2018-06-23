@@ -36,8 +36,8 @@ make clean
 # but with different high flash defines in the .ld files.
 #
 # C8 version--64K|20K
-export LDRAPPLD=ldrapp_V8.ld
-export PWRBOXNAME=pwrbox_V8
+export LDRAPPLD=ldrapp_VB.ld
+export PWRBOXNAME=pwrbox_VB
 make
 make flash
 cd db

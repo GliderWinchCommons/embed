@@ -86,8 +86,8 @@ AFLAGS  = -mcpu=cortex-m3 -mthumb
 
 # Linker script which has the definition of memory layout and "sections"
 #LDSCRIPT	= $(NAME).ld
-#LDSCRIPT	= $(LIBCOMMONALL)/$(LDRAPPLD)
-LDSCRIPT	= f103Ard.ld
+LDSCRIPT	= $(LIBCOMMONALL)/$(LDRAPPLD)
+#LDSCRIPT	= f103Ard.ld
 
 # Libraries (.a), script (.ld), (.map) for the linker
 LDFLAGS  = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles -lc 
@@ -104,7 +104,7 @@ LDFLAGS  += -L$(LGCC)
 LDFLAGS  += -L$(LOTHER)
 
 # List of files to be compiled
-OBJS	 = vector.o $(SRCNAME).o 
+OBJS	= vector.o $(SRCNAME).o 
 OBJS	+= newlib_support.o
 OBJS	+= pwrbox_idx_v_struct.o
 OBJS	+= adcsensor_pwrbox.o
@@ -178,12 +178,16 @@ clean:
 	@printf " .map\n "
 	$(Q)rm -f $(NAME).map
 
+# NOTE: flash bank in the following overrides the automatic probe for memory size, thus
+#  allowing 128K of flash to be used in the 'C8 part.
+# https://sourceforge.net/p/openocd/mailman/message/30446928/
 flash: images
 	@printf "  FLASH   $(NAME).srec\n"
 	@# IMPORTANT: Don't use "resume", only "reset" will work correctly!
 	$(OPENOCD) -s $(OPENOCD_SCRIPTS) \
 		       -f $(OPENOCD_FLASHER) \
-		       -f $(OPENOCD_TARGET) \
+		       -f $(OPENOCD_BOARD) \
+				-c "flash bank $_FLASHNAME stm32f1x 0 0x20000 0 0 stm32f1x.cpu" \
 		       -c "init" -c "reset halt" \
 		       -c "flash write_image erase $(NAME).srec" \
 		       -c "reset" \

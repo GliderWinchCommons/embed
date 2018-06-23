@@ -54,7 +54,6 @@ LIBSENSORMISC	= $(LIBSENSORF103)/libsensormisc
 # Library directory path--local common includes
 LIBCOMMONALL    = $(SRCDIR)/../../../../common_all/trunk
 
-
 # Library of common to all processors
 LIBSVNCOMMON	= $(SRCDIR)/../../../../../svn_common/trunk
 
@@ -67,7 +66,6 @@ LIBF4D	  = $(CURDIR)/../../../../../sw_discoveryf4/trunk
 # The following is setup in ~/.arm_tools when ~/.profile opens a terminal
 LGCC = $(ARM_PREFIX_GCCLIB)
 LOTHER = $(ARM_PREFIX_OTHER)
-
 
 # Compiler directories for .h files
 #CFLAGS	+= -I$(LIBDEVICEF103SE) 
@@ -90,7 +88,6 @@ AFLAGS  = -mcpu=cortex-m3 -mthumb
 # Linker script which has the definition of memory layout and "sections"
 LDSCRIPT	= $(LIBCOMMONALL)/$(LDRAPPLD)
 
-
 # Libraries (.a), script (.ld), (.map) for the linker
 LDFLAGS  = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles -lc
 #LDFLAGS	+= -L$(LIBDEVICEF103SE) 
@@ -109,13 +106,11 @@ LDFLAGS += -L$(LGCC)
 OBJS    = $(NAME).o
 
 # Paths for openocd and automatic flashing
-
 # The following two are 'export'ed in .arm_tools via .profile
 OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
 OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/stlink-v2.cfg
 OPENOCD_BOARD	   = $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
 OPENOCD_TARGET		= $(OPENOCD_SCRIPTS)/target/stm32f1x.cfg
-
 
 # Be silent per default, but 'make V=1' will show all compiler calls.
 ifneq ($(V),1)
@@ -124,8 +119,6 @@ NULL := 2>/dev/null
 endif
 
 all: images
-
-
 
 images: $(NAME)
 	@printf "  OBJCOPY $(NAME).bin\n"
@@ -142,7 +135,6 @@ images: $(NAME)
 	$(CC)	$(CFLAGS) $(TSELECT)  -c -o $@ $<
 .s.o:
 	$(AS)	$(AFLAGS) -a=$*.lst	-o $@ $<
-
 
 $(NAME): $(OBJS) $(LDSCRIPT)
 	@printf "  LD      $(subst $(shell pwd)/,,$(@)) $(LFLAGS)\n"
@@ -164,13 +156,16 @@ clean:
 	@printf " .map\n "
 	$(Q)rm -f $(NAME).map
 
-
+# NOTE: flash bank in the following overrides the automatic probe for memory size, thus
+#  allowing 128K of flash to be used in the 'C8 part.
+# https://sourceforge.net/p/openocd/mailman/message/30446928/
 flash: images
 	@printf "  FLASH   $(NAME).srec\n"
 	@# IMPORTANT: Don't use "resume", only "reset" will work correctly!
 	$(OPENOCD) -s $(OPENOCD_SCRIPTS) \
 		       -f $(OPENOCD_FLASHER) \
 		       -f $(OPENOCD_BOARD) \
+				-c "flash bank $_FLASHNAME stm32f1x 0 0x20000 0 0 stm32f1x.cpu" \
 		       -c "init" -c "reset halt" \
 		       -c "flash write_image erase $(NAME).srec" \
 		       -c "reset" \

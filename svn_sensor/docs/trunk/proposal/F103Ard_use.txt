@@ -1,0 +1,96 @@
+F103Ard_use.txt
+
+6/24/2018
+
+All projects have/use:
+ 1.  FTDI uart tx/rx
+ 2.  CAN #1 non-isolated
+ 3.  SWD for ST-LINK-V2
+ 4.  On-board green LED
+
+Possible projects--
+===================================
+A. Regen/bench supply
+
+  ADC inputs:
+  1. 5v supply to Hall effect
+  2. Divider: Bus voltage DC (0<400) 1M 1/2w:10K
+  3. Hall effect: Charging current DC
+  4. Hall effect: load sum current DC
+  5. Hall effect: motor #1 current DC
+  6. Hall effect: motor #2 current DC
+* 7. Pot for motor #1 torque
+* 8. Pot for motor #2 torque
+ 
+* - could be separate unit or PC sending CAN msgs
+
+(Hall effect: 5.0->3.3 divider with 5.0 HE supply)
+  
+Timer/pwm outputs:
+  1. FET w LED for dump load #1 400v
+  2. FET w LED for dump load #2 400v
+  3. FET w LED for dump load #3 400v
+  4. FET w LED for dump load #4 400v
+# 5. FET motor controller #1 cooling fan 12v
+# 6. FET motor controller #2 cooling fan 12v
+
+# ON/OFF might be sufficient
+===================================
+B. Generator control
+
+  ADC inputs:
+  1. Biased Divider: ~12v ac rms xfmr: Load 240v
+  2. Biased Divider: ~12v ac rms xfmr: Gen 240v
+  3. Bias voltage:
+  4. Current xfmr:op-amp: Gen current (ac)
+  5. Hall effect: Field current (dc)
+ *6. 12v dc supply
+ *7. Pot for throttle/power control
+ *8. Pot for field current
+
+  I/O inputs:
+ #1.  Spark pickup (?)
+ #2.  Audio/vaccum pickup(?)
+ *3,  Pushbutton (advance state)
+
+  Time/pwn outputs
+  1.  FET, field control: 190v (2KHz?)
+  2.  Throttle servo: 5v     (50 Hz)
+  3.  Main relay connect: 28v (2KHz?)
+
+  Timer/shaft encoder input
+  1.  Gen shaft encoder (pair)
+  2>  encoder z input
+
+* - could be separate unit or PC sending CAN msgs
+# - not needed with encoder(?)
+===================================
+C. Yogurt #2
+
+  ADC inputs:
+  1.  Thermistor
+  2.  Thermistor
+  3.  Thermistor
+  4.  Thermistor
+
+  I/O or timer pwm outputs
+  1.  MOC3032 Triac control
+
+===================================
+D. Air conditioner outside unit
+
+  ADC inputs:
+  1. Biased Current xfmr:op-amp: compressor current (ac)
+  2. Biased Divider: ~12v ac rms xfmr: compressor 240v supply
+  3. Bias voltage: 
+
+  I/O inputs:
+  1. 24vac start signal 
+  2. 
+
+  I/O outputs:
+  1.  Triac control: motor relay bridge triac 240v 40a
+  2.  Triac control: motor relay 24v 
+
+
+

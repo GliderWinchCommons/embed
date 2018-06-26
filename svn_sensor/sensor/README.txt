@@ -9,7 +9,7 @@ README.txt
 04/20/2018 se1 - RPM, Manifold pressure, throttle, temperatue
   Updated for database scheme
 
-04/??/2018 tension 
+04/??/2018 tension w POD board
 
 
 

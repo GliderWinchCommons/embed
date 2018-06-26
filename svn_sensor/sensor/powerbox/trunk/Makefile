@@ -1,7 +1,8 @@
 # Makefile - Cortex-M3, STM32F103
 
 # Name of the .c file with 'main' as well as output file name
-NAME		= vcal
+NAME		= $(PWRBOXNAME)
+SRCNAME		= pwrbox
 
 # Prefix the name for the particular toolchain
 PREFIX		= arm-none-eabi-
@@ -12,14 +13,20 @@ OBJCOPY	=$(PREFIX)objcopy
 SIZE	=$(PREFIX)size
 OBJDUMP	=$(PREFIX)objdump
 
+# The path for the commands to find the compiler, linker, et al.
+#TOOLDIR 	= $(HOME)/CodeSourcery/Sourcery_G++_Lite/bin
+#CC		= $(TOOLDIR)/$(PREFIX)-gcc
+#LD		= $(TOOLDIR)/$(PREFIX)-ld
+#OBJCOPY		= $(TOOLDIR)/$(PREFIX)-objcopy
+#OBJDUMP		= $(TOOLDIR)/$(PREFIX)-objdump
+
 # Current directory
 SRCDIR=.
 
 CFLAGS	 = -std=gnu99 -g -Os -Wall -Wextra
 CFLAGS	+= -mlittle-endian -mthumb -mthumb-interwork -nostartfiles
 //CFLAGS	+= -mfp16-format=alternative
-CFLAGS	+= -fno-common -mcpu=cortex-m3 -Wstrict-prototypes -fno-builtin-putc
-
+CFLAGS	+= -fno-common -mcpu=cortex-m3 -Wstrict-prototypes 
 override FLOAT_TYPE = soft
 
 CFLAGS += -msoft-float
@@ -50,10 +57,11 @@ LIBSVNCOMMON	= $(SRCDIR)/../../../../svn_common/trunk
 LIBF4D	  = $(CURDIR)/../../../../sw_discoveryf4/trunk
 
 # Library directory path--compile and stuff
-#LGCC		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-none-eabi/4.5.2/thumb2
-#LOTHER		= $(HOME)/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib/thumb2
+
 #LGCC	= /opt/launchpad/gcc-arm-none-eabi-4_9-2015q2/lib/gcc/arm-none-eabi/4.9.3/armv7-m
-#LOTHER	= /opt/launchpad/gcc-arm-none-eabi-4_9-2015q2/arm-none-eabi/lib/armv7-m
+#LGCC =     $(HOME)/launchpad/gcc-arm-none-eabi-5_4-2016q3/lib/gcc/arm-none-eabi/5.4.1/armv7-m
+#LOTHER      = $(HOME)/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m
+
 # The following is setup in ~/.arm_tools when ~/.profile opens a terminal
 LGCC = $(ARM_PREFIX_GCCLIB)
 LOTHER = $(ARM_PREFIX_OTHER)
@@ -77,11 +85,12 @@ CFLAGS	+= -I$(LIBSENSORF103)
 AFLAGS  = -mcpu=cortex-m3 -mthumb
 
 # Linker script which has the definition of memory layout and "sections"
-LDSCRIPT	= $(NAME).ld
-#LDSCRIPT	= $(LIBCOMMONALL)/ldrapp.ld
+#LDSCRIPT	= $(NAME).ld
+LDSCRIPT	= $(LIBCOMMONALL)/$(LDRAPPLD)
+#LDSCRIPT	= f103Ard.ld
 
 # Libraries (.a), script (.ld), (.map) for the linker
-LDFLAGS  = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles -lc
+LDFLAGS  = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles -lc 
 LDFLAGS	+= -L$(LIBDEVICEF103SE) 
 LDFLAGS	+= -L$(LIBPODLIB) 
 LDFLAGS	+= -L$(LIBPODDEV) 
@@ -91,52 +100,38 @@ LDFLAGS	+= -L$(LIBSUPPORTSTM32)
 LDFLAGS	+= -L$(LIBSENSORMISC) 
 LDFLAGS	+= -L$(LIBCOMMONALL) 
 LDFLAGS	+= -L$(LIBSVNCOMMON)/f103
-LDFLAGS += -L$(LGCC)
-LDFLAGS += -L$(LOTHER)
+LDFLAGS  += -L$(LGCC)
+LDFLAGS  += -L$(LOTHER)
 
 # List of files to be compiled
-OBJS	 = vector.o $(NAME).o 
+OBJS	= vector.o $(SRCNAME).o 
 OBJS	+= newlib_support.o
-OBJS	+= adcsensor_vcal.o
+OBJS	+= pwrbox_idx_v_struct.o
+OBJS	+= adcsensor_pwrbox.o
+OBJS	+= CAN_poll_loop.o 
 OBJS	+= temp_calc_param.o
-OBJS	+= printf.o 
-OBJS	+= tim2_vcal.o
-#OBJS	+= tim4_yog.o
-#OBJS	+= triac_ctl.o
-OBJS	+= tim_clk.o
-#OBJS	+= tim_loop.o
-OBJS	+= vcal_idx_v_struct.o
-OBJS	+= loopctl.o
-#OBJS	+= OlimexLED.o
-OBJS	+= fpprint.o
-#OBJS	+= idx_v_struct_print.o
-OBJS	+= loopctl_print.o
-OBJS	+= yogPC_cmd.o
-#OBJS	+= yog_derivative.o
-#OBJS	+= derivative_19.o
-#OBJS	+= derivative_ave.o
-#OBJS	+= derivative_oneside.o
-OBJS	+= derivative_iir.o
-#OBJS	+= settables_print.o
-OBJS	+= iir_1.o
-OBJS	+= spi1ad7799_vcal.o
-OBJS	+= ad7799_vcal_comm.o
-OBJS	+= ad7799_vcal_filter.o
-OBJS	+= p1_initialization.o
-OBJS	+= recursive_variance.o
-OBJS	+= kalman_scalar.o
-OBJS	+= i2c1.o
-OBJS	+= hd44780.o
-OBJS	+= vcal_cmd.o
+#OBJS	+= p1_initialization.o
+OBJS	+= pwrbox_printf.o
+OBJS	+= fmtprint.o
+OBJS	+= pwrbox_function.o
+#OBJS	+= tension_readings_ptr.o
+#OBJS	+= tension_readingsboard_ptr.o
+OBJS	+= tim3_ten2.o
+OBJS	+= can_filter_print.o
+OBJS	+= can_driver_errors_printf.o
+OBJS	+= cmd_code_dispatch.o
+OBJS	+= readings_dispatch.o
+OBJS	+= iir_filter_lx.o
 
 
-# Paths for openocd and automatic flashing
-OPENOCD_BASE	= /usr/local
-OPENOCD		= $(OPENOCD_BASE)/bin/openocd
-OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/share/openocd/scripts
-OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
+# The following two are 'export'ed in .arm_tools via .profile
+#OPENOCD_BASE	= /usr/share
+#OPENOCD		   = /usr/bin/openocd
 
-OPENOCD_BOARD	= $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
+OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
+OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/stlink-v2.cfg
+OPENOCD_BOARD	   = $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
+OPENOCD_TARGET		= $(OPENOCD_SCRIPTS)/target/stm32f1x.cfg
 
 # Be silent per default, but 'make V=1' will show all compiler calls.
 ifneq ($(V),1)
@@ -145,8 +140,6 @@ NULL := 2>/dev/null
 endif
 
 all: images
-
-
 
 images: $(NAME)
 	@printf "  OBJCOPY $(NAME).bin\n"
@@ -167,7 +160,7 @@ images: $(NAME)
 
 $(NAME): $(OBJS) $(LDSCRIPT)
 	@printf "  LD      $(subst $(shell pwd)/,,$(@)) $(LFLAGS)\n"
-	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)   -lm -lc -lgcc -lmiscstm32 -ldevicestm32 -lsensormisc -lsupportstm32 -lusartstm32 -lmiscstm32 -lsupportstm32 -ldevicesstm32 -lcommon_allf103 -lc -lm -lgcc  -ldevicesstm32
+	$(Q)$(LD) $(LDFLAGS) -o $(NAME) $(OBJS)  -lm -lc -lgcc -lmiscstm32 -ldevicestm32 -lsensormisc -lsupportstm32 -lusartstm32 -lmiscstm32 -lsupportstm32 -ldevicesstm32 -lcommon_allf103 -lc -lm -lgcc  -ldevicesstm32
 
 clean:
 	@printf "  CLEAN   $(subst $(shell pwd)/,,$(OBJS))\n"
@@ -185,12 +178,16 @@ clean:
 	@printf " .map\n "
 	$(Q)rm -f $(NAME).map
 
+# NOTE: flash bank in the following overrides the automatic probe for memory size, thus
+#  allowing 128K of flash to be used in the 'C8 part.
+# https://sourceforge.net/p/openocd/mailman/message/30446928/
 flash: images
 	@printf "  FLASH   $(NAME).srec\n"
 	@# IMPORTANT: Don't use "resume", only "reset" will work correctly!
 	$(OPENOCD) -s $(OPENOCD_SCRIPTS) \
 		       -f $(OPENOCD_FLASHER) \
 		       -f $(OPENOCD_BOARD) \
+				-c "flash bank $_FLASHNAME stm32f1x 0 0x20000 0 0 stm32f1x.cpu" \
 		       -c "init" -c "reset halt" \
 		       -c "flash write_image erase $(NAME).srec" \
 		       -c "reset" \

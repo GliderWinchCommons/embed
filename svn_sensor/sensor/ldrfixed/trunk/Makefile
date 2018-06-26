@@ -105,7 +105,7 @@ else
 	OPENOCD_FLASHER = $(OPENOCD_SCRIPTS)/interface/rlink.cfg
 	OPENOCD_BOARD	  = $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
 endif
-
+OPENOCD_TARGET		= $(OPENOCD_SCRIPTS)/target/stm32f1x.cfg
 
 # Be silent per default, but 'make V=1' will show all compiler calls.
 ifneq ($(V),1)
@@ -158,10 +158,22 @@ flash: images
 	$(OPENOCD) -s $(OPENOCD_SCRIPTS) \
 		       -f $(OPENOCD_FLASHER) \
 		       -f $(OPENOCD_BOARD) \
+		       -c "init" -c "reset halt" \OPENOCD_TARGET
+		       -c "flash write_image erase $(NAME).srec" \
+		       -c "reset" \
+		       -c "shutdown" $(NULL)
+
+flashArd: images
+	@printf "  FLASH   $(NAME).srec\n"
+	@# IMPORTANT: Don't use "resume", only "reset" will work correctly!
+	$(OPENOCD) -s $(OPENOCD_SCRIPTS) \
+		       -f $(OPENOCD_FLASHER) \
+		       -f $(OPENOCD_TARGET) \
 		       -c "init" -c "reset halt" \
 		       -c "flash write_image erase $(NAME).srec" \
 		       -c "reset" \
 		       -c "shutdown" $(NULL)
+
 
 .PHONY: images clean
 

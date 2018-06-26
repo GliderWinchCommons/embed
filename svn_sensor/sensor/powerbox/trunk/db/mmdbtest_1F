@@ -1,0 +1,7 @@
+#!/bin/bash
+# script: mmdbtest_1F
+# UNIT_1F: Re-builds database, then compiles & flashes tables
+cd ..
+./mmdb
+cd db
+./mmtest_1F

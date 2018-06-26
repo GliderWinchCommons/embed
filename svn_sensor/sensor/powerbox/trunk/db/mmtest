@@ -1,0 +1,4 @@
+#!/bin/bash
+./mm ENG1_MANIFOLD ENG1_RPM ENG_THROTTLE ENG_T1 CAN_UNIT_3 eng1_manifold
+cd ..
+make flash

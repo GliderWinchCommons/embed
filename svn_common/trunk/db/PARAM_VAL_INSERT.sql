@@ -41,7 +41,58 @@
 --
 DELETE FROM PARAM_VAL;
 --
---===========================================================================================================================================================================================
+-- ===========================================================================================================================================================================
+-- PWRBOX: Instance 1 of powerbox
+--                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL               FUNCTION_TYPE      DESCRIPTION11
+-- The CAN hw filter will be setFOR the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CRC'              ,'0',     'PWRBOX',' 1 Pwrbox1: CRC');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_VERSION'          ,'1',     'PWRBOX',' 2 Pwrbox1: Version number');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_HEARTBEAT_TIME_CT','1000',  'PWRBOX',' 3 Pwrbox1: Time (ms) between HB msg');
+-- ADC calibrated = (adc count - offset)*scale
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET1'     ,'0.0'        ,'PWRBOX',' 4 Pwrbox1: ADC reading 1 offset na');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE1'      ,'0.200000000','PWRBOX',' 5 Pwrbox1: ADC reading 1  scale internal Temp');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET2'     ,'0.0'        ,'PWRBOX',' 6 Pwrbox1: ADC reading 2 offset na');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE2'      ,'0.002272421','PWRBOX',' 7 Pwrbox1: ADC reading 2  scale 5v ');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET3'     ,'0.0'        ,'PWRBOX',' 8 Pwrbox1: ADC reading 3 offset na');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE3'      ,'0.003934033','PWRBOX',' 9 Pwrbox1: ADC reading 3  scale CAN bus');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET4'     ,'0.0'        ,'PWRBOX','10 Pwrbox1: ADC reading 4 offset na');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE4'      ,'0.003982408','PWRBOX','11 Pwrbox1: ADC reading 4  scale diode');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET5'     ,'0.0'        ,'PWRBOX','12 Pwrbox1: ADC reading 5 offset na');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE5'      ,'0.003974613','PWRBOX','13 Pwrbox1: ADC reading 5  scale input power');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET6'     ,'0.0'        ,'PWRBOX','14 Pwrbox1: ADC reading 6 offset spare');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE6'      ,'0.003977732','PWRBOX','15 Pwrbox1: ADC reading 6  scale spare');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET7'     ,'0.0'        ,'PWRBOX','16 Pwrbox1: ADC reading 7 offset spare');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE7'      ,'0.200000000','PWRBOX','17 Pwrbox1: ADC reading 7  scale spare');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_OFFSET8'     ,'0.0'        ,'PWRBOX','18 Pwrbox1: ADC reading 8 offset na');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CAL_SCALE8'      ,'0.001947059','PWRBOX','19 Pwrbox1: ADC reading 8  scale internal Vref');
+
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR0_K'     ,'10'  ,'PWRBOX','20 Pwrbox1: IIR1 Filter factor: 5v regulator');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR0_SCALE' ,'1'   ,'PWRBOX','21 Pwrbox1: IIR1 Filter scale : 5v regulator');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR1_K'     ,'10'  ,'PWRBOX','22 Pwrbox1: IIR2 Filter factor: internal Vref');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR1_SCALE' ,'1'   ,'PWRBOX','23 Pwrbox1: IIR2 Filter scale : internal Vref');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR2_K'     ,'10'  ,'PWRBOX','24 Pwrbox1: IIR3 Filter factor: CAN bus volts');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR2_SCALE' ,'1'   ,'PWRBOX','25 Pwrbox1: IIR3 Filter scale : CAN bus volts');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR3_K'     ,'128'  ,'PWRBOX','26 Pwrbox1: IIR4 Filter factor: Power source volts');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_IIR3_SCALE' ,'2'   ,'PWRBOX','27 Pwrbox1: IIR4 Filter scale : Power source volts');
+
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_HB_R'    ,'CANID_HB_PWRBOX1' ,'PWRBOX','28 Pwrbox: CANID: Heartbeat: input voltage, bus voltage');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_MSG_R'   ,'CANID_MSG_PWRBOX1','PWRBOX','29 Pwrbox: CANID: Msg: input voltage, bus voltage ');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_ALARM_R' ,'CANID_ALM_PWRBOX1','PWRBOX','30 Pwrbox: CANID: Alarm: input voltage, bus voltage');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_ALARM_RATE'  ,'50'           ,'PWRBOX','31 Pwrbox: Time (ms) between alarm msgs, when below threshold');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_ALARM_THRES' ,'10.5'         ,'PWRBOX','32 Pwrbox: Voltage threshold for alarm msgs');
+
+-- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT1','CANID_HB_TIMESYNC'  ,'PWRBOX','33 Pwrbox1: CANID 0: GPS time sync distribution msg');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT2','CANID_MSG_TIME_POLL','PWRBOX','34 Pwrbox1: CANID 1: Time msg/Group polling');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT3','CANID_DUMMY'        ,'PWRBOX','35 Pwrbox1: CANID 2 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT4','CANID_DUMMY'        ,'PWRBOX','36 Pwrbox1: CANID 3 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT5','CANID_DUMMY'        ,'PWRBOX','37 Pwrbox1: CANID 4 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT6','CANID_DUMMY'        ,'PWRBOX','38 Pwrbox1: CANID 5 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT7','CANID_DUMMY'        ,'PWRBOX','39 Pwrbox1: CANID 6 add CAN hw filter for incoming msg');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT8','CANID_DUMMY'        ,'PWRBOX','40 Pwrbox1: CANID 7 add CAN hw filter for incoming msg');
+
+--
+-- ===========================================================================================================================================================================
 -- ENGINE_MANIFOLD: Instance 1 = ENG1_MANIFOLD
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL               FUNCTION_TYPE      DESCRIPTION11
 -- The CAN hw filter will be setFOR the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
@@ -62,7 +113,7 @@ INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_CANID_HW_FILT6','CANID_DU
 INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_CANID_HW_FILT7','CANID_DUMMY', 'ENG_MANIFOLD','Eng1_manifold: CANID 7 add CAN hw filter for incoming msg');
 INSERT INTO PARAM_VAL VALUES ('ENG1_MANIFOLD','ENG_MAN_CANID_HW_FILT8','CANID_DUMMY', 'ENG_MANIFOLD','Eng1_manifold: CANID 8 add CAN hw filter for incoming msg');
 
---===========================================================================================================================================================================================
+--=============================================================================================================================================================================
 -- ENGINE_RPM: Instance 1 = ENG1_RPM
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL               FUNCTION_TYPE      DESCRIPTION11
 -- The CAN hw filter will be setFOR the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
@@ -81,7 +132,7 @@ INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_CANID_HW_FILT5','CANID_DUMMY',
 INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_CANID_HW_FILT6','CANID_DUMMY', 'ENG_RPM','Eng1_rpm: CANID 6 add CAN hw filter for incoming msg');
 INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_CANID_HW_FILT7','CANID_DUMMY', 'ENG_RPM','Eng1_rpm: CANID 7 add CAN hw filter for incoming msg');
 INSERT INTO PARAM_VAL VALUES ('ENG1_RPM','ENG_RPM_CANID_HW_FILT8','CANID_DUMMY', 'ENG_RPM','Eng1_rpm: CANID 8 add CAN hw filter for incoming msg');
---===========================================================================================================================================================================================
+--=============================================================================================================================================================================
 -- ENGINE_THROTTLE: Instance 1 = ENG1_THROTTLE
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL               FUNCTION_TYPE      DESCRIPTION11
 -- The CAN hw filter will be setFOR the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
@@ -101,7 +152,7 @@ INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_CANID_HW_FILT5','CANID_DU
 INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_CANID_HW_FILT6','CANID_DUMMY', 'ENG_THROTTLE','Eng1_throttle:: CANID 6 add CAN hw filter for incoming msg');
 INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_CANID_HW_FILT7','CANID_DUMMY', 'ENG_THROTTLE','Eng1_throttle:: CANID 7 add CAN hw filter for incoming msg');
 INSERT INTO PARAM_VAL VALUES ('ENG1_THROTTLE','ENG_THR_CANID_HW_FILT8','CANID_DUMMY', 'ENG_THROTTLE','Eng1_throttle:: CANID 8 add CAN hw filter for incoming msg');
---===========================================================================================================================================================================================
+--=============================================================================================================================================================================
 -- ENGINE_TEMPERATURE #1: Instance 1 = ENG1_T1
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL               FUNCTION_TYPE      DESCRIPTION11
 -- The CAN hw filter will be setFOR the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
@@ -125,7 +176,7 @@ INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CANID_HW_FILT5' ,'CANID_DUMMY','
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CANID_HW_FILT6' ,'CANID_DUMMY','ENG_T1','Eng1_t1: CANID 6 added to CAN hardware filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CANID_HW_FILT7' ,'CANID_DUMMY','ENG_T1','Eng1_t1: CANID 7 added to CAN hardware filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('ENG1_T1','ENG_T1_CANID_HW_FILT8' ,'CANID_DUMMY','ENG_T1','Eng1_t1: CANID 8 added to CAN hardware filter to allow incoming msg');
---===========================================================================================================================================================================================
+--============================================================================================================================================================================
 -- ENGINE_SENSOR1
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL               FUNCTION_TYPE      DESCRIPTION11
 -- The CAN hw filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
@@ -156,7 +207,7 @@ INSERT INTO PARAM_VAL VALUES ('ENGINE_SENSOR1','ENGINE_SENSOR_CANID_HW_FILT5','C
 INSERT INTO PARAM_VAL VALUES ('ENGINE_SENSOR1','ENGINE_SENSOR_CANID_HW_FILT6','CANID_DUMMY', 'ENGINE_SENSOR','Eng1: 49 CANID 6 add CAN hw filter for incoming msg');
 INSERT INTO PARAM_VAL VALUES ('ENGINE_SENSOR1','ENGINE_SENSOR_CANID_HW_FILT7','CANID_DUMMY', 'ENGINE_SENSOR','Eng1: 50 CANID 7 add CAN hw filter for incoming msg');
 INSERT INTO PARAM_VAL VALUES ('ENGINE_SENSOR1','ENGINE_SENSOR_CANID_HW_FILT8','CANID_DUMMY', 'ENGINE_SENSOR','Eng1: 51 CANID 8 add CAN hw filter for incoming msg');
- --===========================================================================================================================================================================================
+ --===========================================================================================================================================================================
 -- ENCODERA_1 (H = high resolution) Upper sheave (../svn_discoveryf4/sensor/shaft_encode/trunk)
 --                           FUNCTION_NAME     PARAM_NAME          PARAM_VAL         FUNCTION_TYPE      DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','ENCODER_LIST_CRC'		,'0',	   	 	'SHEAVE_H',	'Encoder_f4_1up: 1 CRC');
@@ -177,7 +228,7 @@ INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','SHEAVE_H_CANID_HW_FILT5'    ,'CANID_
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','SHEAVE_H_CANID_HW_FILT6'    ,'CANID_DUMMY',  	'SHEAVE_H',	'Encoder_f4_1up: 15 CANID 6 add CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','SHEAVE_H_CANID_HW_FILT7'    ,'CANID_DUMMY',	  	'SHEAVE_H',	'Encoder_f4_1up: 16 CANID 7 add CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1UP','SHEAVE_H_CANID_HW_FILT8'    ,'CANID_DUMMY',	  	'SHEAVE_H',	'Encoder_f4_1up: 17 CANID 8 add CAN hw filter to allow incoming msg');
---===========================================================================================================================================================================================
+--===========================================================================================================================================================================
 -- ENCODERA_1 (H = high resolution) Lower sheave (../svn_discoveryf4/sensor/shaft_encode/trunk)
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL               FUNCTION_TYPE      DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','ENCODER_LIST_CRC'		,'0',	   	 	'SHEAVE_H',	'Encoder_f4_1lo: 1 CRC');
@@ -198,7 +249,7 @@ INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','SHEAVE_H_CANID_HW_FILT5'    ,'CANID_
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','SHEAVE_H_CANID_HW_FILT6'    ,'CANID_DUMMY',  	'SHEAVE_H',	'Encoder_f4_1lo: 15 CANID 6 add CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','SHEAVE_H_CANID_HW_FILT7'    ,'CANID_DUMMY',	  	'SHEAVE_H',	'Encoder_f4_1lo: 16 CANID 7 add CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','SHEAVE_H_CANID_HW_FILT8'    ,'CANID_DUMMY',	  	'SHEAVE_H',	'Encoder_f4_1lo: 17 CANID 8 add CAN hw filter to allow incoming msg');
--- ==================================================================================================================================================================================
+-- ===================================================================================================================================================================
 -- SHAFT1 (drive shaft encoder, newer version (../svn_sensor/sensor.shaft/trunk)
 --                           FUNCTION_NAME     PARAM_NAME    PARAM_VAL  FUNCTION_TYPE     DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_LIST_CRC'       ,'0'     ,'DRIVE_SHAFT','Shaft1: CRC');
@@ -224,7 +275,7 @@ INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CANID_HW_FILT7' ,'CANID_DUMMY', 'DR
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_CANID_HW_FILT8' ,'CANID_DUMMY', 'DRIVE_SHAFT','Shaft1: CANID 8 added to CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_IIR_HB_K'       , '4'     ,'DRIVE_SHAFT','Shaft1: IIR Filter factor: divisor sets time const: for heart-beat msg');
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_IIR_HB_SCALE'   , '64'    ,'DRIVE_SHAFT','Shaft1: IIR Filter scale : upscaling (integer math): for heart-beat msg');
--- ===================================================================================================================================================================================
+-- ==================================================================================================================================================================
 -- CANSENDER_1
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL                FUNCTION_TYPE     DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('CANSENDER_1','CANSENDER_LIST_CRC'	   ,'0',	   	 	'CANSENDER',	'Cansender_1: 1 CRC');
@@ -233,7 +284,7 @@ INSERT INTO PARAM_VAL VALUES ('CANSENDER_1','CANSENDER_HEARTBEAT_CT'	,'500',    
 INSERT INTO PARAM_VAL VALUES ('CANSENDER_1','CANSENDER_HEARTBEAT_MSG','CANID_HB_CANSENDER_1'   ,'CANSENDER',  	'Cansender_1: 4 CANID: Hearbeat sends running count');
 INSERT INTO PARAM_VAL VALUES ('CANSENDER_1','CANSENDER_POLL'	    	,'CANID_POLL_CANSENDER'   ,'CANSENDER',  	'Cansender_1: 5 CANID: Poll this cansender');
 INSERT INTO PARAM_VAL VALUES ('CANSENDER_1','CANSENDER_POLL_R'       ,'CANID_POLLR_CANSENDER_1','CANSENDER',	'Cansender_1: 6 CANID: Response to POLL');
--- ===================================================================================================================================================================================
+-- ==================================================================================================================================================================
 -- CANSENDER_2
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL                FUNCTION_TYPE     DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_LIST_CRC'	,'0',                      'CANSENDER','Cansender_2: 1 CRC');
@@ -242,7 +293,7 @@ INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_HEARTBEAT_CT'	,'375',			 
 INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_HEARTBEAT_MSG','CANID_HB_CANSENDER_2','CANSENDER','Cansender_2: 4 CANID: Hearbeat sends running count');
 INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_POLL'	    	,'CANID_POLL_CANSENDER','CANSENDER','Cansender_2: 5 CANID: Poll this cansender');
 INSERT INTO PARAM_VAL VALUES ('CANSENDER_2','CANSENDER_POLL_R'	  	,'CANID_POLLR_CANSENDER_2','CANSENDER','Cansender_2: 6 CANID: Response to POLL');
--- ====================================================================================================================================================================================
+-- ==================================================================================================================================================================
 -- GPS_1
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_LIST_CRC'              ,'0', 		'GPS',		'GPS_1: 1 CRC ');
@@ -254,14 +305,14 @@ INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_HEARTBEAT_TIME'        ,'CANID_HB_GPS
 INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_HEARTBEAT_LLH'         ,'CANID_HB_GPS_LLH_1' ,'GPS','GPS_1: 7 Heartbeat (3 separate msgs) lattitude longitude height');
 INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_DISABLE_SYNCMSGS'      ,'0'                  ,'GPS','GPS_1: 8 time sync msgs: 0 = enable  1 = disable');
 INSERT INTO PARAM_VAL VALUES ('GPS_1','GPS_TIME_SYNC_MSG'         ,'CANID_HB_TIMESYNC'  ,'GPS','GPS_1: 9 Time sync msg');
---============================================================================================================================================================================================
+--==================================================================================================================================================================
 -- LOGGER_1
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_LIST_CRC'        ,'0',              'LOGGER','Logger_1: 1 CRC ');
 INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_LIST_VERSION'    ,'1',              'LOGGER','Logger_1: 2 Version number');
 INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_HEARTBEAT1_CT'   ,'8000',           'LOGGER','Logger_1: 3 Heartbeat count of time (ms) between msgs');
 INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_HEARTBEAT_MSG' ,'CANID_HB_LOGGER_1','LOGGER','Logger_1: 4 CANID: Hearbeat sends running count of logged msgs');
---===========================================================================================================================================================================================
+--===================================================================================================================================================================
 -- GPS_2
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('GPS_2','GPS_LIST_CRC'               ,'0'               ,'GPS','GPS_2: 1 CRC ');
@@ -274,7 +325,7 @@ INSERT INTO PARAM_VAL VALUES ('GPS_2','GPS_HEARTBEAT_LLH'      ,'CANID_HB_GPS_LL
 INSERT INTO PARAM_VAL VALUES ('GPS_2','GPS_DISABLE_SYNCMSGS'   ,'0'                   ,'GPS','GPS_2: 8 time sync msgs: 0 = enable  1 = disable');
 INSERT INTO PARAM_VAL VALUES ('GPS_2','GPS_TIME_SYNC_MSG'      ,'CANID_HB_TIMESYNC_2' ,'GPS','GPS_2: 9 Time sync msg');
 
---===========================================================================================================================================================================================
+--===================================================================================================================================================================
 -- LOGGER_2
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_LIST_CRC'	   	,'0',  		'LOGGER',	'Logger_2: 1 CRC ');
@@ -282,7 +333,7 @@ INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_LIST_VERSION'   	,'1', 		'LOGGE
 INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_HEARTBEAT1_CT'		,'8000', 	'LOGGER',	'Logger_2: 3 Heartbeat count of time (ms) between msgs');
 INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_HEARTBEAT_MSG'    	,'CANID_HB_LOGGER_2','LOGGER',  'Logger_2: 4 CANID: Hearbeat sends running count of logged msgs');
 
---===========================================================================================================================================================================================
+--===================================================================================================================================================================
 -- TENSION_a11
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('TENSION_a11','TENSION_a_LIST_CRC',   	      '0',	'TENSION_a',  'Tension_a11: 1 CRC for tension list');
@@ -350,7 +401,7 @@ INSERT INTO PARAM_VAL VALUES ('TENSION_a11','TENSION_a_CANID_HW_FILT6'    ,'CANI
 INSERT INTO PARAM_VAL VALUES ('TENSION_a11','TENSION_a_CANID_HW_FILT7'    ,'CANID_DUMMY',	  	'TENSION_a',	'Tension_a11: 50 CANID 7 add CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('TENSION_a11','TENSION_a_CANID_HW_FILT8'    ,'CANID_DUMMY',	  	'TENSION_a',	'Tension_a11: 51 CANID 8 add CAN hw filter to allow incoming msg');
 --
---===========================================================================================================================================================================================
+--======================================================================================================================================================================
 -- TENSION_a21
 -- Second AD7799 on the same board, i.e. AD7799 #2(b)
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
@@ -416,7 +467,7 @@ INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_CANID_HW_FILT6'    ,'CANI
 INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_CANID_HW_FILT7'    ,'CANID_DUMMY',	  	'TENSION_a',	'Tension_a21: 50 CANID 7 add CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_CANID_HW_FILT8'    ,'CANID_DUMMY',	  	'TENSION_a',	'Tension_a21: 51 CANID 8 add CAN hw filter to allow incoming msg');
 --
---===========================================================================================================================================================================================
+--====================================================================================================================================================================
 -- TENSION_a12
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('TENSION_a12','TENSION_a_LIST_CRC',   		'0',	'TENSION_a',  'Tension_a12:   1 CRC for tension list');
@@ -478,9 +529,8 @@ INSERT INTO PARAM_VAL VALUES ('TENSION_a12','TENSION_a_CANID_HW_FILT5'    ,'CANI
 INSERT INTO PARAM_VAL VALUES ('TENSION_a12','TENSION_a_CANID_HW_FILT6'    ,'CANID_DUMMY',  		'TENSION_a',	'Tension_a12: 49 CANID 6 add CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('TENSION_a12','TENSION_a_CANID_HW_FILT7'    ,'CANID_DUMMY',	  	'TENSION_a',	'Tension_a12: 50 CANID 7 add CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('TENSION_a12','TENSION_a_CANID_HW_FILT8'    ,'CANID_DUMMY',	  	'TENSION_a',	'Tension_a12: 51 CANID 8 add CAN hw filter to allow incoming msg');
-
 --
---===========================================================================================================================================================================================
+--===================================================================================================================================================================
 -- TENSION_a22
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('TENSION_a22','TENSION_a_LIST_CRC',   		'0',	'TENSION_a',  'Tension_a22:   1 CRC for tension list');
@@ -543,7 +593,7 @@ INSERT INTO PARAM_VAL VALUES ('TENSION_a22','TENSION_a_CANID_HW_FILT6'    ,'CANI
 INSERT INTO PARAM_VAL VALUES ('TENSION_a22','TENSION_a_CANID_HW_FILT7'    ,'CANID_DUMMY',	  	'TENSION_a','Tension_a22: 50 CANID 7 add CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('TENSION_a22','TENSION_a_CANID_HW_FILT8'    ,'CANID_DUMMY',	  	'TENSION_a','Tension_a22: 51 CANID 8 add CAN hw filter to allow incoming msg');
 --
---===========================================================================================================================================================================================
+--========================================================================================================================================================================
 -- Cable Angle 1
 --                           FUNCTION_NAME     PARAM_NAME                PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('CABLE_ANGLE_1','CABLE_ANGLE_LIST_CRC'		,'0',	  'CABLE_ANGLE',  '  1 Cable_angle_1: CRC for Cable angle list');
@@ -566,7 +616,7 @@ INSERT INTO PARAM_VAL VALUES ('CABLE_ANGLE_1','CABLE_ANGLE_HEARTBEAT_MSG'   ,'CA
 INSERT INTO PARAM_VAL VALUES ('CABLE_ANGLE_1','CABLE_ANGLE_HEARTBEAT_CMDI'  ,'CANID_CMD_CABLE_ANGLE_1R','CABLE_ANGLE',  ' 17 Cable angle_1: CANID: Listen for command');
 INSERT INTO PARAM_VAL VALUES ('CABLE_ANGLE_1','CABLE_ANGLE_USEME'    	         , '1',   'CABLE_ANGLE',  ' 18 Cable Angle_1: skip or use this function switch');
 
---===========================================================================================================================================================================================
+--=========================================================================================================================================================================
 -- Yogurt maker 
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL  FUNCTION_TYPE         DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_LIST_CRC',              '0', 'YOGURT_1',  'Yogurt_1:  1 CRC for this list');
@@ -635,7 +685,7 @@ INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_INTEGRATEINIT_A',      '-4000
 INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_INTEGRATEINIT_B',      '434.0',	'YOGURT_1',	'Yogurt_1: 54  Control, integrator initialization, b of  a + b*x ');
 INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_STABILIZETIMEDELAY_P', '200',	'YOGURT_1',	'Yogurt_1: 55  Control, time delay for temperature stabilization, Pasteur');
 INSERT INTO PARAM_VAL VALUES ('YOGURT_1','YOGURT_1_STABILIZETIMEDELAY_F', '1070',	'YOGURT_1',	'Yogurt_1: 56  Control, time delay for temperature stabilization, Ferment');
---===========================================================================================================================================================================================
+--=====================================================================================================================================================================
 -- MCL: Master Controller Launch parameters
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE       DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('MCL','MCL_LIST_CRC'	     ,	 	'0', 	'MCL',	'mcl: crc: CRC: Master Controller Launch parameters');
@@ -660,5 +710,4 @@ INSERT INTO PARAM_VAL VALUES ('MCL','MCL_MAX_PARACHUTE_TENSION',	'50.0', 	'MCL',
 INSERT INTO PARAM_VAL VALUES ('MCL','MCL_PARACHUTE_TAPER_SPEED',	'65.0', 	'MCL',	'mcl: parachute tension taper: parachute taper speed (M/S): Master Controller Launch parameter');
 INSERT INTO PARAM_VAL VALUES ('MCL','MCL_MAX_PARACHUTE_CABLE_SPEED',	'80.0', 	'MCL',	'mcl: parachute tension taper: max chute cable speed (M/S): Master Controller Launch param');
 INSERT INTO PARAM_VAL VALUES ('MCL','MCL_K5',				'1.1',	 	'MCL',	'mcl: parachute tension taper: const k5: Master Controller Launch parameter');
-
 

@@ -1,0 +1,20 @@
+EAGLE Version 4.13 Copyright (c) 1988-2004 CadSoft
+
+Electrical Rule Check for /home/deh/GliderWinchCommons/embed/svn_sensor/hw/trunk/eagle/f103Ard/f103Ard.sch at  6/29/2018 11:08:54 
+
+WARNING: Sheet 1/1: POWER Pin IC103 VSS connected to GND
+WARNING: Sheet 1/1: POWER Pin IC1P VCC connected to +5V
+WARNING: Sheet 1/1: POWER Pin IC2P VCC connected to +5V
+WARNING: Sheet 1/1: POWER Pin DRV1 VDD connected to +12V
+WARNING: Sheet 1/1: POWER Pin U$3G$2 VCC+ connected to +3V3
+WARNING: Sheet 1/1: POWER Pin U$3G$2 VCC- connected to GND
+WARNING: Sheet 1/1: POWER Pin DRV2 VDD connected to +12V
+WARNING: Sheet 1/1: POWER Pin U$14G$2 VCC+ connected to +3V3
+WARNING: Sheet 1/1: POWER Pin U$14G$2 VCC- connected to GND
+WARNING: Sheet 1/1: POWER Pin U$15G$2 VCC+ connected to +3V3
+WARNING: Sheet 1/1: POWER Pin U$15G$2 VCC- connected to GND
+
+Board and schematic are consistent
+
+    0 errors
+   11 warnings

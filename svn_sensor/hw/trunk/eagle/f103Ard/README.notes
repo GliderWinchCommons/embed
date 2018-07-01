@@ -1,0 +1,82 @@
+README.notes
+6/30/2018
+
+Info on the design.
+
+Primary use is for ADC sensing, with a few output options for driving
+FETs which drive relays, including things such as--
+
+DC bench supply for winch motor testing with regeneration
+  four load-dump FETS
+  four hall-effect current sensors
+    motor #1
+    motor #2
+    load sum
+    charging current
+  one bus voltage (400v) 
+
+Paralleling generator instrumentation
+  two transformer voltage sensing of 240v
+  one current transformer for main output
+  one hall-effect field current sensor
+  one pwm FET for field current (180v 3a)
+  one r/c servo for throttle
+  one FET for main relay
+  one pot for manual adjustment of something
+
+r/c servo meter display
+  up to four r/c servos
+
+Air-conditioner outside unit instrumentation
+  one 240v input voltage
+  one 240v motor voltage 
+  one input current
+  one fan current
+  one contactor 24v signal
+  temperature
+    exhaust
+    ambient input
+
+
+The pins and resistor inputs to the ADC are arranged as follows:
+
+1.  Ground selection
+
+Four ADCs can have either ground or a bias voltage.  This selected by
+a zero ohm resistor in one of two locations, and associates with the 
+header pin.
+
+For bias, an op-amp divides the 3.3v ADC Vdd in half to provide a bias for
+transformer outputs so that ac signal swings around that reference.
+
+2.  Dividers
+
+Two resistors for each input form a divider for higher than 3.3v inputs.
+
+3. Op-amp input
+
+Two ADCs have op-amp inputs.  By populating the resistors these can be configured
+to act as voltage followers, where the input impedance is high (e.g. 1 M input
+resistor for high voltage bus voltage sensing).  Another use would be measuring
+current through a resistor in power supply line where the voltage needs to be 
+divided, but the difference between the voltages on both sides of the resistor
+are of interest.
+
+4.  Supply monitor
+
+One adc measures the +5V supply which can be used to correct for the supply drift.
+
+One adc measures the raw supply voltage from the CAN bus connector.
+
+Outputs
+
+1.  Two HC14 w 5v
+
+Six pairs of hc24 inverters provide outputs for pwm, such as r/c servos and FETs.
+
+One on-baord FET w diode provides drive for a relay, and is driven directly from
+one of the hc14 pairs.
+
+One FET driver drives an onboard medium power FET.  It is driven and shares a hc14 pair
+
+

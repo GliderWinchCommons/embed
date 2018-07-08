@@ -1,0 +1,82 @@
+README.notes
+07/07/2018
+
+Overview--
+
+Implements one FET and one current sensor.
+
+Various options provide for different current sensors and 
+FETs.
+
+The 6P6C jack matches the f103Ard.sch/brd layout so that a straight
+one-one module cable can be used.
+
+Ground is separate on this board and carried on separate wires in the
+cable to the f103Ard, or other, boards.
+
+1 Gnd
+2 FET drive
+3 Gnd
+4 current sensor
+5 5v current sensor drive
+6 12v fet driver power
+
+FET--
+
+a.  Drivers
+    1) Direct.
+       Omit R1 and R2 = zero (and no driver chips)
+       F103 board uses HC14 inverters at 5v to drive.
+
+    2) MCP1401 (on top of board)
+
+    3) MCP1407 (on bottom of board)
+
+    4) R1 for slowing FET turn-on if needed.
+
+b.  FET
+    1)  TO-220 package, vertical
+        e.g. RFP030N06 N-FET.
+
+    2)  D-PAK, surface, on bottom
+
+c.  Diodes
+    1) Thru-hole diode mounts on underside
+   
+    2) Surface mount diode on underside
+
+d.  LM78xx
+  
+    Input power from 6P6C jack is the CAN bus power voltage after passing
+    through a diode a small resistor on the f103Ard board.  If this voltage
+    exceeds the fet driver voltage limit (18v) the LMxx is used to regulate
+    that voltage.  If the voltage will stay within limits then jumper the
+    VI/VO pins.
+
+Current Sensors--
+
+a.  ACS712 module
+    1) Top mount (top edge, right)
+       Sweat solder the in/out connector
+
+    2) Underside pin mount (right edge, near top on board)
+       Insert pins from bottom, and board extends outward
+       from pcb edge
+
+b.  ACS711 module
+
+c.  ACS755
+      High current, with large current tabs
+ 
+d.  ACS709, ACS710
+    SOIC-W 16, 25 pins.
+
+e.  Tamura L010Z 
+
+f.  R5, R6 form divider for 5v->3.3V range change
+    Note: f103Ard board also has a divider provision.
+
+    C4 for filtering.
+
+
+    

@@ -1,5 +1,5 @@
 README.notes
-07/07/2018
+07/09/2018
 
 Overview--
 
@@ -9,10 +9,16 @@ Various options provide for different current sensors and
 FETs.
 
 The 6P6C jack matches the f103Ard.sch/brd layout so that a straight
-one-one module cable can be used.
+one-one modular cable can be used.
 
 Ground is separate on this board and carried on separate wires in the
-cable to the f103Ard, or other, boards.
+cable to the f103Ard, or other, boards. 
+
+Three separate ground planes:
+1.  Hall-effect sensors (right portion of board)
+2.  FET and FET drivers (left top portion of board)
+3.  Isolated FET driver input side (left bottom)
+
 
 1 Gnd
 2 FET drive
@@ -52,6 +58,16 @@ d.  LM78xx
     exceeds the fet driver voltage limit (18v) the LMxx is used to regulate
     that voltage.  If the voltage will stay within limits then jumper the
     VI/VO pins.
+
+e.  Grounds and isolation
+
+    The Si826 driver provides isolation of the FET ground by omitting 
+    R10, zero ohm, that connects the ground wire from the 6P6C jack to
+    to the other drivers and FETs.  When the Si826 is used an external
+    supply is needed for the Si826 gate drive, e.g. 12v.
+
+    When the isolation is not used R10, zero ohm, must be installed.  There
+    is the potential for a ground loop.
 
 Current Sensors--
 

@@ -8,6 +8,8 @@ Implements one FET and one current sensor.
 Various options provide for different current sensors and 
 FETs.
 
+One opto-couple for input is provided (in place of a Hall-effect sensor).
+
 The 6P6C jack matches the f103Ard.sch/brd layout so that a straight
 one-one modular cable can be used.
 
@@ -39,6 +41,8 @@ a.  Drivers
     3) MCP1407 (on bottom of board)
 
     4) R1 for slowing FET turn-on if needed.
+
+    5) Si826 isolating FET driver (on bottom left)
 
 b.  FET
     1)  TO-220 package, vertical
@@ -93,6 +97,20 @@ f.  R5, R6 form divider for 5v->3.3V range change
     Note: f103Ard board also has a divider provision.
 
     C4 for filtering.
+
+Isolated input--
+
+    A opto-coupler (LTV817S) provides an isolated input (underside center).  
+    R11 controls the opto diode current.
+
+Jack & header
+
+    6P6C modular jack and a 2x5 0.1" header for connects to processor board.
+
+    The 2x5 header allows ribbon cable/connectors.  It is not keyed, but pin
+    selection should prevent damage if the connector is put on backwards.
+
+
 
 
     

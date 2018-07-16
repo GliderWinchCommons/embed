@@ -25,3 +25,21 @@ CAN bus messages:
    message.
 
 
+Hall effect notes: 07/15/2018
+
+Flying lead 6P6C jack (FLJ) and wiring to Tamura L01Z is intended to
+match the jack wiring for the pcb 'fethe' (in directory
+ ../embed/svn_sensor/hw/trunk/eagle/fethe)
+
+Color coding of flying lead jack, purchased 6P6C cables, and
+Blue Pill wiring--
+
+Pin desc  FLJ  Cable BPill
+1 GND FET wht  gry   --
+2 FET DRV blk  yel   --
+3 HE GND  red  grn   blk
+4 HE SIG  grn  red   grn
+5 +5v     yel  blk   red
+6 +12V    blu  wht   --
+
+

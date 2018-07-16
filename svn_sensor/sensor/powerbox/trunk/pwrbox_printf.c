@@ -33,8 +33,8 @@ fmtprint(i+10, ppwr->adc[3].offset*10000, "10 ADC 3 offset*10000");
 fmtprint(i+11, ppwr->adc[3].scale*10000,  "11 ADC 3 scale*10000");
 fmtprint(i+12, ppwr->adc[4].offset*10000, "12 ADC 4 offset*10000");
 fmtprint(i+13, ppwr->adc[4].scale*10000,  "13 ADC 4 scale*10000");
-fmtprint(i+14, ppwr->adc[5].offset*10000, "14 ADC 5 offset*10000");
-fmtprint(i+15, ppwr->adc[5].scale*10000,  "15 ADC 5 scale*10000");
+fmtprint(i+14, ppwr->adc[5].offset, "14 ADC 5 Hall-effect offset: steps");
+fmtprint(i+15, ppwr->adc[5].scale,  "15 ADC 5 Hall-effect: volts/step");
 fmtprint(i+16, ppwr->adc[6].offset*10000, "16 ADC 6 offset*10000");
 fmtprint(i+17, ppwr->adc[6].scale*10000,  "17 ADC 6 scale*10000");
 fmtprint(i+18, ppwr->adc[7].offset*10000, "18 ADC 7 offset*10000");
@@ -64,6 +64,10 @@ printf("%2d	0x%08X	%s\n\r",i+37, (unsigned int)ppwr->code_CAN_filt[4], " 37 Dumm
 printf("%2d	0x%08X	%s\n\r",i+38, (unsigned int)ppwr->code_CAN_filt[5], " 38 Dummy");
 printf("%2d	0x%08X	%s\n\r",i+39, (unsigned int)ppwr->code_CAN_filt[6], " 39 Dummy");
 printf("%2d	0x%08X	%s\n\r",i+40, (unsigned int)ppwr->code_CAN_filt[7], " 40 Dummy");
+
+printf("%2d	0x%08X	%s\n\r",i+41, (unsigned int)ppwr->cid_lvl_msg,"41 CANID: Hall-effect msg");
+printf("%2d	0x%08X	%s\n\r",i+42, (unsigned int)ppwr->cid_lvl_hb, "42 CANID: Hall-effect hb");
+
 	USART1_txint_send(); 
 	return;
 }

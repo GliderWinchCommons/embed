@@ -157,13 +157,28 @@ void adcsensor_pwrbox_sequence(void)
 
 	/* Start the reset process for the calibration registers */
 	adcsensor_pwrbox_start_cal_register_reset();
-	timedelay(10 * ticksperus);	// Wait
+	timedelay(50 * ticksperus);	// Wait
 
 	/* Start the register calibration process */
 	adcsensor_pwrbox_start_calibration();
 	timedelay(80 * ticksperus);	// WaitCICSCALE
 
-	/* ADC is now ready for use.  Start ADC conversions */
+/* Setup DMA for storing data in the ADC_DR as the channels in the sequence are converted */
+	DMA1_CPAR1 = (u32)&ADC1_DR;				// DMA channel 1 peripheral address (adc1 data register)
+	DMA1_CMAR1 = (u32)&strADC1dr.in[0][0][0];		// Memory address of first buffer array for storing data 
+	DMA1_CNDTR1 = (2 * NUMBERSEQUENCES * NUMBERADCCHANNELS_PWR);// Number of data items before wrap-around
+
+	/* Set and enable interrupt controller for DMA transfer complete interrupt handling */
+	NVICIPR (NVIC_DMA1_CHANNEL1_IRQ, DMA1_CH1_PRIORITY_PWR );	// Set interrupt priority
+	NVICISER(NVIC_DMA1_CHANNEL1_IRQ);
+	DMA1_CCR1 |= DMA_CCR1_EN;
+
+	ADC1_CR1 = (ADC_CR1_SCAN); 	// Scan mode
+
+	/*           Use Internals   |    use DMA   |  Continuous */
+	ADC1_CR2  |= (ADC_CR2_TSVREFE |  ADC_CR2_DMA | ADC_CR2_CONT);
+
+	/* ADC is now ready for use.  Start ADC conversions (writes a 2nd ADC_CR2_ADON) */
 	adcsensor_pwrbox_start_conversion();	// Start ADC conversions and wait for ADC watchdog interrupts
 
 	return;
@@ -203,7 +218,7 @@ static void adcsensor_pwrbox_init(void)
 	/* Enable bus clocking for ADC */
 	RCC_APB2ENR |= RCC_APB2ENR_ADC1EN;	// Enable ADC1 clocking
 
-	RCC_AHBENR |= RCC_AHBENR_DMA1EN;			// Enable DMA1 clock
+	RCC_AHBENR |= RCC_AHBENR_DMA1EN;		// Enable DMA1 clock
 
 	/* Set APB2 bus divider for ADC clock */
 	RCC_CFGR |= ( (ucPrescalar & 0x3) << 14); // Set code for bus division
@@ -212,25 +227,10 @@ static void adcsensor_pwrbox_init(void)
 	//          priority high  | 32b mem xfrs | 16b adc xfrs | mem increment | circular mode | half xfr     | xfr complete   | dma chan 1 enable
 	DMA1_CCR1 =  ( 0x02 << 12) | (0x02 << 10) |  (0x01 << 8) | DMA_CCR1_MINC | DMA_CCR1_CIRC |DMA_CCR1_HTIE | DMA_CCR1_TCIE;//  | DMA_CCR1_EN;
 
-	/* Setup DMA for storing data in the ADC_DR as the channels in the sequence are converted */
-	DMA1_CPAR1 = (u32)&ADC1_DR;				// DMA channel 1 peripheral address (adc1 data register)
-	DMA1_CMAR1 = (u32)&strADC1dr.in[0][0][0];		// Memory address of first buffer array for storing data 
-	DMA1_CNDTR1 = (2 * NUMBERSEQUENCES * NUMBERADCCHANNELS_PWR);// Number of data items before wrap-around
-
-
-	/* Set and enable interrupt controller for DMA transfer complete interrupt handling */
-	NVICIPR (NVIC_DMA1_CHANNEL1_IRQ, DMA1_CH1_PRIORITY_PWR );	// Set interrupt priority
-	NVICISER(NVIC_DMA1_CHANNEL1_IRQ);
-	DMA1_CCR1 |= DMA_CCR1_EN;
-
-
-	//         (   scan      | watchdog enable | watchdog interrupt enable | watchdog channel number )
-	ADC1_CR1 = (ADC_CR1_SCAN ); 	// Scan mode
-
-	/*           Use Internals   |    use DMA   |  Continuous   | Power ON 	*/
-	ADC1_CR2  = (ADC_CR2_TSVREFE |  ADC_CR2_DMA | ADC_CR2_CONT  | ADC_CR2_ADON ); 
-
-	/* 1 us Tstab time is required before writing a second "1" to ADON to start conversions */
+	// Turn ADC on, but conversions don't start until 2nd ADC_CR2_ADON written
+	ADC1_CR2  = ADC_CR2_ADON; 
+	
+	/* 1 us Tstab time delay */
 	timedelay(2 * ticksperus);	// Wait
 
 	/* Set sample times for channels in scan sequence */
@@ -249,8 +249,7 @@ static void adcsensor_pwrbox_init(void)
 	NVICIPR (NVIC_TIM4_IRQ, TIM4_PRIORITY_ADC);	// Set low level interrupt priority for post DMA1 interrupt processing
 	NVICISER(NVIC_TIM4_IRQ);			// Enable low level interrupt
 
-
-	return;
+	return; // Initial init complete.  Calibrations needed.
 }
 /******************************************************************************
  * static void adcsensor_pwrbox_start_cal_register_reset(void);

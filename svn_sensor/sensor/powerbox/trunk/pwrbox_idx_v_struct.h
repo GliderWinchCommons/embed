@@ -64,6 +64,8 @@ struct ADCCALPWRBOX
    uint32_t alarmct;       // Time between alarm msgs (ms)
    float  alarm_thres;     // Voltage threshold for low volt alarm msgs    
 	uint32_t code_CAN_filt[CANFILTMAX];// List of CAN ID's for setting up hw filter
+   uint32_t cid_lvl_msg;   // CANID-level wind motor current: msg
+   uint32_t cid_lvl_hb;    // CANID-level wind motor current: heartbeat
  };
  
 /* **************************************************************************************/

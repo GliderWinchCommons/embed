@@ -555,10 +555,10 @@ for ( i = 0; i < NUMBERADCCHANNELS_PWR; i++)
 			adc_ave_ct = 0;
 
 			/* Calibrated iir filtered reading--beware indices */
-			filtered_calibrate(4, 3); // Input power
-			filtered_calibrate(2, 2); // CAN bus
-			filtered_calibrate(7, 1); // Vref
-			filtered_calibrate(1, 0); // 5V regulator
+			filtered_calibrate(4, IIRX_INPWR); // Input power
+			filtered_calibrate(2, IIRX_CANBV); // CAN bus
+			filtered_calibrate(7, IIRX_IVREF); // Vref
+			filtered_calibrate(1, IIRX_5VREG); // 5V regulator
 	
 			printf("\n\r"); // Last but not least
 		}

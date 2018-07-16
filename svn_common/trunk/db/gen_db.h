@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2018-06-20 14:59:05.459
+// 2018-07-15 20:45:28.633
 
-#define CANID_COUNT 219
+#define CANID_COUNT 221
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -184,6 +184,8 @@
 #define  CANID_HB_PWRBOX1         0xFF200000  // PWRBOX         : Pwrbox1: Heartbeat w input voltage
 #define  CANID_MSG_PWRBOX1        0xE3000000  // PWRBOX         : Pwrbox1: Polled msg
 #define  CANID_ALM_PWRBOX1        0x00800000  // PWRBOX         : Pwrbox1: Input voltage low alarm msg
+#define  CANID_LVL_HB_PWRBOX1     0xFF400000  // PWRBOX         : Pwrbox1: Heartbeat: level wind motor current
+#define  CANID_LVL_MSG_PWRBOX1    0xE3400000  // PWRBOX         : Pwrbox1: Msg: level wind motor current
 #define  CANID_CMD_SANDBOX_1I     0x28E00000  // SANDBOX_1      : HC: SANDBOX_1: I Launch parameters
 #define  CANID_CMD_SANDBOX_1R     0x28E00004  // SANDBOX_1      : HC: SANDBOX_1: R Launch parameters
 #define  CANID_CMD_YOGURT_1I      0x29800000  // YOGURT_1       : Yogurt: YOGURT_1: I Yogurt maker parameters
@@ -311,7 +313,7 @@
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
 
-#define PARAM_LIST_COUNT 334	// TOTAL COUNT OF PARAMETER LIST
+#define PARAM_LIST_COUNT 336	// TOTAL COUNT OF PARAMETER LIST
 
 #define  PWRBOX_CRC              	1         // Pwrbox:: CRC                                    
 #define  PWRBOX_VERSION          	2         // Pwrbox:: Version number                         
@@ -353,8 +355,10 @@
 #define  PWRBOX_CANID_HW_FILT6   	38        // Pwrbox: CANID 6 added to CAN hw filter to allow incoming msg
 #define  PWRBOX_CANID_HW_FILT7   	39        // Pwrbox: CANID 7 added to CAN hw filter to allow incoming msg
 #define  PWRBOX_CANID_HW_FILT8   	40        // Pwrbox: CANID 8 added to CAN hw filter to allow incoming msg
+#define  PWRBOX_LVL_HB_R         	41        // Pwrbox:: CANID: Heartbeat: level wind current   
+#define  PWRBOX_LVL_MSG_R        	42        // Pwrbox:: CANID: Msg: level wind current         
 
-#define PARAM_LIST_CT_PWRBOX	40	// Count of same FUNCTION_TYPE in preceding list
+#define PARAM_LIST_CT_PWRBOX	42	// Count of same FUNCTION_TYPE in preceding list
 
 #define  ENCODER_LIST_CRC        	1         // Encoder_f4_1: crc: CRC for tension list         
 #define  ENCODER_LIST_VERSION    	2         // Encoder_f4_1: version: Version number for Tension List
@@ -794,6 +798,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 729  */
+/* TOTAL COUNT OF #defines = 733  */
 /* Test 2016/06/12 */
 

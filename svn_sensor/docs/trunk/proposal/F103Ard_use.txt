@@ -42,9 +42,9 @@ B. Generator control
   1. Biased Divider: ~12v ac rms xfmr: Load 240v
   2. Biased Divider: ~12v ac rms xfmr: Gen 240v
   3. Bias voltage:
-  4. Current xfmr:op-amp: Gen current (ac)
+  4. Bias: Current xfmr:op-amp: Gen current (ac)
   5. Hall effect: Field current (dc)
- *6. 12v dc supply
+  6. 12v dc supply
  *7. Pot for throttle/power control
  *8. Pot for field current
 

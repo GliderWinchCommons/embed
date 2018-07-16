@@ -30,7 +30,7 @@
 /* Indices: Readings arrays */
 #define ADCX_IVREF	7	// Index in readings array: Internal Vref
 #define ADCX_SPAR1	6	// Index in readings array: spare
-#define ADCX_SPAR2	5	// Index in readings array: spare
+#define ADCX_SPAR2	5	// Index in readings array: Hall-effect current sensor
 #define ADCX_INPWR	4	// Index in readings array: Input power voltage
 #define ADCX_DIODE	3	// Index in readings array: Diode
 #define ADCX_CANVB	2	// Index in readings array: CAN bus voltage
@@ -51,7 +51,7 @@ PA 0 ADC12-IN0	 Grn 5V power supply
 PA 1 ADC12-IN1	 Yel Capacitor/bus voltage, .22 ohm output side
 PA 2 ADC12-IN2	 Blu 0.22 ohm resistor, input side, after diodes
 PA 3 ADC12-IN3	 Wht Input voltage (before diodes)
-PA 4 ADC12-IN4	 Spare divider
+PA 4 ADC12-IN4	 Hall-effect current sensor 
 PA 5 ADC12-IN5	 Spare divider
      ADC1 -IN16 Internal temp ref
      ADC1 -IN17 Internal voltage ref (Vrefint)

@@ -76,6 +76,8 @@ INSERT INTO PARAM_LIST VALUES ('PWRBOX_CANID_HW_FILT5'   ,37,'TYP_CANID','%x','P
 INSERT INTO PARAM_LIST VALUES ('PWRBOX_CANID_HW_FILT6'   ,38,'TYP_CANID','%x','PWRBOX','Pwrbox: CANID 6 added to CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('PWRBOX_CANID_HW_FILT7'   ,39,'TYP_CANID','%x','PWRBOX','Pwrbox: CANID 7 added to CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_LIST VALUES ('PWRBOX_CANID_HW_FILT8'   ,40,'TYP_CANID','%x','PWRBOX','Pwrbox: CANID 8 added to CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_LIST VALUES ('PWRBOX_LVL_HB_R'      ,41,'TYP_CANID','%x','PWRBOX','Pwrbox:: CANID: Heartbeat: level wind current');
+INSERT INTO PARAM_LIST VALUES ('PWRBOX_LVL_MSG_R'     ,42,'TYP_CANID','%x','PWRBOX','Pwrbox:: CANID: Msg: level wind current');
 --
 -- Discovery F4 shaft encoder: upper and lower fairlead sheaves
 --                              Parameter name                Code     Type  format     Function_type            Description

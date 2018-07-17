@@ -52,9 +52,9 @@ PA 0 ADC12-IN0	 Grn 5V power supply
 PA 1 ADC12-IN1	 Yel Capacitor/bus voltage
 PA 2 ADC12-IN2	 Blu 0.22 ohm resistor
 PA 3 ADC12-IN3	 Wht Input voltage
-PA 4 ADC12-IN4	 Spare divider
+PA 4 ADC12-IN4	 Hall-effect current sensor
 PA 5 ADC12-IN5	 Spare divider
-     ADC1 -IN16 Internal temp ref
+     ADC1 -IN16 Internal temp ref (17.1 us sample time best)
      ADC1 -IN17 Internal voltage ref (Vrefint)
 */
 
@@ -77,9 +77,9 @@ will be 32/4 = 8 MHz (max freq must be less than 14 MHz)
 With an ADC clock of 4 MHz the total conversion time--
   12.5 + SMPx time
 
-13.5 + 12.5 = 26.0 adc cycles per External ADC
-28.5 + 12.5 = 41.0 adc cycles for Internal temp
-28.5 + 12.5 = 41.0 adc cycles for Internal V ref
+[2] 13.5 + 12.5 = 26.0 adc cycles per External ADC
+[3] 28.5 + 12.5 = 41.0 adc cycles for Internal temp
+[3] 28.5 + 12.5 = 41.0 adc cycles for Internal V ref
 
 6 External input     6 *  41 = 246
 1 Internal temp      1 *  41 =  41
@@ -92,6 +92,7 @@ Supose DMA 1/2 buffer holds 32 scan cycles--
 
 */
 // *CODE* for number of cycles in conversion on each adc channel
+#define SMP0	2
 #define SMP1	2
 #define SMP2	2
 #define SMP3	2
@@ -107,8 +108,8 @@ Supose DMA 1/2 buffer holds 32 scan cycles--
 #define SMP13	3
 #define SMP14	3
 #define SMP15	3
-#define SMP16	3
-#define SMP17	3
+#define SMP16	4
+#define SMP17	4
 
 
 /* ********** Static routines **************************************************/
@@ -212,7 +213,7 @@ static void adcsensor_pwrbox_init(void)
 	if (pclk2_freq/6 < 14000000) ucPrescalar = 2;	// Division by 6
 	if (pclk2_freq/4 < 14000000) ucPrescalar = 1;	// Division by 4
 
-	/* ==>Override the above<==  32 MHz pclk2, divide by 4 -> 8 MHz. */
+	/* ==>Override the above<==  32 MHz pclk2, divide by 8 -> 4 MHz. */
 	ucPrescalar = 3;
 
 	/* Enable bus clocking for ADC */
@@ -421,24 +422,25 @@ adcdb0 = DTWTIME; // Execution time check
 
 /* #defines reproduced here for convenient reference--
 // Indices: Readings arrays
-#define ADCX_IVREF	7	// Index in readings array: Internal Vref
-#define ADCX_SPAR1	6	// Index in readings array: spare
-#define ADCX_SPAR2	5	// Index in readings array: spare
-#define ADCX_INPWR	4	// Index in readings array: Input power voltage
-#define ADCX_DIODE	3	// Index in readings array: Diode
-#define ADCX_CANVB	2	// Index in readings array: CAN bus voltage
-#define ADCX_5VREG	1	// Index in readings array: 5v regulator
-#define ADCX_ITEMP	0	// Index in readings array: Internal temp
+#define ADCX_ITEMP	7	// Index in readings array: Internal temp
+#define ADCX_IVREF	6	// Index in readings array: Internal Vref
+#define ADCX_SPAR1	5	// Index in readings array: spare
+#define ADCX_HALLE   4  // Index in readings array: Hall-effect current sensor
+#define ADCX_INPWR	3	// Index in readings array: Input power voltage
+#define ADCX_DIODE	2	// Index in readings array: Diode
+#define ADCX_CANVB	1	// Index in readings array: CAN bus voltage
+#define ADCX_5VREG	0	// Index in readings array: 5v regulator
 
-// Indices: IIR filter array
+// Indices: IIR filter array 
 #define IIRX_INPWR	3	// Index in iir filter array: Input power voltage
 #define IIRX_CANBV	2	// Index in iir filter array: CAN bus voltage voltage
-#define IIRX_IVREF	1	// Index in iir filter array: Internal Vref
+#define IIRX_HALLE	1	// Index in iir filter array: Internal Vref
 #define IIRX_5VREG	0	// Index in iir filter array: 5v regulator
+
 */
 	/* IIR filter readings for selected ADC readings execution: 515 cycles */
 	iir_filter_lx_do(&pwr_f.adc_iir[IIRX_5VREG], (int32_t*)(pbuf+ADCX_5VREG) ); // 5v regulator
-	iir_filter_lx_do(&pwr_f.adc_iir[IIRX_IVREF], (int32_t*)(pbuf+ADCX_IVREF) ); // Internal Vref
+	iir_filter_lx_do(&pwr_f.adc_iir[IIRX_HALLE], (int32_t*)(pbuf+ADCX_HALLE) ); // Internal Vref
 	iir_filter_lx_do(&pwr_f.adc_iir[IIRX_CANBV], (int32_t*)(pbuf+ADCX_CANVB) ); // CAN bus (output)
 	iir_filter_lx_do(&pwr_f.adc_iir[IIRX_INPWR], (int32_t*)(pbuf+ADCX_INPWR) ); // Power source (input)
 

@@ -500,6 +500,19 @@ double dGR = 1000.0/0.22;	// Reciprocal of series resistor
 
 extern uint32_t adcdb1;
 
+/* Long term tracking */
+long long llivref_accum = 0;
+long long llitemp_accum = 0;
+long long ll5vreg_accum = 0;
+double ddivref;
+double dditemp;
+double dd5vreg;
+double drecip;
+uint32_t llaccumct = 0;
+#define LTTRACKINGCT (4096*20)	// Long term accumulation count
+char dbuw[32] = {'n','a',0};
+char *strnone = " ";
+
 struct ADCCALIB
 {
 	double volts_in;
@@ -544,22 +557,57 @@ for ( i = 0; i < NUMBERADCCHANNELS_PWR; i++)
 //				printf(" %s", dbuf);
 
 				printf("%6d ", adc_ave[i]/(NUMBERSEQUENCES*adc_ave_ct));
+
+				// Additional accumulations for long term tracking
+				if (i == ADCX_IVREF) llivref_accum += adc_ave[i];
+				if (i == ADCX_ITEMP) llitemp_accum += adc_ave[i];
+				if (i == ADCX_5VREG) ll5vreg_accum += adc_ave[i];				
+
+				// Zero accumulations for next round
 				adc_ave[i] = 0;					
 			}
 
-//			dcur = (dvol[4]-dvol[3])*dGR;
-//			fpformat(&dbuf[0],dcur);
-//			printf("\n\r");
-//			printf("%s %d\n\r",dbuf, (int)adc_ave_ct);
-//			USART1_txint_send();
+			llaccumct += (NUMBERSEQUENCES*adc_ave_ct);
+			if (llaccumct >= LTTRACKINGCT)
+			{
+				ddivref = llivref_accum;
+				dditemp = llitemp_accum;
+				dd5vreg = ll5vreg_accum;
+				drecip = 1.0/llaccumct;
+				ddivref *= drecip;
+				dditemp *= drecip;
+				dd5vreg *= drecip;
+				llivref_accum = 0;
+				llitemp_accum = 0;
+				ll5vreg_accum = 0;
+
+				fpformatn(&dbuw[0],ddivref,10000,4,12);
+
+/* **********************************************************/
+void fpformatn(char *p, double d, int n, int m, int q);
+/* @brief	: Convert double to formatted ascii, e.g. ....-3.145
+ * @param	: d = input double 
+ * @param	: n = scale fraction, (e.g. 1000)
+ * @param	: m = number of decimal of fraction, (e.g. 3)
+ * @param	: q = number of chars total (e.g. 10)
+ * @param	: p = pointer to output char buffer
+*********************************************************** */
+            llaccumct     = 0;
+			}
+			else
+           strcpy(dbuw,strnone);
+
+
 			adc_ave_ct = 0;
 
 			/* Calibrated iir filtered reading--beware indices */
-			filtered_calibrate(4, IIRX_INPWR); // Input power
-			filtered_calibrate(2, IIRX_CANBV); // CAN bus
-			filtered_calibrate(7, IIRX_IVREF); // Vref
-			filtered_calibrate(1, IIRX_5VREG); // 5V regulator
+			filtered_calibrate(ADCX_INPWR, IIRX_INPWR); // Input power
+			filtered_calibrate(ADCX_CANVB, IIRX_CANBV); // CAN bus
+			filtered_calibrate(ADCX_HALLE, IIRX_HALLE); // Hall-effect sensor
+			filtered_calibrate(ADCX_5VREG, IIRX_5VREG); // 5V regulator
 	
+				printf(":%s", dbuw);					
+
 			printf("\n\r"); // Last but not least
 		}
 
@@ -577,8 +625,8 @@ for ( i = 0; i < NUMBERADCCHANNELS_PWR; i++)
 			if (adc_readings_buf_idx_o >= RBUFSIZE) adc_readings_buf_idx_o = 0;
 		}
 
-	/* ---------- Trigger a pass through 'CAN_poll' to poll msg handling & sending. ---------- */
-	CAN_poll_loop_trigger();
+		/* ---------- Trigger a pass through 'CAN_poll' to poll msg handling & sending. ---------- */
+		CAN_poll_loop_trigger();
 	}
 	return 0;	
 }
@@ -593,15 +641,17 @@ static void filtered_calibrate(int i, int j)
 	char dbut[32];
 	struct PWRBOXFUNCTION *p = &pwr_f;
 
+printf("  %d:",i);
 			/* Calibrate iir filtered reading--beware indices */
 				p->diir[i]  = p->adc_iir[j].z;   // Convert filtered reading to double
 				p->diir[i] /= (NUMBERSEQUENCES*p->adc_iir[j].pprm->scale); // De-scale
-				p->diir[i]  = p->diir[i] * p->pwrbox.adc[i].scale;    // Apply calibration
+            // Apply calibration
+				p->diir[i]  = (p->diir[i] - p->pwrbox.adc[i].offset) * p->pwrbox.adc[i].scale;   
 				fpformat(&dbut[0],p->diir[i]);printf(" %s", dbut); // print
 
 				/* Convert to integer: volts * 10 */
-				p->dvolbyte[i] = ((p->diir[i] + 0.05)* 10.0);
-				printf("% 5d", p->dvolbyte[i]);
+//				p->dvolbyte[i] = ((p->diir[i] + 0.05)* 10.0);
+//				printf("% 5d", p->dvolbyte[i]);
 	return;
 }
 

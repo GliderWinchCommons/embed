@@ -12,11 +12,11 @@
 /* **********************************************************/
 void fpformatn(char *p, double d, int n, int m, int q);
 /* @brief	: Convert double to formatted ascii, e.g. ....-3.145
+ * @param	: p = pointer to output char buffer
  * @param	: d = input double 
  * @param	: n = scale fraction, (e.g. 1000)
  * @param	: m = number of decimal of fraction, (e.g. 3)
  * @param	: q = number of chars total (e.g. 10)
- * @param	: p = pointer to output char buffer
 *********************************************************** */
 
 void fmtprint(int i, float f, char* p);

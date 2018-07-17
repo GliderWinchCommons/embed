@@ -1,4 +1,4 @@
-// 2018-07-15 20:45:29.984
+// 2018-07-16 21:38:56.279
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -280,30 +280,30 @@ const uint32_t paramval13[] = {
  0x00000000 , /*   1 0                    6   1 Pwrbox1: CRC                                                                 */
  0x00000001 , /*   2 1                    5   2 Pwrbox1: Version number                                                      */
  0x000003E8 , /*   3 1000                 5   3 Pwrbox1: Time (ms) between HB msg                                            */
- 0x00000000 , /*   4 0.0                 11   4 Pwrbox1: ADC reading 1 offset na                                             */
- 0x3E4CCCCD , /*   5 0.200000000         11   5 Pwrbox1: ADC reading 1  scale internal Temp                                  */
- 0x00000000 , /*   6 0.0                 11   6 Pwrbox1: ADC reading 2 offset na                                             */
- 0x3B14ECE6 , /*   7 0.002272421         11   7 Pwrbox1: ADC reading 2  scale 5v                                             */
- 0x00000000 , /*   8 0.0                 11   8 Pwrbox1: ADC reading 3 offset na                                             */
- 0x3B80E910 , /*   9 0.003934033         11   9 Pwrbox1: ADC reading 3  scale CAN bus                                        */
- 0x00000000 , /*  10 0.0                 11  10 Pwrbox1: ADC reading 4 offset na                                             */
- 0x3B827EDC , /*  11 0.003982408         11  11 Pwrbox1: ADC reading 4  scale diode                                          */
- 0x00000000 , /*  12 0.0                 11  12 Pwrbox1: ADC reading 5 offset na                                             */
- 0x3B823D78 , /*  13 0.003974613         11  13 Pwrbox1: ADC reading 5  scale input power                                    */
- 0x45014000 , /*  14 2068.0              11  14 Pwrbox1: ADC reading 6 offset hall-effect                                    */
- 0x41BC6666 , /*  15 23.55               11  15 Pwrbox1: ADC reading 6  scale hall-effect: steps/amp                         */
- 0x00000000 , /*  16 0.0                 11  16 Pwrbox1: ADC reading 7 offset spare                                          */
- 0x3E4CCCCD , /*  17 0.200000000         11  17 Pwrbox1: ADC reading 7  scale spare                                          */
- 0x00000000 , /*  18 0.0                 11  18 Pwrbox1: ADC reading 8 offset na                                             */
- 0x3AFF3475 , /*  19 0.001947059         11  19 Pwrbox1: ADC reading 8  scale internal Vref                                  */
- 0x0000000A , /*  20 10                   6  20 Pwrbox1: IIR1 Filter factor: 5v regulator                                    */
- 0x00000001 , /*  21 1                    6  21 Pwrbox1: IIR1 Filter scale : 5v regulator                                    */
- 0x0000000A , /*  22 10                   6  22 Pwrbox1: IIR2 Filter factor: internal Vref                                   */
- 0x00000001 , /*  23 1                    6  23 Pwrbox1: IIR2 Filter scale : internal Vref                                   */
- 0x0000000A , /*  24 10                   6  24 Pwrbox1: IIR3 Filter factor: CAN bus volts                                   */
- 0x00000001 , /*  25 1                    6  25 Pwrbox1: IIR3 Filter scale : CAN bus volts                                   */
- 0x00000080 , /*  26 128                  6  26 Pwrbox1: IIR4 Filter factor: Power source volts                              */
- 0x00000002 , /*  27 2                    6  27 Pwrbox1: IIR4 Filter scale : Power source volts                              */
+ 0x00000000 , /*   4 0.0                 11   4 Pwrbox1: ADC 0 5VREG offset na                                               */
+ 0x3AA36F97 , /*   5 0.001246917         11   5 Pwrbox1: ADC 0 5VREG scale volts/step                                        */
+ 0x00000000 , /*   6 0.0                 11   6 Pwrbox1: ADC 1 CANVB offset na                                               */
+ 0x3B80BC24 , /*   7 0.003928678         11   7 Pwrbox1: ADC 1 CANVB scale volts/step                                        */
+ 0x00000000 , /*   8 0.0                 11   8 Pwrbox1: ADC 2 DIODE offset na                                               */
+ 0x3B83EAA6 , /*   9 0.004025775         11   9 Pwrbox1: ADC 2 DIODE scale volts/step                                        */
+ 0x00000000 , /*  10 0.0                 11  10 Pwrbox1: ADC 3 INPWR offset na                                               */
+ 0x3B82388C , /*  11 0.003974026         11  11 Pwrbox1: ADC 3 INPWR scale volts/step                                        */
+ 0x45014000 , /*  12 2068.0              11  12 Pwrbox1: ADC 4 HALLE offset zero                                             */
+ 0x3D2DED85 , /*  13 0.042462845         11  13 Pwrbox1: ADC 4 HALLE scale amps/step                                         */
+ 0x00000000 , /*  14 0.0                 11  14 Pwrbox1: ADC 5 SPAR1 offset                                                  */
+ 0x3F800000 , /*  15 1.0                 11  15 Pwrbox1: ADC 5 SPAR1 scale                                                   */
+ 0x00000000 , /*  16 0.0                 11  16 Pwrbox1: ADC 6 ITEMP offset Vref                                             */
+ 0x3F800000 , /*  17 1.0                 11  17 Pwrbox1: ADC 6 ITEMP scale                                                   */
+ 0x00000000 , /*  18 0.0                 11  18 Pwrbox1: ADC 7 IVREF offset                                                  */
+ 0x3B11643D , /*  19 0.002218499         11  19 Pwrbox1: ADC 7 IVREF scale volts/step                                        */
+ 0x00000080 , /*  20 128                  6  20 Pwrbox1: IIR1 Filter 0 factor: 5v regulator                                  */
+ 0x00000002 , /*  21 2                    6  21 Pwrbox1: IIR1 Filter 0 scale : 5v regulator                                  */
+ 0x0000000A , /*  22 10                   6  22 Pwrbox1: IIR2 Filter 1 factor: Hall-effect sensor                            */
+ 0x00000001 , /*  23 1                    6  23 Pwrbox1: IIR2 Filter 1 scale : Hall-effect sensor                            */
+ 0x0000000A , /*  24 10                   6  24 Pwrbox1: IIR3 Filter 2 factor: CAN bus volts                                 */
+ 0x00000001 , /*  25 1                    6  25 Pwrbox1: IIR3 Filter 2 scale : CAN bus volts                                 */
+ 0x00000080 , /*  26 128                  6  26 Pwrbox1: IIR4 Filter 3 factor: Power source volts                            */
+ 0x00000002 , /*  27 2                    6  27 Pwrbox1: IIR4 Filter 3 scale : Power source volts                            */
  0xFF200000 , /*  28 CANID_HB_PWRBOX1    17  28 Pwrbox: CANID: Heartbeat: input voltage, bus voltage                         */
  0xE3000000 , /*  29 CANID_MSG_PWRBOX1   17  29 Pwrbox: CANID: Msg: input voltage, bus voltage                               */
  0x00800000 , /*  30 CANID_ALM_PWRBOX1   17  30 Pwrbox: CANID: Alarm: input voltage, bus voltage                             */

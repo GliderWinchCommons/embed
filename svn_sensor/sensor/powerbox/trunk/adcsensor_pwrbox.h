@@ -29,18 +29,19 @@
 
 /* Indices: Readings arrays */
 #define ADCX_IVREF	7	// Index in readings array: Internal Vref
-#define ADCX_SPAR1	6	// Index in readings array: spare
-#define ADCX_SPAR2	5	// Index in readings array: Hall-effect current sensor
-#define ADCX_INPWR	4	// Index in readings array: Input power voltage
-#define ADCX_DIODE	3	// Index in readings array: Diode
-#define ADCX_CANVB	2	// Index in readings array: CAN bus voltage
-#define ADCX_5VREG	1	// Index in readings array: 5v regulator
-#define ADCX_ITEMP	0	// Index in readings array: Internal temp
+#define ADCX_ITEMP	6	// Index in readings array: Internal temp
+#define ADCX_SPAR1	5	// Index in readings array: spare
+#define ADCX_HALLE   4  // Index in readings array: Hall-effect current sensor
+#define ADCX_INPWR	3	// Index in readings array: Input power voltage
+#define ADCX_DIODE	2	// Index in readings array: Diode
+#define ADCX_CANVB	1	// Index in readings array: CAN bus voltage
+#define ADCX_5VREG	0	// Index in readings array: 5v regulator
+
 
 /* Indices: IIR filter array */
 #define IIRX_INPWR	3	// Index in iir filter array: Input power voltage
 #define IIRX_CANBV	2	// Index in iir filter array: CAN bus voltage voltage
-#define IIRX_IVREF	1	// Index in iir filter array: Internal Vref
+#define IIRX_HALLE	1	// Index in iir filter array: Internal Vref
 #define IIRX_5VREG	0	// Index in iir filter array: 5v regulator
 
 

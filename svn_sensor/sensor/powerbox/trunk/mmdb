@@ -11,7 +11,7 @@ echo "################## "
 echo "STARTED DB SERVER"
 echo "##################"
 sleep 2
-./db_updatej
+./db_updatej | tee z
 
 # Back to original location
 cd ../../../svn_sensor/sensor/pwrbox/trunk

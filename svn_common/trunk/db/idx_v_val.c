@@ -1,4 +1,4 @@
-// 2018-07-16 21:38:56.279
+// 2018-07-17 21:28:39.414
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -17,7 +17,7 @@
 #define LOGGER_1_PARAM_SIZE 4
 #define LOGGER_2_PARAM_SIZE 4
 #define MCL_PARAM_SIZE 21
-#define PWRBOX1_PARAM_SIZE 41
+#define PWRBOX1_PARAM_SIZE 42
 #define SHAFT1_PARAM_SIZE 22
 #define SHEAVE_1LO_PARAM_SIZE 17
 #define SHEAVE_1UP_PARAM_SIZE 17
@@ -308,16 +308,17 @@ const uint32_t paramval13[] = {
  0xE3000000 , /*  29 CANID_MSG_PWRBOX1   17  29 Pwrbox: CANID: Msg: input voltage, bus voltage                               */
  0x00800000 , /*  30 CANID_ALM_PWRBOX1   17  30 Pwrbox: CANID: Alarm: input voltage, bus voltage                             */
  0x00000032 , /*  31 50                   6  31 Pwrbox: Time (ms) between alarm msgs, when below threshold                   */
- 0x00400000 , /*  32 CANID_HB_TIMESYNC   17  33 Pwrbox1: CANID 0: GPS time sync distribution msg                             */
- 0x20000000 , /*  33 CANID_MSG_TIME_POLL  17  34 Pwrbox1: CANID 1: Time msg/Group polling                                     */
- 0xFFFFFFFC , /*  34 CANID_DUMMY         17  35 Pwrbox1: CANID 2 add CAN hw filter for incoming msg                          */
- 0xFFFFFFFC , /*  35 CANID_DUMMY         17  36 Pwrbox1: CANID 3 add CAN hw filter for incoming msg                          */
- 0xFFFFFFFC , /*  36 CANID_DUMMY         17  37 Pwrbox1: CANID 4 add CAN hw filter for incoming msg                          */
- 0xFFFFFFFC , /*  37 CANID_DUMMY         17  38 Pwrbox1: CANID 5 add CAN hw filter for incoming msg                          */
- 0xFFFFFFFC , /*  38 CANID_DUMMY         17  39 Pwrbox1: CANID 6 add CAN hw filter for incoming msg                          */
- 0xFFFFFFFC , /*  39 CANID_DUMMY         17  40 Pwrbox1: CANID 7 add CAN hw filter for incoming msg                          */
- 0xFF400000 , /*  40 CANID_LVL_HB_PWRBOX1  17  41 Pwrbox1: CANID: Heartbeat: level wind current                                */
- 0xE3400000 , /*  41 CANID_LVL_MSG_PWRBOX1  17  42 Pwrbox1: CANID: Msg: level wind current                                      */
+ 0x41280000 , /*  32 10.5                11  32 Pwrbox: Voltage threshold for alarm msgs                                     */
+ 0x00400000 , /*  33 CANID_HB_TIMESYNC   17  33 Pwrbox1: CANID 0: GPS time sync distribution msg                             */
+ 0x20000000 , /*  34 CANID_MSG_TIME_POLL  17  34 Pwrbox1: CANID 1: Time msg/Group polling                                     */
+ 0xFFFFFFFC , /*  35 CANID_DUMMY         17  35 Pwrbox1: CANID 2 add CAN hw filter for incoming msg                          */
+ 0xFFFFFFFC , /*  36 CANID_DUMMY         17  36 Pwrbox1: CANID 3 add CAN hw filter for incoming msg                          */
+ 0xFFFFFFFC , /*  37 CANID_DUMMY         17  37 Pwrbox1: CANID 4 add CAN hw filter for incoming msg                          */
+ 0xFFFFFFFC , /*  38 CANID_DUMMY         17  38 Pwrbox1: CANID 5 add CAN hw filter for incoming msg                          */
+ 0xFFFFFFFC , /*  39 CANID_DUMMY         17  39 Pwrbox1: CANID 6 add CAN hw filter for incoming msg                          */
+ 0xFFFFFFFC , /*  40 CANID_DUMMY         17  40 Pwrbox1: CANID 7 add CAN hw filter for incoming msg                          */
+ 0xFF400000 , /*  41 CANID_LVL_HB_PWRBOX1  17  41 Pwrbox1: CANID: Heartbeat: level wind current                                */
+ 0xE3400000 , /*  42 CANID_LVL_MSG_PWRBOX1  17  42 Pwrbox1: CANID: Msg: level wind current                                      */
 };
 #endif
 

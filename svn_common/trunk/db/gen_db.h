@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2018-07-16 21:38:54.934
+// 2018-07-17 21:28:37.998
 
 #define CANID_COUNT 221
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -342,11 +342,11 @@
 #define  PWRBOX_IIR2_SCALE       	25        // Pwrbox: IIR2 Filter scale : upscaling (due to integer math)
 #define  PWRBOX_IIR3_K           	26        // Pwrbox: IIR3 Filter factor: divisor sets time constant
 #define  PWRBOX_IIR3_SCALE       	27        // Pwrbox: IIR3 Filter scale : upscaling (due to integer math)
-#define  PWRBOX_HB_R             	28        // Pwrbox:: CANID: Heartbeat: input voltage, bus voltage
-#define  PWRBOX_MSG_R            	29        // Pwrbox:: CANID: Msg: input voltage, bus voltage 
-#define  PWRBOX_ALARM_R          	30        // Pwrbox:: CANID: Alarm: input voltage, bus voltage
-#define  PWRBOX_ALARM_RATE       	31        // Pwrbox:: Time (ms) between alarm msgs, when below threshold
-#define  PWRBOX_ALARM_THRES      	32        // Pwrbox:: Voltage threshold for alarm msgs       
+#define  PWRBOX_HB_R             	28        // Pwrbox: CANID: Heartbeat: input voltage, bus voltage
+#define  PWRBOX_MSG_R            	29        // Pwrbox: CANID: Msg: input voltage, bus voltage  
+#define  PWRBOX_ALARM_R          	30        // Pwrbox: CANID: Alarm: input voltage, bus voltage
+#define  PWRBOX_ALARM_RATE       	31        // Pwrbox: Time (ms) between alarm msgs, when below threshold
+#define  PWRBOX_ALARM_THRES      	32        // Pwrbox: Voltage threshold for alarm msgs        
 #define  PWRBOX_CANID_HW_FILT1   	33        // Pwrbox: CANID 1 added to CAN hw filter to allow incoming msg
 #define  PWRBOX_CANID_HW_FILT2   	34        // Pwrbox: CANID 2 added to CAN hw filter to allow incoming msg
 #define  PWRBOX_CANID_HW_FILT3   	35        // Pwrbox: CANID 3 added to CAN hw filter to allow incoming msg

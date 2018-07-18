@@ -79,7 +79,7 @@ INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_HB_R'    ,'CANID_HB_PWRBOX1' ,'P
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_MSG_R'   ,'CANID_MSG_PWRBOX1','PWRBOX','29 Pwrbox: CANID: Msg: input voltage, bus voltage ');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_ALARM_R' ,'CANID_ALM_PWRBOX1','PWRBOX','30 Pwrbox: CANID: Alarm: input voltage, bus voltage');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_ALARM_RATE' ,'50'            ,'PWRBOX','31 Pwrbox: Time (ms) between alarm msgs, when below threshold');
-INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_ALARM_THRE' ,'10.5'          ,'PWRBOX','32 Pwrbox: Voltage threshold for alarm msgs');
+INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_ALARM_THRES','10.5'          ,'PWRBOX','32 Pwrbox: Voltage threshold for alarm msgs');
 -- The CAN hardware filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT1','CANID_HB_TIMESYNC'  ,'PWRBOX','33 Pwrbox1: CANID 0: GPS time sync distribution msg');
 INSERT INTO PARAM_VAL VALUES ('PWRBOX1','PWRBOX_CANID_HW_FILT2','CANID_MSG_TIME_POLL','PWRBOX','34 Pwrbox1: CANID 1: Time msg/Group polling');

@@ -48,14 +48,15 @@ at the end of the buffer.  The code for DMA interrupts is not used.
 static void adc_accum(void);
 
 /* ADC usage on Arduino Blue Pill F103 board
-PA 0 ADC12-IN0	 Grn 5V power supply
-PA 1 ADC12-IN1	 Yel Capacitor/bus voltage
-PA 2 ADC12-IN2	 Blu 0.22 ohm resistor
-PA 3 ADC12-IN3	 Wht Input voltage
-PA 4 ADC12-IN4	 Hall-effect current sensor
-PA 5 ADC12-IN5	 Spare divider
-     ADC1 -IN16 Internal temp ref (17.1 us sample time best)
-     ADC1 -IN17 Internal voltage ref (Vrefint)
+Scan seq: Port: pin: ADC: Description
+0 PA 0 ADC12-IN0	 Grn 5V power supply
+1 PA 1 ADC12-IN1	 Yel Capacitor/bus voltage
+2 PA 2 ADC12-IN2	 Blu 0.22 ohm resistor
+3 PA 3 ADC12-IN3	 Wht Input voltage
+4 PA 4 ADC12-IN4	 Hall-effect current sensor
+5 PA 5 ADC12-IN5	 Spare divider
+6      ADC1 -IN16 Internal temp ref (17.1 us sample time target)
+7      ADC1 -IN17 Internal voltage ref (17.1 us sample time target)
 */
 
 /*

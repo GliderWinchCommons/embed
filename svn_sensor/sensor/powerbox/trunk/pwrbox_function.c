@@ -189,7 +189,8 @@ static void filtered_calibrate(struct PWRBOXFUNCTION *p, int i, int j)
 	/* Calibrate iir filtered reading--beware indices */
 	p->diir[i]  = p->adc_iir[j].z;   // Convert filtered reading to double
 	p->diir[i] /= (NUMBERSEQUENCES*p->adc_iir[j].pprm->scale); // De-scale
-	p->diir[i]  = p->diir[i] * p->pwrbox.adc[i].scale;    // Apply calibration
+	// Apply calibration
+	p->diir[i]  = (p->diir[i] - p->pwrbox.adc[i].offset) * p->pwrbox.adc[i].scale;    
 	p->fiir[i]  = p->diir[i];	// Convert to float
 
 	/* Convert to integer: volts * 10 */
@@ -207,8 +208,9 @@ static void unfiltered_calibrate(struct PWRBOXFUNCTION *p, int i)
 	/* Calibrate iir filtered reading--beware indices */
 	p->dunf[i]  = p->iunf[i];        // Convert filtered reading to double
 	p->dunf[i] /= (NUMBERSEQUENCES); // De-scale
-	p->dunf[i]  = p->dunf[i] * p->pwrbox.adc[i].scale;  // Apply calibration
-	p->funf[i]  = p->dunf[i];	      // Convert to float
+   // Apply calibration
+	p->dunf[i]  = (p->dunf[i] - p->pwrbox.adc[i].offset) * p->pwrbox.adc[i].scale;
+	p->funf[i]  = p->dunf[i];	      // Convert to float for CAN msg
 	return;
 }
 /* ######################################################################################
@@ -242,6 +244,12 @@ int pwrbox_function_poll(struct CANRCVBUF* pcan, struct PWRBOXFUNCTION* p)
 		/* Send heartbeat and compute next hearbeat time count. */
 		//      Args:  CAN id, status of reading, reading pointer instance pointer
 		send_can_msg(p->pwrbox.cid_heartbeat, p->status_byte, &ui.ui, p); 
+
+		filtered_calibrate(p, ADCX_HALLE, IIRX_HALLE); // Input power voltage
+		ui.ft = p->fiir[ADCX_HALLE];
+		send_can_msg(p->pwrbox.cid_lvl_hb, p->status_byte, &ui.ui, p); 
+
+
 	}
 
 	/* Check if a low input voltage alarm msg should be sent */
@@ -268,10 +276,11 @@ int pwrbox_function_poll(struct CANRCVBUF* pcan, struct PWRBOXFUNCTION* p)
 	if (pcan->id == p->pwrbox.code_CAN_filt[0]) // Time sync msg (0x00400000)
 	{ // Here, group poll msg.  Check if poll and function bits are for us
 		{ // Here, yes.  Send our precious msg.
-//		filtered_calibrate(p, ADCX_INPWR, IIRX_INPWR); // Input power voltage
-//		ui.ft = p->fiir[ADCX_INPWR];
 			//      Args:  CAN id, status of reading, reading pointer instance pointer
 			send_can_msg(p->pwrbox.cid_pwr_msg, p->status_byte, &ui.ui, p); 
+			filtered_calibrate(p, ADCX_HALLE, IIRX_HALLE); // Input power voltage
+			ui.ft = p->fiir[ADCX_HALLE];
+			send_can_msg(p->pwrbox.cid_lvl_msg, p->status_byte, &ui.ui, p); 
 			return 0;
 		}
 	}

@@ -1,7 +1,8 @@
 README.notes
 6/30/2018
 
-Info on the design.
+=====================================================================
+A.  Info on the design.
 
 Primary use is for ADC sensing, with a few output options for driving
 FETs which drive relays, including things such as--
@@ -78,5 +79,54 @@ One on-baord FET w diode provides drive for a relay, and is driven directly from
 one of the hc14 pairs.
 
 One FET driver drives an onboard medium power FET.  It is driven and shares a hc14 pair
+
+======================================================================================
+B. Implemented design
+
+1. 6P6C sensor jack ports (ADC input | HC14 drive output]
+   a.  JP10 [upper  left]
+       PA6 | PB9
+
+   b.  JP13 [upper right]
+       PA2 | PB7
+       
+   c.  JP15 [lower  left]
+       PA5 | PB8
+
+   d.  JP14 [lower right]
+       PA1 | PB5
+
+2. Resistor numbers for dividers and jumpers
+
+ADC
+               Gnd  Sig  Pullup  Bias
+A0  ADC12_IN0  R3   R4    na      na       5V supply
+A1  ADC12_IN1  R17 R18   R44     R37|R22  JP14
+A2  ADC12_IN2  R9  R10   R43     R38|R21  JP13
+A3  ADC12_IN3  R15 R16   R42     R23|R24
+A4  ADC12_IN4  R7  R8    R41     R39|R40 
+A5  ADC12_IN5  R13 R14   R45     na       JP15
+A6  ADC12_IN6  R5  R6    R46     na       JP10
+A7  ADC12_IN7  R11 R12   na      na       Can Raw supply
+
+Op-amp 
+B0  ADC12_IN8 $U14 op-amp
+B1  ADC12_IN9 $U15 op-amp 
+
+======================================================================================
+C. Assembly notes
+
+1.  LM2596 dc-dc switcher
+
+The footprint is for the switcher version that has the diode transverse to the pcb rather than
+the other common version that has the diode in the longitutudinal direction.  The latter
+version has the in/out pin locations slightly larger and doesn't fit the f103Ard board quite
+right, though one could use header pins on the IN switcher pins and stiff wires on the OUT
+pins and make it work.
+
+For a f103Ard board revision--make a eagle library part that has two sets of pads so either
+switcher version can be used.
+
+
 
 

@@ -35,11 +35,13 @@ int logger_idx_v_struct_copy(struct LOGGERLC* p, uint32_t* ptbl)
 {
 
 /* NOTE: values that are not uint32_t  */
-p->size         = ptbl[0];		 		/* 0 Tension: Number of elements in the following list */
-p->crc          = ptbl[LOGGER_LIST_CRC];		/* 1 Tension: CRC for logger list */
-p->version      = ptbl[LOGGER_LIST_VERSION];		/* 2 Version number */	
-p->hbct		= ptbl[LOGGER_HEARTBEAT1_CT];		/* 3 Heartbeat count of time (ms) between msgs */
-p->cid_loghb_ctr= ptbl[LOGGER_HEARTBEAT_MSG];		/* 4 CANID: Hearbeat sends running count of logged msgs */
+p->size         = ptbl[0];                   /* 0 Tension: Number of elements in the following list */
+p->crc          = ptbl[LOGGER_LIST_CRC];     /* 1 Tension: CRC for logger list */
+p->version      = ptbl[LOGGER_LIST_VERSION]; /* 2 Version number */	
+p->hbct		= ptbl[LOGGER_HEARTBEAT1_CT];    /* 3 Heartbeat count of time (ms) between msgs */
+p->cid_loghb_ctr= ptbl[LOGGER_HEARTBEAT_MSG];/* 4 CANID: Hearbeat sends running count of logged msgs */
+p->cid_log_alrm = ptbl[LOGGER_SUSPEND_R];    /* 5 CANID: Suspend logging alarm msg (receive) */
+p->suspend_ct   = ptbl[LOGGER_SUSPEND_CT];   /* 6 Suspend duration (ms) */
 
 return PARAM_LIST_CT_LOGGER;
 }

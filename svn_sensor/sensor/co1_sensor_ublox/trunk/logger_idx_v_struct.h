@@ -5,7 +5,7 @@
 * Description        : Translate parameter index into pointer into struct
 *******************************************************************************/
 /*
-
+07/22/2018 added Alarm msg
 */
 
 #include <stdint.h>
@@ -24,6 +24,8 @@
 	uint32_t version;	// 2 struct version number
 	uint32_t hbct;		// 3 Heartbeat count (ms) between msgs
 	uint32_t cid_loghb_ctr;	// 4 CANID: Heartbeat running count
+   uint32_t cid_log_alrm;  // 5 CANID: Suspend logging alarm msg (receive)
+   uint32_t suspend_ct;    // 6 Suspend duration (ms)
 };
 
 /* **************************************************************************************/

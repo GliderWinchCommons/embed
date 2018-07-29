@@ -518,7 +518,6 @@ struct ADCCALIB
 	double volts_in;
 	double volts_adc;
 	double ave_count;
-
 };
 
 #define ADCEXT 6	// Number of external ADC inputs

@@ -224,10 +224,13 @@ INSERT INTO PARAM_LIST VALUES ('GPS_TIME_SYNC_MSG'         , 9, 'TYP_CANID','%x'
 --
 -- Logger
 --                              Parameter name                 Code     Type  format Function_type       Description
-INSERT INTO PARAM_LIST VALUES ('LOGGER_LIST_CRC'	   	, 1, 'TYP_U32','%08X', 	'LOGGER',	'Logger: CRC ');
-INSERT INTO PARAM_LIST VALUES ('LOGGER_LIST_VERSION'      	, 2, 'TYP_S32','%d', 	'LOGGER',	'Logger: Version number');
-INSERT INTO PARAM_LIST VALUES ('LOGGER_HEARTBEAT1_CT'		, 3, 'TYP_U32','%d',	'LOGGER',	'Logger: Heartbeat count of time (ms) between msgs');
-INSERT INTO PARAM_LIST VALUES ('LOGGER_HEARTBEAT_MSG'    	, 4, 'TYP_CANID','%x', 	'LOGGER',  	'Logger: CANID: Hearbeat sends running count of logged msgs');
+INSERT INTO PARAM_LIST VALUES ('LOGGER_LIST_CRC'         , 1, 'TYP_U32','%08X','LOGGER','Logger: CRC ');
+INSERT INTO PARAM_LIST VALUES ('LOGGER_LIST_VERSION'     , 2, 'TYP_S32','%d'  ,'LOGGER','Logger: Version number');
+INSERT INTO PARAM_LIST VALUES ('LOGGER_HEARTBEAT1_CT'    , 3, 'TYP_U32','%d'  ,'LOGGER','Logger: Heartbeat count of time (ms) between msgs');
+INSERT INTO PARAM_LIST VALUES ('LOGGER_HEARTBEAT_MSG'    , 4, 'TYP_CANID','%x','LOGGER','Logger: CANID: Hearbeat sends running count of logged msgs');
+INSERT INTO PARAM_LIST VALUES ('LOGGER_SUSPEND_R'        , 5, 'TYP_CANID','%x','LOGGER','Logger: CANID: Low voltage alarm msg suspends logging ');
+INSERT INTO PARAM_LIST VALUES ('LOGGER_SUSPEND_CT'       , 6, 'TYP_U32','%d'  ,'LOGGER','Logger: Suspend duration (ms) after receiving alarm msg');
+
 ---
 -- Engine sensors: Mainfold pressure
 --                              Parameter name            Code  Type   format    Function_type            Description

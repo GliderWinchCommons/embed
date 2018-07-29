@@ -14,16 +14,20 @@ CAN messages:
 
 
 11/11/2012 This is a hack of svn_pod/sw_stm32/trunk/devices/adcpod.c
-See p214 of Ref Manual for ADC section 
 02/12/2015 This is a hack of adcsensor_tension.c
 
 */
 /*
-NOTE: Some page number refer to the Ref Manual RM0008, rev 11 and some more recent ones, rev 14.
-
 Strategy--
-Four ADC pins are read at a rapid rate with the DMA storing the sequence.  The DMA wraps around
-at the end of the buffer.  The code for DMA interrupts is not used.  
+Four ADC pins are read at a rapid rate with the DMA storing the sequence.  The DMA wraps around at the end of the buffer.  At the half-way and end points the DMA issues an
+interrupt, which is used to trigger a lower level interrupt for handling of the buffer
+half just filled.
+
+Synchronizing DMA and ADC scan--
+The CONT and DMA bits in CR2 are set following the ADC calibration and DMA setup.  If
+these are set early the data stored in the DMA is shifted.  The shift depends on the
+ADC sampling rate and calibration delays.  When CONT and DMA is set last the timing of
+the ADC calibration and sampling rate have no effect.
  
 */
 #include <math.h>

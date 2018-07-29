@@ -1,0 +1,77 @@
+README.brd1
+Notes on assembly of f103Ard board #1
+07/25/2018
+
+
+f103ARd board #1
+
+UART: vertical header 
+switcher output: 5.05v
+
+
+R1 1 ohm
+D  1N4007
+
+C1 100u 50v
+C6 1u
+C7 1u
+
+
+ ADC input dividers	
+[1]	A7: Can Bus power voltage (switcher max is 37-40 v)
+		18.7K--1.8K  [sum = 20.5K- parallel = 1.64K V = 37.6v->3.30]
+
+[2]	A0: 5V switcher output
+      1.8K--3.24K  [sum = 3.35K parallel = 1.16K V = 5.05->3.25]
+
+[3]	A6: JP10 – div6 (Hall-effect)
+      6.65K--3.40K  [sum = 10.05, parallel = 2.25 V = 5.05->3.34]
+
+6P6C usage
+
+
+
+6P6C usage-- [ () = not used]
+
+1. 6P6C sensor jack ports (ADC input | HC14 drive output]
+
+   a.  JP10 [upper  left]
+       PA6 | PB9
+
+       Generator field current control:
+         PA6: Hall-effect
+         PB9: TIM4CH4: FET drive
+
+   b.  JP13 [upper right]
+       PA2 | PB7
+   
+       PA2: Line volts: 240V transformer
+       PB7: TM4CHCH2: Generator-Line contactor
+       
+   c.  JP15 [lower  left]
+       (PA5) | (PB8)
+
+   d.  JP14 [lower right]
+       PA1 | PB5
+
+       PA1: Generator volts: 240v transformer
+       PB5: TIM3CH2: Throttle servo (pin hdr JP1/JP5)
+        
+
+Resistor numbers for dividers and jumpers
+
+               Gnd  Sig  Pullup  Bias
+A0  ADC12_IN0  R3   R4    na      na       5V supply
+A1  ADC12_IN1  R17 R18   R44     R37|R22  JP14
+A2  ADC12_IN2  R9  R10   R43     R38|R21  JP13
+A3  ADC12_IN3  R15 R16   R42     R23|R24
+A4  ADC12_IN4  R7  R8    R41     R39|R40 
+A5  ADC12_IN5  R13 R14   R45     na       JP15
+A6  ADC12_IN6  R5  R6    R46     na       JP10
+A7  ADC12_IN7  R11 R12   na      na       Can Raw supply
+
+Op-amp 
+B0  ADC12_IN8 $U14 op-amp
+B1  ADC12_IN9 $U15 op-amp 
+
+

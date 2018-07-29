@@ -312,6 +312,8 @@ INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_LIST_CRC'        ,'0',         
 INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_LIST_VERSION'    ,'1',              'LOGGER','Logger_1: 2 Version number');
 INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_HEARTBEAT1_CT'   ,'8000',           'LOGGER','Logger_1: 3 Heartbeat count of time (ms) between msgs');
 INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_HEARTBEAT_MSG' ,'CANID_HB_LOGGER_1','LOGGER','Logger_1: 4 CANID: Hearbeat sends running count of logged msgs');
+INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_SUSPEND_R'     ,'CANID_ALM_PWRBOX1','LOGGER','Logger_1: 5 CANID: Low voltage alarm msg suspends logging ');
+INSERT INTO PARAM_VAL VALUES ('LOGGER_1','LOGGER_SUSPEND_CT'      ,'750'            ,'LOGGER','Logger_1: 6 Suspend duration (ms) after receiving alarm msg');
 --===================================================================================================================================================================
 -- GPS_2
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
@@ -324,15 +326,15 @@ INSERT INTO PARAM_VAL VALUES ('GPS_2','GPS_HEARTBEAT_TIME'     ,'CANID_HB_GPS_TI
 INSERT INTO PARAM_VAL VALUES ('GPS_2','GPS_HEARTBEAT_LLH'      ,'CANID_HB_GPS_LLH_2'  ,'GPS','GPS_2: 7 Heartbeat (3 separate msgs) lattitude longitude height');
 INSERT INTO PARAM_VAL VALUES ('GPS_2','GPS_DISABLE_SYNCMSGS'   ,'0'                   ,'GPS','GPS_2: 8 time sync msgs: 0 = enable  1 = disable');
 INSERT INTO PARAM_VAL VALUES ('GPS_2','GPS_TIME_SYNC_MSG'      ,'CANID_HB_TIMESYNC_2' ,'GPS','GPS_2: 9 Time sync msg');
-
 --===================================================================================================================================================================
 -- LOGGER_2
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
-INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_LIST_CRC'	   	,'0',  		'LOGGER',	'Logger_2: 1 CRC ');
-INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_LIST_VERSION'   	,'1', 		'LOGGER',	'Logger_2: 2 Version number');
-INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_HEARTBEAT1_CT'		,'8000', 	'LOGGER',	'Logger_2: 3 Heartbeat count of time (ms) between msgs');
-INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_HEARTBEAT_MSG'    	,'CANID_HB_LOGGER_2','LOGGER',  'Logger_2: 4 CANID: Hearbeat sends running count of logged msgs');
-
+INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_LIST_CRC'        ,'0',  		       'LOGGER','Logger_2: 1 CRC ');
+INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_LIST_VERSION'    ,'1', 		       'LOGGER','Logger_2: 2 Version number');
+INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_HEARTBEAT1_CT'   ,'8000', 	       'LOGGER','Logger_2: 3 Heartbeat count of time (ms) between msgs');
+INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_HEARTBEAT_MSG' ,'CANID_HB_LOGGER_2','LOGGER','Logger_2: 4 CANID: Hearbeat sends running count of logged msgs');
+INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_SUSPEND_R'     ,'CANID_ALM_PWRBOX1','LOGGER','Logger_2: 5 CANID: Low voltage alarm msg suspends logging ');
+INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_SUSPEND_CT'      ,'750'            ,'LOGGER','Logger_2: 6 Suspend duration (ms) after receiving alarm msg');
 --===================================================================================================================================================================
 -- TENSION_a11
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11

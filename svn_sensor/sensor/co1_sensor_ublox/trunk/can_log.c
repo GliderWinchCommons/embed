@@ -60,7 +60,7 @@ static const uint32_t myfunctype = FUNCTION_TYPE_LOGGER;
 int sdlog_error = 0;	// Signal mainline unrecoverable SD write
 
 /* Logging buffer [to allow for delay in SD card writing]' */
-#define LOGBUFSIZE	512	// SD card write might get far behind
+#define LOGBUFSIZE	2048	// SD card write might get far behind
 static struct CANRCVBUF canbuf[LOGBUFSIZE];
 static u16 canbufidxi = 0;	// Index into 'canbuf' interrupt (adding to)
 static u16 canbufidxm = 0;	// Index into 'canbuf' main (removing from)
@@ -136,7 +136,12 @@ int can_log_init(void)
 	// Convert heartbeat time (ms) to timer ticks (needs to recompute for online update)
 	logger_f.hbct_ticks = (logger_f.logger_s.hbct * tim9_tick_rate/1000);
 	// Compute tim9 tick counter for first heartbeat
-	logger_f.hb_t = tim9_tick_ctr + logger_f.hbct_ticks;	
+	logger_f.hb_t = tim9_tick_ctr + logger_f.hbct_ticks;
+
+	/* Suspend SD card writing */
+	// Convert suspend time (ms) to timer ticks
+	logger_f.suspend_ticks = (logger_f.logger_s.suspend_ct * tim9_tick_rate/1000);
+	logger_f.suspend_sw = 0;	// Assure suspend status = no-suspension
 
 	/* Add this function to the "hub-server" msg distribution. */
 	logger_f.phub_logger = can_hub_add_func();	// Set up port/connection to can_hub
@@ -180,13 +185,36 @@ Enter this routine from CAN_poll_loop
 int can_log_poll (struct CANRCVBUF* pcan, struct LOGGERFUNCTION* p)
 {
 	int ret = 0;
+	uint32_t tmp;
+
+	/* Add msg to buffer for SD card writing, unless overrun will occur. */
 	if (pcan != NULL)
-	{ // Here, add CAN msg to buffer for SD writing.
-		canbuf[canbufidxi] = *pcan;	// Copy msg to buffer 
-		canbufidxi += 1; if (canbufidxi >= LOGBUFSIZE) canbufidxi = 0;// Adv index
-		/* Setup time tick msg */
-		can_log_trigger_logging();
+	{ // Here, msg is waiting
+		// Check for buffer overrun
+		tmp = canbufidxi;
+		tmp += 1; if (tmp >= LOGBUFSIZE) tmp = 0;// Adv index
+		if (tmp != canbufidxm) // Will this overrun?
+		{ // Here, no.
+			canbuf[canbufidxi] = *pcan;	// Copy msg to buffer 
+			canbufidxi = tmp;	// Update to next position
+		}
+		else
+		{ // Here, incoming msg will overrun buffer
+			logger_f.buf_ovrun += 1;	// Count msgs lost
+		}
 	}
+
+	/* Check if this is a suspend SD write alarm msg */
+	if (pcan->id == CANID_ALM_PWRBOX1)
+	{ // Here, 'powerbox' sent an low voltage alarm msg
+		// Compute tim9 tick counter for timeout
+		logger_f.suspend_t = tim9_tick_ctr + logger_f.suspend_ticks;		
+		logger_f.suspend_sw = 1;	// Suspend SD card writing
+	}
+
+	/* Setup time tick msg */
+	can_log_trigger_logging();
+
 	/* Check for need to send heart-beat. */
 	if ( ( (int)tim9_tick_ctr - (int)p->hb_t) > 0  )	// Time to send heart-beat?
 	{ // Here, yes.		
@@ -231,10 +259,31 @@ static void can_log_can(void)
 		return; // Don't start any writes if SD inserted switch is off.
 	}
 
+	/* Suspend SD card writing if a low voltage alarm msg was encountered.
+      until either voltage continues dropping and processor stops, or
+      voltage goes back above the threshold that caused the 'powerbox'
+      unit to begin sending alarm msgs for long enough since the last
+      msg was sent to assume it is safe to continue writing. */
+
+	if (logger_f.suspend_sw != 0)
+	{ // Here, suspension is temporarily active
+		if ( ( (int)tim9_tick_ctr - (int)logger_f.suspend_t) > 0  )	// Timeout?
+		{ // Here, yes.  		
+			logger_f.suspend_sw = 0;	// Resume SD writing
+		}
+		else
+		{
+			return;
+		}
+	}
+
 	/* Write buffered msgs to SD card. */
 	while (canbufidxi != canbufidxm)
 	{ // Here, We have a msg to log
 		if (SD_socket_sw_status(1) != 0) return; // Don't start any writes if SD inserted switch is off.
+
+		/* 'sw may have come on during this while loop. */
+		if (logger_f.suspend_sw != 0) return;
 
 		dwt0 = (*(volatile unsigned int *)0xE0001004); 	// Get time of SD write
 		sdlog_error = sdlog_write( &canbuf[canbufidxm], sizeof(struct CANRCVBUF) );	// Write packet

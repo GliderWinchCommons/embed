@@ -1,4 +1,4 @@
-// 2018-07-17 21:28:39.414
+// 2018-07-29 23:00:41.838
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -14,8 +14,8 @@
 #define ENGINE_SENSOR1_PARAM_SIZE 14
 #define GPS_1_PARAM_SIZE 9
 #define GPS_2_PARAM_SIZE 9
-#define LOGGER_1_PARAM_SIZE 4
-#define LOGGER_2_PARAM_SIZE 4
+#define LOGGER_1_PARAM_SIZE 6
+#define LOGGER_2_PARAM_SIZE 6
 #define MCL_PARAM_SIZE 21
 #define PWRBOX1_PARAM_SIZE 42
 #define SHAFT1_PARAM_SIZE 22
@@ -231,6 +231,8 @@ const uint32_t paramval10[] = {
  0x00000001 , /*   2 1                    5  Logger_1: 2 Version number                                                      */
  0x00001F40 , /*   3 8000                 6  Logger_1: 3 Heartbeat count of time (ms) between msgs                           */
  0xE1800000 , /*   4 CANID_HB_LOGGER_1   17  Logger_1: 4 CANID: Hearbeat sends running count of logged msgs                  */
+ 0x00800000 , /*   5 CANID_ALM_PWRBOX1   17  Logger_1: 5 CANID: Low voltage alarm msg suspends logging                       */
+ 0x000002EE , /*   6 750                  6  Logger_1: 6 Suspend duration (ms) after receiving alarm msg                     */
 };
 #endif
 
@@ -242,6 +244,8 @@ const uint32_t paramval11[] = {
  0x00000001 , /*   2 1                    5  Logger_2: 2 Version number                                                      */
  0x00001F40 , /*   3 8000                 6  Logger_2: 3 Heartbeat count of time (ms) between msgs                           */
  0xE1A00000 , /*   4 CANID_HB_LOGGER_2   17  Logger_2: 4 CANID: Hearbeat sends running count of logged msgs                  */
+ 0x00800000 , /*   5 CANID_ALM_PWRBOX1   17  Logger_2: 5 CANID: Low voltage alarm msg suspends logging                       */
+ 0x000002EE , /*   6 750                  6  Logger_2: 6 Suspend duration (ms) after receiving alarm msg                     */
 };
 #endif
 

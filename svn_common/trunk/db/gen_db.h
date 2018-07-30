@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2018-07-17 21:28:37.998
+// 2018-07-29 23:00:39.403
 
 #define CANID_COUNT 221
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -313,7 +313,7 @@
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
 
-#define PARAM_LIST_COUNT 336	// TOTAL COUNT OF PARAMETER LIST
+#define PARAM_LIST_COUNT 338	// TOTAL COUNT OF PARAMETER LIST
 
 #define  PWRBOX_CRC              	1         // Pwrbox:: CRC                                    
 #define  PWRBOX_VERSION          	2         // Pwrbox:: Version number                         
@@ -505,8 +505,10 @@
 #define  LOGGER_LIST_VERSION     	2         // Logger: Version number                          
 #define  LOGGER_HEARTBEAT1_CT    	3         // Logger: Heartbeat count of time (ms) between msgs
 #define  LOGGER_HEARTBEAT_MSG    	4         // Logger: CANID: Hearbeat sends running count of logged msgs
+#define  LOGGER_SUSPEND_R        	5         // Logger: CANID: Low voltage alarm msg suspends logging 
+#define  LOGGER_SUSPEND_CT       	6         // Logger: Suspend duration (ms) after receiving alarm msg
 
-#define PARAM_LIST_CT_LOGGER	4	// Count of same FUNCTION_TYPE in preceding list
+#define PARAM_LIST_CT_LOGGER	6	// Count of same FUNCTION_TYPE in preceding list
 
 #define  ENG_MAN_CRC             	1         // Eng_manifold: CRC                               
 #define  ENG_MAN_VERSION         	2         // Eng_manifold: Version number                    
@@ -798,6 +800,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 733  */
+/* TOTAL COUNT OF #defines = 735  */
 /* Test 2016/06/12 */
 

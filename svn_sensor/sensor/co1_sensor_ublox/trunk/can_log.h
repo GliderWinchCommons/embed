@@ -20,11 +20,15 @@ struct LOGGERFUNCTION
 {
 	struct	LOGGERLC logger_s;
 	struct CANHUB* phub_logger;	// Pointer: CAN hub buffer
-	void* pparamflash;		// Pointer to flash area with flat array of parameters
+	void* pparamflash;		      // Pointer to flash area with flat array of parameters
 	uint32_t* pcanid_cmd_logger;	// Pointer into high flash for command can id
-	uint32_t hb_t;			// tim9 tick counter for next heart-beat CAN msg
-	uint32_t hbct_ticks;		// logger.hbct (ms) converted to timer ticks
-	uint8_t status_byte;		// Reading status byte	
+	uint32_t hb_t;			         // tim9 tick counter for next heart-beat CAN msg
+	uint32_t hbct_ticks;		      // logger.hbct (ms) converted to timer ticks
+	uint32_t suspend_ticks;	      // suspend SD writing converted to timer ticks
+	uint32_t suspend_t;	         // suspend tick counter
+	uint32_t buf_ovrun;           // buffer overrun count
+	uint8_t  suspend_sw;		      // suspend: 0 = not suspend; not zero = suspend
+	uint8_t status_byte;		      // Reading status byte	
 };
 
 /******************************************************************************/

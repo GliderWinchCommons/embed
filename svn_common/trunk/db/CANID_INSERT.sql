@@ -118,26 +118,26 @@ INSERT INTO CANID VALUES ('CANID_HB_ENG1_THRMTHRTL'   ,'6060000C', 'ENGINE_SENSO
 -- Engine MANIFOLD PRESSURE: with manifold pressure, rpm, throttle, temperature as separate functions
 INSERT INTO CANID VALUES ('CANID_CMD_ENG1_MANFLDI' ,'80A00000', 'ENG_MANIFOLD',  'UNDEF','Eng1_manfld: code: I [0] command code, [1]-[8] depends on code');
 INSERT INTO CANID VALUES ('CANID_CMD_ENG1_MANFLDR' ,'80E00000', 'ENG_MANIFOLD',  'UNDEF','Eng1_manfld: R [0] command code, [1]-[8] depends on code');
-INSERT INTO CANID VALUES ('CANID_MSG_ENG1_MANFLD'  ,'40800000', 'ENG_MANIFOLD',  'FF'   ,'Eng1_manfld: manifold pressure');
-INSERT INTO CANID VALUES ('CANID_HB_ENG1_MANFLD'   ,'82200000', 'ENG_MANIFOLD',  'FF'   ,'Eng1_manfld: Heartbeat manifold pressure calibrated');
+INSERT INTO CANID VALUES ('CANID_MSG_ENG1_MANFLD'  ,'40800000', 'ENG_MANIFOLD',  'U8_FF','Eng1_manfld: manifold pressure');
+INSERT INTO CANID VALUES ('CANID_HB_ENG1_MANFLD'   ,'82200000', 'ENG_MANIFOLD',  'U8_FF','Eng1_manfld: Heartbeat manifold pressure calibrated');
 
 -- Engine RPM: with manifold pressure, rpm, throttle, temperature as separate functions
 INSERT INTO CANID VALUES ('CANID_CMD_ENG1_RPMI'    ,'81200000', 'ENG_RPM',  'UNDEF','Eng1_rpm: cmd code: I [0] command code, [1]-[8] depends on code');
 INSERT INTO CANID VALUES ('CANID_CMD_ENG1_RPMR'    ,'81400000', 'ENG_RPM',  'UNDEF','Eng1_rpm: cmd code: R [0] command code, [1]-[8] depends on code');
-INSERT INTO CANID VALUES ('CANID_MSG_ENG1_RPM'     ,'40A00000', 'ENG_RPM',  'FF'   ,'Eng1_rpm: RPM calibrated');
-INSERT INTO CANID VALUES ('CANID_HB_ENG1_RPM'      ,'82600000', 'ENG_RPM',  'FF'   ,'Eng1_rpm: Heartbeat rpm calibrated');
+INSERT INTO CANID VALUES ('CANID_MSG_ENG1_RPM'     ,'40A00000', 'ENG_RPM',  'U8_FF','Eng1_rpm: RPM calibrated');
+INSERT INTO CANID VALUES ('CANID_HB_ENG1_RPM'      ,'82600000', 'ENG_RPM',  'U8_FF','Eng1_rpm: Heartbeat rpm calibrated');
 
 -- Engine THROTTLE: with manifold pressure, rpm, throttle, temperature as separate functions
 INSERT INTO CANID VALUES ('CANID_CMD_ENG1_THROTTLEI','81600000', 'ENG_THROTTLE',  'UNDEF','Eng1_throttle: cmd code: I [0] command code, [1]-[8] depends on code');
 INSERT INTO CANID VALUES ('CANID_CMD_ENG1_THROTTLER','81800000', 'ENG_THROTTLE',  'UNDEF','Eng1_throttle: cmd code: R [0] command code, [1]-[8] depends on code');
-INSERT INTO CANID VALUES ('CANID_MSG_ENG1_THROTTLE' ,'40E00000', 'ENG_THROTTLE',  'FF'   ,'Eng1_throttle: Throttle calibrated');
-INSERT INTO CANID VALUES ('CANID_HB_ENG1_THROTTLE'  ,'82400000', 'ENG_THROTTLE',  'FF'   ,'Eng1_throttle: Heartbeat throttle calibrated');
+INSERT INTO CANID VALUES ('CANID_MSG_ENG1_THROTTLE' ,'40E00000', 'ENG_THROTTLE',  'U8_FF','Eng1_throttle: Throttle calibrated');
+INSERT INTO CANID VALUES ('CANID_HB_ENG1_THROTTLE'  ,'82400000', 'ENG_THROTTLE',  'U8_FF','Eng1_throttle: Heartbeat throttle calibrated');
 
 -- Engine TEMPERATURE #1: with manifold pressure, rpm, throttle, temperature as separate functions
 INSERT INTO CANID VALUES ('CANID_CMD_ENG1_T1I'     ,'81A00000', 'ENG_T1',  'UNDEF','Eng1_t1: cmd code: I [0] command code, [1]-[8] depends on code');
 INSERT INTO CANID VALUES ('CANID_CMD_ENG1_T1R'     ,'81E00000', 'ENG_T1',  'UNDEF','Eng1_t1: cmd code: R [0] command code, [1]-[8] depends on code');
-INSERT INTO CANID VALUES ('CANID_MSG_ENG1_T1'      ,'41200000', 'ENG_T1',  'FF'   ,'Eng1_t1: Temperature #1 calibrated');
-INSERT INTO CANID VALUES ('CANID_HB_ENG1_T1'       ,'82800000', 'ENG_T1',  'FF'   ,'Eng1_t1: Heartbeat temperature #1 calibrated');
+INSERT INTO CANID VALUES ('CANID_MSG_ENG1_T1'      ,'41200000', 'ENG_T1',  'U8_FF','Eng1_t1: Temperature #1 calibrated');
+INSERT INTO CANID VALUES ('CANID_HB_ENG1_T1'       ,'82800000', 'ENG_T1',  'U8_FF','Eng1_t1: Heartbeat temperature #1 calibrated');
 
 -- GPS/Logger
 INSERT INTO CANID VALUES ('CANID_HB_FIX_HT_TYP_NSAT',	'B1C00000', 'GPS', 	'UNDEF','GPS: fix: heigth:type fix:number sats');
@@ -276,7 +276,7 @@ INSERT INTO CANID VALUES ('CANID_POLLR_CANSENDER_2', 'E2400000', 'CANSENDER','U8
 INSERT INTO CANID VALUES ('CANID_CMD_PWRBOX1I'   ,'E320000C', 'PWRBOX','U8_U32',	'Pwrbox1: I Command CANID');
 INSERT INTO CANID VALUES ('CANID_CMD_PWRBOX1R'   ,'E3200000', 'PWRBOX','U8_U32',	'Pwrbox1: R Command CANID');
 INSERT INTO CANID VALUES ('CANID_HB_PWRBOX1'     ,'FF200000', 'PWRBOX','U8_FF',	'Pwrbox1: Heartbeat w input voltage');
-INSERT INTO CANID VALUES ('CANID_MSG_PWRBOX1'    ,'E3000000', 'PWRBOX','U8_U32',	'Pwrbox1: Polled msg');
+INSERT INTO CANID VALUES ('CANID_MSG_PWRBOX1'    ,'E3000000', 'PWRBOX','U8_FF',	'Pwrbox1: Polled msg');
 INSERT INTO CANID VALUES ('CANID_ALM_PWRBOX1'    ,'00800000', 'PWRBOX','U8',	'Pwrbox1: Input voltage low alarm msg');
 INSERT INTO CANID VALUES ('CANID_LVL_HB_PWRBOX1' ,'FF400000', 'PWRBOX','U8_FF',	'Pwrbox1: Heartbeat: level wind motor current');
 INSERT INTO CANID VALUES ('CANID_LVL_MSG_PWRBOX1','E3400000', 'PWRBOX','U8_FF',	'Pwrbox1: Msg: level wind motor current');

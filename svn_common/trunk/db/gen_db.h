@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2018-07-29 23:00:39.403
+// 2018-07-31 20:23:20.321
 
 #define CANID_COUNT 221
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -143,9 +143,9 @@
 #define  CANID_TST_SHEAVE_1UP     0xD2000004  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: testing poll UP
 #define  CANID_CMD_LOWER1_HI      0xD1400000  // SHEAVE_LO_H    : F4 shaft_encoder: Lower sheave hi-res: I Command CAN: send commands to subsystem
 #define  CANID_CMD_LOWER1_HR      0xD1600004  // SHEAVE_LO_H    : F4 shaft_encoder: Lower sheave hi-res: R Command CAN: subsystem responds
-#define  CANID_MSG_LOWER1_H_RAW   0xD2400000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: msg--lower raw count and delta time
+#define  CANID_MSG_LOWER1_H_RAW   0xD2400000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: msg--lower raw count
 #define  CANID_MSG_LOWER1_H_CAL   0xD1A00000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: msg--lower calibrated--distance and speed
-#define  CANID_HB_LOWER1_H_RAW    0xD1800000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: heartbeat--lower raw count and delta time
+#define  CANID_HB_LOWER1_H_RAW    0xD1800000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: heartbeat--lower raw count
 #define  CANID_HB_LOWER1_H_CAL    0xD1C00000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: heartbeat--lower calibrated--distance and speed
 #define  CANID_TST_SHEAVE_1LO     0xD2200004  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: testing poll LO
 #define  CANID_TILT_ALARM         0x00A00000  // TILT_SENSE     : Tilt: alarm: Vector angle exceeds limit

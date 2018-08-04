@@ -1,0 +1,8 @@
+#!/bin/bash
+
+cd ~/logcsa
+NAME=$(date +%y%m%d_%H%M%S)
+echo "START LOG FILE: $NAME"
+nc localhost 32123 > $NAME
+exit
+

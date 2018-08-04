@@ -1,0 +1,16 @@
+file="./$1";
+this=0;
+last=0;
+
+while [ true ]; do 
+    last="$this";
+    this=$(stat --format=%s $file);
+    diff=$(expr "$this" - "$last");
+
+    if [ "$diff" -eq 0 ]; then
+        echo -e Logfile stalled @ $(date).
+		  aplay -q Ding.wav
+    fi
+
+    sleep 2
+done

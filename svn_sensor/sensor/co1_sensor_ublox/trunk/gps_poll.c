@@ -247,9 +247,11 @@ int gps_poll_can (struct CANRCVBUF* pcan, struct GPSFUNCTION* p)
 //???	tim_sync_flag = 0;	
 
 	/* Check for need to send TIME heartbeat. */
-	if ( ((int)tim9_tick_ctr - (int)p->hb_tim_t) > 0  )	// Time to send heart-beat?
-	{ // Here, yes.		
-		/* Send heartbeat and compute next hearbeat time count. */
+//	if ( ((int)tim9_tick_ctr - (int)p->hb_tim_t) > 0  )	// Time to send heart-beat?
+	if (p->tsw != 0)	// New time msg?
+	{ // Here, yes.
+		p->tsw = 0;
+		/* Send heartbeat and compute next heartbeat time count. */
 		send_can_msg(p->gps_s.cid_hb_tim, p->gpsfix[(p->gpsfixidx ^ 0x1)].code,(uint32_t*)&p->tLinuxtimecounter, p);
 		p->hb_tim_t = tim9_tick_ctr + p->hbct_tim_ticks; // tick ct for next heartbeat
 		ret = 1;	// Show CAN can_hub sending one or more msgs
@@ -357,6 +359,8 @@ void gps_poll(struct GPSFUNCTION* p)
 			strAlltime.GPS.ull  = p->tLinuxtimecounter; 	// Convert to signed long long
 			strAlltime.GPS.ull -= (PODTIMEEPOCH);		// Move to more recent epoch to fit into 40 bits
 			strAlltime.GPS.ull  = (strAlltime.GPS.ull << 6); // Scale linux time for 64 ticks per sec
+
+			p->tsw = 1;	// Trigger sending of 32b linux format time CAN msg
 
 //printf("gps_poll GPS %u SYS %u\n\r",(unsigned int)(strAlltime.GPS.ull >> 6),(unsigned int)(strAlltime.SYS.ull >> 6));USART1_txint_send();
 

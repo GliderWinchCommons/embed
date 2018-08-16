@@ -33,12 +33,18 @@ options:
 #include <time.h>
 
 
-
+#include "PC_gateway_comm.h"
 #include "packet_extract.h"
 #include "packet_print.h"
 #include "can_write.h"
 #include "packet_search.h"
 #include "sdlog.h"
+
+#define CANID_TIME 0xE1000000	// Default CAN ID time msg
+uint32_t canid_time = CANID_TIME;
+
+#define CANID_TIMESYNC 0x00400000	// Default CAN ID for time sync msgs
+uint32_t canid_timesync = CANID_TIMESYNC;
 
 void printhelp(void);
 void progressprint(struct CANRCVBUF *p);
@@ -64,8 +70,23 @@ int readablock_err;
 int fd1;
 int fd2;
 
-uint32_t blknum;
-uint32_t blkend;
+int blknum;
+int blkmax;	// Number blocks on card
+int blkend;
+int blkuse;	// Max less end-of-block reserved space
+
+int sw_firsttime = 0;	// First time msg of run
+time_t time_init;
+time_t time_work;
+
+char firsttime[32];		// Formatted time from first time msg
+uint32_t synctime;		// time sync msg unix time
+struct TIMEIDX
+{
+	uint32_t utime;	// unix time
+	uint32_t nt;		// index in CAN msgs in a SD block
+	long long oset;	// output file offset
+};
 
 /* Command line switches */
 #define SWCT	5	// Number of switches to search
@@ -124,39 +145,22 @@ main
 ********************************************************************************/
 int main (int argc, char **argv)
 {
-	int progress = 0;
-
 	char filename[256];	// Input file path/name
-
-	struct LOGBLK logblk;
-
-	char vv[192];
-	char ww[256];
-	char *pc;
 
 	struct tm t;
 	time_t start_t;
-	time_t t_low;
-	time_t t_high;
-
 
 	FILE *fpOut;
+	FILE *fpOut1;
 
-	int highest_nonzero_blk;
-	int highest_pid;
-	unsigned long long pidx,pidE,pid0;
+	unsigned long long pidE,pid0;
 
 	int count;
 	int i;
 	int j;
-	int ipktend;
 
-	int readct;
-	int err;
-	unsigned long long pid_prev;
-	int sw_1st = 1;
 
-	printf ("\n'sdtoascii2.c' - 08/02/2018\n\n");
+	printf ("\n'sdtoascii2.c' - 08/05/2018\n\n");
 	strcpy(filename, pfiledefault);	// Setup default input file name
 	if (argc > 4)
 	{
@@ -219,35 +223,189 @@ int main (int argc, char **argv)
 		printf("Search for start date/time: %s",ctime (&start_t));
 	}
 
+	/* Find end of SD card */
+	o_pos = lseek64(fd1,(off64_t)0,SEEK_END);
+	o_end = o_pos;		// Save end of SD position
+	blkmax = o_pos/512;	// Number of blocks on SD card
+	printf("Success: %u %s, SEEK_END returned (blocks) %d\t  %lli (bytes) \n",argc,*(argv+1),blkmax,(long long)(blkmax)*512L);
+
+	blkuse = (blkmax - 1 - SDLOG_EXTRA_BLOCKS);
+
+	// NOTE: 'getaPID' returns (PID + 1), so PID = 0 conveys an error.
+	pidE = getaPID(fd1, blkuse); // Last block logging writes
+	pid0 = getaPID(fd1, 0);
+	if ((pidE == 0) || (pid0 == 0)) 
+	{
+ 		printf("Error reading SD card: returned the PID block[0] = %llu block[%u] = %llu\n",pid0,blkuse,pidE); 
+		return -1;
+	}
+	if (pidE == 1)
+	{ // Here high end PID is zero.  Non-wrap situation
+		if (pid0 == 1)
+		{ // Here.  Beginning & End blocks PIDs are zero
+			printf("NO DATA ON CARD: Beginning and End PIDs are both zero\n"); 
+			return -1;
+		}
+	}
+	printf("pidE %lld  pid0 %lld\n",pidE,pid0);
+	printf("blkuse: %llu\n",blkuse);
+
+
 	int ret;
 	int r = 0;
+
 	time_t tim;
-	while (1)
-	{
-	blk.blk = r++;
-	ret = readablock(fd1, &blk);
-	if (ret < 0)
-	printf("readablock ret: %d\n",ret);
+	time_t time_temp;
+	struct tm *ptm;
+	char ftime[96];	
 
-	ret = packet_extract_msgs(&blkparse, &blk.data[0]);
-	if (ret < 0)
+	char mout[1024];
+// ========================================================================
+	/* Find first valid date/time for naming output files. */
+	// Run until: zero SD block | last usable
+	while ((r < blkuse) && (sw_firsttime == 0))
 	{
-		printf("packet_extract_msgs ret: %d\n",ret);
-		if (ret == -1) break;
+		blk.blk = r++;
+		ret = readablock(fd1, &blk);
+		if (ret < 0)
+   		printf("#### ERROR readablock ret: %d\n",ret);
+
+		ret = packet_extract_msgs(&blkparse, &blk.data[0]);
+		if (ret < 0)
+		{
+			printf("#### ERROR packet_extract_msgs ret: %d\n",ret);
+			if (ret == -1) exit(-1);
+		}
+	
+		/* Check if block contains a date/time msg. */
+		ret = packet_extract_time(&blkparse, canid_time);
+		// check if time msg canid found && time msg is not zero
+		if (ret >= 0)
+
+		for (i = 0; i < blkparse.n; i++)
+		{
+			if (blkparse.can[i].id == canid_time) // date/time msg?
+			{ // Here, yes.
+				if ((blkparse.can[i].dlc == 5) &&
+					 ((blkparse.can[i].cd.uc[1] != 0) |
+					  (blkparse.can[i].cd.uc[2] != 0) |
+ 					  (blkparse.can[i].cd.uc[3] != 0) |
+					  (blkparse.can[i].cd.uc[4] != 0)) )
+				{					
+					sw_firsttime = 1;
+				 	progressprint(&blkparse.can[blkparse.nt]);
+  	   		 	tim = packet_extract_uint32_t(&blkparse.can[blkparse.nt], 1);
+					ptm = localtime(&tim);
+					strftime(&ftime[0],96,"%y%m%d_%H%M%S",ptm);
+	   		 	printf("%4d 1st TIME: blk %d idx %d time: %s\n", r,blk.blk,blkparse.nt,ftime);
+					break;		
+				}
+			}
+		}
 	}
 
-	ret = packet_extract_time(&blkparse, 0xE1000000);
-	if (ret >= 0)
-	{
-	//  printf("blk: %d TIME: %d\b\n",r, blkparse.nt);
-	//  packet_extract_print(&blkparse);
-	    printf("%4d ", r);
-		 progressprint(&blkparse.can[blkparse.nt]);
-       tim = packet_extract_uint32_t(&blkparse.can[blkparse.nt], 1);
-		printf ("  %s", ctime(&tim));
-//		printf("ret: 0x%08X\n",tim);
+	if (r >= blkmax)	// No date/time msgs found?
+	{ // Here, yes.
+		printf("#### ERROR No time msgs found\n");
+		exit(-1);
 	}
- }	
+
+	/* Here: we found a beginning date/time */
+
+	/* Setup output file path/name */
+	char ctmp[96];
+	char *path = "/home/deh/logcsa/";
+	strcpy (ctmp, path);	// Path ***Make this a command line arg***
+	strcat (ctmp,ftime);		// Add date/tme to path
+	strcat (ctmp,"sdcan");	// Extension
+	if ( (fpOut = fopen (ctmp,"w")) == NULL)
+	{
+		printf ("\nOutput file fpOut did not open: %s\n",ctmp); return -1;
+	}
+	printf("\nOutput file fpOut opened: %s\n",ctmp);
+
+	strcat (ctmp,".tim");	// Extension
+	if ( (fpOut1 = fopen (ctmp,"w")) == NULL)
+	{
+		printf ("\nOutput file fpOut1 did not open: %s\n",ctmp); return -1;
+	}
+	printf("\nOutput file fpOut1 opened: %s\n",ctmp);
+
+/* ==== Convert SD to ascii =================================================== */
+
+	// Rewind to beginning
+	lseek64(fd1,0L,SEEK_SET);
+
+	// Run until all zero SD block encountered, or end
+	r = 0; sw_firsttime = 0;
+	while (r < blkuse)
+	{
+		blk.blk = r++;
+		ret = readablock(fd1, &blk);
+		if (ret < 0)
+   		printf("readablock ret: %d\n",ret);
+
+		ret = packet_extract_msgs(&blkparse, &blk.data[0]);
+		if (ret < 0)
+		{
+			printf("####ERROR packet_extract_msgs ret: %d\n",ret);
+			if (ret == -1) break;
+		}
+		/* Convert CAN binary to gateway format ASCII/HEX */
+		ret = packet_extract_format(mout, &blkparse);
+//	printf("\nextract_format return: %d\n",ret);
+
+		if (ret != strlen(mout))
+   		printf("ARGH: ret and strlen not equal; %d %d\n",ret,(int)strlen(mout));
+
+//	printf("%s",mout);
+		fwrite(mout, sizeof(char),ret,fpOut); // Output file
+
+
+		ret = packet_extract_time(&blkparse, canid_time);
+		for (i = 0; i < blkparse.n; i++)
+		{
+			if (blkparse.can[i].id == canid_timesync)
+			{
+				if (blkparse.can[i].cd.uc[0] == 0)
+				{
+					time_work += 1;
+				}
+			}
+			if (blkparse.can[i].id == canid_time)
+			{
+				time_temp = packet_extract_uint32_t(&blkparse.can[i],1);
+				if (sw_firsttime == 0)
+				{
+					sw_firsttime = 1;
+					time_init = time_temp;
+					time_work = time_init + 1;
+					ptm = localtime(&tim);
+					strftime(&ftime[0],96,"%y%m%d_%H%M%S",ptm);
+			    	printf("%4d TIME  1st: blk %d idx %d time: %s\n", r,blk.blk,i,ftime);
+				}
+				else
+				{
+					if (time_temp != time_work)
+					{
+						ptm = localtime(&time_work);
+						strftime(&ftime[0],96,"%y%m%d_%H%M%S",ptm);
+				    	printf("%6d TIME step: blk %6d idx %2u time_work: %s ", r,blk.blk,i,ftime);
+						ptm = localtime(&time_temp);							
+						strftime(&ftime[0],96,"%y%m%d_%H%M%S",ptm);
+				    	printf("time_temp: %s %3d\n",ftime,(int)(time_temp - time_work));
+						time_work = time_temp;
+						fwrite(ftime, sizeof(char),strlen(ftime),fpOut1); // Output file
+						o_blk = r;
+						o_pos = o_blk << 9;	// Convert block number of offset (bytes)
+						sprintf(ftime," %lld %d %d\n",(long long)o_pos, r, i);// offset,block,index in block
+						fwrite(ftime, sizeof(char),strlen(ftime),fpOut1); // Output file
+					}
+				}
+			}
+		}
+	}
+ 	
 		printf("\n=== DONE ====\n");
 		return 0;
 }

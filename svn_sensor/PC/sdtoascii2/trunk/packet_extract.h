@@ -71,6 +71,12 @@ uint32_t packet_extract_uint32_t(struct CANRCVBUF *pcan, uint32_t offset);
  * @param	: pcan = pointer to CAN msg struct
  * @param	: offset = number of bytes offset for beginning of uint
 *******************************************************************************/
+int packet_extract_format(char *pout, struct BLOCKPARSED* pbp);
+/* @brief 	: Write extracted CAN msgs in hex/ascii gateway format
+ * @param	: pout = pointer to output ascii string
+ * @param	: pbp  = pointer to array of CAN msgs with some other stuff
+ * @return	: Number of chars in output
+*******************************************************************************/
 
 
 #endif

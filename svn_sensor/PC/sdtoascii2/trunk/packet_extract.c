@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "packet_extract.h"
+#include "PC_gateway_comm.h"
 
 /*******************************************************************************
  * int packet_extract_msgs(struct BLOCKPARSED* pbp, unsigned char* pblk);
@@ -148,6 +149,108 @@ uint32_t packet_extract_uint32_t(struct CANRCVBUF *pcan, uint32_t offset)
 	tmp |= pcan->cd.uc[offset + 3] << 24;
 	return tmp;
 }
+/*******************************************************************************
+ * int packet_extract_format(char *pout, struct BLOCKPARSED* pbp);
+ * @brief 	: Write extracted CAN msgs in hex/ascii gateway format
+ * @param	: pout = pointer to output ascii string
+ * @param	: pbp  = pointer to array of CAN msgs with some other stuff
+ * @return	: Number of chars in output
+*******************************************************************************/
+uint8_t canseq = 0;	// Sequence number byte
 
+int packet_extract_format(char *pout, struct BLOCKPARSED* pbp)
+{
+	int i,j;
+	char* p = pout;
+	uint8_t bin[18];	// Allow for max CAN msg length
+	int binct;
+	
+	*p = 0;	// Null string, jic
 
+	/* Rattle through all CAN msgs in this block */
+	for (i = 0; i < pbp->n; i++)
+	{
+// Debug--test date/time position versus time sync msgs
+//if ((pbp->can[i].id == 0x00400000) | (pbp->can[i].id == 0xE1000000))
+{
+		// Build an array of (binary) bytes
+		bin[0] = canseq;	// Seq number
+		bin[1] = pbp->can[i].id >> 0;	// CAN id
+		bin[2] = pbp->can[i].id >> 8;
+		bin[3] = pbp->can[i].id >> 16;
+		bin[4] = pbp->can[i].id >> 24;
+		bin[5] = pbp->can[i].dlc  >> 0; // Payload size
 
+		binct = 6; // Seq|CANid|DLC: = 6 bytes
+
+		// Copy payload
+		if (bin[5] > 8) bin[5] = 0; // jic
+		for (j = 0; j < bin[5]; j++)
+		{
+			bin[6+j] = pbp->can[i].cd.uc[j];
+		}
+		binct += bin[5];	// Add size of payload
+
+		// Compute chksum using gateway routine
+		bin[binct] = CANgenchksum(&bin[0], binct);
+
+		// Convert binary to ascii/hex
+		for (j = 0; j < (binct+1); j++)
+		{
+			p += sprintf(p,"%02X",bin[j]);
+		}
+		p += sprintf(p,"\n"); // Add newline to output string
+		canseq += 1;
+}	
+	}
+	return (p - pout);	// Return total number of chars in string
+}
+/*******************************************************************************
+ * int packet_extract_first(struct PKTP *pktp, unsigned char* pblk);
+ * @brief 	: Extract PID, find last packet in block
+ * @param	: pointer to struct with packet count, pointer, and block pid
+ * @param	: pblk--pointer to control block
+ * @return	: 0 = OK
+*******************************************************************************/
+
+int packet_extract_first(struct PKTP *pktp, unsigned char* pblk)
+{
+	int i = 0;
+	unsigned char* px = pblk + SDLOG_DATASIZE - 1;
+	union BLOCK *pb = (union BLOCK *)pblk;
+
+	/* Extract pid */
+	pktp->pid = (pb->str.pid);
+
+	/* Search back to first non-zero byte */	
+	while ((*px ==0) && (i++ < SDLOG_DATASIZE)) px--;
+
+	if (i >= SDLOG_DATASIZE) 
+	{
+		pktp->ct = i; return -2;
+	}
+
+	pktp->ct = *px;
+	if ((*px > 250) || (*px < 1))
+	{ // Here, error, ct is too big.
+		  return -1;
+	}
+
+	pktp->p = px - *px;	// Point to beginning of packet
+	
+	return 0;
+}
+/*******************************************************************************
+ * void packet_convert(struct CANRCVTIMBUF* pout, struct PKTP *pp);
+ * @brief 	: convert packet to CAN type struct
+ * @param	: pblk--pointer (not a zero terminated string)
+ * @return	: void
+*******************************************************************************/
+void packet_convert(struct CANRCVTIMBUF* pout, struct PKTP *pp)
+{
+	pout->U.ull 	= *(unsigned long long*)pp->p;
+	pout->R.id     	= *(unsigned int*)(pp->p + 8);
+	pout->R.dlc    	= *(unsigned int*)(pp->p + 8 + 4);
+	pout->R.cd.ull  = *(unsigned long long*)(pp->p + 8 + 4 + 4);
+	return;	
+}

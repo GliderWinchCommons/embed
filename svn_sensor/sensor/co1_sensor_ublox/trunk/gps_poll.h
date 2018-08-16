@@ -69,6 +69,7 @@ struct GPSFUNCTION
 	time_t tLinuxtimecounter;  // Fancy name for int used by time routines
 	struct GPSFIX gpsfix[2];   // latest fix data buffer
 	uint32_t gpsfixidx;        // gpsfix buffer index for main
+	uint8_t tsw;					// Switch to send time msg
 };
 
 /******************************************************************************/

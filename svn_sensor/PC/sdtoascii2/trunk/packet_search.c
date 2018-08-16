@@ -54,7 +54,8 @@ int readablock(int fd, struct LOGBLK* pblk)
 
 	return 0;	// Success
 }
-#ifdef DONOTUSETHISCRAP2
+#define DOUSETHISCRAP2 
+#ifdef  DOUSETHISCRAP2
 /******************************************************************************
  * unsigned long long getaPID(int fd, int blk);
  * @brief	: Read block and extract PID

@@ -25,8 +25,47 @@
 #include <math.h>
 #include <time.h>
 #include "common_can.h"	// Definitions common to CAN and this project.
-#include "common_highflash.h"
-#include "parse.h"
+
+
+/*
+CREATE TABLE CANID 
+(
+CANID_NAME varchar(48) PRIMARY KEY,
+CANID_HEX varchar(8) NOT NULL UNIQUE,
+CANID_TYPE varchar(24) NOT NULL,
+CAN_MSG_FMT varchar(16) NOT NULL,
+DESCRIPTION varchar(128) NOT NULL UNIQUE
+);
+*/
+
+#define CSSIZE_NAME 48
+#define CSSIZE_HEX 8
+#define CSSIZE_TYPE 24
+#define CSSIZE_MSG_FMT 16
+#define CSSIZE_DESCRIPTION 128
+struct CANIDSQL
+{
+	unsigned int id;
+	char name[CSSIZE_NAME+1];
+	char hex[CSSIZE_HEX+1];
+	char type[CSSIZE_TYPE+1];
+	char msg_fmt[CSSIZE_MSG_FMT+1];
+	char description[CSSIZE_DESCRIPTION+1];
+};
+
+struct CANIDWK
+{
+	int size;	// Number of entries in CANID.sql read in
+	int listsz;	// Number of entries in unique CANIDs received
+
+};
+
+struct CANIDLIST
+{
+	unsigned int id;
+	int idx;
+};
+
 
 /******************************************************************************/
 int cmd_q_init(char* p);
@@ -34,10 +73,8 @@ int cmd_q_init(char* p);
  * @param	: p = pointer to line entered on keyboard
  * @return	: 0 = OK.
 *******************************************************************************/
-void cmd_q_subsystems(struct LDPROGSPEC *p, int idsize);
-/* @brief 	: List subsystems
- * @param	: p = pointer to struct array holding input file data
- * @param	: idsize = size of array
+void cmd_q_do_msg(struct CANRCVBUF* p);
+/* @brief 	: Build table and print
 *******************************************************************************/
 
 #endif

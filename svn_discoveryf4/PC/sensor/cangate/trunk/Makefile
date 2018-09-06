@@ -31,18 +31,14 @@ cmd_h.o \
 cmd_l.o \
 cmd_n.o \
 cmd_m.o \
-cmd_p.o \
 cmd_q.o \
 cmd_r.o \
 cmd_s.o \
 cmd_c.o \
 cmd_w.o \
-parse.o \
-parse_print.o \
 sockclient.o \
 timer_thread.o \
 var_size_chk.o \
-winch_merge2.o \
 
 
 

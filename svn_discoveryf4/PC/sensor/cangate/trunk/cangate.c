@@ -20,7 +20,8 @@
 
 compile and execute--
 cd ~/GliderWinchCommons/embed/svn_discoveryf4/PC/sensor/cangate/trunk
-./mm && ./cangate 127.0.0.1 32123 /GliderWinchCommons/embed/svn_discoveryf4/svn_common/trunk/params/testmsg2C.txt
+./mm && ./cangate 127.0.0.1 32123 -t $HOME/GliderWinchCommons/embed/svn_common/trunk/params/testmsg2C.txt
+
 
 */
 #include <sys/types.h>
@@ -155,12 +156,17 @@ int	linect;
 char vv[512];	/* General purpose char buffer */
 
 FILE *fpOut;
-FILE *fpList;
+FILE *fpList;		// Test msgs to be sent file
 int fpListsw = 0; // 0 = no test msg file list
+#define FILENAME_TESTMSGS 't'
+
+FILE *fpList1;		// CANID database sql file
+char* fpList1_default = "../../../../../svn_common/trunk/db/CANID_INSERT.sql";
+int fpList1sw = 0; // 0 = no test msg file list
+#define FILENAME_CANIDLIST	'i'
 
 /* Sequence number checking */
 u8 sequence_prev;
-
 
 /* Debug */
 u32 err_seq;
@@ -221,7 +227,7 @@ printf ("argc %u\n",argc);
 for (i = 0; i < argc; i++)
 printf("%d %s\n",i, argv[i]);
 
-	if (argc > 4)
+	if (argc > 6)
 	{
 			printf ("Command line error: too many arguments %i args, for example--\n./cangate /dev/ttyUSB0\nOR,\n./cangate /dev/ttyUSB0 ../test/testmsg1.txt\n",argc); return -1;
 	}
@@ -232,7 +238,7 @@ printf("%d %s\n",i, argv[i]);
 	}
 	
 	/* Determine if it is a socket connection or uart */
-	if (strncmp(argv[1], "/dev/tty", 8) == 0) // uart?
+	if (strncmp(argv[1], "/dev/", 5) == 0) // uart?
 	{ // Here, yes.
 		serialport = argv[1];
 		if (argc == 3)
@@ -325,22 +331,60 @@ printf("%d %s\n",i, argv[i]);
 		else
 		{printf ("Socket opened OK.  IP: %s PORT: %i\n",argv[1], port);}
 
-		if (argc == 4)
+		/* Pick file names for test msg list, and/or CANID sql file and open the files */
+		int argcx = 4;
+		while (argcx <= argc)
 		{ // Here there were three arguments on the command line. the 3rd is presumed to be the file with the test msgs.
-			if ( (fpList = fopen (argv[3],"r")) == NULL)
+			// 
+			if (*argv[argcx-1] == '-')
+			{ // Looks like a switch
+				switch (*(argv[argcx-1]+1)) // Next char is the switch code char
+				{
+				case FILENAME_TESTMSGS:	// Test msg file name is next argument ('t')
+					if ( (fpList = fopen (argv[argcx],"r")) == NULL)
+					{
+						printf("Test msg file given on command line did not open: %s\n",argv[argcx]); return -1;
+					}
+					else
+					{
+						printf("Test msg file opened!: %s\n\n",argv[argcx]);
+						fpListsw = 1; // test msg file list
+					}			
+					break;
+
+				case FILENAME_CANIDLIST:	// CANID file name is next argument ('i')
+					if ( (fpList1 = fopen (argv[argcx],"r")) == NULL)
+					{
+						printf("The CANID sql file given on command line did not open: %s\n",argv[argcx]); return -1;
+					}
+					else
+					{
+						printf("CANID sql file opened!: %s\n\n",argv[argcx]);
+						fpList1sw = 1; // test msg file list
+					}			
+					break;
+
+				default:
+					printf("Switch -%c did not look like one of the following:\n\t-t = file path/name for test msgs to send\n\t-i = file path/name for CANID sql file\n",*(argv[argcx-1]+1) );
+					break;
+				}
+			}
+			argcx += 2;  // Advance to next switch|filename argument pair
+		}
+		if (fpList1sw == 0)	// Try default for CANID?
+		{ // Here, name wasn't given on command line
+			if ( (fpList1 = fopen (fpList1_default,"r")) == NULL)
 			{
-				printf("Test msg file given on command line did not open: %s\n",argv[3]); return -1;
+				printf("CANID sql file did not open: %s\n",fpList1_default); return -1;
 			}
 			else
 			{
-				printf("Test msg file opened!: %s\n\n",argv[3]);
-				fpListsw = 1; // test msg file list
-			}		
+				printf("CANID sql file opened!: %s\n\n",fpList1_default);
+				fpList1sw = 1; // test msg file list
+			}			
 		}
 	}
 	
-	
-
 	/* Message for the hapless op (maybe he or she would rather have Morse code?) */	
 	printf ("Control C to break & exit\n");
 

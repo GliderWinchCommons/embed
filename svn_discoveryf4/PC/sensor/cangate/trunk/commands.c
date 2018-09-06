@@ -25,6 +25,7 @@ This takes care of dispatching keyboard commands.
 #include "cmd_w.h"
 
 extern int fpListsw;
+extern int cmd_q_initsw;
 
 static u32 msg_sw;	// Command in effect
 /* **************************************************************************************
@@ -107,14 +108,15 @@ void do_command_keybrd(char* p)
 			msg_sw = 'm';
 		break;
 
-	case 'p': // 'p' command (program loader for selected unit)
-		cmd_p_init(p);	// Run edit-check on file, then load
+//	case 'p': // 'p' command (program loader for selected unit)
+//		cmd_p_init(p);	// Run edit-check on file, then load
 //		msg_sw = 257 ;
-		msg_sw = 'p';
-		break;
+//		msg_sw = 'p';
+//		break;
 
 	case 'q': // 'q' CAN bus loader file edit-check only.
-		cmd_q_init(p);	// Run edit-check on file only.
+		if (cmd_q_init(p) < 0);	// Run edit-check on file only.
+			msg_sw = 'q';
 		break;
 
 	case 'r': // 'r' command (RESET everyone)
@@ -146,6 +148,7 @@ void do_command_keybrd(char* p)
 		timer_thread_shutdown(); // Cancel timer thread if running
 		do_printmenu();	  // Nice display for the hapless Op.
 		msg_sw = 'x';
+		cmd_q_initsw = 0;	// OTO initialization switch
 		break;
 
 	case 'c': // 'c' requests & displays launch parameters
@@ -196,9 +199,12 @@ void do_canbus_msg(struct CANRCVBUF* p)
 		cmd_m_do_msg(p);
 		break;
 
-	case 'p':
-		cmd_p_do_msg1(p);
-		break;
+//	case 'p':
+//		cmd_p_do_msg1(p);
+//		break;
+
+	case 'q':
+		cmd_q_do_msg(p);
 
 	case 'c':
 		cmd_c_do_msg(p);
@@ -241,8 +247,8 @@ void do_printmenu(void)
 	printf("n - list msg id's and msg ct during 1 sec (coarse computer timing)\n");
 	printf("u - list msg id's and msg ct between CAN 1 sec time mgs (e.g. u 00600000)\n");
 	printf("m - list msgs for id entered 'm xxxxxxxx (CAN ID as 8 hex digits)'\n");
-	printf("p - CAN bus loader: using file for specs, edit-check and load\n");
-	printf("q - CAN bus file spec edit-check only\n");
+//	printf("p - CAN bus loader: using file for specs, edit-check and load\n");
+	printf("q - Identify received msgs from CANID.sql file\n");
 	printf("r - send high priority RESET\n");
 	printf("s - Toggle sending of test msg file to CAN bus on/off\n");
 	printf("c - request & display launch parameters\n");

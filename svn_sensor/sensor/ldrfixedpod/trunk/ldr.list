@@ -39,7 +39,7 @@ void unique_can_block(void)
  8000136:	e7fe      	b.n	8000136 <unique_can_block+0x6>
 
 08000138 <fixedaddress>:
- 8000138:	0000 0380 0003 0000 20e1 0800 0000 0000     ......... ......
+ 8000138:	0000 02a0 0003 0000 20e1 0800 0000 0000     ......... ......
 	...
 
 08000150 <hard_fault_handler>:
@@ -358,7 +358,7 @@ int main(void)
 
 	/* Initialize CAN for POD board (F103) and get control block */
 	pctl1 = canwinch_setup_F103_pod(&msginit,IAMUNITNUMBER);
- 8000298:	f04f 7160 	mov.w	r1, #58720256	; 0x3800000
+ 8000298:	f04f 7128 	mov.w	r1, #44040192	; 0x2a00000
  800029c:	485d      	ldr	r0, [pc, #372]	; (8000414 <main+0x244>)
  800029e:	f001 ff5d 	bl	800215c <canwinch_setup_F103_pod>
  80002a2:	f8c8 0000 	str.w	r0, [r8]
@@ -390,15 +390,15 @@ int main(void)
 //canwinch_pod_common_systick2048_printerr_header();
 /* ---------------- When CAN interrupts are enabled reception of msgs begins! ------------------------ */
 	can_msg_reset_init(pctl1, IAMUNITNUMBER);	// Specify CAN ID for this unit for msg caused RESET
- 80002c8:	f04f 7160 	mov.w	r1, #58720256	; 0x3800000
- 80002cc:	f003 f850 	bl	8003370 <can_msg_reset_init>
+ 80002c8:	f04f 7128 	mov.w	r1, #44040192	; 0x2a00000
+ 80002cc:	f003 f86e 	bl	80033ac <can_msg_reset_init>
 
 // RX msgs begin immediately following enabling CAN interrupts.  Get 'peek' 'toss' of RX msgs going soon.
 	can_driver_enable_interrupts();	// Enable CAN interrupts
  80002d0:	f002 fc36 	bl	8002b40 <can_driver_enable_interrupts>
 /* -------------- Get the program loader stuff setup -------------------------------------- */
 	canwinch_ldrproto_init(IAMUNITNUMBER);
- 80002d4:	f04f 7060 	mov.w	r0, #58720256	; 0x3800000
+ 80002d4:	f04f 7028 	mov.w	r0, #44040192	; 0x2a00000
  80002d8:	f000 f9f0 	bl	80006bc <canwinch_ldrproto_init>
 printf(  "BOARD_TYP : %08X\n\r", pfixedaddress->board_typ); 	USART1_txint_send();
 printf(  "rc_crc32  : %08X\n\r", (u32)pfixedaddress->func1);
@@ -406,7 +406,7 @@ printf(  "MY CAN ID : %08X\n\r", IAMUNITNUMBER);
 */
 // Right justify to show unit number (based on a basic 11 bit CAN id, though 29 bit might be used 
 printf(  "  i.e. unit#: %d\n\r", IAMUNITNUMBER); USART1_txint_send();
- 80002dc:	f04f 7160 	mov.w	r1, #58720256	; 0x3800000
+ 80002dc:	f04f 7128 	mov.w	r1, #44040192	; 0x2a00000
  80002e0:	484f      	ldr	r0, [pc, #316]	; (8000420 <main+0x250>)
  80002e2:	f001 fbef 	bl	8001ac4 <tfp_printf>
  80002e6:	f001 fce1 	bl	8001cac <USART1_txint_send>
@@ -623,32 +623,32 @@ printf(  "FLASH SIZE: %d\n\r",flashblocksize1);USART1_txint_send();
  80003d0:	40021024 	.word	0x40021024
  80003d4:	08005004 	.word	0x08005004
  80003d8:	40011414 	.word	0x40011414
- 80003dc:	08003490 	.word	0x08003490
+ 80003dc:	080034cc 	.word	0x080034cc
  80003e0:	08000191 	.word	0x08000191
  80003e4:	200010e0 	.word	0x200010e0
  80003e8:	000f4240 	.word	0x000f4240
- 80003ec:	080034c9 	.word	0x080034c9
+ 80003ec:	08003505 	.word	0x08003505
  80003f0:	200010dc 	.word	0x200010dc
- 80003f4:	080034e3 	.word	0x080034e3
+ 80003f4:	0800351f 	.word	0x0800351f
  80003f8:	200010d4 	.word	0x200010d4
  80003fc:	200010d8 	.word	0x200010d8
- 8000400:	080034fd 	.word	0x080034fd
- 8000404:	08003517 	.word	0x08003517
- 8000408:	08003531 	.word	0x08003531
- 800040c:	0800355e 	.word	0x0800355e
- 8000410:	0800359d 	.word	0x0800359d
- 8000414:	080039b0 	.word	0x080039b0
- 8000418:	080035dc 	.word	0x080035dc
- 800041c:	080035f9 	.word	0x080035f9
- 8000420:	0800361d 	.word	0x0800361d
+ 8000400:	08003539 	.word	0x08003539
+ 8000404:	08003553 	.word	0x08003553
+ 8000408:	0800356d 	.word	0x0800356d
+ 800040c:	0800359a 	.word	0x0800359a
+ 8000410:	080035d9 	.word	0x080035d9
+ 8000414:	080039f0 	.word	0x080039f0
+ 8000418:	08003618 	.word	0x08003618
+ 800041c:	08003635 	.word	0x08003635
+ 8000420:	08003659 	.word	0x08003659
  8000424:	1ffff7e0 	.word	0x1ffff7e0
- 8000428:	08003630 	.word	0x08003630
- 800042c:	08003641 	.word	0x08003641
+ 8000428:	0800366c 	.word	0x0800366c
+ 800042c:	0800367d 	.word	0x0800367d
  8000430:	e0001004 	.word	0xe0001004
- 8000434:	080039c0 	.word	0x080039c0
+ 8000434:	08003a00 	.word	0x08003a00
  8000438:	200010c0 	.word	0x200010c0
  800043c:	08040000 	.word	0x08040000
- 8000440:	08003657 	.word	0x08003657
+ 8000440:	08003693 	.word	0x08003693
  8000444:	05fa0004 	.word	0x05fa0004
  8000448:	e000ed0c 	.word	0xe000ed0c
  800044c:	40003000 	.word	0x40003000
@@ -1043,7 +1043,7 @@ void _exit(int status) {
  8000598:	f7ff ffc6 	bl	8000528 <_write>
  800059c:	e7fe      	b.n	800059c <_exit+0xc>
  800059e:	bf00      	nop
- 80005a0:	0800368c 	.word	0x0800368c
+ 80005a0:	080036c8 	.word	0x080036c8
 
 080005a4 <flashblockinit>:
 	u64* pt1;	// Beginning address of flash block
@@ -1226,13 +1226,13 @@ printf("wrblk: default: %d\n\r",flblkbuff.sw);USART1_txint_send();
  8000696:	f001 bb09 	b.w	8001cac <USART1_txint_send>
  800069a:	bf00      	nop
  800069c:	20000860 	.word	0x20000860
- 80006a0:	08003692 	.word	0x08003692
- 80006a4:	080036ae 	.word	0x080036ae
- 80006a8:	080036d6 	.word	0x080036d6
+ 80006a0:	080036ce 	.word	0x080036ce
+ 80006a4:	080036ea 	.word	0x080036ea
+ 80006a8:	08003712 	.word	0x08003712
  80006ac:	20000004 	.word	0x20000004
- 80006b0:	08003702 	.word	0x08003702
- 80006b4:	08003721 	.word	0x08003721
- 80006b8:	0800373e 	.word	0x0800373e
+ 80006b0:	0800373e 	.word	0x0800373e
+ 80006b4:	0800375d 	.word	0x0800375d
+ 80006b8:	0800377a 	.word	0x0800377a
 
 080006bc <canwinch_ldrproto_init>:
  * void canwinch_ldrproto_init(u32 iamunitnumber);
@@ -1402,13 +1402,13 @@ printf( "WR : %08X\n\r",can_msg_wr.id);
  8000748:	20000860 	.word	0x20000860
  800074c:	1ffff7e0 	.word	0x1ffff7e0
  8000750:	20000004 	.word	0x20000004
- 8000754:	08003753 	.word	0x08003753
+ 8000754:	0800378f 	.word	0x0800378f
  8000758:	20000868 	.word	0x20000868
- 800075c:	08003769 	.word	0x08003769
- 8000760:	0800377f 	.word	0x0800377f
- 8000764:	0800378a 	.word	0x0800378a
- 8000768:	08003796 	.word	0x08003796
- 800076c:	080037a2 	.word	0x080037a2
+ 800075c:	080037a5 	.word	0x080037a5
+ 8000760:	080037bb 	.word	0x080037bb
+ 8000764:	080037c6 	.word	0x080037c6
+ 8000768:	080037d2 	.word	0x080037d2
+ 800076c:	080037de 	.word	0x080037de
 
 08000770 <mv2>:
  * @brief	: Convert 2 bytes into a 1/2 word
@@ -1908,11 +1908,11 @@ debugPctr += 1;
  80009a4:	b26d      	sxtb	r5, r5
  80009a6:	e7b6      	b.n	8000916 <do_datawrite+0x12e>
  80009a8:	20000860 	.word	0x20000860
- 80009ac:	080037ae 	.word	0x080037ae
- 80009b0:	080037cd 	.word	0x080037cd
- 80009b4:	080037ec 	.word	0x080037ec
+ 80009ac:	080037ea 	.word	0x080037ea
+ 80009b0:	08003809 	.word	0x08003809
+ 80009b4:	08003828 	.word	0x08003828
  80009b8:	20000004 	.word	0x20000004
- 80009bc:	080039d0 	.word	0x080039d0
+ 80009bc:	08003a10 	.word	0x08003a10
 
 080009c0 <do_wrblk>:
 /* **************************************************************************************
@@ -2140,14 +2140,14 @@ printf("Send crc-32: %08X\n\r",crc32);USART1_txint_send();USART1_txint_send();
 	can_msg_put(p);		// Place in CAN output buffer
  8000a88:	e5b0      	b.n	80005ec <can_msg_put>
  8000a8a:	bf00      	nop
- 8000a8c:	0800381c 	.word	0x0800381c
+ 8000a8c:	08003858 	.word	0x08003858
  8000a90:	08005000 	.word	0x08005000
  8000a94:	20000860 	.word	0x20000860
- 8000a98:	08003837 	.word	0x08003837
+ 8000a98:	08003873 	.word	0x08003873
  8000a9c:	08003fff 	.word	0x08003fff
- 8000aa0:	0800386e 	.word	0x0800386e
- 8000aa4:	08003895 	.word	0x08003895
- 8000aa8:	080038b0 	.word	0x080038b0
+ 8000aa0:	080038aa 	.word	0x080038aa
+ 8000aa4:	080038d1 	.word	0x080038d1
+ 8000aa8:	080038ec 	.word	0x080038ec
 
 08000aac <do_set_addr>:
  * void do_set_addr(struct CANRCVBUF* p);
@@ -2314,7 +2314,7 @@ printf("X: flashblocksize: %X %X %X %X\n\r",flashblocksize, p->cd.uc[0],p->cd.uc
  8000b40:	e554      	b.n	80005ec <can_msg_put>
  8000b42:	bf00      	nop
  8000b44:	20000004 	.word	0x20000004
- 8000b48:	080038c4 	.word	0x080038c4
+ 8000b48:	08003900 	.word	0x08003900
 
 08000b4c <do_rd4>:
  * void do_rd4(struct CANRCVBUF* p);
@@ -2392,7 +2392,7 @@ printf("R4: read addr: %X %X %X %X %X %X\n\r",(u32)rdaddr, p->cd.uc[0],p->cd.uc[
 	can_msg_put(p);	// Place in CAN output buffer
  8000b88:	e530      	b.n	80005ec <can_msg_put>
  8000b8a:	bf00      	nop
- 8000b8c:	080038e5 	.word	0x080038e5
+ 8000b8c:	08003921 	.word	0x08003921
 
 08000b90 <do_getfromdaddress>:
  * @brief	: Return msg with 4 bytes in payload uc[1-4] from address d
@@ -2468,8 +2468,8 @@ printf("GETADDR: read addr: %X %X %X %X %X\n\r", p->cd.uc[0],p->cd.uc[1],p->cd.u
 	can_msg_put(p);	// Place in CAN output buffer
  8000bd8:	e508      	b.n	80005ec <can_msg_put>
  8000bda:	bf00      	nop
- 8000bdc:	08003908 	.word	0x08003908
- 8000be0:	08003930 	.word	0x08003930
+ 8000bdc:	08003944 	.word	0x08003944
+ 8000be0:	0800396c 	.word	0x0800396c
 
 08000be4 <do_send4>:
  * @brief	: Send 4 bytes
@@ -2550,7 +2550,7 @@ printf("send4: %X %X %X %X %X %X\n\r", n, p->cd.uc[0],p->cd.uc[1],p->cd.uc[2],p-
 printf("send4: %X %X %X %X %X %X\n\r", n, p->cd.uc[0],p->cd.uc[1],p->cd.uc[2],p->cd.uc[3],p->cd.uc[4]);USART1_txint_send();
 	can_msg_put(p);	// Place in CAN output buffer
  8000c1a:	e4e7      	b.n	80005ec <can_msg_put>
- 8000c1c:	08003955 	.word	0x08003955
+ 8000c1c:	08003991 	.word	0x08003991
 
 08000c20 <do_getflashpaddr>:
 extern u8* __highflashp;
@@ -2668,9 +2668,9 @@ printf("\n\r"); USART1_txint_send();
  8000c72:	bf00      	nop
  8000c74:	08005004 	.word	0x08005004
  8000c78:	000fffff 	.word	0x000fffff
- 8000c7c:	08003970 	.word	0x08003970
- 8000c80:	08003981 	.word	0x08003981
- 8000c84:	080034c6 	.word	0x080034c6
+ 8000c7c:	080039ac 	.word	0x080039ac
+ 8000c80:	080039bd 	.word	0x080039bd
+ 8000c84:	08003502 	.word	0x08003502
 
 08000c88 <do_cmd_cmd>:
  * void do_cmd_cmd(struct CANRCVBUF* p);
@@ -2962,7 +2962,7 @@ printf("BOGUS CMD CODE: %X %08X %X  %08X %08X\n\r",p->cd.uc[0], p->id, p->dlc, p
  8000d8c:	08005000 	.word	0x08005000
  8000d90:	0807f800 	.word	0x0807f800
  8000d94:	20000860 	.word	0x20000860
- 8000d98:	08003985 	.word	0x08003985
+ 8000d98:	080039c1 	.word	0x080039c1
 
 08000d9c <canwinch_ldrproto_poll>:
  * void canwinch_ldrproto_poll(void);
@@ -4188,7 +4188,7 @@ void clockspecifysetup(struct CLOCKS *clocks)
  80017d8:	40021004 	.word	0x40021004
  80017dc:	40021000 	.word	0x40021000
  80017e0:	40010004 	.word	0x40010004
- 80017e4:	080039e0 	.word	0x080039e0
+ 80017e4:	08003a20 	.word	0x08003a20
  80017e8:	200010d4 	.word	0x200010d4
  80017ec:	016e3600 	.word	0x016e3600
  80017f0:	02dc6c00 	.word	0x02dc6c00
@@ -4991,7 +4991,7 @@ void Reset_Handler(void)
   main();
  8001b3a:	f7fe fb49 	bl	80001d0 <main>
  8001b3e:	e7fe      	b.n	8001b3e <Reset_Handler+0x2a>
- 8001b40:	08003ee3 	.word	0x08003ee3
+ 8001b40:	08003f23 	.word	0x08003f23
  8001b44:	20000000 	.word	0x20000000
  8001b48:	2000084c 	.word	0x2000084c
  8001b4c:	20000850 	.word	0x20000850
@@ -6602,7 +6602,7 @@ uint32_t rc_crc32(u8* buf, u32 len)
 }
  8002100:	43d8      	mvns	r0, r3
  8002102:	bd30      	pop	{r4, r5, pc}
- 8002104:	08003a10 	.word	0x08003a10
+ 8002104:	08003a50 	.word	0x08003a50
 
 08002108 <can_nxp_setRS>:
  * @param	: rs: 0 = NORMAL mode; not-zero = SILENT mode 
@@ -6669,7 +6669,7 @@ struct CLOCKS* canwinch_setup_F103_pod_clocks(void)
 }
  8002154:	4800      	ldr	r0, [pc, #0]	; (8002158 <canwinch_setup_F103_pod_clocks+0x4>)
  8002156:	4770      	bx	lr
- 8002158:	08003e10 	.word	0x08003e10
+ 8002158:	08003e50 	.word	0x08003e50
 
 0800215c <canwinch_setup_F103_pod>:
  *		:  -5 port pin setup failed
@@ -6744,9 +6744,9 @@ static int canwinch_setup_F103_filter(u32 canid)
  800219e:	4628      	mov	r0, r5
  80021a0:	bd70      	pop	{r4, r5, r6, pc}
  80021a2:	bf00      	nop
- 80021a4:	08003e1c 	.word	0x08003e1c
- 80021a8:	08003e44 	.word	0x08003e44
- 80021ac:	08003e50 	.word	0x08003e50
+ 80021a4:	08003e5c 	.word	0x08003e5c
+ 80021a8:	08003e84 	.word	0x08003e84
+ 80021ac:	08003e90 	.word	0x08003e90
 
 080021b0 <loop>:
 {
@@ -7422,7 +7422,7 @@ int SENSORgpiopins_Config(void)
  80024b6:	4320      	orrs	r0, r4
  80024b8:	bd38      	pop	{r3, r4, r5, pc}
  80024ba:	bf00      	nop
- 80024bc:	08003e5c 	.word	0x08003e5c
+ 80024bc:	08003e9c 	.word	0x08003e9c
 
 080024c0 <configure_pin>:
  * @param	: bit in port to set or reset
@@ -8365,7 +8365,7 @@ struct CAN_CTLBLOCK* can_driver_init(struct CAN_PARAMS2 *p, const struct CAN_INI
 	pctl = (struct CAN_CTLBLOCK*)calloc(1, sizeof(struct CAN_CTLBLOCK));
  80028b2:	2198      	movs	r1, #152	; 0x98
  80028b4:	2001      	movs	r0, #1
- 80028b6:	f000 fd65 	bl	8003384 <calloc>
+ 80028b6:	f000 fd83 	bl	80033c0 <calloc>
 	if (pctl == NULL) return NULL;
  80028ba:	4604      	mov	r4, r0
  80028bc:	2800      	cmp	r0, #0
@@ -8486,7 +8486,7 @@ struct CAN_CTLBLOCK* can_driver_init(struct CAN_PARAMS2 *p, const struct CAN_INI
 
 		/* Get CAN xmit linked list and init 'plinknext'. */	
 		ptmp = (struct CAN_POOLBLOCK*)calloc(pinit->numbuff, sizeof(struct CAN_POOLBLOCK));
- 800291c:	f000 fd32 	bl	8003384 <calloc>
+ 800291c:	f000 fd50 	bl	80033c0 <calloc>
 		if ( ptmp == NULL){pctl->ret = -2; return pctl;} // Get buff failed
  8002920:	b908      	cbnz	r0, 8002926 <can_driver_init+0x8a>
  8002922:	23fe      	movs	r3, #254	; 0xfe
@@ -9686,7 +9686,7 @@ void CAN1_RX0_IRQHandler(void){return CAN_RX_IRQHandler(&can1rx0, &pctl0->ptrs0)
  8002e9e:	3124      	adds	r1, #36	; 0x24
  8002ea0:	f7ff bf7c 	b.w	8002d9c <CAN_RX_IRQHandler>
  8002ea4:	20001900 	.word	0x20001900
- 8002ea8:	08003e74 	.word	0x08003e74
+ 8002ea8:	08003eb4 	.word	0x08003eb4
 
 08002eac <CAN1_RX1_IRQHandler>:
 void CAN1_RX1_IRQHandler(void){return CAN_RX_IRQHandler(&can1rx1, &pctl0->ptrs1); }
@@ -9696,7 +9696,7 @@ void CAN1_RX1_IRQHandler(void){return CAN_RX_IRQHandler(&can1rx1, &pctl0->ptrs1)
  8002eb2:	3134      	adds	r1, #52	; 0x34
  8002eb4:	f7ff bf72 	b.w	8002d9c <CAN_RX_IRQHandler>
  8002eb8:	20001900 	.word	0x20001900
- 8002ebc:	08003e80 	.word	0x08003e80
+ 8002ebc:	08003ec0 	.word	0x08003ec0
 
 08002ec0 <CAN2_RX0_IRQHandler>:
 void CAN2_RX0_IRQHandler(void){return CAN_RX_IRQHandler(&can2rx0, &pctl1->ptrs0); }
@@ -9706,7 +9706,7 @@ void CAN2_RX0_IRQHandler(void){return CAN_RX_IRQHandler(&can2rx0, &pctl1->ptrs0)
  8002ec6:	3124      	adds	r1, #36	; 0x24
  8002ec8:	f7ff bf68 	b.w	8002d9c <CAN_RX_IRQHandler>
  8002ecc:	20001900 	.word	0x20001900
- 8002ed0:	08003e8c 	.word	0x08003e8c
+ 8002ed0:	08003ecc 	.word	0x08003ecc
 
 08002ed4 <CAN2_RX1_IRQHandler>:
 void CAN2_RX1_IRQHandler(void){return CAN_RX_IRQHandler(&can2rx1, &pctl1->ptrs1); }
@@ -9716,7 +9716,7 @@ void CAN2_RX1_IRQHandler(void){return CAN_RX_IRQHandler(&can2rx1, &pctl1->ptrs1)
  8002eda:	3134      	adds	r1, #52	; 0x34
  8002edc:	f7ff bf5e 	b.w	8002d9c <CAN_RX_IRQHandler>
  8002ee0:	20001900 	.word	0x20001900
- 8002ee4:	08003e98 	.word	0x08003e98
+ 8002ee4:	08003ed8 	.word	0x08003ed8
 
 08002ee8 <can_driver_port>:
  * @param	: cannum = CAN num (0 or 1, for CAN1 or CAN2)
@@ -9983,7 +9983,7 @@ int can_driver_port(u8 port, u8 cannum)
  8002fb0:	b00d      	add	sp, #52	; 0x34
  8002fb2:	bdf0      	pop	{r4, r5, r6, r7, pc}
  8002fb4:	4002101c 	.word	0x4002101c
- 8002fb8:	08003ea4 	.word	0x08003ea4
+ 8002fb8:	08003ee4 	.word	0x08003ee4
  8002fbc:	40010004 	.word	0x40010004
 
 08002fc0 <can_driver_filter_deactivate_one>:
@@ -10641,7 +10641,7 @@ int can_driver_filter_add_two_32b_id(u32 id1, u32 id2, u32 fifo, u32 banknum)
  80032b6:	b005      	add	sp, #20
  80032b8:	bdf0      	pop	{r4, r5, r6, r7, pc}
  80032ba:	bf00      	nop
- 80032bc:	08003ed4 	.word	0x08003ed4
+ 80032bc:	08003f14 	.word	0x08003f14
 
 080032c0 <can_driver_filter_add_param_tbl>:
  * @param	: dummy = CAN ID that is a non-table entry, i.e. skip
@@ -10759,655 +10759,720 @@ u32 can_driver_filter_getbanknum(u32 CANnum)
  800332c:	2000194c 	.word	0x2000194c
  8003330:	20000848 	.word	0x20000848
 
-08003334 <can_msg_reset_msg>:
+08003334 <can_driver_hw_filter_list>:
+ * @param	: oe = 0 = odd; 1 = even
+ * @return	: value
+*******************************************************************************/
+uint32_t can_driver_hw_filter_list(uint8_t cannumber, int8_t banknum, uint8_t oe)
+{
+	if (banknum < 0)
+ 8003334:	2900      	cmp	r1, #0
+ 8003336:	da07      	bge.n	8003348 <can_driver_hw_filter_list+0x14>
+	{
+		if (cannumber == 1) return (filtnum1<<1)|oe;
+ 8003338:	2801      	cmp	r0, #1
+ 800333a:	bf0c      	ite	eq
+ 800333c:	4b0a      	ldreq	r3, [pc, #40]	; (8003368 <can_driver_hw_filter_list+0x34>)
+		return (filtnum2<<1)|oe;
+ 800333e:	4b0b      	ldrne	r3, [pc, #44]	; (800336c <can_driver_hw_filter_list+0x38>)
+ 8003340:	6818      	ldr	r0, [r3, #0]
+ 8003342:	ea42 0040 	orr.w	r0, r2, r0, lsl #1
+ 8003346:	4770      	bx	lr
+ 8003348:	f101 6100 	add.w	r1, r1, #134217728	; 0x8000000
+	}
+
+	if (cannumber == 0)
+ 800334c:	b920      	cbnz	r0, 8003358 <can_driver_hw_filter_list+0x24>
+	{
+		if (oe == 0)
+		{
+			return CAN_FiR1(CAN1, banknum);
+ 800334e:	f601 41c8 	addw	r1, r1, #3272	; 0xcc8
+ 8003352:	00c9      	lsls	r1, r1, #3
+		return (filtnum2<<1)|oe;
+	}
+
+	if (cannumber == 0)
+	{
+		if (oe == 0)
+ 8003354:	b932      	cbnz	r2, 8003364 <can_driver_hw_filter_list+0x30>
+ 8003356:	e003      	b.n	8003360 <can_driver_hw_filter_list+0x2c>
+		return CAN_FiR2(CAN1, banknum);
+	}
+
+		if (oe != 0)
+		{
+			return CAN_FiR1(CAN2, banknum);
+ 8003358:	f601 5148 	addw	r1, r1, #3400	; 0xd48
+ 800335c:	00c9      	lsls	r1, r1, #3
+			return CAN_FiR1(CAN1, banknum);
+		}
+		return CAN_FiR2(CAN1, banknum);
+	}
+
+		if (oe != 0)
+ 800335e:	b10a      	cbz	r2, 8003364 <can_driver_hw_filter_list+0x30>
+		{
+			return CAN_FiR1(CAN2, banknum);
+ 8003360:	6808      	ldr	r0, [r1, #0]
+ 8003362:	4770      	bx	lr
+		}
+		return CAN_FiR2(CAN2, banknum);	
+ 8003364:	6848      	ldr	r0, [r1, #4]
+}
+ 8003366:	4770      	bx	lr
+ 8003368:	2000194c 	.word	0x2000194c
+ 800336c:	20000848 	.word	0x20000848
+
+08003370 <can_msg_reset_msg>:
 {
 	__attribute__((__unused__)) void* x = pctl;	// Get rid of unused warning.
 
 	/* Compare the CAN ID in the msg just received with the UNIT id, and execute a software
    	   forced system reset if they match. */
 	if (pblk->can.id == myunitid_local)	// Msg for this unit?
- 8003334:	4b0b      	ldr	r3, [pc, #44]	; (8003364 <can_msg_reset_msg+0x30>)
+ 8003370:	4b0b      	ldr	r3, [pc, #44]	; (80033a0 <can_msg_reset_msg+0x30>)
 }
 /*#######################################################################################
  * Callled from can_driver.c RX0 or RX1 IRQHandler
  *####################################################################################### */
 static void can_msg_reset_msg(void* pctl, struct CAN_POOLBLOCK* pblk)
 {
- 8003336:	b410      	push	{r4}
+ 8003372:	b410      	push	{r4}
 	__attribute__((__unused__)) void* x = pctl;	// Get rid of unused warning.
 
 	/* Compare the CAN ID in the msg just received with the UNIT id, and execute a software
    	   forced system reset if they match. */
 	if (pblk->can.id == myunitid_local)	// Msg for this unit?
- 8003338:	681a      	ldr	r2, [r3, #0]
- 800333a:	680c      	ldr	r4, [r1, #0]
- 800333c:	4294      	cmp	r4, r2
- 800333e:	d10a      	bne.n	8003356 <can_msg_reset_msg+0x22>
+ 8003374:	681a      	ldr	r2, [r3, #0]
+ 8003376:	680c      	ldr	r4, [r1, #0]
+ 8003378:	4294      	cmp	r4, r2
+ 800337a:	d10a      	bne.n	8003392 <can_msg_reset_msg+0x22>
 	{ // Here, a loader command (data type) for our unitid.  Is this a forced reset to this unit only?
 		if ( ((pblk->can.dlc & 0xf) == 1) && (pblk->can.cd.u8[0] == LDR_RESET) )
- 8003340:	684a      	ldr	r2, [r1, #4]
- 8003342:	f002 020f 	and.w	r2, r2, #15
- 8003346:	2a01      	cmp	r2, #1
- 8003348:	d105      	bne.n	8003356 <can_msg_reset_msg+0x22>
- 800334a:	7a0a      	ldrb	r2, [r1, #8]
- 800334c:	2a08      	cmp	r2, #8
+ 800337c:	684a      	ldr	r2, [r1, #4]
+ 800337e:	f002 020f 	and.w	r2, r2, #15
+ 8003382:	2a01      	cmp	r2, #1
+ 8003384:	d105      	bne.n	8003392 <can_msg_reset_msg+0x22>
+ 8003386:	7a0a      	ldrb	r2, [r1, #8]
+ 8003388:	2a08      	cmp	r2, #8
 			SCB_AIRCR = (0x5FA << 16) | SCB_AIRCR_SYSRESETREQ;	// Cause a RESET
- 800334e:	bf02      	ittt	eq
- 8003350:	4c05      	ldreq	r4, [pc, #20]	; (8003368 <can_msg_reset_msg+0x34>)
- 8003352:	4a06      	ldreq	r2, [pc, #24]	; (800336c <can_msg_reset_msg+0x38>)
- 8003354:	6014      	streq	r4, [r2, #0]
+ 800338a:	bf02      	ittt	eq
+ 800338c:	4c05      	ldreq	r4, [pc, #20]	; (80033a4 <can_msg_reset_msg+0x34>)
+ 800338e:	4a06      	ldreq	r2, [pc, #24]	; (80033a8 <can_msg_reset_msg+0x38>)
+ 8003390:	6014      	streq	r4, [r2, #0]
 	}
 
 	/* Call other routines if an address is set up, (e.g. 'can_gps_phasing' that saves the
            DTW tick count stored  in CAN_POOLBLOCK). */
 	if (can_msg_reset_ptr != NULL)	// Option here is to chain to other routines
- 8003356:	685b      	ldr	r3, [r3, #4]
- 8003358:	b10b      	cbz	r3, 800335e <can_msg_reset_msg+0x2a>
+ 8003392:	685b      	ldr	r3, [r3, #4]
+ 8003394:	b10b      	cbz	r3, 800339a <can_msg_reset_msg+0x2a>
 		(*can_msg_reset_ptr)(pctl, pblk);	// Go do something else (in a timely manner!)
 
 	return;	
 }
- 800335a:	bc10      	pop	{r4}
+ 8003396:	bc10      	pop	{r4}
 	}
 
 	/* Call other routines if an address is set up, (e.g. 'can_gps_phasing' that saves the
            DTW tick count stored  in CAN_POOLBLOCK). */
 	if (can_msg_reset_ptr != NULL)	// Option here is to chain to other routines
 		(*can_msg_reset_ptr)(pctl, pblk);	// Go do something else (in a timely manner!)
- 800335c:	4718      	bx	r3
+ 8003398:	4718      	bx	r3
 
 	return;	
 }
- 800335e:	bc10      	pop	{r4}
- 8003360:	4770      	bx	lr
- 8003362:	bf00      	nop
- 8003364:	20001954 	.word	0x20001954
- 8003368:	05fa0004 	.word	0x05fa0004
- 800336c:	e000ed0c 	.word	0xe000ed0c
+ 800339a:	bc10      	pop	{r4}
+ 800339c:	4770      	bx	lr
+ 800339e:	bf00      	nop
+ 80033a0:	20001954 	.word	0x20001954
+ 80033a4:	05fa0004 	.word	0x05fa0004
+ 80033a8:	e000ed0c 	.word	0xe000ed0c
 
-08003370 <can_msg_reset_init>:
+080033ac <can_msg_reset_init>:
  * @return	: 0 = OK, -1 failed: RX ptr was not NULL
 ********************************************************************************/
 
 int can_msg_reset_init (struct CAN_CTLBLOCK* pctl, u32 canid)
 {
 	myunitid_local = canid;		// Save unit id used for causing RESET
- 8003370:	4b02      	ldr	r3, [pc, #8]	; (800337c <can_msg_reset_init+0xc>)
- 8003372:	6019      	str	r1, [r3, #0]
+ 80033ac:	4b02      	ldr	r3, [pc, #8]	; (80033b8 <can_msg_reset_init+0xc>)
+ 80033ae:	6019      	str	r1, [r3, #0]
 
 	// 'can_driver.c' 'CAN_RX_IRQHandler' will call to this address
 	pctl->ptrs1.func_rx = (void*)&can_msg_reset_msg; // Callback address for CAN RX0 or RX1 handler
- 8003374:	4b02      	ldr	r3, [pc, #8]	; (8003380 <can_msg_reset_init+0x10>)
- 8003376:	6383      	str	r3, [r0, #56]	; 0x38
+ 80033b0:	4b02      	ldr	r3, [pc, #8]	; (80033bc <can_msg_reset_init+0x10>)
+ 80033b2:	6383      	str	r3, [r0, #56]	; 0x38
 
 	return 0;
 }
- 8003378:	2000      	movs	r0, #0
- 800337a:	4770      	bx	lr
- 800337c:	20001954 	.word	0x20001954
- 8003380:	08003335 	.word	0x08003335
+ 80033b4:	2000      	movs	r0, #0
+ 80033b6:	4770      	bx	lr
+ 80033b8:	20001954 	.word	0x20001954
+ 80033bc:	08003371 	.word	0x08003371
 
-08003384 <calloc>:
- 8003384:	4b02      	ldr	r3, [pc, #8]	; (8003390 <calloc+0xc>)
- 8003386:	460a      	mov	r2, r1
- 8003388:	4601      	mov	r1, r0
- 800338a:	6818      	ldr	r0, [r3, #0]
- 800338c:	f000 b802 	b.w	8003394 <_calloc_r>
- 8003390:	20000430 	.word	0x20000430
+080033c0 <calloc>:
+ 80033c0:	4b02      	ldr	r3, [pc, #8]	; (80033cc <calloc+0xc>)
+ 80033c2:	460a      	mov	r2, r1
+ 80033c4:	4601      	mov	r1, r0
+ 80033c6:	6818      	ldr	r0, [r3, #0]
+ 80033c8:	f000 b802 	b.w	80033d0 <_calloc_r>
+ 80033cc:	20000430 	.word	0x20000430
 
-08003394 <_calloc_r>:
- 8003394:	b510      	push	{r4, lr}
- 8003396:	fb02 f101 	mul.w	r1, r2, r1
- 800339a:	f7fd fe9f 	bl	80010dc <_malloc_r>
- 800339e:	4604      	mov	r4, r0
- 80033a0:	b1d8      	cbz	r0, 80033da <_calloc_r+0x46>
- 80033a2:	f850 2c04 	ldr.w	r2, [r0, #-4]
- 80033a6:	f022 0203 	bic.w	r2, r2, #3
- 80033aa:	3a04      	subs	r2, #4
- 80033ac:	2a24      	cmp	r2, #36	; 0x24
- 80033ae:	d818      	bhi.n	80033e2 <_calloc_r+0x4e>
- 80033b0:	2a13      	cmp	r2, #19
- 80033b2:	d914      	bls.n	80033de <_calloc_r+0x4a>
- 80033b4:	2300      	movs	r3, #0
- 80033b6:	2a1b      	cmp	r2, #27
- 80033b8:	6003      	str	r3, [r0, #0]
- 80033ba:	6043      	str	r3, [r0, #4]
- 80033bc:	d916      	bls.n	80033ec <_calloc_r+0x58>
- 80033be:	2a24      	cmp	r2, #36	; 0x24
- 80033c0:	6083      	str	r3, [r0, #8]
- 80033c2:	60c3      	str	r3, [r0, #12]
- 80033c4:	bf11      	iteee	ne
- 80033c6:	f100 0210 	addne.w	r2, r0, #16
- 80033ca:	6103      	streq	r3, [r0, #16]
- 80033cc:	6143      	streq	r3, [r0, #20]
- 80033ce:	f100 0218 	addeq.w	r2, r0, #24
- 80033d2:	2300      	movs	r3, #0
- 80033d4:	6013      	str	r3, [r2, #0]
- 80033d6:	6053      	str	r3, [r2, #4]
- 80033d8:	6093      	str	r3, [r2, #8]
- 80033da:	4620      	mov	r0, r4
- 80033dc:	bd10      	pop	{r4, pc}
- 80033de:	4602      	mov	r2, r0
- 80033e0:	e7f7      	b.n	80033d2 <_calloc_r+0x3e>
- 80033e2:	2100      	movs	r1, #0
- 80033e4:	f000 f806 	bl	80033f4 <memset>
- 80033e8:	4620      	mov	r0, r4
- 80033ea:	bd10      	pop	{r4, pc}
- 80033ec:	f100 0208 	add.w	r2, r0, #8
- 80033f0:	e7ef      	b.n	80033d2 <_calloc_r+0x3e>
- 80033f2:	bf00      	nop
+080033d0 <_calloc_r>:
+ 80033d0:	b510      	push	{r4, lr}
+ 80033d2:	fb02 f101 	mul.w	r1, r2, r1
+ 80033d6:	f7fd fe81 	bl	80010dc <_malloc_r>
+ 80033da:	4604      	mov	r4, r0
+ 80033dc:	b1d8      	cbz	r0, 8003416 <_calloc_r+0x46>
+ 80033de:	f850 2c04 	ldr.w	r2, [r0, #-4]
+ 80033e2:	f022 0203 	bic.w	r2, r2, #3
+ 80033e6:	3a04      	subs	r2, #4
+ 80033e8:	2a24      	cmp	r2, #36	; 0x24
+ 80033ea:	d818      	bhi.n	800341e <_calloc_r+0x4e>
+ 80033ec:	2a13      	cmp	r2, #19
+ 80033ee:	d914      	bls.n	800341a <_calloc_r+0x4a>
+ 80033f0:	2300      	movs	r3, #0
+ 80033f2:	2a1b      	cmp	r2, #27
+ 80033f4:	6003      	str	r3, [r0, #0]
+ 80033f6:	6043      	str	r3, [r0, #4]
+ 80033f8:	d916      	bls.n	8003428 <_calloc_r+0x58>
+ 80033fa:	2a24      	cmp	r2, #36	; 0x24
+ 80033fc:	6083      	str	r3, [r0, #8]
+ 80033fe:	60c3      	str	r3, [r0, #12]
+ 8003400:	bf11      	iteee	ne
+ 8003402:	f100 0210 	addne.w	r2, r0, #16
+ 8003406:	6103      	streq	r3, [r0, #16]
+ 8003408:	6143      	streq	r3, [r0, #20]
+ 800340a:	f100 0218 	addeq.w	r2, r0, #24
+ 800340e:	2300      	movs	r3, #0
+ 8003410:	6013      	str	r3, [r2, #0]
+ 8003412:	6053      	str	r3, [r2, #4]
+ 8003414:	6093      	str	r3, [r2, #8]
+ 8003416:	4620      	mov	r0, r4
+ 8003418:	bd10      	pop	{r4, pc}
+ 800341a:	4602      	mov	r2, r0
+ 800341c:	e7f7      	b.n	800340e <_calloc_r+0x3e>
+ 800341e:	2100      	movs	r1, #0
+ 8003420:	f000 f806 	bl	8003430 <memset>
+ 8003424:	4620      	mov	r0, r4
+ 8003426:	bd10      	pop	{r4, pc}
+ 8003428:	f100 0208 	add.w	r2, r0, #8
+ 800342c:	e7ef      	b.n	800340e <_calloc_r+0x3e>
+ 800342e:	bf00      	nop
 
-080033f4 <memset>:
- 80033f4:	b470      	push	{r4, r5, r6}
- 80033f6:	0784      	lsls	r4, r0, #30
- 80033f8:	d046      	beq.n	8003488 <memset+0x94>
- 80033fa:	1e54      	subs	r4, r2, #1
- 80033fc:	2a00      	cmp	r2, #0
- 80033fe:	d041      	beq.n	8003484 <memset+0x90>
- 8003400:	b2cd      	uxtb	r5, r1
- 8003402:	4603      	mov	r3, r0
- 8003404:	e002      	b.n	800340c <memset+0x18>
- 8003406:	1e62      	subs	r2, r4, #1
- 8003408:	b3e4      	cbz	r4, 8003484 <memset+0x90>
- 800340a:	4614      	mov	r4, r2
- 800340c:	f803 5b01 	strb.w	r5, [r3], #1
- 8003410:	079a      	lsls	r2, r3, #30
- 8003412:	d1f8      	bne.n	8003406 <memset+0x12>
- 8003414:	2c03      	cmp	r4, #3
- 8003416:	d92e      	bls.n	8003476 <memset+0x82>
- 8003418:	b2cd      	uxtb	r5, r1
- 800341a:	ea45 2505 	orr.w	r5, r5, r5, lsl #8
- 800341e:	2c0f      	cmp	r4, #15
- 8003420:	ea45 4505 	orr.w	r5, r5, r5, lsl #16
- 8003424:	d919      	bls.n	800345a <memset+0x66>
- 8003426:	4626      	mov	r6, r4
- 8003428:	f103 0210 	add.w	r2, r3, #16
- 800342c:	3e10      	subs	r6, #16
- 800342e:	2e0f      	cmp	r6, #15
- 8003430:	f842 5c10 	str.w	r5, [r2, #-16]
- 8003434:	f842 5c0c 	str.w	r5, [r2, #-12]
- 8003438:	f842 5c08 	str.w	r5, [r2, #-8]
- 800343c:	f842 5c04 	str.w	r5, [r2, #-4]
- 8003440:	f102 0210 	add.w	r2, r2, #16
- 8003444:	d8f2      	bhi.n	800342c <memset+0x38>
- 8003446:	f1a4 0210 	sub.w	r2, r4, #16
- 800344a:	f022 020f 	bic.w	r2, r2, #15
- 800344e:	f004 040f 	and.w	r4, r4, #15
- 8003452:	3210      	adds	r2, #16
- 8003454:	2c03      	cmp	r4, #3
- 8003456:	4413      	add	r3, r2
- 8003458:	d90d      	bls.n	8003476 <memset+0x82>
- 800345a:	461e      	mov	r6, r3
- 800345c:	4622      	mov	r2, r4
- 800345e:	3a04      	subs	r2, #4
- 8003460:	2a03      	cmp	r2, #3
- 8003462:	f846 5b04 	str.w	r5, [r6], #4
- 8003466:	d8fa      	bhi.n	800345e <memset+0x6a>
- 8003468:	1f22      	subs	r2, r4, #4
- 800346a:	f022 0203 	bic.w	r2, r2, #3
- 800346e:	3204      	adds	r2, #4
- 8003470:	4413      	add	r3, r2
- 8003472:	f004 0403 	and.w	r4, r4, #3
- 8003476:	b12c      	cbz	r4, 8003484 <memset+0x90>
- 8003478:	b2c9      	uxtb	r1, r1
- 800347a:	441c      	add	r4, r3
- 800347c:	f803 1b01 	strb.w	r1, [r3], #1
- 8003480:	42a3      	cmp	r3, r4
- 8003482:	d1fb      	bne.n	800347c <memset+0x88>
- 8003484:	bc70      	pop	{r4, r5, r6}
- 8003486:	4770      	bx	lr
- 8003488:	4614      	mov	r4, r2
- 800348a:	4603      	mov	r3, r0
- 800348c:	e7c2      	b.n	8003414 <memset+0x20>
- 800348e:	bf00      	nop
- 8003490:	0a0a0a0d 	.word	0x0a0a0a0d
- 8003494:	23232320 	.word	0x23232320
- 8003498:	2e2e2023 	.word	0x2e2e2023
- 800349c:	52444c2f 	.word	0x52444c2f
- 80034a0:	45584946 	.word	0x45584946
- 80034a4:	444f5044 	.word	0x444f5044
- 80034a8:	5552542f 	.word	0x5552542f
- 80034ac:	4c2f4b4e 	.word	0x4c2f4b4e
- 80034b0:	23205244 	.word	0x23205244
- 80034b4:	20232323 	.word	0x20232323
- 80034b8:	322f3330 	.word	0x322f3330
- 80034bc:	30322f39 	.word	0x30322f39
- 80034c0:	76203831 	.word	0x76203831
- 80034c4:	0d0a2030 	.word	0x0d0a2030
- 80034c8:	68202000 	.word	0x68202000
- 80034cc:	5f6b6c63 	.word	0x5f6b6c63
- 80034d0:	71657266 	.word	0x71657266
- 80034d4:	484d2820 	.word	0x484d2820
- 80034d8:	3a20297a 	.word	0x3a20297a
- 80034dc:	75392520 	.word	0x75392520
- 80034e0:	20000d0a 	.word	0x20000d0a
- 80034e4:	6b6c6370 	.word	0x6b6c6370
- 80034e8:	72665f31 	.word	0x72665f31
- 80034ec:	28207165 	.word	0x28207165
- 80034f0:	297a484d 	.word	0x297a484d
- 80034f4:	25203a20 	.word	0x25203a20
- 80034f8:	0d0a7539 	.word	0x0d0a7539
- 80034fc:	63702000 	.word	0x63702000
- 8003500:	5f326b6c 	.word	0x5f326b6c
- 8003504:	71657266 	.word	0x71657266
- 8003508:	484d2820 	.word	0x484d2820
- 800350c:	3a20297a 	.word	0x3a20297a
- 8003510:	75392520 	.word	0x75392520
- 8003514:	73000d0a 	.word	0x73000d0a
- 8003518:	6c637379 	.word	0x6c637379
- 800351c:	72665f6b 	.word	0x72665f6b
- 8003520:	28207165 	.word	0x28207165
- 8003524:	297a484d 	.word	0x297a484d
- 8003528:	25203a20 	.word	0x25203a20
- 800352c:	0d0a7539 	.word	0x0d0a7539
- 8003530:	430d0a00 	.word	0x430d0a00
- 8003534:	72746e6f 	.word	0x72746e6f
- 8003538:	732f6c6f 	.word	0x732f6c6f
- 800353c:	75746174 	.word	0x75746174
- 8003540:	65722073 	.word	0x65722073
- 8003544:	74736967 	.word	0x74736967
- 8003548:	28207265 	.word	0x28207265
- 800354c:	5f434352 	.word	0x5f434352
- 8003550:	29525343 	.word	0x29525343
- 8003554:	25203a20 	.word	0x25203a20
- 8003558:	0a783830 	.word	0x0a783830
- 800355c:	6f43000d 	.word	0x6f43000d
- 8003560:	6f72746e 	.word	0x6f72746e
- 8003564:	74732f6c 	.word	0x74732f6c
- 8003568:	73757461 	.word	0x73757461
- 800356c:	67657220 	.word	0x67657220
- 8003570:	65747369 	.word	0x65747369
- 8003574:	52282072 	.word	0x52282072
- 8003578:	435f4343 	.word	0x435f4343
- 800357c:	20295253 	.word	0x20295253
- 8003580:	3025203a 	.word	0x3025203a
- 8003584:	41207838 	.word	0x41207838
- 8003588:	72657466 	.word	0x72657466
- 800358c:	564d5220 	.word	0x564d5220
- 8003590:	72772046 	.word	0x72772046
- 8003594:	65747469 	.word	0x65747469
- 8003598:	0a0d0a6e 	.word	0x0a0d0a6e
- 800359c:	6e6f4300 	.word	0x6e6f4300
- 80035a0:	6c6f7274 	.word	0x6c6f7274
- 80035a4:	6174732f 	.word	0x6174732f
- 80035a8:	20737574 	.word	0x20737574
- 80035ac:	69676572 	.word	0x69676572
- 80035b0:	72657473 	.word	0x72657473
- 80035b4:	43522820 	.word	0x43522820
- 80035b8:	53435f43 	.word	0x53435f43
- 80035bc:	3a202952 	.word	0x3a202952
- 80035c0:	38302520 	.word	0x38302520
- 80035c4:	66412078 	.word	0x66412078
- 80035c8:	20726574 	.word	0x20726574
- 80035cc:	5257504c 	.word	0x5257504c
- 80035d0:	69727720 	.word	0x69727720
- 80035d4:	6e657474 	.word	0x6e657474
- 80035d8:	000a0d0a 	.word	0x000a0d0a
- 80035dc:	314e4143 	.word	0x314e4143
- 80035e0:	696e6920 	.word	0x696e6920
- 80035e4:	61662074 	.word	0x61662074
- 80035e8:	64656c69 	.word	0x64656c69
- 80035ec:	554e203a 	.word	0x554e203a
- 80035f0:	70204c4c 	.word	0x70204c4c
- 80035f4:	0d0a7274 	.word	0x0d0a7274
- 80035f8:	4e414300 	.word	0x4e414300
- 80035fc:	696e6920 	.word	0x696e6920
- 8003600:	61662074 	.word	0x61662074
- 8003604:	64656c69 	.word	0x64656c69
- 8003608:	6572203a 	.word	0x6572203a
- 800360c:	6e727574 	.word	0x6e727574
- 8003610:	646f6320 	.word	0x646f6320
- 8003614:	203d2065 	.word	0x203d2065
- 8003618:	0d0a6425 	.word	0x0d0a6425
- 800361c:	69202000 	.word	0x69202000
- 8003620:	202e652e 	.word	0x202e652e
- 8003624:	74696e75 	.word	0x74696e75
- 8003628:	25203a23 	.word	0x25203a23
- 800362c:	000d0a64 	.word	0x000d0a64
- 8003630:	53414c46 	.word	0x53414c46
- 8003634:	49532048 	.word	0x49532048
- 8003638:	203a455a 	.word	0x203a455a
- 800363c:	0d0a6425 	.word	0x0d0a6425
- 8003640:	33752800 	.word	0x33752800
- 8003644:	702a2932 	.word	0x702a2932
- 8003648:	62637263 	.word	0x62637263
- 800364c:	203a6b6c 	.word	0x203a6b6c
- 8003650:	58383025 	.word	0x58383025
- 8003654:	0a000d0a 	.word	0x0a000d0a
- 8003658:	23230a0d 	.word	0x23230a0d
- 800365c:	41202323 	.word	0x41202323
- 8003660:	666f2074 	.word	0x666f2074
- 8003664:	74657366 	.word	0x74657366
- 8003668:	38302520 	.word	0x38302520
- 800366c:	64612058 	.word	0x64612058
- 8003670:	73657264 	.word	0x73657264
- 8003674:	30252073 	.word	0x30252073
- 8003678:	69205838 	.word	0x69205838
- 800367c:	6f622073 	.word	0x6f622073
- 8003680:	20737567 	.word	0x20737567
- 8003684:	23232323 	.word	0x23232323
- 8003688:	000a0d0a 	.word	0x000a0d0a
- 800368c:	74697865 	.word	0x74697865
- 8003690:	000a      	.short	0x000a
- 8003692:	7277      	.short	0x7277
- 8003694:	3a6b6c62 	.word	0x3a6b6c62
- 8003698:	20642520 	.word	0x20642520
- 800369c:	25205825 	.word	0x25205825
- 80036a0:	30252058 	.word	0x30252058
- 80036a4:	25205838 	.word	0x25205838
- 80036a8:	0a583830 	.word	0x0a583830
- 80036ac:	7277000d 	.word	0x7277000d
- 80036b0:	3a6b6c62 	.word	0x3a6b6c62
- 80036b4:	53414320 	.word	0x53414320
- 80036b8:	3a302045 	.word	0x3a302045
- 80036bc:	206f6e20 	.word	0x206f6e20
- 80036c0:	6465656e 	.word	0x6465656e
- 80036c4:	206f7420 	.word	0x206f7420
- 80036c8:	74697277 	.word	0x74697277
- 80036cc:	6c622065 	.word	0x6c622065
- 80036d0:	0a6b636f 	.word	0x0a6b636f
- 80036d4:	7277000d 	.word	0x7277000d
- 80036d8:	3a6b6c62 	.word	0x3a6b6c62
- 80036dc:	53414320 	.word	0x53414320
- 80036e0:	3a322045 	.word	0x3a322045
- 80036e4:	61726520 	.word	0x61726520
- 80036e8:	62206573 	.word	0x62206573
- 80036ec:	6b636f6c 	.word	0x6b636f6c
- 80036f0:	66656220 	.word	0x66656220
- 80036f4:	2065726f 	.word	0x2065726f
- 80036f8:	74697277 	.word	0x74697277
- 80036fc:	0a676e69 	.word	0x0a676e69
- 8003700:	7277000d 	.word	0x7277000d
- 8003704:	3a6b6c62 	.word	0x3a6b6c62
- 8003708:	53414320 	.word	0x53414320
- 800370c:	3a312045 	.word	0x3a312045
- 8003710:	69727720 	.word	0x69727720
- 8003714:	676e6974 	.word	0x676e6974
- 8003718:	6f6c6220 	.word	0x6f6c6220
- 800371c:	0d0a6b63 	.word	0x0d0a6b63
- 8003720:	62727700 	.word	0x62727700
- 8003724:	203a6b6c 	.word	0x203a6b6c
- 8003728:	5b796170 	.word	0x5b796170
- 800372c:	25205d31 	.word	0x25205d31
- 8003730:	61702058 	.word	0x61702058
- 8003734:	5d325b79 	.word	0x5d325b79
- 8003738:	0a582520 	.word	0x0a582520
+08003430 <memset>:
+ 8003430:	b470      	push	{r4, r5, r6}
+ 8003432:	0784      	lsls	r4, r0, #30
+ 8003434:	d046      	beq.n	80034c4 <memset+0x94>
+ 8003436:	1e54      	subs	r4, r2, #1
+ 8003438:	2a00      	cmp	r2, #0
+ 800343a:	d041      	beq.n	80034c0 <memset+0x90>
+ 800343c:	b2cd      	uxtb	r5, r1
+ 800343e:	4603      	mov	r3, r0
+ 8003440:	e002      	b.n	8003448 <memset+0x18>
+ 8003442:	1e62      	subs	r2, r4, #1
+ 8003444:	b3e4      	cbz	r4, 80034c0 <memset+0x90>
+ 8003446:	4614      	mov	r4, r2
+ 8003448:	f803 5b01 	strb.w	r5, [r3], #1
+ 800344c:	079a      	lsls	r2, r3, #30
+ 800344e:	d1f8      	bne.n	8003442 <memset+0x12>
+ 8003450:	2c03      	cmp	r4, #3
+ 8003452:	d92e      	bls.n	80034b2 <memset+0x82>
+ 8003454:	b2cd      	uxtb	r5, r1
+ 8003456:	ea45 2505 	orr.w	r5, r5, r5, lsl #8
+ 800345a:	2c0f      	cmp	r4, #15
+ 800345c:	ea45 4505 	orr.w	r5, r5, r5, lsl #16
+ 8003460:	d919      	bls.n	8003496 <memset+0x66>
+ 8003462:	4626      	mov	r6, r4
+ 8003464:	f103 0210 	add.w	r2, r3, #16
+ 8003468:	3e10      	subs	r6, #16
+ 800346a:	2e0f      	cmp	r6, #15
+ 800346c:	f842 5c10 	str.w	r5, [r2, #-16]
+ 8003470:	f842 5c0c 	str.w	r5, [r2, #-12]
+ 8003474:	f842 5c08 	str.w	r5, [r2, #-8]
+ 8003478:	f842 5c04 	str.w	r5, [r2, #-4]
+ 800347c:	f102 0210 	add.w	r2, r2, #16
+ 8003480:	d8f2      	bhi.n	8003468 <memset+0x38>
+ 8003482:	f1a4 0210 	sub.w	r2, r4, #16
+ 8003486:	f022 020f 	bic.w	r2, r2, #15
+ 800348a:	f004 040f 	and.w	r4, r4, #15
+ 800348e:	3210      	adds	r2, #16
+ 8003490:	2c03      	cmp	r4, #3
+ 8003492:	4413      	add	r3, r2
+ 8003494:	d90d      	bls.n	80034b2 <memset+0x82>
+ 8003496:	461e      	mov	r6, r3
+ 8003498:	4622      	mov	r2, r4
+ 800349a:	3a04      	subs	r2, #4
+ 800349c:	2a03      	cmp	r2, #3
+ 800349e:	f846 5b04 	str.w	r5, [r6], #4
+ 80034a2:	d8fa      	bhi.n	800349a <memset+0x6a>
+ 80034a4:	1f22      	subs	r2, r4, #4
+ 80034a6:	f022 0203 	bic.w	r2, r2, #3
+ 80034aa:	3204      	adds	r2, #4
+ 80034ac:	4413      	add	r3, r2
+ 80034ae:	f004 0403 	and.w	r4, r4, #3
+ 80034b2:	b12c      	cbz	r4, 80034c0 <memset+0x90>
+ 80034b4:	b2c9      	uxtb	r1, r1
+ 80034b6:	441c      	add	r4, r3
+ 80034b8:	f803 1b01 	strb.w	r1, [r3], #1
+ 80034bc:	42a3      	cmp	r3, r4
+ 80034be:	d1fb      	bne.n	80034b8 <memset+0x88>
+ 80034c0:	bc70      	pop	{r4, r5, r6}
+ 80034c2:	4770      	bx	lr
+ 80034c4:	4614      	mov	r4, r2
+ 80034c6:	4603      	mov	r3, r0
+ 80034c8:	e7c2      	b.n	8003450 <memset+0x20>
+ 80034ca:	bf00      	nop
+ 80034cc:	0a0a0a0d 	.word	0x0a0a0a0d
+ 80034d0:	23232320 	.word	0x23232320
+ 80034d4:	2e2e2023 	.word	0x2e2e2023
+ 80034d8:	52444c2f 	.word	0x52444c2f
+ 80034dc:	45584946 	.word	0x45584946
+ 80034e0:	444f5044 	.word	0x444f5044
+ 80034e4:	5552542f 	.word	0x5552542f
+ 80034e8:	4c2f4b4e 	.word	0x4c2f4b4e
+ 80034ec:	23205244 	.word	0x23205244
+ 80034f0:	20232323 	.word	0x20232323
+ 80034f4:	322f3330 	.word	0x322f3330
+ 80034f8:	30322f39 	.word	0x30322f39
+ 80034fc:	76203831 	.word	0x76203831
+ 8003500:	0d0a2030 	.word	0x0d0a2030
+ 8003504:	68202000 	.word	0x68202000
+ 8003508:	5f6b6c63 	.word	0x5f6b6c63
+ 800350c:	71657266 	.word	0x71657266
+ 8003510:	484d2820 	.word	0x484d2820
+ 8003514:	3a20297a 	.word	0x3a20297a
+ 8003518:	75392520 	.word	0x75392520
+ 800351c:	20000d0a 	.word	0x20000d0a
+ 8003520:	6b6c6370 	.word	0x6b6c6370
+ 8003524:	72665f31 	.word	0x72665f31
+ 8003528:	28207165 	.word	0x28207165
+ 800352c:	297a484d 	.word	0x297a484d
+ 8003530:	25203a20 	.word	0x25203a20
+ 8003534:	0d0a7539 	.word	0x0d0a7539
+ 8003538:	63702000 	.word	0x63702000
+ 800353c:	5f326b6c 	.word	0x5f326b6c
+ 8003540:	71657266 	.word	0x71657266
+ 8003544:	484d2820 	.word	0x484d2820
+ 8003548:	3a20297a 	.word	0x3a20297a
+ 800354c:	75392520 	.word	0x75392520
+ 8003550:	73000d0a 	.word	0x73000d0a
+ 8003554:	6c637379 	.word	0x6c637379
+ 8003558:	72665f6b 	.word	0x72665f6b
+ 800355c:	28207165 	.word	0x28207165
+ 8003560:	297a484d 	.word	0x297a484d
+ 8003564:	25203a20 	.word	0x25203a20
+ 8003568:	0d0a7539 	.word	0x0d0a7539
+ 800356c:	430d0a00 	.word	0x430d0a00
+ 8003570:	72746e6f 	.word	0x72746e6f
+ 8003574:	732f6c6f 	.word	0x732f6c6f
+ 8003578:	75746174 	.word	0x75746174
+ 800357c:	65722073 	.word	0x65722073
+ 8003580:	74736967 	.word	0x74736967
+ 8003584:	28207265 	.word	0x28207265
+ 8003588:	5f434352 	.word	0x5f434352
+ 800358c:	29525343 	.word	0x29525343
+ 8003590:	25203a20 	.word	0x25203a20
+ 8003594:	0a783830 	.word	0x0a783830
+ 8003598:	6f43000d 	.word	0x6f43000d
+ 800359c:	6f72746e 	.word	0x6f72746e
+ 80035a0:	74732f6c 	.word	0x74732f6c
+ 80035a4:	73757461 	.word	0x73757461
+ 80035a8:	67657220 	.word	0x67657220
+ 80035ac:	65747369 	.word	0x65747369
+ 80035b0:	52282072 	.word	0x52282072
+ 80035b4:	435f4343 	.word	0x435f4343
+ 80035b8:	20295253 	.word	0x20295253
+ 80035bc:	3025203a 	.word	0x3025203a
+ 80035c0:	41207838 	.word	0x41207838
+ 80035c4:	72657466 	.word	0x72657466
+ 80035c8:	564d5220 	.word	0x564d5220
+ 80035cc:	72772046 	.word	0x72772046
+ 80035d0:	65747469 	.word	0x65747469
+ 80035d4:	0a0d0a6e 	.word	0x0a0d0a6e
+ 80035d8:	6e6f4300 	.word	0x6e6f4300
+ 80035dc:	6c6f7274 	.word	0x6c6f7274
+ 80035e0:	6174732f 	.word	0x6174732f
+ 80035e4:	20737574 	.word	0x20737574
+ 80035e8:	69676572 	.word	0x69676572
+ 80035ec:	72657473 	.word	0x72657473
+ 80035f0:	43522820 	.word	0x43522820
+ 80035f4:	53435f43 	.word	0x53435f43
+ 80035f8:	3a202952 	.word	0x3a202952
+ 80035fc:	38302520 	.word	0x38302520
+ 8003600:	66412078 	.word	0x66412078
+ 8003604:	20726574 	.word	0x20726574
+ 8003608:	5257504c 	.word	0x5257504c
+ 800360c:	69727720 	.word	0x69727720
+ 8003610:	6e657474 	.word	0x6e657474
+ 8003614:	000a0d0a 	.word	0x000a0d0a
+ 8003618:	314e4143 	.word	0x314e4143
+ 800361c:	696e6920 	.word	0x696e6920
+ 8003620:	61662074 	.word	0x61662074
+ 8003624:	64656c69 	.word	0x64656c69
+ 8003628:	554e203a 	.word	0x554e203a
+ 800362c:	70204c4c 	.word	0x70204c4c
+ 8003630:	0d0a7274 	.word	0x0d0a7274
+ 8003634:	4e414300 	.word	0x4e414300
+ 8003638:	696e6920 	.word	0x696e6920
+ 800363c:	61662074 	.word	0x61662074
+ 8003640:	64656c69 	.word	0x64656c69
+ 8003644:	6572203a 	.word	0x6572203a
+ 8003648:	6e727574 	.word	0x6e727574
+ 800364c:	646f6320 	.word	0x646f6320
+ 8003650:	203d2065 	.word	0x203d2065
+ 8003654:	0d0a6425 	.word	0x0d0a6425
+ 8003658:	69202000 	.word	0x69202000
+ 800365c:	202e652e 	.word	0x202e652e
+ 8003660:	74696e75 	.word	0x74696e75
+ 8003664:	25203a23 	.word	0x25203a23
+ 8003668:	000d0a64 	.word	0x000d0a64
+ 800366c:	53414c46 	.word	0x53414c46
+ 8003670:	49532048 	.word	0x49532048
+ 8003674:	203a455a 	.word	0x203a455a
+ 8003678:	0d0a6425 	.word	0x0d0a6425
+ 800367c:	33752800 	.word	0x33752800
+ 8003680:	702a2932 	.word	0x702a2932
+ 8003684:	62637263 	.word	0x62637263
+ 8003688:	203a6b6c 	.word	0x203a6b6c
+ 800368c:	58383025 	.word	0x58383025
+ 8003690:	0a000d0a 	.word	0x0a000d0a
+ 8003694:	23230a0d 	.word	0x23230a0d
+ 8003698:	41202323 	.word	0x41202323
+ 800369c:	666f2074 	.word	0x666f2074
+ 80036a0:	74657366 	.word	0x74657366
+ 80036a4:	38302520 	.word	0x38302520
+ 80036a8:	64612058 	.word	0x64612058
+ 80036ac:	73657264 	.word	0x73657264
+ 80036b0:	30252073 	.word	0x30252073
+ 80036b4:	69205838 	.word	0x69205838
+ 80036b8:	6f622073 	.word	0x6f622073
+ 80036bc:	20737567 	.word	0x20737567
+ 80036c0:	23232323 	.word	0x23232323
+ 80036c4:	000a0d0a 	.word	0x000a0d0a
+ 80036c8:	74697865 	.word	0x74697865
+ 80036cc:	000a      	.short	0x000a
+ 80036ce:	7277      	.short	0x7277
+ 80036d0:	3a6b6c62 	.word	0x3a6b6c62
+ 80036d4:	20642520 	.word	0x20642520
+ 80036d8:	25205825 	.word	0x25205825
+ 80036dc:	30252058 	.word	0x30252058
+ 80036e0:	25205838 	.word	0x25205838
+ 80036e4:	0a583830 	.word	0x0a583830
+ 80036e8:	7277000d 	.word	0x7277000d
+ 80036ec:	3a6b6c62 	.word	0x3a6b6c62
+ 80036f0:	53414320 	.word	0x53414320
+ 80036f4:	3a302045 	.word	0x3a302045
+ 80036f8:	206f6e20 	.word	0x206f6e20
+ 80036fc:	6465656e 	.word	0x6465656e
+ 8003700:	206f7420 	.word	0x206f7420
+ 8003704:	74697277 	.word	0x74697277
+ 8003708:	6c622065 	.word	0x6c622065
+ 800370c:	0a6b636f 	.word	0x0a6b636f
+ 8003710:	7277000d 	.word	0x7277000d
+ 8003714:	3a6b6c62 	.word	0x3a6b6c62
+ 8003718:	53414320 	.word	0x53414320
+ 800371c:	3a322045 	.word	0x3a322045
+ 8003720:	61726520 	.word	0x61726520
+ 8003724:	62206573 	.word	0x62206573
+ 8003728:	6b636f6c 	.word	0x6b636f6c
+ 800372c:	66656220 	.word	0x66656220
+ 8003730:	2065726f 	.word	0x2065726f
+ 8003734:	74697277 	.word	0x74697277
+ 8003738:	0a676e69 	.word	0x0a676e69
  800373c:	7277000d 	.word	0x7277000d
  8003740:	3a6b6c62 	.word	0x3a6b6c62
- 8003744:	66656420 	.word	0x66656420
- 8003748:	746c7561 	.word	0x746c7561
- 800374c:	6425203a 	.word	0x6425203a
- 8003750:	46000d0a 	.word	0x46000d0a
- 8003754:	4853414c 	.word	0x4853414c
- 8003758:	4b4c4220 	.word	0x4b4c4220
- 800375c:	455a5320 	.word	0x455a5320
- 8003760:	6425203a 	.word	0x6425203a
- 8003764:	0d0a4b20 	.word	0x0d0a4b20
- 8003768:	414c4600 	.word	0x414c4600
- 800376c:	48204853 	.word	0x48204853
- 8003770:	44412049 	.word	0x44412049
- 8003774:	203a5244 	.word	0x203a5244
- 8003778:	58383025 	.word	0x58383025
- 800377c:	43000d0a 	.word	0x43000d0a
- 8003780:	49204e41 	.word	0x49204e41
- 8003784:	0a732744 	.word	0x0a732744
- 8003788:	4d43000d 	.word	0x4d43000d
- 800378c:	25203a44 	.word	0x25203a44
- 8003790:	0a583830 	.word	0x0a583830
- 8003794:	4452000d 	.word	0x4452000d
- 8003798:	25203a20 	.word	0x25203a20
- 800379c:	0a583830 	.word	0x0a583830
- 80037a0:	5257000d 	.word	0x5257000d
- 80037a4:	25203a20 	.word	0x25203a20
- 80037a8:	0a583830 	.word	0x0a583830
- 80037ac:	414e000d 	.word	0x414e000d
- 80037b0:	3a304b43 	.word	0x3a304b43
- 80037b4:	20642520 	.word	0x20642520
- 80037b8:	25205825 	.word	0x25205825
- 80037bc:	58252064 	.word	0x58252064
- 80037c0:	38302520 	.word	0x38302520
- 80037c4:	30252058 	.word	0x30252058
- 80037c8:	0d0a5838 	.word	0x0d0a5838
- 80037cc:	43414e00 	.word	0x43414e00
- 80037d0:	203a4b31 	.word	0x203a4b31
- 80037d4:	25206425 	.word	0x25206425
- 80037d8:	64252058 	.word	0x64252058
- 80037dc:	20582520 	.word	0x20582520
- 80037e0:	58383025 	.word	0x58383025
- 80037e4:	38302520 	.word	0x38302520
- 80037e8:	000d0a58 	.word	0x000d0a58
- 80037ec:	64646170 	.word	0x64646170
- 80037f0:	6f726320 	.word	0x6f726320
- 80037f4:	64657373 	.word	0x64657373
- 80037f8:	6f6c6220 	.word	0x6f6c6220
- 80037fc:	62206b63 	.word	0x62206b63
- 8003800:	646e756f 	.word	0x646e756f
- 8003804:	3a797261 	.word	0x3a797261
- 8003808:	38302520 	.word	0x38302520
- 800380c:	70202058 	.word	0x70202058
- 8003810:	3a646461 	.word	0x3a646461
- 8003814:	38302520 	.word	0x38302520
- 8003818:	000d0a78 	.word	0x000d0a78
- 800381c:	646e6553 	.word	0x646e6553
- 8003820:	43414e20 	.word	0x43414e20
- 8003824:	64203a4b 	.word	0x64203a4b
- 8003828:	6e20636c 	.word	0x6e20636c
- 800382c:	3820746f 	.word	0x3820746f
- 8003830:	6425203a 	.word	0x6425203a
- 8003834:	53000d0a 	.word	0x53000d0a
- 8003838:	20646e65 	.word	0x20646e65
- 800383c:	4b43414e 	.word	0x4b43414e
- 8003840:	61747320 	.word	0x61747320
- 8003844:	61207472 	.word	0x61207472
- 8003848:	20726464 	.word	0x20726464
- 800384c:	2074756f 	.word	0x2074756f
- 8003850:	7220666f 	.word	0x7220666f
- 8003854:	65676e61 	.word	0x65676e61
- 8003858:	3025203a 	.word	0x3025203a
- 800385c:	25205838 	.word	0x25205838
- 8003860:	30252058 	.word	0x30252058
- 8003864:	25205838 	.word	0x25205838
- 8003868:	0a583830 	.word	0x0a583830
- 800386c:	6148000d 	.word	0x6148000d
- 8003870:	43206472 	.word	0x43206472
- 8003874:	6465646f 	.word	0x6465646f
- 8003878:	64646120 	.word	0x64646120
- 800387c:	73736572 	.word	0x73736572
- 8003880:	65686320 	.word	0x65686320
- 8003884:	6f206b63 	.word	0x6f206b63
- 8003888:	6f2d7475 	.word	0x6f2d7475
- 800388c:	61722d66 	.word	0x61722d66
- 8003890:	3a65676e 	.word	0x3a65676e
- 8003894:	5f637200 	.word	0x5f637200
- 8003898:	33637263 	.word	0x33637263
- 800389c:	25203a32 	.word	0x25203a32
- 80038a0:	20583830 	.word	0x20583830
- 80038a4:	58383025 	.word	0x58383025
- 80038a8:	38302520 	.word	0x38302520
- 80038ac:	000d0a58 	.word	0x000d0a58
- 80038b0:	646e6553 	.word	0x646e6553
- 80038b4:	63726320 	.word	0x63726320
- 80038b8:	3a32332d 	.word	0x3a32332d
- 80038bc:	38302520 	.word	0x38302520
- 80038c0:	000d0a58 	.word	0x000d0a58
- 80038c4:	66203a58 	.word	0x66203a58
- 80038c8:	6873616c 	.word	0x6873616c
- 80038cc:	636f6c62 	.word	0x636f6c62
- 80038d0:	7a69736b 	.word	0x7a69736b
- 80038d4:	25203a65 	.word	0x25203a65
- 80038d8:	58252058 	.word	0x58252058
- 80038dc:	20582520 	.word	0x20582520
- 80038e0:	0d0a5825 	.word	0x0d0a5825
- 80038e4:	3a345200 	.word	0x3a345200
- 80038e8:	61657220 	.word	0x61657220
- 80038ec:	64612064 	.word	0x64612064
- 80038f0:	203a7264 	.word	0x203a7264
- 80038f4:	25205825 	.word	0x25205825
- 80038f8:	58252058 	.word	0x58252058
- 80038fc:	20582520 	.word	0x20582520
- 8003900:	25205825 	.word	0x25205825
- 8003904:	000d0a58 	.word	0x000d0a58
- 8003908:	675f6f64 	.word	0x675f6f64
- 800390c:	72667465 	.word	0x72667465
- 8003910:	61646d6f 	.word	0x61646d6f
- 8003914:	65726464 	.word	0x65726464
- 8003918:	203a7373 	.word	0x203a7373
- 800391c:	72646461 	.word	0x72646461
- 8003920:	746f6e20 	.word	0x746f6e20
- 8003924:	3a4b4f20 	.word	0x3a4b4f20
- 8003928:	38302520 	.word	0x38302520
- 800392c:	000d0a58 	.word	0x000d0a58
- 8003930:	41544547 	.word	0x41544547
- 8003934:	3a524444 	.word	0x3a524444
- 8003938:	61657220 	.word	0x61657220
- 800393c:	64612064 	.word	0x64612064
- 8003940:	203a7264 	.word	0x203a7264
- 8003944:	25205825 	.word	0x25205825
- 8003948:	58252058 	.word	0x58252058
- 800394c:	20582520 	.word	0x20582520
- 8003950:	0d0a5825 	.word	0x0d0a5825
- 8003954:	6e657300 	.word	0x6e657300
- 8003958:	203a3464 	.word	0x203a3464
- 800395c:	25205825 	.word	0x25205825
- 8003960:	58252058 	.word	0x58252058
- 8003964:	20582520 	.word	0x20582520
- 8003968:	25205825 	.word	0x25205825
- 800396c:	000d0a58 	.word	0x000d0a58
- 8003970:	20544547 	.word	0x20544547
- 8003974:	53414c46 	.word	0x53414c46
- 8003978:	61205048 	.word	0x61205048
- 800397c:	20726464 	.word	0x20726464
- 8003980:	58252000 	.word	0x58252000
- 8003984:	474f4200 	.word	0x474f4200
- 8003988:	43205355 	.word	0x43205355
- 800398c:	4320444d 	.word	0x4320444d
- 8003990:	3a45444f 	.word	0x3a45444f
- 8003994:	20582520 	.word	0x20582520
- 8003998:	58383025 	.word	0x58383025
- 800399c:	20582520 	.word	0x20582520
- 80039a0:	38302520 	.word	0x38302520
- 80039a4:	30252058 	.word	0x30252058
- 80039a8:	0d0a5838 	.word	0x0d0a5838
- 80039ac:	00000000 	.word	0x00000000
-
-080039b0 <msginit>:
- 80039b0:	00000060 00000020 00000010 00000008     `... ...........
-
-080039c0 <can_ldr_ready>:
- 80039c0:	03800000 00000001 00000008 00000000     ................
-
-080039d0 <table>:
- 80039d0:	08040402 02020202 04040402 02020202     ................
-
-080039e0 <pllmulxtbl>:
- 80039e0:	0a080202 12100e0c 1a181614 20201e1c     ..............  
-
-080039f0 <ahbtbl>:
- 80039f0:	00010001 00010001 00010001 00010001     ................
- 8003a00:	00040002 00100008 00800040 02000100     ........@.......
-
-08003a10 <crctable>:
- 8003a10:	00000000 77073096 ee0e612c 990951ba     .....0.w,a...Q..
- 8003a20:	076dc419 706af48f e963a535 9e6495a3     ..m...jp5.c...d.
- 8003a30:	0edb8832 79dcb8a4 e0d5e91e 97d2d988     2......y........
- 8003a40:	09b64c2b 7eb17cbd e7b82d07 90bf1d91     +L...|.~.-......
- 8003a50:	1db71064 6ab020f2 f3b97148 84be41de     d.... .jHq...A..
- 8003a60:	1adad47d 6ddde4eb f4d4b551 83d385c7     }......mQ.......
- 8003a70:	136c9856 646ba8c0 fd62f97a 8a65c9ec     V.l...kdz.b...e.
- 8003a80:	14015c4f 63066cd9 fa0f3d63 8d080df5     O\...l.cc=......
- 8003a90:	3b6e20c8 4c69105e d56041e4 a2677172     . n;^.iL.A`.rqg.
- 8003aa0:	3c03e4d1 4b04d447 d20d85fd a50ab56b     ...<G..K....k...
- 8003ab0:	35b5a8fa 42b2986c dbbbc9d6 acbcf940     ...5l..B....@...
- 8003ac0:	32d86ce3 45df5c75 dcd60dcf abd13d59     .l.2u\.E....Y=..
- 8003ad0:	26d930ac 51de003a c8d75180 bfd06116     .0.&:..Q.Q...a..
- 8003ae0:	21b4f4b5 56b3c423 cfba9599 b8bda50f     ...!#..V........
- 8003af0:	2802b89e 5f058808 c60cd9b2 b10be924     ...(..._....$...
- 8003b00:	2f6f7c87 58684c11 c1611dab b6662d3d     .|o/.LhX..a.=-f.
- 8003b10:	76dc4190 01db7106 98d220bc efd5102a     .A.v.q... ..*...
- 8003b20:	71b18589 06b6b51f 9fbfe4a5 e8b8d433     ...q........3...
- 8003b30:	7807c9a2 0f00f934 9609a88e e10e9818     ...x4...........
- 8003b40:	7f6a0dbb 086d3d2d 91646c97 e6635c01     ..j.-=m..ld..\c.
- 8003b50:	6b6b51f4 1c6c6162 856530d8 f262004e     .Qkkbal..0e.N.b.
- 8003b60:	6c0695ed 1b01a57b 8208f4c1 f50fc457     ...l{.......W...
- 8003b70:	65b0d9c6 12b7e950 8bbeb8ea fcb9887c     ...eP.......|...
- 8003b80:	62dd1ddf 15da2d49 8cd37cf3 fbd44c65     ...bI-...|..eL..
- 8003b90:	4db26158 3ab551ce a3bc0074 d4bb30e2     Xa.M.Q.:t....0..
- 8003ba0:	4adfa541 3dd895d7 a4d1c46d d3d6f4fb     A..J...=m.......
- 8003bb0:	4369e96a 346ed9fc ad678846 da60b8d0     j.iC..n4F.g...`.
- 8003bc0:	44042d73 33031de5 aa0a4c5f dd0d7cc9     s-.D...3_L...|..
- 8003bd0:	5005713c 270241aa be0b1010 c90c2086     <q.P.A.'..... ..
- 8003be0:	5768b525 206f85b3 b966d409 ce61e49f     %.hW..o ..f...a.
- 8003bf0:	5edef90e 29d9c998 b0d09822 c7d7a8b4     ...^...)".......
- 8003c00:	59b33d17 2eb40d81 b7bd5c3b c0ba6cad     .=.Y....;\...l..
- 8003c10:	edb88320 9abfb3b6 03b6e20c 74b1d29a      ..............t
- 8003c20:	ead54739 9dd277af 04db2615 73dc1683     9G...w...&.....s
- 8003c30:	e3630b12 94643b84 0d6d6a3e 7a6a5aa8     ..c..;d.>jm..Zjz
- 8003c40:	e40ecf0b 9309ff9d 0a00ae27 7d079eb1     ........'......}
- 8003c50:	f00f9344 8708a3d2 1e01f268 6906c2fe     D.......h......i
- 8003c60:	f762575d 806567cb 196c3671 6e6b06e7     ]Wb..ge.q6l...kn
- 8003c70:	fed41b76 89d32be0 10da7a5a 67dd4acc     v....+..Zz...J.g
- 8003c80:	f9b9df6f 8ebeeff9 17b7be43 60b08ed5     o.......C......`
- 8003c90:	d6d6a3e8 a1d1937e 38d8c2c4 4fdff252     ....~......8R..O
- 8003ca0:	d1bb67f1 a6bc5767 3fb506dd 48b2364b     .g..gW.....?K6.H
- 8003cb0:	d80d2bda af0a1b4c 36034af6 41047a60     .+..L....J.6`z.A
- 8003cc0:	df60efc3 a867df55 316e8eef 4669be79     ..`.U.g...n1y.iF
- 8003cd0:	cb61b38c bc66831a 256fd2a0 5268e236     ..a...f...o%6.hR
- 8003ce0:	cc0c7795 bb0b4703 220216b9 5505262f     .w...G....."/&.U
- 8003cf0:	c5ba3bbe b2bd0b28 2bb45a92 5cb36a04     .;..(....Z.+.j.\
- 8003d00:	c2d7ffa7 b5d0cf31 2cd99e8b 5bdeae1d     ....1......,...[
- 8003d10:	9b64c2b0 ec63f226 756aa39c 026d930a     ..d.&.c...ju..m.
- 8003d20:	9c0906a9 eb0e363f 72076785 05005713     ....?6...g.r.W..
- 8003d30:	95bf4a82 e2b87a14 7bb12bae 0cb61b38     .J...z...+.{8...
- 8003d40:	92d28e9b e5d5be0d 7cdcefb7 0bdbdf21     ...........|!...
- 8003d50:	86d3d2d4 f1d4e242 68ddb3f8 1fda836e     ....B......hn...
- 8003d60:	81be16cd f6b9265b 6fb077e1 18b74777     ....[&...w.owG..
- 8003d70:	88085ae6 ff0f6a70 66063bca 11010b5c     .Z..pj...;.f\...
- 8003d80:	8f659eff f862ae69 616bffd3 166ccf45     ..e.i.b...kaE.l.
- 8003d90:	a00ae278 d70dd2ee 4e048354 3903b3c2     x.......T..N...9
- 8003da0:	a7672661 d06016f7 4969474d 3e6e77db     a&g...`.MGiI.wn>
- 8003db0:	aed16a4a d9d65adc 40df0b66 37d83bf0     Jj...Z..f..@.;.7
- 8003dc0:	a9bcae53 debb9ec5 47b2cf7f 30b5ffe9     S..........G...0
- 8003dd0:	bdbdf21c cabac28a 53b39330 24b4a3a6     ........0..S...$
- 8003de0:	bad03605 cdd70693 54de5729 23d967bf     .6......)W.T.g.#
- 8003df0:	b3667a2e c4614ab8 5d681b02 2a6f2b94     .zf..Ja...h].+o*
- 8003e00:	b40bbe37 c30c8ea1 5a05df1b 2d02ef8d     7..........Z...-
-
-08003e10 <clocks>:
- 8003e10:	00010601 00000004 007a1200              ..........z.
-
-08003e1c <params>:
- 8003e1c:	0007a120 00000001 010d0201 00000100      ...............
- 8003e2c:	00000013 00000070 00000014 00000070     ....p.......p...
- 8003e3c:	00000015 00000070                       ....p...
-
-08003e44 <fb0>:
- 8003e44:	00000000 ff800000 00000006              ............
-
-08003e50 <fb2>:
+ 8003744:	53414320 	.word	0x53414320
+ 8003748:	3a312045 	.word	0x3a312045
+ 800374c:	69727720 	.word	0x69727720
+ 8003750:	676e6974 	.word	0x676e6974
+ 8003754:	6f6c6220 	.word	0x6f6c6220
+ 8003758:	0d0a6b63 	.word	0x0d0a6b63
+ 800375c:	62727700 	.word	0x62727700
+ 8003760:	203a6b6c 	.word	0x203a6b6c
+ 8003764:	5b796170 	.word	0x5b796170
+ 8003768:	25205d31 	.word	0x25205d31
+ 800376c:	61702058 	.word	0x61702058
+ 8003770:	5d325b79 	.word	0x5d325b79
+ 8003774:	0a582520 	.word	0x0a582520
+ 8003778:	7277000d 	.word	0x7277000d
+ 800377c:	3a6b6c62 	.word	0x3a6b6c62
+ 8003780:	66656420 	.word	0x66656420
+ 8003784:	746c7561 	.word	0x746c7561
+ 8003788:	6425203a 	.word	0x6425203a
+ 800378c:	46000d0a 	.word	0x46000d0a
+ 8003790:	4853414c 	.word	0x4853414c
+ 8003794:	4b4c4220 	.word	0x4b4c4220
+ 8003798:	455a5320 	.word	0x455a5320
+ 800379c:	6425203a 	.word	0x6425203a
+ 80037a0:	0d0a4b20 	.word	0x0d0a4b20
+ 80037a4:	414c4600 	.word	0x414c4600
+ 80037a8:	48204853 	.word	0x48204853
+ 80037ac:	44412049 	.word	0x44412049
+ 80037b0:	203a5244 	.word	0x203a5244
+ 80037b4:	58383025 	.word	0x58383025
+ 80037b8:	43000d0a 	.word	0x43000d0a
+ 80037bc:	49204e41 	.word	0x49204e41
+ 80037c0:	0a732744 	.word	0x0a732744
+ 80037c4:	4d43000d 	.word	0x4d43000d
+ 80037c8:	25203a44 	.word	0x25203a44
+ 80037cc:	0a583830 	.word	0x0a583830
+ 80037d0:	4452000d 	.word	0x4452000d
+ 80037d4:	25203a20 	.word	0x25203a20
+ 80037d8:	0a583830 	.word	0x0a583830
+ 80037dc:	5257000d 	.word	0x5257000d
+ 80037e0:	25203a20 	.word	0x25203a20
+ 80037e4:	0a583830 	.word	0x0a583830
+ 80037e8:	414e000d 	.word	0x414e000d
+ 80037ec:	3a304b43 	.word	0x3a304b43
+ 80037f0:	20642520 	.word	0x20642520
+ 80037f4:	25205825 	.word	0x25205825
+ 80037f8:	58252064 	.word	0x58252064
+ 80037fc:	38302520 	.word	0x38302520
+ 8003800:	30252058 	.word	0x30252058
+ 8003804:	0d0a5838 	.word	0x0d0a5838
+ 8003808:	43414e00 	.word	0x43414e00
+ 800380c:	203a4b31 	.word	0x203a4b31
+ 8003810:	25206425 	.word	0x25206425
+ 8003814:	64252058 	.word	0x64252058
+ 8003818:	20582520 	.word	0x20582520
+ 800381c:	58383025 	.word	0x58383025
+ 8003820:	38302520 	.word	0x38302520
+ 8003824:	000d0a58 	.word	0x000d0a58
+ 8003828:	64646170 	.word	0x64646170
+ 800382c:	6f726320 	.word	0x6f726320
+ 8003830:	64657373 	.word	0x64657373
+ 8003834:	6f6c6220 	.word	0x6f6c6220
+ 8003838:	62206b63 	.word	0x62206b63
+ 800383c:	646e756f 	.word	0x646e756f
+ 8003840:	3a797261 	.word	0x3a797261
+ 8003844:	38302520 	.word	0x38302520
+ 8003848:	70202058 	.word	0x70202058
+ 800384c:	3a646461 	.word	0x3a646461
+ 8003850:	38302520 	.word	0x38302520
+ 8003854:	000d0a78 	.word	0x000d0a78
+ 8003858:	646e6553 	.word	0x646e6553
+ 800385c:	43414e20 	.word	0x43414e20
+ 8003860:	64203a4b 	.word	0x64203a4b
+ 8003864:	6e20636c 	.word	0x6e20636c
+ 8003868:	3820746f 	.word	0x3820746f
+ 800386c:	6425203a 	.word	0x6425203a
+ 8003870:	53000d0a 	.word	0x53000d0a
+ 8003874:	20646e65 	.word	0x20646e65
+ 8003878:	4b43414e 	.word	0x4b43414e
+ 800387c:	61747320 	.word	0x61747320
+ 8003880:	61207472 	.word	0x61207472
+ 8003884:	20726464 	.word	0x20726464
+ 8003888:	2074756f 	.word	0x2074756f
+ 800388c:	7220666f 	.word	0x7220666f
+ 8003890:	65676e61 	.word	0x65676e61
+ 8003894:	3025203a 	.word	0x3025203a
+ 8003898:	25205838 	.word	0x25205838
+ 800389c:	30252058 	.word	0x30252058
+ 80038a0:	25205838 	.word	0x25205838
+ 80038a4:	0a583830 	.word	0x0a583830
+ 80038a8:	6148000d 	.word	0x6148000d
+ 80038ac:	43206472 	.word	0x43206472
+ 80038b0:	6465646f 	.word	0x6465646f
+ 80038b4:	64646120 	.word	0x64646120
+ 80038b8:	73736572 	.word	0x73736572
+ 80038bc:	65686320 	.word	0x65686320
+ 80038c0:	6f206b63 	.word	0x6f206b63
+ 80038c4:	6f2d7475 	.word	0x6f2d7475
+ 80038c8:	61722d66 	.word	0x61722d66
+ 80038cc:	3a65676e 	.word	0x3a65676e
+ 80038d0:	5f637200 	.word	0x5f637200
+ 80038d4:	33637263 	.word	0x33637263
+ 80038d8:	25203a32 	.word	0x25203a32
+ 80038dc:	20583830 	.word	0x20583830
+ 80038e0:	58383025 	.word	0x58383025
+ 80038e4:	38302520 	.word	0x38302520
+ 80038e8:	000d0a58 	.word	0x000d0a58
+ 80038ec:	646e6553 	.word	0x646e6553
+ 80038f0:	63726320 	.word	0x63726320
+ 80038f4:	3a32332d 	.word	0x3a32332d
+ 80038f8:	38302520 	.word	0x38302520
+ 80038fc:	000d0a58 	.word	0x000d0a58
+ 8003900:	66203a58 	.word	0x66203a58
+ 8003904:	6873616c 	.word	0x6873616c
+ 8003908:	636f6c62 	.word	0x636f6c62
+ 800390c:	7a69736b 	.word	0x7a69736b
+ 8003910:	25203a65 	.word	0x25203a65
+ 8003914:	58252058 	.word	0x58252058
+ 8003918:	20582520 	.word	0x20582520
+ 800391c:	0d0a5825 	.word	0x0d0a5825
+ 8003920:	3a345200 	.word	0x3a345200
+ 8003924:	61657220 	.word	0x61657220
+ 8003928:	64612064 	.word	0x64612064
+ 800392c:	203a7264 	.word	0x203a7264
+ 8003930:	25205825 	.word	0x25205825
+ 8003934:	58252058 	.word	0x58252058
+ 8003938:	20582520 	.word	0x20582520
+ 800393c:	25205825 	.word	0x25205825
+ 8003940:	000d0a58 	.word	0x000d0a58
+ 8003944:	675f6f64 	.word	0x675f6f64
+ 8003948:	72667465 	.word	0x72667465
+ 800394c:	61646d6f 	.word	0x61646d6f
+ 8003950:	65726464 	.word	0x65726464
+ 8003954:	203a7373 	.word	0x203a7373
+ 8003958:	72646461 	.word	0x72646461
+ 800395c:	746f6e20 	.word	0x746f6e20
+ 8003960:	3a4b4f20 	.word	0x3a4b4f20
+ 8003964:	38302520 	.word	0x38302520
+ 8003968:	000d0a58 	.word	0x000d0a58
+ 800396c:	41544547 	.word	0x41544547
+ 8003970:	3a524444 	.word	0x3a524444
+ 8003974:	61657220 	.word	0x61657220
+ 8003978:	64612064 	.word	0x64612064
+ 800397c:	203a7264 	.word	0x203a7264
+ 8003980:	25205825 	.word	0x25205825
+ 8003984:	58252058 	.word	0x58252058
+ 8003988:	20582520 	.word	0x20582520
+ 800398c:	0d0a5825 	.word	0x0d0a5825
+ 8003990:	6e657300 	.word	0x6e657300
+ 8003994:	203a3464 	.word	0x203a3464
+ 8003998:	25205825 	.word	0x25205825
+ 800399c:	58252058 	.word	0x58252058
+ 80039a0:	20582520 	.word	0x20582520
+ 80039a4:	25205825 	.word	0x25205825
+ 80039a8:	000d0a58 	.word	0x000d0a58
+ 80039ac:	20544547 	.word	0x20544547
+ 80039b0:	53414c46 	.word	0x53414c46
+ 80039b4:	61205048 	.word	0x61205048
+ 80039b8:	20726464 	.word	0x20726464
+ 80039bc:	58252000 	.word	0x58252000
+ 80039c0:	474f4200 	.word	0x474f4200
+ 80039c4:	43205355 	.word	0x43205355
+ 80039c8:	4320444d 	.word	0x4320444d
+ 80039cc:	3a45444f 	.word	0x3a45444f
+ 80039d0:	20582520 	.word	0x20582520
+ 80039d4:	58383025 	.word	0x58383025
+ 80039d8:	20582520 	.word	0x20582520
+ 80039dc:	38302520 	.word	0x38302520
+ 80039e0:	30252058 	.word	0x30252058
+ 80039e4:	0d0a5838 	.word	0x0d0a5838
 	...
- 8003e58:	00000202                                ....
 
-08003e5c <led21green>:
- 8003e5c:	40010c00 0002000f                       ...@....
+080039f0 <msginit>:
+ 80039f0:	00000060 00000020 00000010 00000008     `... ...........
 
-08003e64 <led20red>:
- 8003e64:	40011000 00020005                       ...@....
+08003a00 <can_ldr_ready>:
+ 8003a00:	02a00000 00000001 00000008 00000000     ................
 
-08003e6c <led19red>:
- 8003e6c:	40011000 00020004                       ...@....
+08003a10 <table>:
+ 8003a10:	08040402 02020202 04040402 02020202     ................
 
-08003e74 <can1rx0>:
- 8003e74:	20001900 000001b0 00000000              ... ........
+08003a20 <pllmulxtbl>:
+ 8003a20:	0a080202 12100e0c 1a181614 20201e1c     ..............  
 
-08003e80 <can1rx1>:
- 8003e80:	20001900 000001c0 00000004              ... ........
+08003a30 <ahbtbl>:
+ 8003a30:	00010001 00010001 00010001 00010001     ................
+ 8003a40:	00040002 00100008 00800040 02000100     ........@.......
 
-08003e8c <can2rx0>:
- 8003e8c:	20001904 000001b0 00000000              ... ........
+08003a50 <crctable>:
+ 8003a50:	00000000 77073096 ee0e612c 990951ba     .....0.w,a...Q..
+ 8003a60:	076dc419 706af48f e963a535 9e6495a3     ..m...jp5.c...d.
+ 8003a70:	0edb8832 79dcb8a4 e0d5e91e 97d2d988     2......y........
+ 8003a80:	09b64c2b 7eb17cbd e7b82d07 90bf1d91     +L...|.~.-......
+ 8003a90:	1db71064 6ab020f2 f3b97148 84be41de     d.... .jHq...A..
+ 8003aa0:	1adad47d 6ddde4eb f4d4b551 83d385c7     }......mQ.......
+ 8003ab0:	136c9856 646ba8c0 fd62f97a 8a65c9ec     V.l...kdz.b...e.
+ 8003ac0:	14015c4f 63066cd9 fa0f3d63 8d080df5     O\...l.cc=......
+ 8003ad0:	3b6e20c8 4c69105e d56041e4 a2677172     . n;^.iL.A`.rqg.
+ 8003ae0:	3c03e4d1 4b04d447 d20d85fd a50ab56b     ...<G..K....k...
+ 8003af0:	35b5a8fa 42b2986c dbbbc9d6 acbcf940     ...5l..B....@...
+ 8003b00:	32d86ce3 45df5c75 dcd60dcf abd13d59     .l.2u\.E....Y=..
+ 8003b10:	26d930ac 51de003a c8d75180 bfd06116     .0.&:..Q.Q...a..
+ 8003b20:	21b4f4b5 56b3c423 cfba9599 b8bda50f     ...!#..V........
+ 8003b30:	2802b89e 5f058808 c60cd9b2 b10be924     ...(..._....$...
+ 8003b40:	2f6f7c87 58684c11 c1611dab b6662d3d     .|o/.LhX..a.=-f.
+ 8003b50:	76dc4190 01db7106 98d220bc efd5102a     .A.v.q... ..*...
+ 8003b60:	71b18589 06b6b51f 9fbfe4a5 e8b8d433     ...q........3...
+ 8003b70:	7807c9a2 0f00f934 9609a88e e10e9818     ...x4...........
+ 8003b80:	7f6a0dbb 086d3d2d 91646c97 e6635c01     ..j.-=m..ld..\c.
+ 8003b90:	6b6b51f4 1c6c6162 856530d8 f262004e     .Qkkbal..0e.N.b.
+ 8003ba0:	6c0695ed 1b01a57b 8208f4c1 f50fc457     ...l{.......W...
+ 8003bb0:	65b0d9c6 12b7e950 8bbeb8ea fcb9887c     ...eP.......|...
+ 8003bc0:	62dd1ddf 15da2d49 8cd37cf3 fbd44c65     ...bI-...|..eL..
+ 8003bd0:	4db26158 3ab551ce a3bc0074 d4bb30e2     Xa.M.Q.:t....0..
+ 8003be0:	4adfa541 3dd895d7 a4d1c46d d3d6f4fb     A..J...=m.......
+ 8003bf0:	4369e96a 346ed9fc ad678846 da60b8d0     j.iC..n4F.g...`.
+ 8003c00:	44042d73 33031de5 aa0a4c5f dd0d7cc9     s-.D...3_L...|..
+ 8003c10:	5005713c 270241aa be0b1010 c90c2086     <q.P.A.'..... ..
+ 8003c20:	5768b525 206f85b3 b966d409 ce61e49f     %.hW..o ..f...a.
+ 8003c30:	5edef90e 29d9c998 b0d09822 c7d7a8b4     ...^...)".......
+ 8003c40:	59b33d17 2eb40d81 b7bd5c3b c0ba6cad     .=.Y....;\...l..
+ 8003c50:	edb88320 9abfb3b6 03b6e20c 74b1d29a      ..............t
+ 8003c60:	ead54739 9dd277af 04db2615 73dc1683     9G...w...&.....s
+ 8003c70:	e3630b12 94643b84 0d6d6a3e 7a6a5aa8     ..c..;d.>jm..Zjz
+ 8003c80:	e40ecf0b 9309ff9d 0a00ae27 7d079eb1     ........'......}
+ 8003c90:	f00f9344 8708a3d2 1e01f268 6906c2fe     D.......h......i
+ 8003ca0:	f762575d 806567cb 196c3671 6e6b06e7     ]Wb..ge.q6l...kn
+ 8003cb0:	fed41b76 89d32be0 10da7a5a 67dd4acc     v....+..Zz...J.g
+ 8003cc0:	f9b9df6f 8ebeeff9 17b7be43 60b08ed5     o.......C......`
+ 8003cd0:	d6d6a3e8 a1d1937e 38d8c2c4 4fdff252     ....~......8R..O
+ 8003ce0:	d1bb67f1 a6bc5767 3fb506dd 48b2364b     .g..gW.....?K6.H
+ 8003cf0:	d80d2bda af0a1b4c 36034af6 41047a60     .+..L....J.6`z.A
+ 8003d00:	df60efc3 a867df55 316e8eef 4669be79     ..`.U.g...n1y.iF
+ 8003d10:	cb61b38c bc66831a 256fd2a0 5268e236     ..a...f...o%6.hR
+ 8003d20:	cc0c7795 bb0b4703 220216b9 5505262f     .w...G....."/&.U
+ 8003d30:	c5ba3bbe b2bd0b28 2bb45a92 5cb36a04     .;..(....Z.+.j.\
+ 8003d40:	c2d7ffa7 b5d0cf31 2cd99e8b 5bdeae1d     ....1......,...[
+ 8003d50:	9b64c2b0 ec63f226 756aa39c 026d930a     ..d.&.c...ju..m.
+ 8003d60:	9c0906a9 eb0e363f 72076785 05005713     ....?6...g.r.W..
+ 8003d70:	95bf4a82 e2b87a14 7bb12bae 0cb61b38     .J...z...+.{8...
+ 8003d80:	92d28e9b e5d5be0d 7cdcefb7 0bdbdf21     ...........|!...
+ 8003d90:	86d3d2d4 f1d4e242 68ddb3f8 1fda836e     ....B......hn...
+ 8003da0:	81be16cd f6b9265b 6fb077e1 18b74777     ....[&...w.owG..
+ 8003db0:	88085ae6 ff0f6a70 66063bca 11010b5c     .Z..pj...;.f\...
+ 8003dc0:	8f659eff f862ae69 616bffd3 166ccf45     ..e.i.b...kaE.l.
+ 8003dd0:	a00ae278 d70dd2ee 4e048354 3903b3c2     x.......T..N...9
+ 8003de0:	a7672661 d06016f7 4969474d 3e6e77db     a&g...`.MGiI.wn>
+ 8003df0:	aed16a4a d9d65adc 40df0b66 37d83bf0     Jj...Z..f..@.;.7
+ 8003e00:	a9bcae53 debb9ec5 47b2cf7f 30b5ffe9     S..........G...0
+ 8003e10:	bdbdf21c cabac28a 53b39330 24b4a3a6     ........0..S...$
+ 8003e20:	bad03605 cdd70693 54de5729 23d967bf     .6......)W.T.g.#
+ 8003e30:	b3667a2e c4614ab8 5d681b02 2a6f2b94     .zf..Ja...h].+o*
+ 8003e40:	b40bbe37 c30c8ea1 5a05df1b 2d02ef8d     7..........Z...-
 
-08003e98 <can2rx1>:
- 8003e98:	20001904 000001c0 00000004 40010800     ... ...........@
- 8003ea8:	0003020c 40010c00 00030209 40011400     .......@.......@
- 8003eb8:	00030201 40010800 0000070b 40010c00     .......@.......@
- 8003ec8:	00000708 40011400 00000700 fffffffc     .......@........
- 8003ed8:	fffffffc 00000200                       ........
+08003e50 <clocks>:
+ 8003e50:	00010601 00000004 007a1200              ..........z.
+
+08003e5c <params>:
+ 8003e5c:	0007a120 00000001 010d0201 00000100      ...............
+ 8003e6c:	00000013 00000070 00000014 00000070     ....p.......p...
+ 8003e7c:	00000015 00000070                       ....p...
+
+08003e84 <fb0>:
+ 8003e84:	00000000 ff800000 00000006              ............
+
+08003e90 <fb2>:
+	...
+ 8003e98:	00000202                                ....
+
+08003e9c <led21green>:
+ 8003e9c:	40010c00 0002000f                       ...@....
+
+08003ea4 <led20red>:
+ 8003ea4:	40011000 00020005                       ...@....
+
+08003eac <led19red>:
+ 8003eac:	40011000 00020004                       ...@....
+
+08003eb4 <can1rx0>:
+ 8003eb4:	20001900 000001b0 00000000              ... ........
+
+08003ec0 <can1rx1>:
+ 8003ec0:	20001900 000001c0 00000004              ... ........
+
+08003ecc <can2rx0>:
+ 8003ecc:	20001904 000001b0 00000000              ... ........
+
+08003ed8 <can2rx1>:
+ 8003ed8:	20001904 000001c0 00000004 40010800     ... ...........@
+ 8003ee8:	0003020c 40010c00 00030209 40011400     .......@.......@
+ 8003ef8:	00030201 40010800 0000070b 40010c00     .......@.......@
+ 8003f08:	00000708 40011400 00000700 fffffffc     .......@........
+ 8003f18:	fffffffc 00000200                       ........

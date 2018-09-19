@@ -1,0 +1,80 @@
+README.parameters
+09/14/2018
+
+Notes & tips on flash new calibration tables
+
+The parameter/calibration tables are stored at the end of flash, i.e. 
+high flash, with one table per "function" implemented in the unit, e.g.
+a unit with two AD7799 adcs would implement two tension functions.  Each
+function would be the same from a software standpoint, but each would
+have a separate set of parameters/calibrations.
+
+1.  'mm' file & flash size
+
+The 'mm' file in the 'db' directory as well as the 'tension' directory
+have an 'export' that specifies the .ld file for the amount of flash memory.
+Most f103 units have the 'E' size, but a few have 'C'.  As long as the program
+doesn't exceed the 'C' size, then using the 'C' works for all units.
+
+It is *critical* that *both* mm files specify the .ld file, otherwise the parameter
+tables will not be locations expected by the program.  Worse, a mismatch, where there
+was formerly a match results in revisions of parameters not appearing to have resulted
+in a change, as the program looks to the old location with old parameters and the 
+revised parameters are in a different location.
+
+# Specify which flash size
+export LDRAPPLD=ldrapp_VC.ld
+#export LDRAPPLD=ldrapp_VE.ld
+
+2.  Sequence for updating parameters/calibrations
+
+a.  Edit the file: PARAM_VAL_INSERT.sql located in--
+
+GliderWinchCommons/embed/svn_common/trunk/db
+
+Locate the parameter for the particular 
+function, e.g. TENSION_a11 (which is the first
+AD7799 of the first instance of 'TENSION_a')
+
+Unsure?  Use 'cangate' command 'q' to show the CAN id versus name.
+
+Change the parameter value, e.g. changing the -1760 in the following
+changes the zero tension offset--
+'TENSION_a11','TENSION_a_AD7799_1_OFFSET',   '-1760',
+
+WARNING: Do not place any leading blanks between the ''.  For some reason the database
+checking rejects the value if there are leading blanks.
+
+b.  Re-built the database and compile the tables
+
+For the 'tension' program--
+
+cd ~/GliderWinchCommons/embed/svn_sensor/sensor/tension/trunk/db
+
+Run the script for the appriopiate unit, e.g. unit _12
+
+./mmdbtest_12
+
+Running the following saves the screen output to a file named 'z' for later
+examination--
+
+./mmdbtest_12 | tee z
+
+The script sequence--
+  update the database
+  run java program to generate #define statements
+  run java program to generate parameter/calibration .c code
+  compiles the .c code and loads it into high flash
+
+The RS232 (POD boards), or uart-usb, when the program starts, displays the
+parameter/calibration tables for each function on the unit as part of the
+initialization/startup.  The new values should appear.
+
+
+
+
+
+
+
+
+

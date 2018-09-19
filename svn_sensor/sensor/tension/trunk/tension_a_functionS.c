@@ -361,6 +361,10 @@ if (pcan->id == 0x00400000) // ##### TEST #########
 //$		if ( ((pcan->cd.uc[0] & p->ten_a.p_pollbit) != 0) && \
 		     ((pcan->cd.uc[1] & p->ten_a.f_pollbit) != 0) )
 		{ // Here, yes.  Send our precious msg.
+
+			iir_filtered_calib(p, 0);	// Fast (short time constant) filter the reading
+			ui.ft = p->fcalib_lgr;		// Float version of calibrated last good reading
+
 			/* Send tension msg and re-compute next hearbeat time count. */
 			//      Args:  CAN id, status of reading, reading pointer instance pointer
 			send_can_msg(p->ten_a.cid_ten_msg, p->status_byte, &ui.ui, p); 

@@ -94,8 +94,9 @@ const struct CAN_INIT msginit2 = { \
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& */
 /* ######################### GATEWAY HEARTBEAT CAN ID ############################ */
 //static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY1}; // See CANID_INSERT.sql
-static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY2}; // See CANID_INSERT.sql
-//static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY3}; // See CANID_INSERT.sql
+//static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY2}; // See CANID_INSERT.sql
+static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY3}; // See CANID_INSERT.sql
+//static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY4}; // See CANID_INSERT.sql
 /* ############################################################################### */
 /* %%%%%%%%%%%%% Board hardware setup %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 #define SETUP_CAN1	// Include code for setup of CAN1

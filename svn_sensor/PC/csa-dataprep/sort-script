@@ -1,0 +1,6 @@
+# sort-script
+# 09/06/2018
+# Sort copy-pasted file from cangate:cmd-q (canid v names from database)
+
+sort -k 2 canid-name.txt | tee canid-name-sort-name.txt
+sort canid-name.txt | tee canid-name-sort-id.txt

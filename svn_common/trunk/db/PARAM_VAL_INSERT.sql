@@ -340,8 +340,8 @@ INSERT INTO PARAM_VAL VALUES ('LOGGER_2','LOGGER_SUSPEND_CT'      ,'750'        
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('TENSION_a11','TENSION_a_LIST_CRC',   	      '0',	'TENSION_a',  'Tension_a11: 1 CRC for tension list');
 INSERT INTO PARAM_VAL VALUES ('TENSION_a11','TENSION_a_LIST_VERSION',         '1',	'TENSION_a',  'Tension_a11: 2 Version number for Tension List');
-INSERT INTO PARAM_VAL VALUES ('TENSION_a11','TENSION_a_AD7799_1_OFFSET',   '75580',	'TENSION_a',  'Tension_a11: 3 AD7799 final offset');
-INSERT INTO PARAM_VAL VALUES ('TENSION_a11','TENSION_a_AD7799_1_SCALE',  '0.246E-3', 'TENSION_a', 'Tension_a11: 4 AD7799 final Scale (convert to kgf)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a11','TENSION_a_AD7799_1_OFFSET',   '-1760',	'TENSION_a',  'Tension_a11: 3 AD7799 final offset');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a11','TENSION_a_AD7799_1_SCALE',  '0.2954E-3', 'TENSION_a', 'Tension_a11: 4 AD7799 final Scale (convert to kgf)');
 
 INSERT INTO PARAM_VAL VALUES ('TENSION_a11','TENSION_a_THERM1_CONST_B',   '3380.0',	'TENSION_a',  'Tension_a11:  5 Thermistor1 param: const B');
 INSERT INTO PARAM_VAL VALUES ('TENSION_a11','TENSION_a_THERM1_R_SERIES' ,   '10.0',	'TENSION_a',  'Tension_a11:  6 Thermistor1 param: Series resistor, fixed (K ohms)');
@@ -409,8 +409,8 @@ INSERT INTO PARAM_VAL VALUES ('TENSION_a11','TENSION_a_CANID_HW_FILT8'    ,'CANI
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_LIST_CRC',   		'0',	'TENSION_a',  'Tension_a21:   1 CRC for tension list');
 INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_LIST_VERSION',    	'1',	'TENSION_a',  'Tension_a21:   2 Version number for Tension List');
-INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_AD7799_1_OFFSET',     '83310',	'TENSION_a',  'Tension_a21:   3 AD7799 offset');
-INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_AD7799_1_SCALE',  '0.246E-3', 	'TENSION_a',  'Tension_a21: AD7799 #1 Scale (convert to kgf)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_AD7799_1_OFFSET',     '5076',	'TENSION_a',  'Tension_a21:   3 AD7799 offset');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_AD7799_1_SCALE',  '0.2954E-3', 	'TENSION_a',  'Tension_a21: AD7799 #1 Scale (convert to kgf)');
 
 INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_THERM1_CONST_B',   '3380.0',	'TENSION_a',  'Tension_a21:  5 Thermistor1 param: const B');
 INSERT INTO PARAM_VAL VALUES ('TENSION_a21','TENSION_a_THERM1_R_SERIES' ,   '10.0',	'TENSION_a',  'Tension_a21:  6 Thermistor1 param: Series resistor, fixed (K ohms)');

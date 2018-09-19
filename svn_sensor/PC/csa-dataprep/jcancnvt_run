@@ -1,0 +1,15 @@
+#!/bin/bash
+# Start database engine and run jcancnvt
+# 09/08/2018
+# Example--
+# ./jcancnvt_run ~/logcsa/180811_114712sdcan
+
+cd ../../../*common/trunk/db
+pwd
+./db_start
+cd ../../../../../GliderWinchCommons/javaparams/jcancnvt/dist
+pwd
+# jcancnvt takes the input path/file ($1) and outputs with a suffix '.can' added
+java -jar jcancnvt.jar $1
+exit
+

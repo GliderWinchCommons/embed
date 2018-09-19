@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2018-07-31 20:23:20.321
+// 2018-09-14 21:18:42.934
 
-#define CANID_COUNT 221
+#define CANID_COUNT 223
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -158,6 +158,7 @@
 #define  CANID_HB_GATEWAY1        0xE0200000  // GATEWAY        : Gateway1: Heartbeat
 #define  CANID_HB_GATEWAY2        0xE1200000  // GATEWAY        : Gateway2: Heartbeat
 #define  CANID_HB_GATEWAY3        0xE1400000  // GATEWAY        : Gateway3: Heartbeat
+#define  CANID_HB_GATEWAY4        0xE2E00000  // GATEWAY        : Gateway4: Heartbeat
 #define  CANID_HB_TENSION_0       0xE0400000  // TENSION_0      : Tension_0: Heartbeat
 #define  CANID_HB_TENSION_a11     0xE0600000  // TENSION_a      : Tension_a11: Heartbeat
 #define  CANID_HB_TENSION_a21     0xE0C00000  // TENSION_a      : Tension_a21: Heartbeat
@@ -213,13 +214,14 @@
 #define  CANID_UNIT_15            0x02A00000  // UNIT_15        : Tension: 2 AD7799 VE POD brd 4
 #define  CANID_UNIT_16            0x02C00000  // UNIT_16        : Tension: 2 AD7799 VE POD brd 5 GSM
 #define  CANID_UNIT_17            0x03200000  // UNIT_17        : Gateway2: 1 CAN
-#define  CANID_UNIT_18            0x03400000  // UNIT_18        : Gateway3: 2 CAN
+#define  CANID_UNIT_18            0x03400000  // UNIT_18        : Gateway3: 1 CAN
 #define  CANID_UNIT_1A            0x03600000  // UNIT_1A        : Logger2: sensor board w ublox gps & SD card
 #define  CANID_UNIT_1B            0x03E00000  // UNIT_1B        : Sensor board: CAW experiments
 #define  CANID_UNIT_1C            0x04200000  // UNIT_1C        : Sensor board: DEH spare 1
 #define  CANID_UNIT_1D            0x04400000  // UNIT_1D        : Sensor board: DEH spare 2
 #define  CANID_UNIT_1E            0x04800000  // UNIT_1E        : DiscoveryF4 shaft encoder unit 1
 #define  CANID_UNIT_1F            0x04A00000  // UNIT_1F        : Pwrbox: Blue Pill board
+#define  CANID_UNIT_20            0x04E00000  // UNIT_20        : Gateway4: 1 CAN
 #define  CANID_UNIT_99            0xFFFFFF14  // UNIT_99        : Dummy for missing CAN IDs
 #define  CANID_DUMMY              0xFFFFFFFC  // UNIT_NU        : Dummy ID: Lowest priority possible (Not Used)
 #define  CANID_MSG_DUMMY          0xFFFFFF16  // ANY            : Dummy ID: Polled Msg dummy
@@ -800,6 +802,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 735  */
+/* TOTAL COUNT OF #defines = 737  */
 /* Test 2016/06/12 */
 

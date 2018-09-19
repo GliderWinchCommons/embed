@@ -375,7 +375,7 @@ printf("%d %s\n",i, argv[i]);
 		{ // Here, name wasn't given on command line
 			if ( (fpList1 = fopen (fpList1_default,"r")) == NULL)
 			{
-				printf("CANID sql file did not open: %s\n",fpList1_default); return -1;
+				printf("CANID sql file did not open: %s\n",fpList1_default);
 			}
 			else
 			{

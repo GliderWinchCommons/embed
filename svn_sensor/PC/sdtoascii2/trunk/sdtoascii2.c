@@ -1,6 +1,6 @@
 /************************************************************************************
 sdtoascii2.c--SD card packet reader to file
-06-20-2014, 0803/2018
+06-20-2014, 08/03/2018
 Read SD card from logger and output ascii/hex lines (which can be piped to a file)
 *************************************************************************************/
 /*
@@ -9,7 +9,7 @@ Hack of ../../SD-read/trunk/sdpkf.c to implement date/time search and output asc
 08/03/2018 update sdtoascii for newer CAN log SD format (no timestamp, and not compressed msgs)
 
 // Example--
-cd ~/svn_sensor/PC/sdtoascii/trunk
+cd ~/svn_sensor/PC/sdtoascii2/trunk
 make && sudo ./sdtoascii2  [default to /dev/sdb]
 make && sudo ./sdtoascii2 /dev/sdb
 make && sudo ./sdtoascii2 ~/SDimageSD4

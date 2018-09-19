@@ -1,4 +1,4 @@
-// 2018-07-31 20:23:22.552
+// 2018-09-14 21:18:44.288
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -409,8 +409,8 @@ const uint32_t paramval17[] = {
  TENSION_a11_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a11: 1 CRC for tension list                                             */
  0x00000001 , /*   2 1                    5  Tension_a11: 2 Version number for Tension List                                  */
- 0x0001273C , /*   3 75580                5  Tension_a11: 3 AD7799 final offset                                              */
- 0x3980F990 , /*   4 0.246E-3            11  Tension_a11: 4 AD7799 final Scale (convert to kgf)                              */
+ 0xFFFFF920 , /*   3 -1760                5  Tension_a11: 3 AD7799 final offset                                              */
+ 0x399ADFEB , /*   4 0.2954E-3           11  Tension_a11: 4 AD7799 final Scale (convert to kgf)                              */
  0x45534000 , /*   5 3380.0              11  Tension_a11:  5 Thermistor1 param: const B                                      */
  0x41200000 , /*   6 10.0                11  Tension_a11:  6 Thermistor1 param: Series resistor, fixed (K ohms)              */
  0x41200000 , /*   7 10.0                11  Tension_a11:  7 Thermistor1 param: Thermistor room temp resistance (K ohms)     */
@@ -525,8 +525,8 @@ const uint32_t paramval19[] = {
  TENSION_a21_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a21:   1 CRC for tension list                                           */
  0x00000001 , /*   2 1                    5  Tension_a21:   2 Version number for Tension List                                */
- 0x0001456E , /*   3 83310                5  Tension_a21:   3 AD7799 offset                                                  */
- 0x3980F990 , /*   4 0.246E-3            11  Tension_a21: AD7799 #1 Scale (convert to kgf)                                   */
+ 0x000013D4 , /*   3 5076                 5  Tension_a21:   3 AD7799 offset                                                  */
+ 0x399ADFEB , /*   4 0.2954E-3           11  Tension_a21: AD7799 #1 Scale (convert to kgf)                                   */
  0x45534000 , /*   5 3380.0              11  Tension_a21:  5 Thermistor1 param: const B                                      */
  0x41200000 , /*   6 10.0                11  Tension_a21:  6 Thermistor1 param: Series resistor, fixed (K ohms)              */
  0x41200000 , /*   7 10.0                11  Tension_a21:  7 Thermistor1 param: Thermistor room temp resistance (K ohms)     */

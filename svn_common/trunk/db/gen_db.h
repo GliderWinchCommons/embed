@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2018-09-14 21:18:42.934
+// 2018-09-21 11:09:19.248
 
 #define CANID_COUNT 223
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -203,17 +203,17 @@
 #define  CANID_UNIT_B             0x0160000C  // UNIT_B         : Display driver/console
 #define  CANID_UNIT_C             0x0180000C  // UNIT_C         : CAWs Olimex board
 #define  CANID_UNIT_D             0x01A0000C  // UNIT_D         : POD board sensor prototype ("6" marked on board)
-#define  CANID_UNIT_E             0x01C0000C  // UNIT_E         : Logger1: sensor board w ublox gps & SD card
+#define  CANID_UNIT_E             0x01C0000C  // UNIT_E         : Logger1: sensor board w ublox gps & SD card GSM 18-09-17
 #define  CANID_UNIT_F             0x01E0000C  // UNIT_F         : Tension_1 & Cable_angle_1 Unit
 #define  CANID_UNIT_10            0x0200000C  // UNIT_10        : Gateway1: 2 CAN
 #define  CANID_UNIT_19            0x02800000  // UNIT_19        : Master Controller
 #define  CANID_UNIT_11            0x02200000  // UNIT_11        : Tension: 1 AD7799 VE POD brd 1
-#define  CANID_UNIT_12            0x02400000  // UNIT_12        : Tension: 2 AD7799 VE POD brd 2
+#define  CANID_UNIT_12            0x02400000  // UNIT_12        : Tension: 2 AD7799 VE POD brd 2 GSM 18-09-17
 #define  CANID_UNIT_13            0x02600000  // UNIT_13        : Yogurt: Olimex board
 #define  CANID_UNIT_14            0x02E00000  // UNIT_14        : Tension: 1 AD7799 VE POD brd 3
 #define  CANID_UNIT_15            0x02A00000  // UNIT_15        : Tension: 2 AD7799 VE POD brd 4
 #define  CANID_UNIT_16            0x02C00000  // UNIT_16        : Tension: 2 AD7799 VE POD brd 5 GSM
-#define  CANID_UNIT_17            0x03200000  // UNIT_17        : Gateway2: 1 CAN
+#define  CANID_UNIT_17            0x03200000  // UNIT_17        : Gateway2: 1 CAN GSM 18-09-17
 #define  CANID_UNIT_18            0x03400000  // UNIT_18        : Gateway3: 1 CAN
 #define  CANID_UNIT_1A            0x03600000  // UNIT_1A        : Logger2: sensor board w ublox gps & SD card
 #define  CANID_UNIT_1B            0x03E00000  // UNIT_1B        : Sensor board: CAW experiments

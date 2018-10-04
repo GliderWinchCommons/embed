@@ -1,7 +1,9 @@
 #!/bin/bash
 # Logger #2
+export LDRAPPLD=ldrapp_VE.ld
 echo $(date)
-echo "./mm LOGGER_2 GPS_2 CAN_UNIT_1A"
-./mm LOGGER_2 GPS_2 CAN_UNIT_1A
+CMDARGS="logger_param LOGGER_2 gps_param GPS_2 CAN_UNIT_1A"
+echo "./mm $CMDARGS"
+./mm $CMDARGS
 cd ..
 make flash

@@ -1,24 +1,30 @@
 #!/bin/bash
 # 08/06/2016
 # Compile and load database parameter tables
-# ./mm <table selection name first function> <...second function>
-# ./mm TENSION_1a TENSION_1b
+# ./mm <source name table selection name first function> <...second function>
+#           1           2          3      4     5
+# ./mm logger_param LOGGER_2 gps_param GPS_2 CAN_UNIT_1A
 # 
 # Specify which flash size VC=256 VE=512 VG=1024 (VG has a problem on the STM32F103RG)
 export LDRAPPLD=ldrapp_VE.ld
 
 echo
 echo "########## First table ("_logger") $1"
-make -f Makefile_logger clean
-make -f Makefile_logger TSELECT=-D$1 && make -f Makefile_logger TSELECT=-D$1 flash
+export SRCNAME=$1
+make -f Makefile clean
+make -f Makefile TSELECT=-D$2 && make -f Makefile TSELECT=-D$2 flash
 
 echo
-echo "########## Second table ("_gps") $2"
-make -f Makefile_gps clean
-make -f Makefile_gps TSELECT=-D$2 && make -f Makefile_gps TSELECT=-D$2 flash
+echo "########## Second table ("_gps") $3"
+export SRCNAME=$3
+make -f Makefile clean
+make -f Makefile TSELECT=-D$4 && make -f Makefile TSELECT=-D$4 flash
 
 echo
-echo "########## Table with function command CAN ids $3"
-make -f Makefile_can_unit clean
-make -f Makefile_can_unit TSELECT=-D$3 && make -f Makefile_can_unit TSELECT=-D$3 flash
+echo "########## Table with function command CAN ids $5"
+export SRCNAME=unit_cmd_canid
+make -f Makefile clean
+make -f Makefile TSELECT=-D$5 && make -f Makefile TSELECT=-D$5 flash
+
+
 

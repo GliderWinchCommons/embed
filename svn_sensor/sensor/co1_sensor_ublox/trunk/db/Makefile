@@ -1,7 +1,8 @@
 # Makefile - Cortex-M3, STM32F103
 
 # Name of the .c file with 'main' as well as output file name
-NAME		= logger_param
+# NAME is supplied from calling script, e.g. 'eng_param_man'
+NAME=$(SRCNAME)
 
 # Prefix the name for the particular toolchain
 PREFIX		= arm-none-eabi-
@@ -11,6 +12,13 @@ LD	=$(PREFIX)ld
 OBJCOPY	=$(PREFIX)objcopy
 SIZE	=$(PREFIX)size
 OBJDUMP	=$(PREFIX)objdump
+
+# The path for the commands to find the compiler, linker, et al.
+#TOOLDIR 	= $(HOME)/CodeSourcery/Sourcery_G++_Lite/bin
+#CC		= $(TOOLDIR)/$(PREFIX)-gcc
+#LD		= $(TOOLDIR)/$(PREFIX)-ld
+#OBJCOPY		= $(TOOLDIR)/$(PREFIX)-objcopy
+#OBJDUMP		= $(TOOLDIR)/$(PREFIX)-objdump
 
 # Current directory
 SRCDIR=.
@@ -46,13 +54,15 @@ LIBSENSORMISC	= $(LIBSENSORF103)/libsensormisc
 # Library directory path--local common includes
 LIBCOMMONALL    = $(SRCDIR)/../../../../common_all/trunk
 
-
 # Library of common to all processors
 LIBSVNCOMMON	= $(SRCDIR)/../../../../../svn_common/trunk
 
 LIBF4D	  = $(CURDIR)/../../../../../sw_discoveryf4/trunk
 
 # Library directory path--compile and stuff
+#LGCC =     $(HOME)/launchpad/gcc-arm-none-eabi-5_4-2016q3/lib/gcc/arm-none-eabi/5.4.1/armv7-m
+#LOTHER      = $(HOME)/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m
+
 # The following is setup in ~/.arm_tools when ~/.profile opens a terminal
 LGCC = $(ARM_PREFIX_GCCLIB)
 LOTHER = $(ARM_PREFIX_OTHER)
@@ -76,10 +86,7 @@ CFLAGS	+= -I$(LIBSVNCOMMON)
 AFLAGS  = -mcpu=cortex-m3 -mthumb
 
 # Linker script which has the definition of memory layout and "sections"
-#LDSCRIPT	= tension_a.ld
-#LDSCRIPT	= ../tension.ld
 LDSCRIPT	= $(LIBCOMMONALL)/$(LDRAPPLD)
-
 
 # Libraries (.a), script (.ld), (.map) for the linker
 LDFLAGS  = -L$(LOTHER) -L$(LGCC) -lgcc -lgcov -lc -lm -Map=$(NAME).map -T$(LDSCRIPT) -nostartfiles -lc
@@ -98,10 +105,8 @@ LDFLAGS += -L$(LGCC)
 # List of files to be compiled
 OBJS    = $(NAME).o
 
+# Paths for openocd and automatic flashing
 # The following two are 'export'ed in .arm_tools via .profile
-#OPENOCD_BASE	= /usr/share
-#OPENOCD		   = /usr/bin/openocd
-
 OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
 OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/rlink.cfg
 OPENOCD_BOARD	   = $(OPENOCD_SCRIPTS)/board/olimex_stm32_h103.cfg
@@ -113,8 +118,6 @@ NULL := 2>/dev/null
 endif
 
 all: images
-
-
 
 images: $(NAME)
 	@printf "  OBJCOPY $(NAME).bin\n"
@@ -131,7 +134,6 @@ images: $(NAME)
 	$(CC)	$(CFLAGS) $(TSELECT)  -c -o $@ $<
 .s.o:
 	$(AS)	$(AFLAGS) -a=$*.lst	-o $@ $<
-
 
 $(NAME): $(OBJS) $(LDSCRIPT)
 	@printf "  LD      $(subst $(shell pwd)/,,$(@)) $(LFLAGS)\n"
@@ -153,7 +155,9 @@ clean:
 	@printf " .map\n "
 	$(Q)rm -f $(NAME).map
 
-
+# NOTE: flash bank in the following overrides the automatic probe for memory size, thus
+#  allowing 128K of flash to be used in the 'C8 part.
+# https://sourceforge.net/p/openocd/mailman/message/30446928/
 flash: images
 	@printf "  FLASH   $(NAME).srec\n"
 	@# IMPORTANT: Don't use "resume", only "reset" will work correctly!

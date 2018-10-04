@@ -42,8 +42,8 @@ INSERT INTO FUNCTION_CODES VALUES ('TENSION_a1X'	,'TENSION_a',    'UNIT_F',	4,	'
 INSERT INTO FUNCTION_CODES VALUES ('CABLE_ANGLE_1'	,'CABLE_ANGLE',  'UNIT_F',	5,	'Cable_Angle_1: Cable angle drum #1' );
 INSERT INTO FUNCTION_CODES VALUES ('LEVEL_WIND'		,'LEVEL_WIND',   'UNIT_8',	6,	'Level wind: current sensing' );
 
-INSERT INTO FUNCTION_CODES VALUES ('GPS_1'		   ,'GPS',			'UNIT_E',	7,	'GPS_1: ublox: time sync distribution msg' );
-INSERT INTO FUNCTION_CODES VALUES ('LOGGER_1'		,'LOGGER',		'UNIT_E',	20,	'Logger 1: sensor board w SD card' );
+INSERT INTO FUNCTION_CODES VALUES ('GPS_1'		   ,'GPS',			'UNIT_E',	7,	'GPS_1: ublox: time sync distribution msg GSM GSM 18-09-17' );
+INSERT INTO FUNCTION_CODES VALUES ('LOGGER_1'		,'LOGGER',		'UNIT_E',	20,	'Logger 1: sensor board w SD card GSM 18-09-17' );
 
 INSERT INTO FUNCTION_CODES VALUES ('GPS_2'         ,'GPS',			'UNIT_1A',	22,	'GPS_2: ublox: time sync distribution msg' );
 INSERT INTO FUNCTION_CODES VALUES ('LOGGER_2'		,'LOGGER',		'UNIT_1A',	21,	'Logger 2: sensor board w SD card' );

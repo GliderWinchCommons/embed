@@ -1,4 +1,4 @@
-// 2018-09-21 11:09:22.329
+// 2018-10-03 12:34:41.773
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -23,8 +23,10 @@
 #define SHEAVE_1UP_PARAM_SIZE 17
 #define TENSION_a11_PARAM_SIZE 51
 #define TENSION_a12_PARAM_SIZE 51
+#define TENSION_a1G_PARAM_SIZE 51
 #define TENSION_a21_PARAM_SIZE 51
 #define TENSION_a22_PARAM_SIZE 51
+#define TENSION_a2G_PARAM_SIZE 51
 #define YOGURT_1_PARAM_SIZE 56
 
 
@@ -219,7 +221,7 @@ const uint32_t paramval09[] = {
  0xE1E00000 , /*   6 CANID_HB_GPS_TIME_2  17  GPS_2: 6 Heartbeat unix time                                                    */
  0xE2600000 , /*   7 CANID_HB_GPS_LLH_2  17  GPS_2: 7 Heartbeat (3 separate msgs) lattitude longitude height                 */
  0x00000000 , /*   8 0                    6  GPS_2: 8 time sync msgs: 0 = enable  1 = disable                                */
- 0x00600000 , /*   9 CANID_HB_TIMESYNC_2  17  GPS_2: 9 Time sync msg                                                          */
+ 0x00400000 , /*   9 CANID_HB_TIMESYNC   17  GPS_2: 9 Time sync msg                                                          */
 };
 #endif
 
@@ -520,8 +522,66 @@ const uint32_t paramval18[] = {
 #endif
 
 // =====================================================================
-#ifdef TENSION_a21	// Include following parameters?
+#ifdef TENSION_a1G	// Include following parameters?
 const uint32_t paramval19[] = {
+ TENSION_a1G_PARAM_SIZE,	/* Number of param entries that follow */
+ 0x00000000 , /*   1 0                    6  Tension_a1G: 1 CRC for tension list                                             */
+ 0x00000001 , /*   2 1                    5  Tension_a1G: 2 Version number for Tension List                                  */
+ 0x00000000 , /*   3 0                    5  Tension_a1G: 3 AD7799 final offset                                              */
+ 0x38E8528F , /*   4 0.11078E-3          11  Tension_a1G: 4 AD7799 final Scale (kgf) FS 250kgf 2mv/v                         */
+ 0x45534000 , /*   5 3380.0              11  Tension_a1G:  5 Thermistor1 param: const B                                      */
+ 0x41200000 , /*   6 10.0                11  Tension_a1G:  6 Thermistor1 param: Series resistor, fixed (K ohms)              */
+ 0x41200000 , /*   7 10.0                11  Tension_a1G:  7 Thermistor1 param: Thermistor room temp resistance (K ohms)     */
+ 0x43910000 , /*   8 290.0               11  Tension_a1G:  8 Thermistor1 param: Reference temp for thermistor                */
+ 0x00000000 , /*   9 0.0                 11  Tension_a1G:  9 Thermistor1 param: Thermistor temp offset correction (deg C)    */
+ 0x3F800000 , /*  10 1.0                 11  Tension_a1G: 10 Thermistor1 param: Thermistor temp scale correction             */
+ 0x45534000 , /*  11 3380.0              11  Tension_a1G: 11 Thermistor2 param: const B                                      */
+ 0x41200000 , /*  12 10.0                11  Tension_a1G: 12 Thermistor2 param: Series resistor, fixed (K ohms)              */
+ 0x41200000 , /*  13 10.0                11  Tension_a1G: 13 Thermistor2 param: Thermistor room temp resistance (K ohms)     */
+ 0x43910000 , /*  14 290.0               11  Tension_a1G: 14 Thermistor2 param: Reference temp for thermistor                */
+ 0x00000000 , /*  15 0.0                 11  Tension_a1G: 15 Thermistor2 param: Thermistor temp offset correction (deg C)    */
+ 0x3F800000 , /*  16 1.0                 11  Tension_a1G: 16 Thermistor2 param: Thermistor temp scale correction             */
+ 0x40A00000 , /*  17 5.0                 11  Tension_a1G: 17 Thermistor1 param: Load-Cell temp comp polynomial coeff 0 (offset)*/
+ 0x3F90A3D7 , /*  18 1.13                11  Tension_a1G: 18 Thermistor1 param: Load-Cell temp comp polynomial coeff 1 (scale)*/
+ 0x00000000 , /*  19 0.0                 11  Tension_a1G: 19 Thermistor1 param: Load-Cell temp comp polynomial coeff 2 (x^2) */
+ 0x00000000 , /*  20 0.0                 11  Tension_a1G: 20 Thermistor1 param: Load-Cell temp comp polynomial coeff 3 (x^3) */
+ 0x40A00000 , /*  21 5.0                 11  Tension_a1G: 21 Thermistor2 param: Load-Cell temp comp polynomial coeff 0 (offset)*/
+ 0x3F90A3D7 , /*  22 1.13                11  Tension_a1G: 22 Thermistor2 param: Load-Cell temp comp polynomial coeff 1 (scale)*/
+ 0x00000000 , /*  23 0.0                 11  Tension_a1G: 23 Thermistor2 param: Load-Cell temp comp polynomial coeff 2 (x^2) */
+ 0x00000000 , /*  24 0.0                 11  Tension_a1G: 24 Thermistor2 param: Load-Cell temp comp polynomial coeff 3 (x^3) */
+ 0x000000FA , /*  25 250                  6  Tension_a1G: 25 Heart-Beat: Count of time ticks (milliseconds) between autonomous msgs*/
+ 0x00000001 , /*  26 1                    6  Tension_a1G: 26 Drum sys number for this function instance                      */
+ 0x00000001 , /*  27 1                    6  Tension_a1G: 27 Drum sys poll 2nd payload byte bit for this type of function    */
+ 0x00000001 , /*  28 1                    6  Tension_a1G: 28 Drum sys poll 1st payload byte bit for drum # (function instance)*/
+ 0xF800043C , /*  29 CANID_MSG_TENSION_a1G  17  Tension_a1G: 29 CANID: can msg tension for AD7799 #1                            */
+ 0x20000000 , /*  30 CANID_MSG_TIME_POLL  17  Tension_a1G: 30 CANID: MC: Time msg/Group polling                               */
+ 0x00400000 , /*  31 CANID_HB_TIMESYNC   17  Tension_a1G: 31 CANID: GPS time sync distribution msg                           */
+ 0xE0E20000 , /*  32 CANID_HB_TENSION_a1G  17  Tension_a1G: 32 CANID: Heartbeat msg                                            */
+ 0xF800041C , /*  33 CANID_TST_TENSION_a1G  17  Tension_a1G: 33 Test                                                            */
+ 0x00000004 , /*  34 04                   6  Tension_a1G: 34 IIR Filter factor: divisor sets time const: reading for polled msg*/
+ 0x00000080 , /*  35 128                  6  Tension_a1G: 35 Filter scale : upscaling (due to integer math): for polled msg  */
+ 0x00000064 , /*  36 100                  6  Tension_a1G: 36 IIR Filter factor: divisor sets time const: reading for heart-beat  msg*/
+ 0x00000080 , /*  37 128                  6  Tension_a1G: 37 Filter scale : upscaling (due to integer math): for heart-beat  msg*/
+ 0x00000003 , /*  38 3                    6  Tension_a1G: 38 skip or use this function swit ch                               */
+ 0x0000000A , /*  39 10                   6  Tension_a1G: 39 IIR Filter factor: zero recalibration                           */
+ 0x00000040 , /*  40 64                   6  Tension_a1G: 40 IIR Filter scale : zero recalibration                           */
+ 0x000001D6 , /*  41 470                  6  Tension_a1G: 41 ADC conversion counts between zero recalibrations               */
+ 0x44960000 , /*  42 1200.0              11  Tension_a1G: 42 Exceeding this calibrated limit (+) means invalid reading       */
+ 0xC42F0000 , /*  43 -700.0              11  Tension_a1G: 43 Exceeding this calibrated limit (-) means invalid reading       */
+ 0x00400000 , /*  44 CANID_HB_TIMESYNC   17  Tension_a1G: 44 CANID 1 add CAN hw filter to allow incoming msg                 */
+ 0x20000000 , /*  45 CANID_MSG_TIME_POLL  17  Tension_a1G: 45 CANID 2 add CAN hw filter to allow incoming msg                 */
+ 0xF800041C , /*  46 CANID_TST_TENSION_a1G  17  Tension_a1G: 46 CANID 3 add CAN hw filter to allow incoming msg                 */
+ 0xF800007C , /*  47 CANID_CMD_TENSION_a1GI  17  Tension_a1G: 47 CANID 4 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  48 CANID_DUMMY         17  Tension_a1G: 48 CANID 5 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  49 CANID_DUMMY         17  Tension_a1G: 49 CANID 6 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  50 CANID_DUMMY         17  Tension_a1G: 50 CANID 7 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  51 CANID_DUMMY         17  Tension_a1G: 51 CANID 8 add CAN hw filter to allow incoming msg                 */
+};
+#endif
+
+// =====================================================================
+#ifdef TENSION_a21	// Include following parameters?
+const uint32_t paramval20[] = {
  TENSION_a21_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a21:   1 CRC for tension list                                           */
  0x00000001 , /*   2 1                    5  Tension_a21:   2 Version number for Tension List                                */
@@ -579,7 +639,7 @@ const uint32_t paramval19[] = {
 
 // =====================================================================
 #ifdef TENSION_a22	// Include following parameters?
-const uint32_t paramval20[] = {
+const uint32_t paramval21[] = {
  TENSION_a22_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Tension_a22:   1 CRC for tension list                                           */
  0x00000001 , /*   2 1                    5  Tension_a22:   2 Version number for Tension List                                */
@@ -636,8 +696,66 @@ const uint32_t paramval20[] = {
 #endif
 
 // =====================================================================
+#ifdef TENSION_a2G	// Include following parameters?
+const uint32_t paramval22[] = {
+ TENSION_a2G_PARAM_SIZE,	/* Number of param entries that follow */
+ 0x00000000 , /*   1 0                    6  Tension_a2G: 1 CRC for tension list                                             */
+ 0x00000001 , /*   2 1                    5  Tension_a2G: 2 Version number for Tension List                                  */
+ 0x000013D4 , /*   3 5076                 5  Tension_a2G: 3 AD7799 offset                                                    */
+ 0x399ADFEB , /*   4 0.2954E-3           11  Tension_a2G: 4 AD7799 #1 Scale (kgf) FS 1000kgf 3mv/v                           */
+ 0x45534000 , /*   5 3380.0              11  Tension_a2G:  5 Thermistor1 param: const B                                      */
+ 0x41200000 , /*   6 10.0                11  Tension_a2G:  6 Thermistor1 param: Series resistor, fixed (K ohms)              */
+ 0x41200000 , /*   7 10.0                11  Tension_a2G:  7 Thermistor1 param: Thermistor room temp resistance (K ohms)     */
+ 0x43910000 , /*   8 290.0               11  Tension_a2G:  8 Thermistor1 param: Reference temp for thermistor                */
+ 0x00000000 , /*   9 0.0                 11  Tension_a2G:  9 Thermistor1 param: Thermistor temp offset correction (deg C)    */
+ 0x3F800000 , /*  10 1.0                 11  Tension_a2G: 10 Thermistor1 param: Thermistor temp scale correction             */
+ 0x45534000 , /*  11 3380.0              11  Tension_a2G: 11 Thermistor2 param: const B                                      */
+ 0x41200000 , /*  12 10.0                11  Tension_a2G: 12 Thermistor2 param: Series resistor, fixed (K ohms)              */
+ 0x41200000 , /*  13 10.0                11  Tension_a2G: 13 Thermistor2 param: Thermistor room temp resistance (K ohms)     */
+ 0x43910000 , /*  14 290.0               11  Tension_a2G: 14 Thermistor2 param: Reference temp for thermistor                */
+ 0x00000000 , /*  15 0.0                 11  Tension_a2G: 15 Thermistor2 param: Thermistor temp offset correction (deg C)    */
+ 0x3F800000 , /*  16 1.0                 11  Tension_a2G: 16 Thermistor2 param: Thermistor temp scale correction             */
+ 0x40A00000 , /*  17 5.0                 11  Tension_a2G: 17 Thermistor1 param: Load-Cell temp comp polynomial coeff 0 (offset)*/
+ 0x3F90A3D7 , /*  18 1.13                11  Tension_a2G: 18 Thermistor1 param: Load-Cell temp comp polynomial coeff 1 (scale)*/
+ 0x00000000 , /*  19 0.0                 11  Tension_a2G: 19 Thermistor1 param: Load-Cell temp comp polynomial coeff 2 (x^2) */
+ 0x00000000 , /*  20 0.0                 11  Tension_a2G: 20 Thermistor1 param: Load-Cell temp comp polynomial coeff 3 (x^3) */
+ 0x40A00000 , /*  21 5.0                 11  Tension_a2G: 21 Thermistor2 param: Load-Cell temp comp polynomial coeff 0 (offset)*/
+ 0x3F90A3D7 , /*  22 1.13                11  Tension_a2G: 22 Thermistor2 param: Load-Cell temp comp polynomial coeff 1 (scale)*/
+ 0x00000000 , /*  23 0.0                 11  Tension_a2G: 23 Thermistor2 param: Load-Cell temp comp polynomial coeff 2 (x^2) */
+ 0x00000000 , /*  24 0.0                 11  Tension_a2G: 24 Thermistor2 param: Load-Cell temp comp polynomial coeff 3 (x^3) */
+ 0x000003E8 , /*  25 1000                 6  Tension_a2G: 25 Heart-Beat: Count of time ticks (milliseconds) between autonomous msgs*/
+ 0x00000001 , /*  26 1                    6  Tension_a2G: 26 Drum sys number for this function instance                      */
+ 0x00000001 , /*  27 1                    6  Tension_a2G: 27 Drum sys poll 2nd payload byte bit for this type of function    */
+ 0x00000001 , /*  28 1                    6  Tension_a2G: 28 Drum sys poll 1st payload byte bit for drum # (function instance)*/
+ 0xF800044C , /*  29 CANID_MSG_TENSION_a2G  17  Tension_a2G: 29 CANID: can msg tension for AD7799 #2                            */
+ 0x20000000 , /*  30 CANID_MSG_TIME_POLL  17  Tension_a2G: 30 CANID: MC: Time msg/Group polling                               */
+ 0x00400000 , /*  31 CANID_HB_TIMESYNC   17  Tension_a2G: 31 CANID: GPS time sync distribution msg                           */
+ 0xE0E40000 , /*  32 CANID_HB_TENSION_a2G  17  Tension_a2G: 32 CANID: Heartbeat msg                                            */
+ 0xF800042C , /*  33 CANID_TST_TENSION_a2G  17  Tension_a2G: 33 Test                                                            */
+ 0x00000004 , /*  34 04                   6  Tension_a2G: 34 IIR Filter factor: divisor sets time const: reading polled msg  */
+ 0x00000080 , /*  35 128                  6  Tension_a2G: 35 Filter scale : upscaling (due to integer math): polled msg      */
+ 0x00000200 , /*  36 512                  6  Tension_a2G: 36 IIR Filter factor: divisor sets time const: reading heart-beat msg*/
+ 0x00000080 , /*  37 128                  6  Tension_a2G: 37 Filter scale : upscaling (due to integer math): heart-beat  msg */
+ 0x00000003 , /*  38 3                    6  Tension_a: 38 skip or use this function switch                                  */
+ 0x0000000A , /*  39 10                   6  Tension_a2G: 39 IIR Filter factor: zero recalibration                           */
+ 0x00000080 , /*  40 128                  6  Tension_a2G: 40 IIR Filter scale : zero recalibration                           */
+ 0x000001D6 , /*  41 470                  6  Tension_a2G: 41 ADC conversion counts between zero recalibrations               */
+ 0x44960000 , /*  42 1200.0              11  Tension_a2G: 42 Exceeding this calibrated limit (+) means invalid reading       */
+ 0xC42F0000 , /*  43 -700.0              11  Tension_a2G: 43 Exceeding this calibrated limit (-) means invalid reading       */
+ 0x00400000 , /*  44 CANID_HB_TIMESYNC   17  Tension_a2G: 44 CANID 1 add CAN hw filter to allow incoming msg                 */
+ 0x20000000 , /*  45 CANID_MSG_TIME_POLL  17  Tension_a2G: 45 CANID 2 add CAN hw filter to allow incoming msg                 */
+ 0xF800042C , /*  46 CANID_TST_TENSION_a2G  17  Tension_a2G: 46 CANID 3 add CAN hw filter to allow incoming msg                 */
+ 0xF800008C , /*  47 CANID_CMD_TENSION_a2GI  17  Tension_a2G: 47 CANID 4 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  48 CANID_DUMMY         17  Tension_a2G: 48 CANID 5 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  49 CANID_DUMMY         17  Tension_a2G: 49 CANID 6 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  50 CANID_DUMMY         17  Tension_a2G: 50 CANID 7 add CAN hw filter to allow incoming msg                 */
+ 0xFFFFFFFC , /*  51 CANID_DUMMY         17  Tension_a2G: 51 CANID 8 add CAN hw filter to allow incoming msg                 */
+};
+#endif
+
+// =====================================================================
 #ifdef YOGURT_1	// Include following parameters?
-const uint32_t paramval21[] = {
+const uint32_t paramval23[] = {
  YOGURT_1_PARAM_SIZE,	/* Number of param entries that follow */
  0x00000000 , /*   1 0                    6  Yogurt_1:  1 CRC for this list                                                  */
  0x00000001 , /*   2 1                    5  Yogurt_1:  2 Version number for Tension List                                    */
@@ -700,15 +818,15 @@ const uint32_t paramval21[] = {
 
 // ================= COMMAND CANID TABLES ========================
 
-#define CAN_UNIT_11_CMDID_TABLE_SIZE 2	// Tension_a2: R 2 AD7799 VE POD Test (hence X) 1
+#define CAN_UNIT_11_CMDID_TABLE_SIZE 2	// Tension_a2: R 2 AD7799 VE POD 1 port 2
 
 #define CAN_UNIT_12_CMDID_TABLE_SIZE 4	// Yogurt_1: R Ver 1 of maker
 
-#define CAN_UNIT_13_CMDID_TABLE_SIZE 2	// Tension_a:  R 1 AD7799 VE POD Test (hence X) 2
+#define CAN_UNIT_13_CMDID_TABLE_SIZE 2	// Tension_a:  R 1 AD7799 VE POD port 1
 
-#define CAN_UNIT_14_CMDID_TABLE_SIZE 2	// Tension_a2: R 2 AD7799 VE POD Test (hence X) 3
+#define CAN_UNIT_14_CMDID_TABLE_SIZE 2	// Tension_a2: R 2 AD7799 VE POD port 2
 
-#define CAN_UNIT_15_CMDID_TABLE_SIZE 4	// Tension_a2: R 2 AD7799 VE POD GSM 1
+#define CAN_UNIT_15_CMDID_TABLE_SIZE 4	// Tension_a2: R 2 AD7799 VE POD GSM 1 port 2
 
 #define CAN_UNIT_16_CMDID_TABLE_SIZE 4	// Logger_2: R 
 
@@ -733,8 +851,8 @@ const uint32_t paramval21[] = {
 #ifdef CAN_UNIT_11	// a #define is used to select the following
 const struct FUNC_CANID func_canid00[] = {
 {   0x02200000, CAN_UNIT_11_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
-{1003,  0x## CAN ID NOT FOUND ## }, /*   1 CAN_UNIT_11          CANID_CMD_TENSION_0R	 Tension_a: R 1 AD7799 VE POD Test (hence X) 0*/
-{   3,  0x## CAN ID NOT FOUND ## }, /*   2 CAN_UNIT_11          CANID_CMD_TENSION_0I	 Tension_a: I 1 AD7799 VE POD Test (hence X) 0*/
+{1003,  0xF800801C }, /*   1 CAN_UNIT_11          CANID_CMD_TENSION_a0XR	 Tension_a: R 1 AD7799 VE POD Test (hence X) 0*/
+{   3,  0xF800001C }, /*   2 CAN_UNIT_11          CANID_CMD_TENSION_a0XI	 Tension_a: I 1 AD7799 VE POD Test (hence X) 0*/
 };
 #endif
 
@@ -742,10 +860,10 @@ const struct FUNC_CANID func_canid00[] = {
 #ifdef CAN_UNIT_12	// a #define is used to select the following
 const struct FUNC_CANID func_canid01[] = {
 {   0x02400000, CAN_UNIT_12_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
-{1004,  0x05E0000C }, /*   1 CAN_UNIT_12          CANID_CMD_TENSION_a21R	 Tension_a2: R 2 AD7799 VE POD Test (hence X) 1*/
-{   4,  0x05E00004 }, /*   2 CAN_UNIT_12          CANID_CMD_TENSION_a21I	 Tension_a2: I 2 AD7799 VE POD Test (hence X) 1*/
-{1003,  0x05C0000C }, /*   3 CAN_UNIT_12          CANID_CMD_TENSION_a11R	 Tension_a: R  2 AD7799 VE POD Test (hence X) 1*/
-{   3,  0x05C00004 }, /*   4 CAN_UNIT_12          CANID_CMD_TENSION_a11I	 Tension_a: I  2 AD7799 VE POD Test (hence X) 1*/
+{1004,  0x05E0000C }, /*   1 CAN_UNIT_12          CANID_CMD_TENSION_a21R	 Tension_a2: R 2 AD7799 VE POD 1 port 2*/
+{   4,  0x05E00004 }, /*   2 CAN_UNIT_12          CANID_CMD_TENSION_a21I	 Tension_a2: I 2 AD7799 VE POD 1 port 2*/
+{1003,  0x05C0000C }, /*   3 CAN_UNIT_12          CANID_CMD_TENSION_a11R	 Tension_a: R  2 AD7799 VE POD 1 port 2*/
+{   3,  0x05C00004 }, /*   4 CAN_UNIT_12          CANID_CMD_TENSION_a11I	 Tension_a: I  2 AD7799 VE POD 1 port 1*/
 };
 #endif
 
@@ -762,8 +880,8 @@ const struct FUNC_CANID func_canid02[] = {
 #ifdef CAN_UNIT_14	// a #define is used to select the following
 const struct FUNC_CANID func_canid03[] = {
 {   0x02E00000, CAN_UNIT_14_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
-{1003,  0xF800804C }, /*   1 CAN_UNIT_14          CANID_CMD_TENSION_a1YR	 Tension_a:  R 1 AD7799 VE POD Test (hence X) 2*/
-{   3,  0xF800004C }, /*   2 CAN_UNIT_14          CANID_CMD_TENSION_a1YI	 Tension_a:  I 1 AD7799 VE POD Test (hence X) 2*/
+{1003,  0xF800804C }, /*   1 CAN_UNIT_14          CANID_CMD_TENSION_a1YR	 Tension_a:  R 1 AD7799 VE POD port 1*/
+{   3,  0xF800004C }, /*   2 CAN_UNIT_14          CANID_CMD_TENSION_a1YI	 Tension_a:  I 1 AD7799 VE POD port 1*/
 };
 #endif
 
@@ -771,10 +889,10 @@ const struct FUNC_CANID func_canid03[] = {
 #ifdef CAN_UNIT_15	// a #define is used to select the following
 const struct FUNC_CANID func_canid04[] = {
 {   0x02A00000, CAN_UNIT_15_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
-{1004,  0xF800806C }, /*   1 CAN_UNIT_15          CANID_CMD_TENSION_a22R	 Tension_a2: R 2 AD7799 VE POD Test (hence X) 3*/
-{   4,  0xF800006C }, /*   2 CAN_UNIT_15          CANID_CMD_TENSION_a22I	 Tension_a2: I 2 AD7799 VE POD Test (hence X) 3*/
-{1003,  0xF800805C }, /*   3 CAN_UNIT_15          CANID_CMD_TENSION_a12R	 Tension_a:  R 2 AD7799 VE POD Test (hence X) 3*/
-{   3,  0xF800005C }, /*   4 CAN_UNIT_15          CANID_CMD_TENSION_a12I	 Tension_a:  I 2 AD7799 VE POD Test (hence X) 3*/
+{1004,  0xF800806C }, /*   1 CAN_UNIT_15          CANID_CMD_TENSION_a22R	 Tension_a2: R 2 AD7799 VE POD port 2*/
+{   4,  0xF800006C }, /*   2 CAN_UNIT_15          CANID_CMD_TENSION_a22I	 Tension_a2: I 2 AD7799 VE POD port 2*/
+{1003,  0xF800805C }, /*   3 CAN_UNIT_15          CANID_CMD_TENSION_a12R	 Tension_a:  R 2 AD7799 VE POD 2 port 1*/
+{   3,  0xF800005C }, /*   4 CAN_UNIT_15          CANID_CMD_TENSION_a12I	 Tension_a:  I 2 AD7799 VE POD 2 port 1*/
 };
 #endif
 
@@ -782,10 +900,10 @@ const struct FUNC_CANID func_canid04[] = {
 #ifdef CAN_UNIT_16	// a #define is used to select the following
 const struct FUNC_CANID func_canid05[] = {
 {   0x02C00000, CAN_UNIT_16_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
-{1004,  0xF800808C }, /*   1 CAN_UNIT_16          CANID_CMD_TENSION_a2GR	 Tension_a2: R 2 AD7799 VE POD GSM 1*/
-{   4,  0xF800008C }, /*   2 CAN_UNIT_16          CANID_CMD_TENSION_a2GI	 Tension_a2: I 2 AD7799 VE POD GSM 1*/
-{1003,  0xF800807C }, /*   3 CAN_UNIT_16          CANID_CMD_TENSION_a1GR	 Tension_a:  R 2 AD7799 VE POD GSM 1*/
-{   3,  0xF800007C }, /*   4 CAN_UNIT_16          CANID_CMD_TENSION_a1GI	 Tension_a:  I 2 AD7799 VE POD GSM 1*/
+{1004,  0xF800808C }, /*   1 CAN_UNIT_16          CANID_CMD_TENSION_a2GR	 Tension_a2: R 2 AD7799 VE POD GSM 1 port 2*/
+{   4,  0xF800008C }, /*   2 CAN_UNIT_16          CANID_CMD_TENSION_a2GI	 Tension_a2: I 2 AD7799 VE POD GSM 1 port 2*/
+{1003,  0xF800807C }, /*   3 CAN_UNIT_16          CANID_CMD_TENSION_a1GR	 Tension_a:  R 2 AD7799 VE POD GSM 1 port 1*/
+{   3,  0xF800007C }, /*   4 CAN_UNIT_16          CANID_CMD_TENSION_a1GI	 Tension_a:  I 2 AD7799 VE POD GSM 1 port 1*/
 };
 #endif
 

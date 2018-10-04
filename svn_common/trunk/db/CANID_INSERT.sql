@@ -63,11 +63,15 @@ INSERT INTO CANID VALUES ('CANID_MSG_TENSION_a21',	'38200000', 'TENSION_a', 'U8_
 INSERT INTO CANID VALUES ('CANID_MSG_TENSION_a12',	'38400000', 'TENSION_a', 'U8_FF','Tension_a21: Drum 2 calibrated tension, polled by time msg');
 INSERT INTO CANID VALUES ('CANID_MSG_TENSION_a22',	'38600000', 'TENSION_a', 'U8_FF','Tension_a22: Drum 2 calibrated tension, polled by time msg');
 INSERT INTO CANID VALUES ('CANID_MSG_TENSION_2',	'38800000', 'TENSION_2', 'U8_FF','Tension_2: calibrated tension, polled by time msg');
+INSERT INTO CANID VALUES ('CANID_MSG_TENSION_a1G',	'F800043C', 'TENSION_a', 'U8_FF','Tension_a1G: Drum 2 calibrated tension, polled by time msg');
+INSERT INTO CANID VALUES ('CANID_MSG_TENSION_a2G',	'F800044C', 'TENSION_a', 'U8_FF','Tension_a2G: Drum 2 calibrated tension, polled by time msg');
 
 INSERT INTO CANID VALUES ('CANID_TST_TENSION_a11',	'F800010C', 'TENSION_a', 'U8_FF','Tension_a11: TESTING java program generation of idx_v_val.c');
 INSERT INTO CANID VALUES ('CANID_TST_TENSION_a12',	'F800020C', 'TENSION_a', 'U8_FF','Tension_a12: TESTING java program generation of idx_v_val.c');
 INSERT INTO CANID VALUES ('CANID_TST_TENSION_a21',	'F800030C', 'TENSION_a', 'U8_FF','Tension_a21: TESTING java program generation of idx_v_val.c');
 INSERT INTO CANID VALUES ('CANID_TST_TENSION_a22',	'F800040C', 'TENSION_a', 'U8_FF','Tension_a22: TESTING java program generation of idx_v_val.c');
+INSERT INTO CANID VALUES ('CANID_TST_TENSION_a1G',	'F800041C', 'TENSION_a', 'U8_FF','Tension_a1G: TESTING java program generation of idx_v_val.c');
+INSERT INTO CANID VALUES ('CANID_TST_TENSION_a2G',	'F800042C', 'TENSION_a', 'U8_FF','Tension_a2G: TESTING java program generation of idx_v_val.c');
 --
 -- Command CAN IDs for each function
 INSERT INTO CANID VALUES ('CANID_CMD_TENSION_a1WI',	'05C0003C', 'TENSION_a', 'U8_U8_U32','Tension_a: I 1W Command code: [0] command code, [1]-[8] depends on code');
@@ -255,6 +259,8 @@ INSERT INTO CANID VALUES ('CANID_HB_TENSION_a21',	'E0C00000', 'TENSION_a', 	'U8_
 INSERT INTO CANID VALUES ('CANID_HB_TENSION_a12',	'E0800000', 'TENSION_a', 	'U8_FF','Tension_a12: Heartbeat');
 INSERT INTO CANID VALUES ('CANID_HB_TENSION_a22',	'E0E00000', 'TENSION_a', 	'U8_FF','Tension_a22: Heartbeat');
 INSERT INTO CANID VALUES ('CANID_HB_CABLE_ANGLE_1','E0A00000', 'CABLE_ANGLE_1', 'UNDEF','Cable_Angle_1: Heartbeat');
+INSERT INTO CANID VALUES ('CANID_HB_TENSION_a1G',	'E0E20000', 'TENSION_a', 	'U8_FF','Tension_a1G: Heartbeat');
+INSERT INTO CANID VALUES ('CANID_HB_TENSION_a2G',	'E0E40000', 'TENSION_a', 	'U8_FF','Tension_a2G: Heartbeat');
 
 INSERT INTO CANID VALUES ('CANID_HB_GPS_TIME_1',	'E1000000', 'GPS', 'UNIXTIME',  'GPS_1: Heartbeat unix time');
 INSERT INTO CANID VALUES ('CANID_HB_GPS_TIME_2',	'E1E00000', 'GPS', 'UNIXTIME',  'GPS_2: Heartbeat unix time');
@@ -310,7 +316,7 @@ INSERT INTO CANID VALUES ('CANID_UNIT_19',	'02800000', 'UNIT_19',	'U8','Master C
 INSERT INTO CANID VALUES ('CANID_UNIT_11',	'02200000', 'UNIT_11',	'U8','Tension: 1 AD7799 VE POD brd 1');
 INSERT INTO CANID VALUES ('CANID_UNIT_12',	'02400000', 'UNIT_12',	'U8','Tension: 2 AD7799 VE POD brd 2 GSM 18-09-17');
 INSERT INTO CANID VALUES ('CANID_UNIT_13',	'02600000', 'UNIT_13',	'U8','Yogurt: Olimex board');
-INSERT INTO CANID VALUES ('CANID_UNIT_14',	'02E00000', 'UNIT_14',	'U8','Tension: 1 AD7799 VE POD brd 3');
+INSERT INTO CANID VALUES ('CANID_UNIT_14',	'02E00000', 'UNIT_14',	'U8','Tension: 1 AD7799 w op-amp VE POD brd 3');
 INSERT INTO CANID VALUES ('CANID_UNIT_15',	'02A00000', 'UNIT_15',	'U8','Tension: 2 AD7799 VE POD brd 4');
 INSERT INTO CANID VALUES ('CANID_UNIT_16',	'02C00000', 'UNIT_16',	'U8','Tension: 2 AD7799 VE POD brd 5 GSM');
 INSERT INTO CANID VALUES ('CANID_UNIT_17',	'03200000', 'UNIT_17',	'U8','Gateway2: 1 CAN GSM 18-09-17');

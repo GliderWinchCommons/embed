@@ -1,17 +1,21 @@
 // Defines from database pcc
-// 2018-09-21 11:09:19.248
+// 2018-10-03 12:34:40.345
 
-#define CANID_COUNT 223
+#define CANID_COUNT 229
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a12    0x38400000  // TENSION_a      : Tension_a21: Drum 2 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a22    0x38600000  // TENSION_a      : Tension_a22: Drum 2 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_2      0x38800000  // TENSION_2      : Tension_2: calibrated tension, polled by time msg
+#define  CANID_MSG_TENSION_a1G    0xF800043C  // TENSION_a      : Tension_a1G: Drum 2 calibrated tension, polled by time msg
+#define  CANID_MSG_TENSION_a2G    0xF800044C  // TENSION_a      : Tension_a2G: Drum 2 calibrated tension, polled by time msg
 #define  CANID_TST_TENSION_a11    0xF800010C  // TENSION_a      : Tension_a11: TESTING java program generation of idx_v_val.c
 #define  CANID_TST_TENSION_a12    0xF800020C  // TENSION_a      : Tension_a12: TESTING java program generation of idx_v_val.c
 #define  CANID_TST_TENSION_a21    0xF800030C  // TENSION_a      : Tension_a21: TESTING java program generation of idx_v_val.c
 #define  CANID_TST_TENSION_a22    0xF800040C  // TENSION_a      : Tension_a22: TESTING java program generation of idx_v_val.c
+#define  CANID_TST_TENSION_a1G    0xF800041C  // TENSION_a      : Tension_a1G: TESTING java program generation of idx_v_val.c
+#define  CANID_TST_TENSION_a2G    0xF800042C  // TENSION_a      : Tension_a2G: TESTING java program generation of idx_v_val.c
 #define  CANID_CMD_TENSION_a1WI   0x05C0003C  // TENSION_a      : Tension_a: I 1W Command code: [0] command code, [1]-[8] depends on code
 #define  CANID_CMD_TENSION_a1WR   0x05C0803C  // TENSION_a      : Tension_a: R 1W Command code: [0] command code, [1]-[8] depends on code
 #define  CANID_CMD_TENSION_a2WI   0x05C0004C  // TENSION_a      : Tension_a: I 2W Command code: [0] command code, [1]-[8] depends on code
@@ -165,6 +169,8 @@
 #define  CANID_HB_TENSION_a12     0xE0800000  // TENSION_a      : Tension_a12: Heartbeat
 #define  CANID_HB_TENSION_a22     0xE0E00000  // TENSION_a      : Tension_a22: Heartbeat
 #define  CANID_HB_CABLE_ANGLE_1   0xE0A00000  // CABLE_ANGLE_1  : Cable_Angle_1: Heartbeat
+#define  CANID_HB_TENSION_a1G     0xE0E20000  // TENSION_a      : Tension_a1G: Heartbeat
+#define  CANID_HB_TENSION_a2G     0xE0E40000  // TENSION_a      : Tension_a2G: Heartbeat
 #define  CANID_HB_GPS_TIME_1      0xE1000000  // GPS            : GPS_1: Heartbeat unix time
 #define  CANID_HB_GPS_TIME_2      0xE1E00000  // GPS            : GPS_2: Heartbeat unix time
 #define  CANID_HB_GPS_LLH_1       0xE1C00000  // GPS            : GPS_1: Heartbeat (3 separate msgs) lattitude longitude height
@@ -210,7 +216,7 @@
 #define  CANID_UNIT_11            0x02200000  // UNIT_11        : Tension: 1 AD7799 VE POD brd 1
 #define  CANID_UNIT_12            0x02400000  // UNIT_12        : Tension: 2 AD7799 VE POD brd 2 GSM 18-09-17
 #define  CANID_UNIT_13            0x02600000  // UNIT_13        : Yogurt: Olimex board
-#define  CANID_UNIT_14            0x02E00000  // UNIT_14        : Tension: 1 AD7799 VE POD brd 3
+#define  CANID_UNIT_14            0x02E00000  // UNIT_14        : Tension: 1 AD7799 w op-amp VE POD brd 3
 #define  CANID_UNIT_15            0x02A00000  // UNIT_15        : Tension: 2 AD7799 VE POD brd 4
 #define  CANID_UNIT_16            0x02C00000  // UNIT_16        : Tension: 2 AD7799 VE POD brd 5 GSM
 #define  CANID_UNIT_17            0x03200000  // UNIT_17        : Gateway2: 1 CAN GSM 18-09-17
@@ -802,6 +808,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 737  */
+/* TOTAL COUNT OF #defines = 743  */
 /* Test 2016/06/12 */
 

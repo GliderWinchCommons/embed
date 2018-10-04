@@ -325,7 +325,7 @@ INSERT INTO PARAM_VAL VALUES ('GPS_2','GPS_HEARTBEAT_LLH_DELAY_CT' ,'1050'      
 INSERT INTO PARAM_VAL VALUES ('GPS_2','GPS_HEARTBEAT_TIME'     ,'CANID_HB_GPS_TIME_2' ,'GPS','GPS_2: 6 Heartbeat unix time');
 INSERT INTO PARAM_VAL VALUES ('GPS_2','GPS_HEARTBEAT_LLH'      ,'CANID_HB_GPS_LLH_2'  ,'GPS','GPS_2: 7 Heartbeat (3 separate msgs) lattitude longitude height');
 INSERT INTO PARAM_VAL VALUES ('GPS_2','GPS_DISABLE_SYNCMSGS'   ,'0'                   ,'GPS','GPS_2: 8 time sync msgs: 0 = enable  1 = disable');
-INSERT INTO PARAM_VAL VALUES ('GPS_2','GPS_TIME_SYNC_MSG'      ,'CANID_HB_TIMESYNC_2' ,'GPS','GPS_2: 9 Time sync msg');
+INSERT INTO PARAM_VAL VALUES ('GPS_2','GPS_TIME_SYNC_MSG'      ,'CANID_HB_TIMESYNC' ,'GPS','GPS_2: 9 Time sync msg');
 --===================================================================================================================================================================
 -- LOGGER_2
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
@@ -595,6 +595,140 @@ INSERT INTO PARAM_VAL VALUES ('TENSION_a22','TENSION_a_CANID_HW_FILT6'    ,'CANI
 INSERT INTO PARAM_VAL VALUES ('TENSION_a22','TENSION_a_CANID_HW_FILT7'    ,'CANID_DUMMY',	  	'TENSION_a','Tension_a22: 50 CANID 7 add CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('TENSION_a22','TENSION_a_CANID_HW_FILT8'    ,'CANID_DUMMY',	  	'TENSION_a','Tension_a22: 51 CANID 8 add CAN hw filter to allow incoming msg');
 --
+--===================================================================================================================================================================
+-- TENSION_a1G (First AD7799 port, first POD unit shipped to GSM, strapped to plywood sheet)
+--                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_LIST_CRC',   	            '0','TENSION_a','Tension_a1G: 1 CRC for tension list');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_LIST_VERSION',            '1','TENSION_a','Tension_a1G: 2 Version number for Tension List');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_AD7799_1_OFFSET',         '0','TENSION_a','Tension_a1G: 3 AD7799 final offset');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_AD7799_1_SCALE', '0.11078E-3','TENSION_a','Tension_a1G: 4 AD7799 final Scale (kgf) FS 250kgf 2mv/v');
+
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM1_CONST_B',   '3380.0',	'TENSION_a',  'Tension_a1G:  5 Thermistor1 param: const B');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM1_R_SERIES' ,   '10.0',	'TENSION_a',  'Tension_a1G:  6 Thermistor1 param: Series resistor, fixed (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM1_R_ROOMTMP',   '10.0',	'TENSION_a',  'Tension_a1G:  7 Thermistor1 param: Thermistor room temp resistance (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM1_REF_TEMP',   '290.0',	'TENSION_a',  'Tension_a1G:  8 Thermistor1 param: Reference temp for thermistor');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM1_TEMP_OFFSET',  '0.0',	'TENSION_a',  'Tension_a1G:  9 Thermistor1 param: Thermistor temp offset correction (deg C)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM1_TEMP_SCALE',   '1.0',	'TENSION_a',  'Tension_a1G: 10 Thermistor1 param: Thermistor temp scale correction');
+
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM2_CONST_B',   '3380.0',	'TENSION_a',  'Tension_a1G: 11 Thermistor2 param: const B');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM2_R_SERIES',    '10.0',	'TENSION_a',  'Tension_a1G: 12 Thermistor2 param: Series resistor, fixed (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM2_R_ROOMTMP',   '10.0',	'TENSION_a',  'Tension_a1G: 13 Thermistor2 param: Thermistor room temp resistance (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM2_REF_TEMP',   '290.0',	'TENSION_a',  'Tension_a1G: 14 Thermistor2 param: Reference temp for thermistor');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM2_TEMP_OFFSET',  '0.0',	'TENSION_a',  'Tension_a1G: 15 Thermistor2 param: Thermistor temp offset correction (deg C)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM2_TEMP_SCALE',   '1.0',	'TENSION_a',  'Tension_a1G: 16 Thermistor2 param: Thermistor temp scale correction');
+
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM1_COEF_0',	 '5.0', 	'TENSION_a',  'Tension_a1G: 17 Thermistor1 param: Load-Cell temp comp polynomial coeff 0 (offset)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM1_COEF_1',	'1.13', 	'TENSION_a',  'Tension_a1G: 18 Thermistor1 param: Load-Cell temp comp polynomial coeff 1 (scale)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM1_COEF_2',	 '0.0', 	'TENSION_a',  'Tension_a1G: 19 Thermistor1 param: Load-Cell temp comp polynomial coeff 2 (x^2)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM1_COEF_3',	 '0.0', 	'TENSION_a',  'Tension_a1G: 20 Thermistor1 param: Load-Cell temp comp polynomial coeff 3 (x^3)');
+
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM2_COEF_0',	 '5.0', 	'TENSION_a',  'Tension_a1G: 21 Thermistor2 param: Load-Cell temp comp polynomial coeff 0 (offset)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM2_COEF_1',	'1.13', 	'TENSION_a',  'Tension_a1G: 22 Thermistor2 param: Load-Cell temp comp polynomial coeff 1 (scale)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM2_COEF_2',	 '0.0', 	'TENSION_a',  'Tension_a1G: 23 Thermistor2 param: Load-Cell temp comp polynomial coeff 2 (x^2)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_THERM2_COEF_3',	 '0.0', 	'TENSION_a',  'Tension_a1G: 24 Thermistor2 param: Load-Cell temp comp polynomial coeff 3 (x^3)');
+
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_HEARTBEAT_CT',     '250',	'TENSION_a',  'Tension_a1G: 25 Heart-Beat: Count of time ticks (milliseconds) between autonomous msgs');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_DRUM_NUMBER',        '1',	'TENSION_a',  'Tension_a1G: 26 Drum sys number for this function instance');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_DRUM_FUNCTION_BIT',  '1',	'TENSION_a',  'Tension_a1G: 27 Drum sys poll 2nd payload byte bit for this type of function');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_DRUM_POLL_BIT',      '1',	'TENSION_a',  'Tension_a1G: 28 Drum sys poll 1st payload byte bit for drum # (function instance)');
+-- These don't have be grouped together, but it does make a bit easier for the reader
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_CANPRM_TENSION'  ,'CANID_MSG_TENSION_a1G', 'TENSION_a',  'Tension_a1G: 29 CANID: can msg tension for AD7799 #1');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_MSG_TIME_POLL'   ,'CANID_MSG_TIME_POLL',	  'TENSION_a',  'Tension_a1G: 30 CANID: MC: Time msg/Group polling');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_TIMESYNC'        ,'CANID_HB_TIMESYNC', 	  'TENSION_a',  'Tension_a1G: 31 CANID: GPS time sync distribution msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_HEARTBEAT'       ,'CANID_HB_TENSION_a1G',  'TENSION_a',  'Tension_a1G: 32 CANID: Heartbeat msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_CANIDTEST'       ,'CANID_TST_TENSION_a1G', 'TENSION_a',  'Tension_a1G: 33 Test');
+-- Tacking additions on the end avoids the trouble of renumbering the sequence numbers
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_IIR_POLL_K'        , '04',	'TENSION_a',  	'Tension_a1G: 34 IIR Filter factor: divisor sets time const: reading for polled msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_IIR_POLL_SCALE'    , '128',	'TENSION_a',  	'Tension_a1G: 35 Filter scale : upscaling (due to integer math): for polled msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_IIR_HB_K'          , '100',	'TENSION_a',  	'Tension_a1G: 36 IIR Filter factor: divisor sets time const: reading for heart-beat  msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_IIR_HB_SCALE'      , '128',	'TENSION_a',  	'Tension_a1G: 37 Filter scale : upscaling (due to integer math): for heart-beat  msg');
+--
+-- TENSION_a_IIR_USEME should be the same for all functions in the same unit.  The bit tells the program if this function instance is to be used as the program may support more
+-- instances of the function than the particular hw provides, e.g. only one AD7799.
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_USEME'    	  , '3',		'TENSION_a',  	'Tension_a1G: 38 skip or use this function swit ch');
+-- Internal zero recalibration.  New readings are filtered and used for current conversions.
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_IIR_Z_RECAL_K'     , '10',   	'TENSION_a',  	'Tension_a1G: 39 IIR Filter factor: zero recalibration');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_IIR_Z_RECAL_SCALE' , '64',  	'TENSION_a',  	'Tension_a1G: 40 IIR Filter scale : zero recalibration');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_Z_RECAL_CT'        ,'470',  	'TENSION_a',  	'Tension_a1G: 41 ADC conversion counts between zero recalibrations');
+-- Limits for reasonable readings.
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_LIMIT_HI'         ,'1200.0',	'TENSION_a',  	'Tension_a1G: 42 Exceeding this calibrated limit (+) means invalid reading');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_LIMIT_LO'         ,'-700.0', 	'TENSION_a',  	'Tension_a1G: 43 Exceeding this calibrated limit (-) means invalid reading');
+-- The CAN hw filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_CANID_HW_FILT1'    ,'CANID_HB_TIMESYNC',		'TENSION_a',	'Tension_a1G: 44 CANID 1 add CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_CANID_HW_FILT2'    ,'CANID_MSG_TIME_POLL',	'TENSION_a',	'Tension_a1G: 45 CANID 2 add CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_CANID_HW_FILT3'    ,'CANID_TST_TENSION_a1G',	'TENSION_a',	'Tension_a1G: 46 CANID 3 add CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_CANID_HW_FILT4'    ,'CANID_CMD_TENSION_a1GI', 	'TENSION_a',	'Tension_a1G: 47 CANID 4 add CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_CANID_HW_FILT5'    ,'CANID_DUMMY', 	  	'TENSION_a',	'Tension_a1G: 48 CANID 5 add CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_CANID_HW_FILT6'    ,'CANID_DUMMY',  		'TENSION_a',	'Tension_a1G: 49 CANID 6 add CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_CANID_HW_FILT7'    ,'CANID_DUMMY',	  	'TENSION_a',	'Tension_a1G: 50 CANID 7 add CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a1G','TENSION_a_CANID_HW_FILT8'    ,'CANID_DUMMY',	  	'TENSION_a',	'Tension_a1G: 51 CANID 8 add CAN hw filter to allow incoming msg');
+--
+--======================================================================================================================================================================
+-- TENSION_a2G  (Second AD7799 port, first POD unit shipped to GSM, strapped to plywood sheet)
+--                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_LIST_CRC',               '0','TENSION_a','Tension_a2G: 1 CRC for tension list');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_LIST_VERSION',           '1','TENSION_a','Tension_a2G: 2 Version number for Tension List');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_AD7799_1_OFFSET',     '5076','TENSION_a','Tension_a2G: 3 AD7799 offset');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_AD7799_1_SCALE', '0.2954E-3','TENSION_a','Tension_a2G: 4 AD7799 #1 Scale (kgf) FS 1000kgf 3mv/v');
+
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM1_CONST_B',   '3380.0',	'TENSION_a','Tension_a2G:  5 Thermistor1 param: const B');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM1_R_SERIES' ,   '10.0',	'TENSION_a','Tension_a2G:  6 Thermistor1 param: Series resistor, fixed (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM1_R_ROOMTMP',   '10.0',	'TENSION_a','Tension_a2G:  7 Thermistor1 param: Thermistor room temp resistance (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM1_REF_TEMP',   '290.0',	'TENSION_a','Tension_a2G:  8 Thermistor1 param: Reference temp for thermistor');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM1_TEMP_OFFSET',  '0.0',	'TENSION_a','Tension_a2G:  9 Thermistor1 param: Thermistor temp offset correction (deg C)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM1_TEMP_SCALE',   '1.0',	'TENSION_a','Tension_a2G: 10 Thermistor1 param: Thermistor temp scale correction');
+
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM2_CONST_B',   '3380.0',	'TENSION_a',  'Tension_a2G: 11 Thermistor2 param: const B');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM2_R_SERIES',    '10.0',	'TENSION_a',  'Tension_a2G: 12 Thermistor2 param: Series resistor, fixed (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM2_R_ROOMTMP',   '10.0',	'TENSION_a',  'Tension_a2G: 13 Thermistor2 param: Thermistor room temp resistance (K ohms)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM2_REF_TEMP',   '290.0',	'TENSION_a',  'Tension_a2G: 14 Thermistor2 param: Reference temp for thermistor');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM2_TEMP_OFFSET',  '0.0',	'TENSION_a',  'Tension_a2G: 15 Thermistor2 param: Thermistor temp offset correction (deg C)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM2_TEMP_SCALE',   '1.0',	'TENSION_a',  'Tension_a2G: 16 Thermistor2 param: Thermistor temp scale correction');
+
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM1_COEF_0',	 '5.0', 	'TENSION_a',  'Tension_a2G: 17 Thermistor1 param: Load-Cell temp comp polynomial coeff 0 (offset)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM1_COEF_1',	'1.13', 	'TENSION_a',  'Tension_a2G: 18 Thermistor1 param: Load-Cell temp comp polynomial coeff 1 (scale)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM1_COEF_2',	 '0.0', 	'TENSION_a',  'Tension_a2G: 19 Thermistor1 param: Load-Cell temp comp polynomial coeff 2 (x^2)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM1_COEF_3',	 '0.0', 	'TENSION_a',  'Tension_a2G: 20 Thermistor1 param: Load-Cell temp comp polynomial coeff 3 (x^3)');
+
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM2_COEF_0',	 '5.0', 	'TENSION_a',  'Tension_a2G: 21 Thermistor2 param: Load-Cell temp comp polynomial coeff 0 (offset)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM2_COEF_1',	'1.13', 	'TENSION_a',  'Tension_a2G: 22 Thermistor2 param: Load-Cell temp comp polynomial coeff 1 (scale)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM2_COEF_2',	 '0.0', 	'TENSION_a',  'Tension_a2G: 23 Thermistor2 param: Load-Cell temp comp polynomial coeff 2 (x^2)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_THERM2_COEF_3',	 '0.0', 	'TENSION_a',  'Tension_a2G: 24 Thermistor2 param: Load-Cell temp comp polynomial coeff 3 (x^3)');
+
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_HEARTBEAT_CT',       '1000',	'TENSION_a',  'Tension_a2G: 25 Heart-Beat: Count of time ticks (milliseconds) between autonomous msgs');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_DRUM_NUMBER',           '1', 'TENSION_a',  'Tension_a2G: 26 Drum sys number for this function instance');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_DRUM_FUNCTION_BIT',     '1',	'TENSION_a',  'Tension_a2G: 27 Drum sys poll 2nd payload byte bit for this type of function');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_DRUM_POLL_BIT',         '1',	'TENSION_a',  'Tension_a2G: 28 Drum sys poll 1st payload byte bit for drum # (function instance)');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_CANPRM_TENSION'  ,'CANID_MSG_TENSION_a2G','TENSION_a',  'Tension_a2G: 29 CANID: can msg tension for AD7799 #2');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_MSG_TIME_POLL'   ,'CANID_MSG_TIME_POLL',	 'TENSION_a',  'Tension_a2G: 30 CANID: MC: Time msg/Group polling');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_TIMESYNC'        ,'CANID_HB_TIMESYNC', 	 'TENSION_a',  'Tension_a2G: 31 CANID: GPS time sync distribution msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_HEARTBEAT'       ,'CANID_HB_TENSION_a2G', 'TENSION_a',  'Tension_a2G: 32 CANID: Heartbeat msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_CANIDTEST'       ,'CANID_TST_TENSION_a2G','TENSION_a',  'Tension_a2G: 33 Test');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_IIR_POLL_K'        , '04',	'TENSION_a','Tension_a2G: 34 IIR Filter factor: divisor sets time const: reading polled msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_IIR_POLL_SCALE'    , '128',	'TENSION_a','Tension_a2G: 35 Filter scale : upscaling (due to integer math): polled msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_IIR_HB_K'          , '512',	'TENSION_a','Tension_a2G: 36 IIR Filter factor: divisor sets time const: reading heart-beat msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_IIR_HB_SCALE'      , '128',	'TENSION_a','Tension_a2G: 37 Filter scale : upscaling (due to integer math): heart-beat  msg');
+
+-- instances of the function than the particular hw provides, e.g. only one AD7799.
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_USEME'    	 , '3',		'TENSION_a',  	'Tension_a: 38 skip or use this function switch');
+-- Internal zero recalibration.  New readings are filtered and used for current conversions.
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_IIR_Z_RECAL_K'     , '10', 'TENSION_a', 	'Tension_a2G: 39 IIR Filter factor: zero recalibration');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_IIR_Z_RECAL_SCALE' , '128','TENSION_a', 	'Tension_a2G: 40 IIR Filter scale : zero recalibration');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_Z_RECAL_CT'        ,'470', 'TENSION_a', 	'Tension_a2G: 41 ADC conversion counts between zero recalibrations');
+-- Limits for reasonable readings.
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_LIMIT_HI'         ,'1200.0',	'TENSION_a','Tension_a2G: 42 Exceeding this calibrated limit (+) means invalid reading');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_LIMIT_LO'         ,'-700.0', 'TENSION_a','Tension_a2G: 43 Exceeding this calibrated limit (-) means invalid reading');
+-- The CAN hw filter will be set to allow the following *incoming* msgs with these CAN IDs to be recognized (CANID_DUMMY is not loaded)
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_CANID_HW_FILT1'    ,'CANID_HB_TIMESYNC',		 'TENSION_a','Tension_a2G: 44 CANID 1 add CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_CANID_HW_FILT2'    ,'CANID_MSG_TIME_POLL',	 'TENSION_a','Tension_a2G: 45 CANID 2 add CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_CANID_HW_FILT3'    ,'CANID_TST_TENSION_a2G', 'TENSION_a','Tension_a2G: 46 CANID 3 add CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_CANID_HW_FILT4'    ,'CANID_CMD_TENSION_a2GI','TENSION_a','Tension_a2G: 47 CANID 4 add CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_CANID_HW_FILT5'    ,'CANID_DUMMY',   	'TENSION_a','Tension_a2G: 48 CANID 5 add CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_CANID_HW_FILT6'    ,'CANID_DUMMY', 	'TENSION_a','Tension_a2G: 49 CANID 6 add CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_CANID_HW_FILT7'    ,'CANID_DUMMY',	  	'TENSION_a','Tension_a2G: 50 CANID 7 add CAN hw filter to allow incoming msg');
+INSERT INTO PARAM_VAL VALUES ('TENSION_a2G','TENSION_a_CANID_HW_FILT8'    ,'CANID_DUMMY',	  	'TENSION_a','Tension_a2G: 51 CANID 8 add CAN hw filter to allow incoming msg');
+--
+
 --========================================================================================================================================================================
 -- Cable Angle 1
 --                           FUNCTION_NAME     PARAM_NAME                PARAM_VAL        FUNCTION_TYPE         DESCRIPTION11
@@ -617,7 +751,7 @@ INSERT INTO PARAM_VAL VALUES ('CABLE_ANGLE_1','CABLE_ANGLE_TIMESYNC'        ,'CA
 INSERT INTO PARAM_VAL VALUES ('CABLE_ANGLE_1','CABLE_ANGLE_HEARTBEAT_MSG'   ,'CANID_HB_CABLE_ANGLE_1',	'CABLE_ANGLE',  ' 17 Cable angle_1: CANID: Heartbeat msg');
 INSERT INTO PARAM_VAL VALUES ('CABLE_ANGLE_1','CABLE_ANGLE_HEARTBEAT_CMDI'  ,'CANID_CMD_CABLE_ANGLE_1R','CABLE_ANGLE',  ' 17 Cable angle_1: CANID: Listen for command');
 INSERT INTO PARAM_VAL VALUES ('CABLE_ANGLE_1','CABLE_ANGLE_USEME'    	         , '1',   'CABLE_ANGLE',  ' 18 Cable Angle_1: skip or use this function switch');
-
+--
 --=========================================================================================================================================================================
 -- Yogurt maker 
 --                           FUNCTION_NAME     PARAM_NAME             PARAM_VAL  FUNCTION_TYPE         DESCRIPTION11

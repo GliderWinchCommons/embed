@@ -1,5 +1,5 @@
 /******************************************************************************
-* File Name          : tension_b_param.c
+* File Name          : logger_param.c
 * Date First Issued  : 04/08/2015, 05/12/2016
 * Board              : f103
 * Description        : Manually load parmeter table into high flash second section

@@ -1,5 +1,5 @@
 /******************************************************************************
-* File Name          : tension_a_param.c
+* File Name          : gps_param.c
 * Date First Issued  : 04/08/2015, 05/12/2016
 * Board              : f103
 * Description        : Manually load parmeter table into high flash 
@@ -33,5 +33,4 @@ make TSELECT=-DTENSION_1a
 __attribute__ ((section(".appparam2"))) // Place in FLASHP1 location
 
 #include "db/idx_v_val.c"	// The source code file with all the functions
-
 

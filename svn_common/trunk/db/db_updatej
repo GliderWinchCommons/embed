@@ -23,15 +23,15 @@ ij x
 #   from the #defines.
 
 echo "java defines"
-cd ~/GliderWinchItems/db/pcc_gen_defines/dist
+cd ~/GliderWinchCommons/javaparams/pcc_gen_defines/dist
 java -jar pcc_gen_defines.jar | tee ~/GliderWinchCommons/embed/svn_common/trunk/db/gen_db.h
 
 echo "java defines static final"
-cd ~/GliderWinchItems/db/pcc_gen_static_final/dist
+cd ~/GliderWinchCommons/javaparams/pcc_gen_static_final/dist
 java -jar pcc_gen_static_final.jar | tee ~/GliderWinchCommons/embed/svn_common/trunk/db/pcc_static_final.java
 
 echo "java table gen"
-cd ~/GliderWinchItems/db/pcc_values_table/dist
+cd ~/GliderWinchCommons/javaparams/pcc_values_table/dist
 java -jar pcc_values_table.jar | tee ~/GliderWinchCommons/embed/svn_common/trunk/db/idx_v_val.c
 
 

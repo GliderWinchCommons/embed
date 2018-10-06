@@ -98,7 +98,7 @@ void rpmsensor_init(void)
 	double dclk1_freq = pclk1_freq;
 	
 	/* factor to yield rpm */
-	erpm_f.dk1 = (2 * 60 * dclk1_freq)/erpm_f.lc.seg_ct;
+	erpm_f.dk1 = (4 * 60 * dclk1_freq)/erpm_f.lc.seg_ct;
 
 	/* Input capture and 64/sec timing */
 	Tim4_eng_init();	// Initialize TIM4_CH4
@@ -365,6 +365,7 @@ rpmsensor_dbug2 = DTWTIME;
 				zct = ZCTMAX;	// Avoid eventual zct wrap around
 				p->drpm = 0; // No need to compute.  Just set to zero
 				p->frpm = 0;
+				p->cf.flast1 = p->frpm;	// Oops.
 			}
 			return; 
 		}

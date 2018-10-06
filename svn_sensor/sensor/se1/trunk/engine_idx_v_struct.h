@@ -51,7 +51,7 @@ struct ENGRPMLC
  	uint32_t crc;			// 1 crc-32 placed by loader
 	uint32_t version;		// 2 struct version number
 	uint32_t hbct;			// 3 Time (ms) between HB msg
-	uint32_t seg_ct;		// 4 Counts per revolution on engine
+	uint32_t seg_ct;		// 4 Counts per TWO revolutions on engine
 	uint32_t cid_msg;    // 5 CANID: RPM, calirated, response to poll
 	uint32_t cid_hb;	   // 6 CANID: RPM, calirated, heartbeat
 	uint32_t code_CAN_filt[CANFILTMAX];// List of CAN ID's for setting up hw filter

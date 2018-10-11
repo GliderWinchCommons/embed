@@ -19,6 +19,7 @@ gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/logcsa/181008_212136
 #include <stdint.h>
 #include <stdlib.h>
 #include "../../../svn_common/trunk/db/gen_db.h"
+#include "../../../svn_common/trunk/common_can.h"
 
 
 /* Line buffer size */
@@ -288,12 +289,15 @@ float payff(struct CANTBL* pcanx, int offset)
  * @param	: p = pointer to output char array
  * @param	: pcanx = pointer to struct with payload bytes (binary)
  **********************************************************************************/
+void structcnvt(struct CANRCVBUF* pcan, struct CANTBL* ptbl); // Declaration
+
 void payloadcnvt(char* p, struct CANTBL* pcanx)
 {
 	unsigned int ui;
 	unsigned int n;
 	float ff;
 	int m;
+	struct CANRCVBUF can;
 
 	struct tm* tb;
 	char c[96];
@@ -351,10 +355,11 @@ void payloadcnvt(char* p, struct CANTBL* pcanx)
 //printf("%s\n",p);
 		break;
 
-//	case: LAT_LON_HT:
-//		ui = payui(pcanx,2);
-		
-//		break;
+	case LAT_LON_HT:
+		ui = payui(pcanx,2);
+		structcnvt(&can,pcanx);
+		cmd_f_do_msg(p,&can);
+		break;
 
 	default:
 		strcat(p,"PAYLOAD NOT PROGRAMMED");
@@ -368,6 +373,81 @@ void payloadcnvt(char* p, struct CANTBL* pcanx)
 //printf(":%s:\n",p);
 	return;
 }	
+/* ********** Following lifted from cangate cmd_f *********************** */
+/* Extract 4 byte unsigned integer from CAN payload */
+unsigned int extract(struct CANRCVBUF* p)
+{
+	union INTB
+	{
+		unsigned int ui;
+		unsigned char uc[4];
+	}intb;
+
+	intb.uc[0] = p->cd.uc[2+0];
+	intb.uc[1] = p->cd.uc[2+1];
+	intb.uc[2] = p->cd.uc[2+2];
+	intb.uc[3] = p->cd.uc[2+3];
+	return intb.ui;
+}
+struct GPSFIX // Lifted from ../svn_sensor/sensor/co1_sensor_ublox/trunk/p1_gps_time_convert.h
+{
+	int	lat;	// Latitude  (+/-  540000000 (minutes * 100,000) minus = S, plus = N)
+	int	lon;	// Longitude (+/- 1080000000 (minutes * 100,000) minus = E, plus = W)
+	int	ht;	// Meters (+/- meters * 10)
+	unsigned char fix;	// Fix type 0 = NF, 1 = G1, 2 = G3, 3 = G3
+	unsigned char nsats;	// Number of satellites
+};
+static struct GPSFIX gfx;
+
+void cmd_f_do_msg(char* po, struct CANRCVBUF* p)
+{
+	unsigned int code;
+	int type;
+	double dlat;	// Conversion to minutes lat
+	double dlon;	// Conversion to minutes lon
+	double dht;		// Conversion of height to meters
+
+	/* Extract bit fields from first two bytes of payload */
+	gfx.fix = p->cd.uc[0] & 0xf; 	// Fix type 0 = NF, 1 = G1, 2 = G3, 3 = G3
+	code = p->cd.uc[0] >> 4;		// Conversion resulting from parsing of the line
+	type = p->cd.uc[1] & 0x7;		// Type: lat/lon/ht->0/1/2
+	gfx.nsats = p->cd.uc[1] >> 3;	// Number of satellites
+
+	switch(type)
+	{
+	case 0: // Latitude
+		gfx.lat = extract(p);
+		break;
+	case 1: // Longitude
+		gfx.lon = extract(p);
+		break;
+	case 2: // Height
+		gfx.ht = extract(p);
+		break;
+
+	default:
+		sprintf (po,"BAD LAT/LON/HT TYPE CODE: %d code: %d\n",type, code);
+		return;
+	}
+	dlat = gfx.lat; dlon = gfx.lon; dht = gfx.ht;
+	sprintf(po,"%2d %2d %10.5f  %10.5f  %8.3f",gfx.fix, gfx.nsats,dlat/60.0E5, dlon/60.0E5, dht/1E3);
+
+	return;
+}
+/* ************************************************************ 
+ * void structcnvt(struct CANRCVBUF* pcan, struct CANTBL* ptbl);
+ * Shameless hack: convert skinny struct to the "standard" struct
+ * in order to use lat/long/ht code from other programs
+ * ************************************************************/
+void structcnvt(struct CANRCVBUF* pcan, struct CANTBL* ptbl)
+{
+	int i;
+	pcan->id       = ptbl->id;
+	pcan->dlc      = ptbl->dlc;
+	for (i = 0; i < ptbl->dlc; i++)
+	   pcan->cd.uc[i] = ptbl->uc[i];
+	return;
+}
 
 
 

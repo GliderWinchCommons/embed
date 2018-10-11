@@ -83,6 +83,31 @@ pcan.uc[2:3] = .ht
 */
 #endif
 
+#define CANIDREF	 0XE1C00000	// Start with default
+static unsigned int canidref = CANIDREF;
+
+
+int cmd_f_init(char* p)
+{
+	int pn = strlen(p);
+
+	if (pn < 3)
+	{ // Here use previous CANID for lat/lon/ht msgs
+		printf("Using CANID 0x%08X\n",canidref);
+		return 0;
+	}
+	if (pn < 11)
+	{
+		printf("%d istoo few chars. Expecting something such as--\nf E2600000<enter>\n",pn);
+		return -1;
+	}
+	// Here, sufficient chars
+  	sscanf( (p+1), "%x",&canidref);
+	printf("Using CANID 0x%08X\n",canidref);
+	return 0 ;
+}
+
+
 struct GPSFIX // Lifted from ../svn_sensor/sensor/co1_sensor_ublox/trunk/p1_gps_time_convert.h
 {
 	int	lat;	// Latitude  (+/-  540000000 (minutes * 100,000) minus = S, plus = N)
@@ -123,7 +148,7 @@ void cmd_f_do_msg(struct CANRCVBUF* p)
 	double dlatd;	// Conversion to minutes lat
 	double dlond;	// Conversion to minutes lon
 
-	if (p->id != 0xe1c00000) return;
+	if (p->id != canidref) return;
 
 	/* Extract bit fields from first two bytes of payload */
 	gfx.fix = p->cd.uc[0] & 0xf; 	// Fix type 0 = NF, 1 = G1, 2 = G3, 3 = G3

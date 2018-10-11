@@ -73,8 +73,9 @@ void do_command_keybrd(char* p)
 		msg_sw = 'd';
 		break;
 
-	case 'f': // Display gps fix
-		msg_sw = 'f';
+	case 'f': // 'f' command: Display gps fix: lat/lon/ht
+		if (cmd_f_init(p) >= 0) // negative return means invalid input
+			msg_sw = 'f';
 		break;
 
 	case 'h': // 'h' command: histogram readout
@@ -241,7 +242,7 @@ void do_printmenu(void)
 {
 	printf("a - ascii monitor of a CAN unit\n");
 	printf("d - list raw msgs\n");
-	printf("f - display fix\n");
+	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");
 	printf("h - Photodetector level histogram from sensor\n");
 	printf("l - list unix time/date in heartbeat time msgs (l e1000000)\n");
 	printf("n - list msg id's and msg ct during 1 sec (coarse computer timing)\n");

@@ -27,8 +27,10 @@
 #include "common_can.h"	// Definitions common to CAN and this project.
 
 /******************************************************************************/
-void cmd_f_init(void);
-/* @brief 	: Reset 
+int cmd_f_init(char* p);
+/* @brief 	: Set CAN id
+ * @param	: p = pointer to keyboard input chars
+ * @return	: 0 = OK; -1 = entry no good
 *******************************************************************************/
 void cmd_f_do_msg(struct CANRCVBUF* p);
 /* @brief 	: Output current msg ID's ('n' command)

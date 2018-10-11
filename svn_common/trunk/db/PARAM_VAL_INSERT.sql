@@ -250,7 +250,7 @@ INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','SHEAVE_H_CANID_HW_FILT6'    ,'CANID_
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','SHEAVE_H_CANID_HW_FILT7'    ,'CANID_DUMMY',	  	'SHEAVE_H',	'Encoder_f4_1lo: 16 CANID 7 add CAN hw filter to allow incoming msg');
 INSERT INTO PARAM_VAL VALUES ('SHEAVE_1LO','SHEAVE_H_CANID_HW_FILT8'    ,'CANID_DUMMY',	  	'SHEAVE_H',	'Encoder_f4_1lo: 17 CANID 8 add CAN hw filter to allow incoming msg');
 -- ===================================================================================================================================================================
--- SHAFT1 (drive shaft encoder, newer version (../svn_sensor/sensor.shaft/trunk)
+-- SHAFT1 (drive shaft encoder, newer version (../svn_sensor/sensor/shaft/trunk)
 --                           FUNCTION_NAME     PARAM_NAME    PARAM_VAL  FUNCTION_TYPE     DESCRIPTION11
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_LIST_CRC'       ,'0'     ,'DRIVE_SHAFT','Shaft1: CRC');
 INSERT INTO PARAM_VAL VALUES('SHAFT1','SHAFT_LIST_VERSION'   ,'1'     ,'DRIVE_SHAFT','Shaft1: Version number');

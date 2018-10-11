@@ -73,6 +73,7 @@ int cmd_q_init(char *p)
 	char* p1;
 	int i;
 	int itmp;
+	int j;
 
 	printf("cmd_q: Identify msgs\n");
 
@@ -94,7 +95,7 @@ int cmd_q_init(char *p)
 		strcpy(&canidlistnotfound.name[0], "NOT in sql table");
 		strcpy(&canidlistnotfound.hex[0], "ffffffff");
 		strcpy(&canidlistnotfound.type[0], "         ");
-		strcpy(&canidlistnotfound.msg_fmt[0], "UNDEF");
+		strcpy(&canidlistnotfound.msg_fmt[0], "UNDEF       ");
 		
 		while ( (fgets (&buf[0],CANIDMAXLINESIZE,fpList1)) != NULL)
 		{
@@ -109,6 +110,11 @@ int cmd_q_init(char *p)
 				p1 = search_copy(&canidsql[wk.size].type[0],p1);
 				p1 = search_copy(&canidsql[wk.size].msg_fmt[0],p1);
 				p1 = search_copy(&canidsql[wk.size].description[0],p1);
+
+				// Make entries same length
+				j = strlen(&canidsql[wk.size].msg_fmt[0]);
+				if ((12-j) > 0)
+					strncat(&canidsql[wk.size].msg_fmt[0],"             ", 12-j);
 
 				// Convert hex CANID to binary
 				sscanf(&canidsql[wk.size].hex[0],"%x",&canidsql[wk.size].id);
@@ -135,7 +141,7 @@ int cmd_q_init(char *p)
 *******************************************************************************/
 static void print_list(struct CANIDSQL* p)
 {
-	printf("0X%08X\t %s\n",p->id,p->name);
+	printf("0X%08X   %s\t %s\n",p->id,p->msg_fmt,p->name);
 	return;
 }
 /******************************************************************************

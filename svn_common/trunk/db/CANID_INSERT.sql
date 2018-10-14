@@ -296,9 +296,14 @@ INSERT INTO CANID VALUES ('CANID_CMD_YOGURT_1I',	'29800000', 'YOGURT_1',	'UNDEF'
 INSERT INTO CANID VALUES ('CANID_CMD_YOGURT_1R',	'29800004', 'YOGURT_1',	'UNDEF','Yogurt: YOGURT_1: R Yogurt maker parameters');
 INSERT INTO CANID VALUES ('CANID_MSG_YOGURT_1',		'29400000', 'YOGURT_1',	'UNDEF','Yogurt: YOGURT_1: Yogurt maker msgs');
 INSERT INTO CANID VALUES ('CANID_HB_YOGURT_1',		'29600000', 'YOGURT_1',	'UNDEF','Yogurt: YOGURT_1: Heart-beats');
+--
+-- Bridging and Recomputation output addresses
+--                         CANID_NAME        CANNID_HEX   CANID_TYPE    CAN_MSG_FMT     DESCRIPTION
+INSERT INTO CANID VALUES ('CANID_MSG_METER_TORQ1','4080000C','BRIDGE1','U8_FF','Bridge1: Eng Manifold recomputed');
+INSERT INTO CANID VALUES ('CANID_MSG_ENG1_RPM'   ,'40A0000C','BRIDGE1','U8_FF','Bridge1: Eng RPM recomputed');
 
 -- Nodes/Units (Loader addresses)
---                         CANID_NAME        NID_HEX   CANID_TYPE    CAN_MSG_FMT     DESCRIPTION
+--                         CANID_NAME       CANNID_HEX   CANID_TYPE    CAN_MSG_FMT     DESCRIPTION
 INSERT INTO CANID VALUES ('CANID_UNIT_2',		'04000000', 'UNIT_2', 	'U8','Sensor unit: Drive shaft encoder #1');
 INSERT INTO CANID VALUES ('CANID_UNIT_3',		'03800000', 'UNIT_3', 	'U8','Sensor unit: Engine');
 INSERT INTO CANID VALUES ('CANID_UNIT_4',		'03A00000', 'UNIT_4', 	'U8','Sensor unit: Lower sheave shaft encoder');

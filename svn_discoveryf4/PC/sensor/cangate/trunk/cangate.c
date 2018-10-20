@@ -21,7 +21,10 @@
 compile and execute--
 cd ~/GliderWinchCommons/embed/svn_discoveryf4/PC/sensor/cangate/trunk
 ./mm && ./cangate 127.0.0.1 32123 -t $HOME/GliderWinchCommons/embed/svn_common/trunk/params/testmsg2C.txt
-
+or, for 'q' command file specified
+./mm && ./cangate 127.0.0.1 32123 -i $HOME/GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
+or, for 'q' command default file spec
+./mm && ./cangate 127.0.0.1 32123
 
 */
 #include <sys/types.h>

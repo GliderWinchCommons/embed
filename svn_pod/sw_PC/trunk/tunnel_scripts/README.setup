@@ -1,0 +1,81 @@
+README.setup
+10/14/2018
+
+1.  Need to know
+   a.  Computer name, e.g. 'gsm'
+   b.  Password, e.g. 'admin'
+
+2. Check for ssh server & update sshd_config
+
+cd /etc/ssh
+ls 
+
+Check if 'sshd_config' present.
+  If not--
+
+  sudo apt-get install openssh-server
+
+Check "listening port"
+
+less sshd_config
+
+Find line with port number, default should be 22
+  
+# What ports, IPs and protocols we listen for
+Port 22
+
+Add line 'MaxAuthTries' following the line
+'AuthorizedKeysFile', and remove the '#' at the
+beginning of the 'AuthorizedKeysFile' line--
+
+AuthorizedKeysFile      %h/.ssh/authorized_keys
+MaxAuthTries 30
+
+To do this--
+
+cd /etc/ssh
+sudo gedit sshd_config
+
+3.  Update FIT ip address
+
+cd
+gedit .profile
+
+edit "export FITIP" line with latest IP address--
+  export FITIP=47.204.208.132  
+
+logout/login
+
+Check that update is OK--
+echo $FITIP
+
+4.  Check if FIT reachable
+
+ssh -p 41574 georgesm@$FITIP
+
+If not, then ssh key needs to be added to the FIT.
+
+Easiest: use the same key pair in the desktop that is
+used in the laptop.  Copy the key pair from the laptop 
+to the desktop--
+
+sudo cp ~/.ssh/id_rsa* /media/gsm/Lexar
+
+which should copy id_rsa and id_rsa.pub
+
+Copy the two files into the desktop's .ssh file
+
+cd ~/.ssh
+sudo cp /media/gsm/Lexar/id_rsa* .
+
+See if tha allows ssh'ing into the FIT.
+
+
+5.  When FIT reachable via ssh try reverse ssh
+
+ssh -R 22220:localhost:22 georgesm@localhost -p 41574
+
+
+
+
+

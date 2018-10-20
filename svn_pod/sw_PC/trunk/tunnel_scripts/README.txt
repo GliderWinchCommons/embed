@@ -158,11 +158,12 @@ SSH PORTS
                        FIT    remote
               listen   local  name
 FIT            41574   -----
-George's laptop   22   22222  gsm
-Netbook-logger 41573   22223  deh
-Toshiba laptop 41575   22225  deh
 Netbook-home   41576   22226  deh
+Toshiba laptop 41575   22225  deh
+Netbook-logger 41573   22223  deh
+George's laptop   22   22222  gsm
 ASUS laptop       22   22221  deh
+George's desktop  22   22220  gsm(?)
 
 Troubleshooting tips
 
@@ -191,7 +192,26 @@ for remote machine.  <name> may be wrong--
 
 ssh -p 22222 <name>@localhost
 
+===== 10/18/2018 =======
 
+Connecting to, e.g. netbook from desktop (ASUS laptop)
+
+1.  On netbook setup reverse port to FIT
+
+ssh -R 22226:localhost:41576 deh@$FITIP -p 41574
+
+2.  On desktip (ASUS laptop) setup forward port to FIT
+
+ssh -L 22223:localhost:22223 deh@$FITIP -p 41574
+
+3.  On desktop get terminal on netbook via FIT
+
+deh@ASUS:~$ ssh -p 22223 deh@localhost
+[response] deh@AOA150-2:~$
+
+4.  Transfiles with 'rsync'--
+
+rsync -ruav -e 'ssh -p 22223' /home/deh/logcsa deh@localhost:/home/deh
 
 
 

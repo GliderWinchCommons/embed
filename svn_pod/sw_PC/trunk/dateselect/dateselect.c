@@ -32,6 +32,8 @@ sudo ./dateselect /dev/ttyUSB1 01-06-12 02:30:22 01-06-12 02:29:00
 01-06-2011 example of data selection followed by reformatting--
 sudo ./dateselect /dev/ttyUSB0 01-07-12 00:05:00 01-06-12 19:08:42 && cd ../read* && sudo ./reformat ../dateselect/120107.000500 && cd ../da*
 
+11-01-2018
+gcc dateselect.c -o dateselect && ./dateselect /dev/ttyUSB4 181101.020000 60
 
 Fields--
 /dev/ttyUSB0 -- serial port

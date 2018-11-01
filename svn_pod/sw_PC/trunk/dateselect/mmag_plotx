@@ -17,7 +17,8 @@
 # Make sure correct number of arguments
 # If no argument supplied setup a default USB port
 if [ $# -ne 4 ] ; then
-	echo "THREE arguments required, e.g. ww 5 121104 121104.234957"
+   echo "$# arguments were on command line"
+	echo "FOUR arguments required, e.g. ww 5 121104 121104.234957"
 	echo "  Where 1st = Number hours offset from UTC"
 	echo "    and 2nd = subdirectory (yymmdd)"
 	echo "    and 3rd = filename (yymmdd.hhmmss)"
@@ -33,6 +34,14 @@ if [ $1 -gt 8 -o $1 -lt 0 ]; then
 	echo "FIRST argument is out-of-range: UTC offset for local time: 0 to 8"
 	exit
 fi
+
+# List arguments (debugging)
+echo "Command line arguments"
+echo "0 - $0"
+echo "1 - Time Zone offset: $1"
+echo "2 - Directory for computed results: $2"
+echo "3 - File name of input and output with suffices: $3"
+echo "4 - Sensor selection code: $4"
 
 # Time zone adjustment for 'reformat.c'
 export TZONEOFFSET=$1
@@ -66,7 +75,7 @@ echo
 # 'reformat' outputs to stdout plus file with 'R' appended 
 # 'reformat2' outputs stdout with 'RM' appended (ReformattedMerged)
 cd $DATESELDIR
-echo " directory where computed results stored"
+echo " path/file where computed results stored"
 echo $COMPDIR/$3 
 
 echo "checkpt 1"
@@ -99,21 +108,35 @@ esac
 # ===== Tension and GPS only ==========
 case $4 in
 	*1)
+echo "Input file: $SAVEDIR/$3"
 
-../read*/reformat $SAVEDIR | sort -k 1 | tee $COMPDIR/$3RS | 
+# Convert from raw download format
+../read*/reformat $SAVEDIR/$3 | 
+
+# Remove lines that start with ERROR
+awk '$1 != "ERROR" { print ; }' | 
+
+# Remove lines with 10 or less fields (i.e. blank lines and summary lines)
+awk ' NF > 10 { print ; }' |
+
+# Remove lines with NF gps fix (NF code = 5)
+awk ' $10 == 3 { print ; }' |
+
+# Sort so gps interleaves with tension
+sort -k 1 | tee $COMPDIR/$3RS | 
+
+# Rate change gps
 ../read*/ratechangecic | tee $COMPDIR/$3RC | sort -k 1 | tee $COMPDIR/$3RCS | 
-../read*/reformatgps2 | tee $COMPDIR/$3RM | 
-./float_timegps $COMPDIR/$3.param | tee $COMPDIR/$3FT
 
-echo "  checkpt 2"
+../read*/reformatgps2 | tee $COMPDIR/$3RM | 
 
 # Strip extraneous lines from 'RM file
-awk '{if ( length > 110 ) print $0 }' $COMPDIR/$3RM > $COMPDIR/$3RMX
+awk '{if ( length > 110 ) print ; }' $COMPDIR/$3RM > $COMPDIR/$3RMX
 
-echo "  checkpt 3"
+##./float_timegps $COMPDIR/$3.param | tee $COMPDIR/$3FT
 
 # Plot the file and save plot image as a png file
-./podplot $COMPDIR/$3FT
+##./podplot $COMPDIR/$3FT
 
 	;;
 esac

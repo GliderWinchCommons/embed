@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+# Clean up gpsextract.c output lines
+#
+# gpsextractrun <raw download input file>
+#   Example:
+# ./gpsextractrun ~/winch/download/181020/181020_atfield
+
+#gcc gpsextract.c -o gpsextract -lm &&  ./gpsextract ~/winch/download/181020/181020_atfield | tee pp | grep ERROR
+
+./gpsextract $1 | 
+
+# Remove lines that start with ERROR
+cat pp | awk '$1 != "ERROR" { print ; }' | 
+
+# Remove lines with 10 or less fields (i.e. blank lines and summary lines)
+awk ' NF > 10 { print ; }' |
+
+# Remove lines with NF gps fix (NF code = 5)
+awk ' $10 == 3 { print ; }' | tee qq
+

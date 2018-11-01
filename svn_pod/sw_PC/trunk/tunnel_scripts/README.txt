@@ -12,7 +12,7 @@ you can start the tunnel from the FIT PC to your Linux box.  An
 administrator logged into the FIT PC can log into your Linux box with
 the following command:
 
-    $ ssh -p 22222 localhost -l $USER
+    $ ssh -p 22222 gsm@localhost
     
 Note that tunnel-startup assumes you have an account on the FIT PC with
 the same account name as you're logged into on your Linux box.

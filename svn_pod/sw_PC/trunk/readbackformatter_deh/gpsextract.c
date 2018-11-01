@@ -1,13 +1,13 @@
 /******************************************************************************
-* File Name          : reformat.c
-* Date First Issued  : 12/01/2011
+* File Name          : gpsextract.c
+* Date First Issued  : 10/28/2018
 * Board              : Linux PC
-* Description        : Convert file from captured 'r' command of 'pod_v1' logging data
+* Description        : Convert downloaded file, for gps only
 *******************************************************************************/
 /*
 
 // 01-05-2012 example--
-gcc reformat.c -o reformat -lm && sudo ./reformat ../dateselect/120106.023022
+gcc gosextract.c -o reformat -lm && sudo ./reformat ../dateselect/120106.023022
 
 Example, with concatenated packet problem--
 gcc reformat.c -o reformat -lm && sudo ./reformat ../dateselect/120722.182240
@@ -18,9 +18,11 @@ POD).  Searchthe following line--
 	uiLinux = mktime(&t) - 14400;	; // Linux time in one second ticks
 
 export TZONEOFFSET=4
-gcc reformat.c -o reformat -lm &&  ./reformat ~/winch/download/130317/130317.205045
+gcc gpsextract.c -o gpsextract -lm &&  ./gpsextract ~/winch/download/130317/130317.205045
+
+// 10/28/2018 Hack of gpsextract.c
 export TZONEOFFSET=5
-gcc reformat.c -o reformat -lm &&  ./reformat ~/winch/download/181020/181020_atfield
+gcc gpsextract.c -o gpsextract -lm &&  ./gpsextract ~/winch/download/181020/181020_atfield
 */
 
 #include <stdlib.h>
@@ -37,7 +39,6 @@ int tzoneadjust = 5;	// Number hours to adjust GPS to log time
 
 /* Subroutine prototypes */
 int gps_crc_check(char* p);
-
 void pkt_tension(void);
 void pkt_accelerometer(void);
 void pkt_gps_sentence(void);
@@ -92,7 +93,7 @@ char * ptype[NUMBERPKTTYPES] = {"tension","gps set","battemp","pushbtn","accel  
 #define OUTSIZE 1024
 char bufout[OUTSIZE];
 
-char zz[180]; //debug
+char zz[512]; //debug
 unsigned long long ullX;
 
 #define DATSIZE 200000	// Number of readings to deal with
@@ -116,7 +117,7 @@ char cGPStype = 0;	// 0 = Garmin, 1 = u-blox
 char fixstatus_pubx;
 char fixstatus_gga;
 
-char infile[256];	// Input file name buffer
+char infile[512];	// Input file name buffer
 
 /* You ought to be able to figure the following two */
 FILE *fpIn;
@@ -124,7 +125,7 @@ FILE *fpOut;
 
 int imax;
 
-char bufadj[256];
+char bufadj[512];
 
 // Line counters (mostly for debugging)
 int rawlinectr;
@@ -196,7 +197,7 @@ int main(int argc, char **argv)
 rawlinectr += 1;
 		j = strlen(buf);
 		c = buf[0];	// Packet ID is in the first char
-		if (j< 12)
+		if (j< 11)
 		{
 			lessthan12ctr += 1;
 			continue;
@@ -223,23 +224,14 @@ rawlinectr += 1;
   			c = buf[0];	// Packet ID is in the first char
 			printf("\n%d:%02x:%s\n",rawlinectr,c,buf);
 		}
-  
 		switch (c)
 		{
-		case '1': // Tension packet size
-			pkt_tension();
-			break;
-		case '2': // gps time versus time stamp time
-			pkt_gps_time();
-			break;
-		case '3': // Battery/temperature
-			pkt_battery();
-			break;
-		case '4': // Pushbutton packet
-			pkt_pushbutton();
-			break;
-		case '5': // Accelerometer packet size
-			pkt_accelerometer();
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+			otherlinectr += 1;
 			break;
 		case '6': // Combine data from fields extracted from gps sentences
 			if (strchr(buf,'*') == NULL) 
@@ -253,17 +245,17 @@ printf("ERROR crc check err: %d: %s\n",rawlinectr,buf);
 			pkt_gps_sentence();
 			break;
 		default:
-			otherlinectr += 1;
+			defaultctr += 1;
 //printf("Line is greater than 12 chars: %d AND first char not in list: %c %s\n",j,c,buf);
 			break;
 		}
 	}
+
 	for (i = 0; i < NUMBERPKTTYPES; i++)
 	{
 		sprintf(zz,"Type%2u %s%8u\n",i+1,ptype[i],linectr[i]);
 		outputboth(zz);
 	}
-
 	printf("noasteriskctr: %7d\n",noasteriskctr);
 	printf("rawlinectr   : %7d\n",rawlinectr);
 	printf("otherlinectr : %7d\n",otherlinectr);
@@ -277,165 +269,11 @@ printf("ERROR crc check err: %d: %s\n",rawlinectr,buf);
 	printf("gpsgpgga     : %7d\n",gpsgpgga);
 	printf("zerocharctr  : %7d\n",zerocharctr);
 
-	
+
 	printf ("Done\n");
 	return 0;
 }
 
-/* ************************************************************************************************************* */
-/* void pkt_tension(void);											 */
-/* Convert tension packet (ID = 1)										 */
-/* ************************************************************************************************************* */
-void pkt_tension(void)
-{
-	int k;
-	char *p;
-	struct tm *ptm;
-	unsigned long long ull64,ullt64;
-	unsigned long long ullEpoch = PODTIMEEPOCH;
-
-//unsigned long long ull;	// Debug;
-
-	imax++; 	// Counter of number of lines we deal with
-//printf ("%6u %s",i,buf);
-	/* Convert tension packet in hex line to binary */
-	sscanf(buf,"%1x%10llx",&id,&ticktime2048);
-//printf("%d %10llx\n",id,ticktime2048);
-
-	for (k = 0; k < 16; k++)
-	{
-		sscanf (&buf[11+k*8],"%8x",&tension[k]);
-	}
-	/* Reduce 2048 per sec tick time to resolution of tension readings: 64 per sec */
-	ullt64 = ticktime2048 >> 5;
-
-	/* Add POD epoch shift */
-	ull64 = ullt64 +(ullEpoch << 6);
-
-	/* Present each reading in a form a hapless op can understand */	
-	for (k = 0; k < 16; k++)
-	{
-	/* Each successive readings is one 64th time tick higher, but the input
-	   stream of packets is in reverse order. */
-	
-
-		/* Convert count to date/time format */
-		linuxtime = ull64 >> 6;
-		ptm = gmtime( (const time_t*)&linuxtime );
-		p = asctime (ptm);
-
-		/* Get rid of the newline that ctime inserts */
-		if (p != NULL)
-			*(p+strlen(p)-1) = 0;		
-	
-//printf("%9llu %s",ull64,ctime(&linuxtime) );
-		sprintf (bufout,"%10llu %8d %s|%2u",(ull64 - (ullEpoch << 6)),tension[k],p,(int)(ull64 & 63));
-		outputboth(bufout);
-//if ((tension[k] > 0) && ((tension[k] & 0x00300000) != 0))
-//{
-//printf("ERROR: %u %08x %d %10llu %10llx\n",k, tension[k],tension[k], (ull64 - (ullEpoch << 6)), ticktime2048); while(1==1);
-//}
-
-		outputid('1');	// Add packet ID
-
-		linectr[0] += 1;	// Count packet type 1
-
-		/* Each entry in the packet is 1/64th sec later in time */
-		ull64 += 1; 
-
-	}
-	return;
-}
-/* ************************************************************************************************************* */
-/* void pkt_accelerometer(void);										 */
-/* Convert accelerometer packet (ID = 5)									 */
-/* ************************************************************************************************************* */
-#define NUMBERACCELREADINGSPKT	3		// Number of readings for one group in this packet
-#define	PKT_ACCEL_GRP_SIZE	16		// Number of groups of ADC readings in a packet 
-void pkt_accelerometer(void)
-{
-	int uN;
-	int k,l,m,mm;
-	char *p;
-	struct tm *ptm;
-	short adc[NUMBERACCELREADINGSPKT][PKT_ACCEL_GRP_SIZE];
-	double dX;
-double dS;// RMS computation
-
-	imax++; 	// Counter of number of lines we deal with
-//printf ("%6u %s",i,buf);
-	/* Convert accelerometer packet in hex line to binary */
-	sscanf(buf,"%1x%10llx",&id,&ticktime2048);	// Get ID and time
-//printf("%d %10llx\n",id,ticktime2048);
-
-	/* The sequence is all 16 of X, then 16 of Y, then 16 of Z */
-	m = 0;
-	for (k = 0; k < NUMBERACCELREADINGSPKT; k++) // 
-	{
-		for (l = 0; l < PKT_ACCEL_GRP_SIZE; l++) // 
-		{
-			uN = adc[k][l];
-			sscanf (&buf[11 + m],"%4x",&uN);
-			m += 4;		// Packet fields are 4 hex chars wide
-		}
-	}
-	/* Convert ticktime2048 into linux date/time */
-	linuxtime = (ticktime2048 >> 11) + PODTIMEEPOCH;	// Add epoch shift
-	/* Isolate the subticks for each reading */
-	subticktime = (ticktime2048 & 2047)>>5;	// 1/64th sub ticks
-	/* Reduce tick time to resolution of accelerometer readings */
-	ticktime64 = ticktime2048 >> 5;
-	/* Linux time in 64ths of a sec (for sorting A and T lines later */
-	linuxtime64 = ticktime2048 >> 5;
-	/* Present each reading in a form a hapless op can understand */
-	for (k = 0; k < PKT_ACCEL_GRP_SIZE; k++) // 16 x,y,z readings in each packet
-	{
-		/* Each successive readings is one 16th time tick higher, but the input
-		   stream is in reverse order.  So do the readings backwards */
-		mm = (PKT_ACCEL_GRP_SIZE*4 -1) - k*4;	// 'm' goes 63 -> 0 in steps of 4
-		subsecfraction = subticktime + mm;
-		if (subsecfraction > 63) 
-		{
-			subsecfraction -= 64;
-			linuxtimeN	= linuxtime + 1;
-		}
-		else
-			linuxtimeN	= linuxtime;
-		/* Convert count to date/time format */
-//		p = ctime( (const time_t*)&linuxtimeN );
-		ptm = gmtime( (const time_t*)&linuxtimeN );
-		p = asctime (ptm);
-
-		/* Get rid of the newline that ctime inserts */
-if (p != NULL)
-		*(p+strlen(p)-1) = 0;			/* Convert count to date/time format */
-
-
-		m = sprintf (bufout,"%9llu ",linuxtime64+mm);
-//		m = sprintf (bufout,"%9llu %s|%2u ",ticktime64+mm,p,subsecfraction);
-
-		dS = 0;	// Magnitude of vector
-		for (l = 0; l < NUMBERACCELREADINGSPKT; l++)
-		{
-			dX = adc[l][k];
-			sprintf (&bufout[m],"%10.3f ",dX*0.001);
-			m += 11;
-			dS += dX*dX;	// (X^2 + Y^2 + Z^2)
-		}
-		sprintf (&bufout[m],"%10.3f ",sqrt(dS)*.001);	
-		m += 11;
-		sprintf (&bufout[m]," %s|%2u ",p,subsecfraction);
-		m += 28;
-		bufout[m] = 0;
-		outputboth(bufout);
-
-		outputid('5');	// Add packet ID
-
-		linectr[4] += 1;	// Count packet type 5
-
-	}
-	return;
-}
 /* ************************************************************************************************************* */
 /* void pkt_gps_sentence(void);											 */
 /* Convert accelerometer packet (ID = 6)									 */
@@ -492,7 +330,8 @@ id: '6'
 	p=strchr(buf,'$');	// Point to '$' at beginning of sentence
 	if (p == NULL) 
 	{
-		printf("ERROR gps sentence type 6 but no $ sign found at line $ %d:%s",rawlinectr,buf);
+		gpserrctr += 1;
+		printf("ERROR gps sentence type 6 but no $ sign found at line: %d:%s",rawlinectr,buf);
 		return;
 	}
 	p++;
@@ -506,7 +345,8 @@ id: '6'
 	}
 	if (k >= NUMSENTS)
 	{
-		printf("ERROR gps sentence start not found for type 6 line, at line # %d:%d:%s",rawlinectr,k,p);
+		gpserrctr += 1;
+		printf("ERROR gps sentence start not found for type 6 line, at line # %d:%d:%s",rawlinectr,k,buf);
 		return;
 	}
 
@@ -524,6 +364,7 @@ id: '6'
 			nChk |= 0x01; 	// ublox. Since readout is backwards this one starts the new cycle		
 			gps_extract_gpgga_ublox(&cGPS[0][0], p);	// Extract fields
 		}
+		gpsgpgga += 1;
 		break;
 
 	case 1: // PGRMF
@@ -548,12 +389,14 @@ id: '6'
 		cGPStype = 1;
 		nChk = 0x10;
 		gps_extract_pubx00(&cGPS[4][0], p);
+		gpspubxctr += 1;
 		break;
 
 	case 5:	// GPZDA u-blox gps (time/date)
 		cGPStype = 1;
 		nChk |= 0x20;
-		gps_extract_gpzda(&cGPS[5][0], p);		
+		gps_extract_gpzda(&cGPS[5][0], p);	
+		gpsgpzda += 1;	
 		break;
 
 	case 6: //GPRMC
@@ -1058,7 +901,9 @@ $GPZDA,211155.80,20,03,2013,00,00*6C
 void outputboth(char *p)
 {
 	printf ("%s",p);	// For the hapless Op or piping
-	fputs(p, fpOut);	// For the serious programmer
+
+/* Use '>' or '| tee' on command line for output file */
+//	fputs(p, fpOut);	// For the serious programmer
 	return;
 }
 /* *************************************************************************************************************
@@ -1147,131 +992,6 @@ unsigned long long pod_time_from_GPRMF(char * p)
 //printf(" yr%3u mn%2u da%2u hh%2u mm%2u ss%2u\n",t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min,t.tm_sec);
 	
 	return (ull2 - (ullEpoch << 6));
-}
-// =================================================
-/* ************************************************************************************************************* */
-/* void pkt_battery(void);											 */
-/* Convert battery/temperature packet (ID = 3)									 */
-/* ************************************************************************************************************* */
-void pkt_battery(void)
-{
-	char *p;
-	struct tm *ptm;
-	unsigned long long ull64,ullt64;
-	unsigned long long ullEpoch = PODTIMEEPOCH;
-
-
-	/* Convert tension packet in hex line to binary */
-	sscanf(buf,"%1x%10llx",&id,&ticktime2048);
-
-	/* Reduce 2048 per sec tick time to resolution of tension readings: 64 per sec */
-	ullt64 = ticktime2048 >> 5;
-
-	/* Add POD epoch shift */
-	ull64 = ullt64 +(ullEpoch << 6);
-
-	/* Convert count to date/time format */
-	linuxtime = ull64 >> 6;
-	ptm = gmtime( (const time_t*)&linuxtime );
-	p = asctime (ptm);
-
-	/* Get rid of the newline that ctime inserts */
-	*(p+strlen(p)-1) = 0;		
-	
-	/* Get rid of CR LF that ends packet */
-	*(&buf[11]+strlen(&buf[11])-2) = 0;		
-
-	sprintf (bufout,"%10llu %s %s|%2u",(ull64 - (ullEpoch << 6)),&buf[11],p,(int)(ull64 & 63));
-	outputboth(bufout);
-
-	outputid('3');	// Add packet ID
-
-	linectr[2] += 1;	// Count packet type 2
-
-	return;
-}
-/* ************************************************************************************************************* */
-/* void pkt_pushbutton(void);											 */
-/* Convert pushbutton packet (ID = 4)									 */
-/* ************************************************************************************************************* */
-void pkt_pushbutton(void)
-{
-	char *p;
-	struct tm *ptm;
-	unsigned long long ull64,ullt64;
-	unsigned long long ullEpoch = PODTIMEEPOCH;
-
-
-	/* Convert tension packet in hex line to binary */
-	sscanf(buf,"%1x%10llx",&id,&ticktime2048);
-
-	/* Reduce 2048 per sec tick time to resolution of tension readings: 64 per sec */
-	ullt64 = ticktime2048 >> 5;
-
-	/* Add POD epoch shift */
-	ull64 = ullt64 +(ullEpoch << 6);
-
-	/* Convert count to date/time format */
-	linuxtime = ull64 >> 6;
-	ptm = gmtime( (const time_t*)&linuxtime );
-	p = asctime (ptm);
-
-	/* Get rid of the newline that ctime inserts */
-	*(p+strlen(p)-1) = 0;		
-	
-	sprintf (bufout,"%10llu PUSHBUTTON %s|%2u",(ull64 - (ullEpoch << 6)),p,(int)(ull64 & 63));
-	outputboth(bufout);
-
-	outputid('4');	// Add packet ID
-
-	linectr[3] += 1;	// Count packet type 4
-
-	return;
-}
-/* ************************************************************************************************************* */
-/* void pkt_gps_time(void);											 */
-/* Convert gps time versus time stamp time packet (ID = 2)							 */
-/* ************************************************************************************************************* */
-void pkt_gps_time(void)
-{
-	
-/* 
-pod_v1.c 350 < rev < 615 has an error for the continuous GPS connected situation, where a tension packet gets concatenated (miss CR/LF).  E.g.--
-20BAF1EC8EC18273722071210BAF1EC620FFFFB1B3FFFFB1B0FFFFB1AEFFFFB1B0FFFFB1B0FFFFB1ADFFFFB1ABFFFFB1ACFFFFB1ABFFFFB1ABFFFFB1B0FFFFB1B3FFFFB1B3FFFFB1B2FFFFB1B0FFFFB1AC
-*/
-	int i,m;
-	char buf2[64];
-
-	m = strlen(buf);
-	if ( m > 30)
-	{
-		/* Save packet ID 2 */
-		for (i = 0; i < 24; i++)
-		{
-			buf2[i] = buf[i];
-		}
-		buf2[24] = '\n'; buf2[25] = 0;
-		
-		/* Reposition tension packet that follows */
-		for (i = 0; i < LINESIZE; i++)
-		{
-			buf[i] = buf[i+23];
-			if (buf[i] == 0)
-				break;
-		}
-		if (buf[0] != '1') // Be sure the packet ID is correct
-		{
-			printf ("Concatenated id2/id1 error: %s\n",buf);
-			return;
-		}
-		/* Reformat the tension packet */
-		pkt_tension();
-	}
-	/* Reformat the gps time packet */
-	// We aren't using it, so this is blank
-
-
-	return;
 }
 /******************************************************************************
  * char *gps_field(char *p, u8 n, u16 length );

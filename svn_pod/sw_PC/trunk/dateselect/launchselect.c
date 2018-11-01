@@ -40,6 +40,11 @@ sudo ./launchselect /dev/ttyUSB1 01-06-12 02:30:22 01-06-12 02:29:00
 01-06-2011 example of data selection followed by reformatting--
 sudo ./launchselect /dev/ttyUSB0 01-07-12 00:05:00 01-06-12 19:08:42 && cd ../read* && sudo ./reformat ../launchselect/120107.000500 && cd ../da*
 
+10-30-2018
+gcc launchselect.c -o launchselect -Wall &&  ./launchselect /dev/ttyUSB4 181030.004430 1800
+
+
+
 
 Fields--
 /dev/ttyUSB0 -- serial port
@@ -152,7 +157,7 @@ static int console_edit;
 
 
 
-const char *file_prefix = "../../../../winch/download";			// Directory where downloads will go
+const char *file_prefix = "../../../../../../winch/download";			// Directory where downloads will go
 char file_yymmdd[6];		// Under main directory, this one groups downloads by year, month, day
 char file_total[128];		// String with total file to open, e.g. '~/winch/download/121023/121023.193554'
 
@@ -272,51 +277,67 @@ void cleanup_termios(int signal)
 /* ************************************************************************************************************ */
 /*  Yes, this is where it starts.                                                                               */
 /* ************************************************************************************************************ */
-int main(int argc, char *argv[])
+int main(int argc, char *argv[], char *envp[])
 {
 /* Misc */
 	int	i,j,k,l;		/* The for loop variable of choice */
-	char *pa;	
-	int	nX;
-	int	nZ;
+	int	nZ = 0;
 
 	printf ("'launchselect' has started\n");
 //	printf ("arg count %u\n",argc);
 
 
-printf ("argc %u\n",argc);
+	printf ("argc %u\n",argc);
+	for (i = 0; i < argc; i++)
+	{
+		printf("%d %s\n",i,argv[i]);
+	}
 
+
+	printf("\nCommand line args\n\
+/dev/ttyUSB0 [serial input]\n\
+yymmdd.hhmmss [search start time]\n\
+ssss [seconds duration]\n\
+path/file [output file name: optional]\n\
+\n");
+
+	/* Find TZONEOFFSET in evironmental variables */
+	int tzoneoffset;	
+	for (i = 0; (envp[i] != NULL); i++)
+	{
+//		printf("%s\n",envp[i]); // debug
+		if (strncmp(envp[i],"TZONEOFFSET=",12) == 0)
+		{ // Here, found. get the zone hourse digit 
+			tzoneoffset=*(envp[i] + 12) - '0';
+			break;
+		}
+	}
+	if (envp[i] == NULL)
+	{ // Not found, so use a default value
+		printf("Time zone offset TZONEOFFSET not found\nUSING 5 hours for a default!\n");	
+		tzoneoffset = 5;
+	}
+	printf("tzoneoffset: %d\n",tzoneoffset);
+	
+	timezone = tzoneoffset * 3600;
 struct timeval tmeval;
 tmeval.tv_sec = time(NULL);
 printf ("%9u %s",(unsigned int)tmeval.tv_sec,ctime(&tmeval.tv_sec));
-printf("timezone %lu\n",timezone);
-
+printf("timezone: %lu in hours: %u\n",timezone, timezone/3600);
 
 
 /* Pass in args for tweaking xmit enable timing */
 	serialport = serialport_default;	// Compiled-in serial port device
 	serialport = argv[1];
 
-		if (argc == 4)
+		if ((argc == 4) || (argc == 5))
 		{
 			serialport = argv[1];
 printf ("serialport %s\n",serialport);
 			
-			/* Check if 4th argument is a time or a number */
-			pa = argv[3]; nX = 0;
-			while (*pa != 0)
-			{
-				if ((*pa < '0') || (*pa > '9'))
-				{
-					nX = 1; break;
-				}
-				pa++;
-			}
-			if (nX == 0)
-			{ // Here it looks like it is number.  So we expect the 'yymmdd.hhmmss ssss' format.
 				serialport = argv[1];
 				nZ = atoi(argv[3]);	// Convert seconds duration
-printf("argv[2]: %s %u\n",argv[2], nZ);
+printf("argv[2]: time %s  duration %u\n",argv[2], nZ);
 				s_stop = convertdotnametotime_t(argv[2]); // Get start-of-event time (low end of time)
 				if (s_stop.t == 0)	// Was there a gross error in the argument?
 				{ // Here, yes.  Bomb out.
@@ -326,15 +347,29 @@ printf("argv[2]: %s %u\n",argv[2], nZ);
 				/* Convert time_t to a 'tm' to char string */
 				converttime_ttochar(&s_start,0);
 printf ("c array: %s\n",&s_start.c[0]);
+
+		}
+		else
+		{
+				printf ("Command line error.  There are two forms:\n./launchselect /dev/ttyUSB0 yymmdd.hhmmss duration\n./launchselect  /dev/ttyUSB0\n");
+				return -1;
+		}
+
+		if (argc == 5)
+		{
+			if ( (fpOut = fopen (argv[4],"w")) == NULL)
+			{
+				printf ("\nOutput file did not open %s\n",argv[4]); return -1;
+				cmd_file_sw = 0;
+			}	
+			else
+			{
+				printf("\nOutfile name is open: %s\n",argv[4]);
+				cmd_file_sw = 1;
 			}
 		}
 		else
 		{
-			if (argc != 2)
-			{
-				printf ("Command line error.  There are two forms:\n./launchselect /dev/ttyUSB0 yymmdd.hhmmss duration\n./launchselect  /dev/ttyUSB0\n");
-				return -1;
-			}
 			nofilesw = 1;	// No file name, so don't try to write to the file output.
 		}
 
@@ -365,8 +400,6 @@ printf ("c array: %s\n",&s_start.c[0]);
 		printf ("Data is transfered this readout will be saved as file named: %s\n",vvf);
 	}
 	
-
-
 	/* Message for the hapless op (he or she would rather have Morse code) */	
 	printf ("Control C to break & exit\n");
 
@@ -729,36 +762,36 @@ static struct SS convertdotnametotime_t(char * p)
 	
 	/* Take each field and convert to binary, whilst checking for bogus chars */
 	s.tm.tm_year = convert_n( (p+0),2);	// Convert year (e.g. 2011)
-//printf ("%s yr %u\n",p,s.tm.tm_year);
+printf ("%s yr %u\n",p,s.tm.tm_year);
 	if (s.tm.tm_year < 0) return s;	// Return of bogus char encountered
 	if (s.tm.tm_year == 20) return s; 	// Hapless op typed '2011' rather than '11'
  	s.tm.tm_year += (2000 - 1900) ;
 
 	s.tm.tm_mon = convert_n( (p+2),2);	// Convert month (01 - 12)
-//printf ("%s mo %u\n",p,s.tm.tm_mon);
+printf ("%s mo %u\n",p,s.tm.tm_mon);
 	s.tm.tm_mon -= 1;
 	if (s.tm.tm_mon < 0) return s;
 	if (s.tm.tm_mon > 11) return s;
 
 	s.tm.tm_mday = convert_n( (p+4),2);	// Convert day of month (01-31)
-//printf ("%s da %u\n",p,s.tm.tm_mday);
+printf ("%s da %u\n",p,s.tm.tm_mday);
 	if (s.tm.tm_mday < 1) return s;	
 	if (s.tm.tm_mday >31) return s;
 
 	if (!((*(p+6) == '.') || (*(p+6) == '_'))) return s;	
 
 	s.tm.tm_hour = convert_n( (p+7),2);	// Convert hour (00-23)
-//printf ("%s hr %u\n",p,s.tm.tm_hour);
+printf ("%s hr %u\n",p,s.tm.tm_hour);
 	if (s.tm.tm_hour < 0) return s;
 	if (s.tm.tm_hour > 23) return s;
 
 	s.tm.tm_min = convert_n( (p+9),2);	// Convert minute (00-59)
-//printf ("%s mn %u\n",p,s.tm.tm_min);
+printf ("%s mn %u\n",p,s.tm.tm_min);
 	if (s.tm.tm_min < 0) return s;
 	if (s.tm.tm_min >59) return s;
 
 	s.tm.tm_sec = convert_n( (p+11),2);	// Convert minute (00-59)
-//printf ("%s sc %u\n",p,s.tm.tm_sec);
+printf ("%s sc %u\n",p,s.tm.tm_sec);
 	if (s.tm.tm_sec < 0) return s;
 	if (s.tm.tm_sec >59) return s;
 

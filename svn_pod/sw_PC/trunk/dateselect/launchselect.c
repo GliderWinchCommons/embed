@@ -26,7 +26,7 @@ sudo ./launchselect /dev/ttyUSB2 12-30-11 00:00:00 12-29-11 23:59:59
 Or, execute with default serial port devices ('/dev/ttyUSB0')
 sudo ./launchselect 12-30-11 00:00:00 12-29-11 23:59:59
 
-Or, execute for manually stopping readout (only specify start)
+Or, execute for manually stopping readout (only specify start)1295
 sudo ./launchselect /dev/ttyUSB0 12-30-11 00:00:00
 Or, with default serial device--
 sudo ./launchselect 12-30-11 00:00:00
@@ -43,7 +43,7 @@ sudo ./launchselect /dev/ttyUSB0 01-07-12 00:05:00 01-06-12 19:08:42 && cd ../re
 10-30-2018
 gcc launchselect.c -o launchselect -Wall &&  ./launchselect /dev/ttyUSB4 181030.004430 1800
 
-
+1295
 
 
 Fields--
@@ -158,7 +158,7 @@ static int console_edit;
 
 
 const char *file_prefix = "../../../../../../winch/download";			// Directory where downloads will go
-char file_yymmdd[6];		// Under main directory, this one groups downloads by year, month, day
+char file_yymmdd[96];		// Under main directory, this one groups downloads by year, month, day
 char file_total[128];		// String with total file to open, e.g. '~/winch/download/121023/121023.193554'
 
 /* This definition shifts the date/time of the Linux format time */
@@ -319,11 +319,11 @@ path/file [output file name: optional]\n\
 	}
 	printf("tzoneoffset: %d\n",tzoneoffset);
 	
-	timezone = tzoneoffset * 3600;
+//	timezone = tzoneoffset * 3600;
 struct timeval tmeval;
 tmeval.tv_sec = time(NULL);
-printf ("%9u %s",(unsigned int)tmeval.tv_sec,ctime(&tmeval.tv_sec));
-printf("timezone: %lu in hours: %u\n",timezone, timezone/3600);
+printf ("tmeval: %9u %s",(unsigned int)tmeval.tv_sec,ctime(&tmeval.tv_sec));
+//printf("timezone: %lu in hours: %u\n",timezone, timezone/3600);
 
 
 /* Pass in args for tweaking xmit enable timing */
@@ -345,7 +345,7 @@ printf("argv[2]: time %s  duration %u\n",argv[2], nZ);
 				}
 				s_start.t = s_stop.t + nZ;	// Compute end-of-event time (which is start of readout backwards)
 				/* Convert time_t to a 'tm' to char string */
-				converttime_ttochar(&s_start,0);
+				converttime_ttochar(&s_start,1);
 printf ("c array: %s\n",&s_start.c[0]);
 
 		}
@@ -368,13 +368,7 @@ printf ("c array: %s\n",&s_start.c[0]);
 				cmd_file_sw = 1;
 			}
 		}
-		else
-		{
-			nofilesw = 1;	// No file name, so don't try to write to the file output.
-		}
 
-	if (nofilesw == 0)
-	{
 		printf("   Search date/time will be: %s",ctime (&s_start.t));
 		printf("   Ending date/time will be: %s",ctime (&s_stop.t));
 		printf("  The duration (seconds) is: %d\n",nZ);
@@ -398,8 +392,7 @@ printf ("c array: %s\n",&s_start.c[0]);
 		vvf[l++] = 0;
 
 		printf ("Data is transfered this readout will be saved as file named: %s\n",vvf);
-	}
-	
+
 	/* Message for the hapless op (he or she would rather have Morse code) */	
 	printf ("Control C to break & exit\n");
 
@@ -814,6 +807,8 @@ printf ("%s sc %u\n",p,s.tm.tm_sec);
 static void converttime_ttochar(struct SS *s, int sw)
 {
 	char *p = &s->c[0];
+time_t ts = s->t;
+printf("line 810: %u %s\n",ts,ctime(&ts));
 
 	s->tm.tm_isdst = 1;	// Don't deal with daylight time.
 	if (sw == 0)
@@ -828,6 +823,10 @@ static void converttime_ttochar(struct SS *s, int sw)
 	sprintf ((p+ 8),"%02u",s->tm.tm_min);
 	sprintf ((p+10),"%02u",s->tm.tm_sec);
 	*(p+12) = 0;
+printf("line 825: %s\n",p);
+char ww[96];
+ctime_r(&s->t,ww);
+printf("line 827: %u %s\n",s->t, ww);
 	return;
 }
 /*************************************************************************************************************************************
@@ -846,6 +845,8 @@ int convert_linux_datetime_to_yymmddhhmmss(char *pfile, char* ptime)
 //char *pdebug1 = pfile;
 //char *pdebug2 = ptime;
 
+printf("line 841: %s\n",ptime);
+
 	/* Locate linux time on '^' line from POD */
 	while ((*ptime != ':') && (++i < j)) ptime++;	// Spin forward to ':'
 	if (i >= j ) return -1;
@@ -854,10 +855,13 @@ int convert_linux_datetime_to_yymmddhhmmss(char *pfile, char* ptime)
 
 	/* Convert linux time to struct tm format */
 	sscanf(ptime,"%u",(unsigned int*)&linuxtime);
-
+//printf("line 856: %s %d\n",ptime, linuxtime);
 	/* Pick off items in tm format and place in char array */
 	s.t = linuxtime;
+//printf("line 861: %u %s\n",s.t,ctime(&s.t));
  	converttime_ttochar(&s,1);
+//printf("line 863: %u %s\n",s.t,&s.c[0]);
+//printf("line 864: %s\n",ctime(&s.t));
 
 	/* Turn date/time into a file name string in format "yymmdd.hhmmss" */
 	j = 0;
@@ -1108,7 +1112,8 @@ static void setup_path_and_file(char w, char *p)
 	for (i = 0; i < 6; i++) *(pc+j++) = *(p+i);	// Copy yymmdd
 	*(pc+j++) = 0;	// String terminator
 	
-//printf("MKDIR %s\n",pc); // Check that this line is set up correctly
+printf("MKDIR %s\n",pc); // Check that this line is set up correctly
+
 	system (pc);	// This will fail if directory exists, but we don't care
 
 	/* Make up a string with the path/file for the download */

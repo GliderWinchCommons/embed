@@ -1,0 +1,84 @@
+calibration_value_changing.txt
+
+11/07/2018
+
+===================================
+Setting new scale calibration "online"
+
+Menu is command 'f'
+f nn xxxxx
+Where 
+ nn = table position (0-63)
+ xxxxx = new value
+
+For load-cell scale--
+
+nn = 13
+
+China 1000 kgf load-cell (2 mv/v) approx
+xxxxx = 21344
+
+US 1000 kgf load-cell (2 mv/v) approx
+xxxxx = 35268
+
+p to save (upon shutting down for sleep)
+v to flip with old value
+w to not save, i.e. undo (upon shutting down for sleep)
+
+Load-cell zero: nn = 14, but not much need for 
+using 'f' command as the 'm' 'z' will automatically
+re-zero (but still needs 'p' to save upon shutdown to sleep).
+
+===================================
+To compile new calibrations (ublox)
+
+The POD gets it calibrations from the SD card.  The SD card initially
+was loaded from the calibration_init_u.c, but only the first time.
+
+To compile new values and get them used a flag has to be set that will
+intialize the SD card each time.  Once completed the flag is reset and
+the routine compiled again.
+
+Edit file: p1_calibration_sd.c
+At approx line 135, uncomment the following--
+
+//cCalDefaultflag = 1;
+
+Edit file: calibration_init_u.c
+
+Revise values
+
+Compile:
+
+cd ~/GliderWinchCommons/embed/svn_pod/sw_pod/branches/pod_v2d_ublox
+./mm
+
+Flash
+make flash
+
+Or, do both
+./mm && make flash
+
+Start minicom
+- Change serial port speed, e.g.
+Ctla z for menu
+Select serial port
+Change speed
+ESC, ESC, etc.
+
+lower case 'x' return to get POD menu.
+'m<enter>' to display load-cell
+'p<enter>' Stores calibration_init_u.c values in SD card
+'s<enter?' Put in sleep
+Press button wake up
+New values should be present.
+
+When satisfied--
+Edit file: calibration_init_u.c
+Re-comment --
+//cCalDefaultflag = 1;
+
+Compile and flash.
+
+
+

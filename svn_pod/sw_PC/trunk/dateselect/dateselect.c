@@ -385,6 +385,7 @@ printf ("c array: %s\n",&s_start.c[0]);
 						if  (lineinS.b[0] == 0x0d)
 							strcpy (&lineinS.b[0],&lineinS.b[1]); 
 						/* Eliminate lines that do not start with a non-hex char */
+#ifdef TESTINGFILEWRITE
 						if ( ((lineinS.b[0] >= '0') && (lineinS.b[0] <= '9')) || ((lineinS.b[0] >= 'A') && (lineinS.b[0] <= 'F')) )
 						{
 							if (nofilesw == 0)
@@ -405,6 +406,7 @@ printf ("c array: %s\n",&s_start.c[0]);
 								}
 							}
 						}
+#endif
 
 						/* Is this a unique line from the POD that signals end of file. */
 						if (lineinS.b[0] == '<')

@@ -111,32 +111,25 @@ case $4 in
 echo "Input file: $SAVEDIR/$3"
 
 # Convert from raw download format
-../read*/reformat $SAVEDIR/$3 | 
-
+../read*/reformat $SAVEDIR/$3 | awk '$1 != "ERROR" { print ; }' | awk ' NF > 6 { print ; }' | sort -k 1 | tee $COMPDIR/$3RS
 # Remove lines that start with ERROR
-awk '$1 != "ERROR" { print ; }' | 
-
+#awk '$1 != "ERROR" { print ; }' | 
 # Remove lines with 10 or less fields (i.e. blank lines and summary lines)
-awk ' NF > 10 { print ; }' |
-
+#awk ' NF >  { print ; }' |
 # Remove lines with NF gps fix (NF code = 5)
-awk ' $10 == 3 { print ; }' |
-
+#awk ' $10 == 3 { print ; }' | 
 # Sort so gps interleaves with tension
-sort -k 1 | tee $COMPDIR/$3RS | 
-
+#sort -k 1 | tee $COMPDIR/$3RS
 # Rate change gps
-../read*/ratechangecic | tee $COMPDIR/$3RC | sort -k 1 | tee $COMPDIR/$3RCS | 
-
-../read*/reformatgps2 | tee $COMPDIR/$3RM | 
-
+cat $COMPDIR/$3RS  | ../read*/ratechangecic | tee $COMPDIR/$3RC | sort -k 1 | tee $COMPDIR/$3RCS
+cat $COMPDIR/$3RCS | ../read*/reformatgps2 | tee $COMPDIR/$3RM 
 # Strip extraneous lines from 'RM file
 awk '{if ( length > 110 ) print ; }' $COMPDIR/$3RM > $COMPDIR/$3RMX
 
-##./float_timegps $COMPDIR/$3.param | tee $COMPDIR/$3FT
+cat $COMPDIR/$3RMX | ./float_timegps $COMPDIR/$3.param | tee $COMPDIR/$3FT
 
 # Plot the file and save plot image as a png file
-##./podplot $COMPDIR/$3FT
+./podplot $COMPDIR/$3FT
 
 	;;
 esac

@@ -275,7 +275,7 @@ void cleanup_termios(int signal)
 	exit(0);
 }
 /* ************************************************************************************************************ */
-/*  Yes, this is where it starts.                                                                               */
+/*  Yes, this is where it starts.                                                         gcc dateselect.c -o dateselect                      */
 /* ************************************************************************************************************ */
 int main(int argc, char *argv[], char *envp[])
 {
@@ -391,7 +391,9 @@ printf ("c array: %s\n",&s_start.c[0]);
 		while (k < 12) vvf[l++] = s_stop.c[k++]; 
 		vvf[l++] = 0;
 
-		printf ("Data is transfered this readout will be saved as file named: %s\n",vvf);
+		opensw = 0;
+		filedone = 0;
+		printf ("d command output will be saved as file named: %s\n",vvf);
 
 	/* Message for the hapless op (he or she would rather have Morse code) */	
 	printf ("Control C to break & exit\n");
@@ -505,7 +507,6 @@ printf ("c array: %s\n",&s_start.c[0]);
 						lineinS.b[lineinS.size] = 0; // JIC: place '\0' to be sure we have a string 
 						if  (lineinS.b[0] == 0x0d)
 						{
-//							strcpy (&lineinS.b[0],&lineinS.b[1]); 
 							memmove(&lineinS.b[0],&lineinS.b[1],lineinS.size); lineinS.size -= 1;
 						}
 
@@ -627,11 +628,7 @@ printf ("c array: %s\n",&s_start.c[0]);
 						vv[1] = 0x0d; vv[2] = 0;  
 						write(pf,vv,2);		// Only 2 chars ever get sent out of the line
 						break;
-
-                                           } // End of 'switch (vv[0])'
-
-						
-
+                 } // End of 'switch (vv[0])'
 					} // End of 'if (linecompleted(&lineinK,buf[j]) == 1)'
 				}
 //				write(pf,buf,i);
@@ -730,7 +727,10 @@ static struct SS convertargtotime_t(char * p, char * r)
 	if (s.tm.tm_sec < 0) return s;
 	if (s.tm.tm_sec >59) return s;
 
-	s.tm.tm_isdst = 0;			// Daylight saving time switch off
+/* http://www.catb.org/esr/time-programming/#_date_and_timezone_aware_functions
+    tm_isdst is easily misinterpreted as a flag when it’s actually three-valued: 
+    0 = DST off, 1 = DST on, -1 = DST status unknown. */
+	s.tm.tm_isdst = -1;			// Daylight saving time switch off
 
 	/* Here the fields all passed the check.  Now convert to linux time */
 	
@@ -806,27 +806,36 @@ printf ("%s sc %u\n",p,s.tm.tm_sec);
 *************************************************************************************************************************************/
 static void converttime_ttochar(struct SS *s, int sw)
 {
-	char *p = &s->c[0];
+	struct tm *ptmr;
+	char *cfail = {"FAILEDTIMEXX"};
+
 time_t ts = s->t;
-printf("line 810: %u %s\n",ts,ctime(&ts));
+printf("line 813: %u %s\n",(unsigned int)ts,ctime(&ts));
 
-	s->tm.tm_isdst = 1;	// Don't deal with daylight time.
 	if (sw == 0)
-		localtime_r(&s->t,&s->tm);
+		ptmr = localtime_r(&s->t,&s->tm);
 	else
-		gmtime_r(&s->t,&s->tm);
+		ptmr = gmtime_r(&s->t,&s->tm);
 
-	sprintf ((p+ 0),"%02u",s->tm.tm_year-100);
-	sprintf ((p+ 2),"%02u",s->tm.tm_mon+1);
-	sprintf ((p+ 4),"%02u",s->tm.tm_mday);
-	sprintf ((p+ 6),"%02u",s->tm.tm_hour);
-	sprintf ((p+ 8),"%02u",s->tm.tm_min);
-	sprintf ((p+10),"%02u",s->tm.tm_sec);
-	*(p+12) = 0;
-printf("line 825: %s\n",p);
+	if (ptmr == NULL)
+	{
+		strcpy(&s->c[0],cfail);
+printf("line 823: fail: %d\n",(unsigned int)s->t);
+		return;
+	}
+	s->tm.tm_isdst = -1;	// Don't deal with daylight time.
+s->tm.tm_gmtoff = 0;
+
+char sf[96];
+strftime(sf,96,"%y %m %d : %H %M %S\n",&s->tm);
+printf("line 830,1: %s\n",sf);
+
+	strftime(&s->c[0],14,"%y%m%d%H%M%S",&s->tm);
+
+printf("line 835: %s\n",s->c);
 char ww[96];
 ctime_r(&s->t,ww);
-printf("line 827: %u %s\n",s->t, ww);
+printf("line 838: %u %s\n",(unsigned int)s->t, ww);
 	return;
 }
 /*************************************************************************************************************************************
@@ -844,9 +853,9 @@ int convert_linux_datetime_to_yymmddhhmmss(char *pfile, char* ptime)
 
 //char *pdebug1 = pfile;
 //char *pdebug2 = ptime;
-
-printf("line 841: %s\n",ptime);
-
+time_t tx = 1541726235;
+printf("line 857: %s\n",ptime);
+printf("line 858: %d %s\n", (unsigned int)tx, ctime(&tx));
 	/* Locate linux time on '^' line from POD */
 	while ((*ptime != ':') && (++i < j)) ptime++;	// Spin forward to ':'
 	if (i >= j ) return -1;
@@ -855,7 +864,7 @@ printf("line 841: %s\n",ptime);
 
 	/* Convert linux time to struct tm format */
 	sscanf(ptime,"%u",(unsigned int*)&linuxtime);
-//printf("line 856: %s %d\n",ptime, linuxtime);
+printf("line 867: %s %d\n",ptime, (unsigned int)linuxtime);
 	/* Pick off items in tm format and place in char array */
 	s.t = linuxtime;
 //printf("line 861: %u %s\n",s.t,ctime(&s.t));

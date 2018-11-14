@@ -1,7 +1,10 @@
 DE9_loadcell_cablewiring.txt
 11/06/2018
 
-Except for shield pins are doubled.
+male   - POD board
+female - load-cell
+
+Except for shield, pins are doubled.
 
 Pin
 1 - Red +v

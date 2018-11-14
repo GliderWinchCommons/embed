@@ -388,10 +388,10 @@ extern union INTCHAR	ad7799_24bit;
 
 
 // 'p1_launchtime'
-//#define LAUNCHTIME_TENSION_UP	100000	// Grams tension going upwards
-//#define LAUNCHTIME_TENSION_DN	30000	// Grams tension at end (going downwards)
-#define LAUNCHTIME_TENSION_UP	3800	// ##TEST## Grams tension going upwards
-#define LAUNCHTIME_TENSION_DN	3000	// ##TEST## Grams tension at end (going downwards)
+#define LAUNCHTIME_TENSION_UP	100000	// Grams tension going upwards
+#define LAUNCHTIME_TENSION_DN	30000	// Grams tension at end (going downwards)
+//#define LAUNCHTIME_TENSION_UP	3800	// ##TEST## Grams tension going upwards
+//#define LAUNCHTIME_TENSION_DN	3000	// ##TEST## Grams tension at end (going downwards)
 
 #define LAUNCHTIME_CTR	(64*8)		// Number of consecutive tension readings (64/sec) that must be high to be called a launch
 #define LAUNCHTIME_TENSION_OFFSCALE	2100000	// Off scale reading threshold

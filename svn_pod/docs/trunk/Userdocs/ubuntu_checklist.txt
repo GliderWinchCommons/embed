@@ -1,0 +1,94 @@
+ubuntu_checklist.txt
+11/17/2018
+
+--Checklist for setting up Ubuntu--
+
+A. Misc get started
+
+1.  ssh server (needed for reverse tunnel)
+
+	sudo apt-get install openssh-server
+
+2. ssh keys
+
+3. bin directory setup 
+   [.profile will add bin to PATH during login]
+
+	mkdir ~/bin
+
+4.  minicom
+
+	sudo apt-get install minicom
+
+5. dialout (avoid need for 'sudo' with serial ports)
+	e.g.--
+	sudo adduser gsm dialout
+   [Then logout/login for it to become effective]
+   
+
+6. ntp
+
+	sudo apt-get ntp
+
+
+B. .profile
+
+	1. PATH-- add the following to .profile
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/bin" ] ; then
+    PATH="$HOME/bin:$PATH"
+fi
+
+export FITIP=47.204.208.132
+# ends 20180810: 47.204.250.158
+# ends 20170916: 47.204.234.231
+
+# set PATH so it includes dateselect if it exists
+if [ -d "$HOME/GliderWinchCommons/embed/svn_pod/sw_PC/trunk/dateselect" ] ; then
+    PATH="$PATH:$HOME/GliderWinchCommons/embed/svn_pod/sw_PC/trunk/dateselect"
+fi
+
+if [ -d "$HOME/svn_pod/sw_PC/trunk/tunnel_scripts" ] ; then
+    PATH="$PATH:$HOME/svn_pod/sw_PC/trunk/tunnel_scripts"
+fi
+
+
+if [ -x ~/.arm_tools ]; then
+	. ~/.arm_tools
+fi
+
+
+if [ -d "/usr/local/lib" ] ; then
+    PATH="$PATH:/usr/local/lib"
+fi
+
+export PATH=$PATH:/home/deh/jdk1.8.0_121/db/bin:/home/deh/jdk1.8.0_121/bin
+
+
+2. FITIP, e.g.
+
+	export FITIP=47.204.208.132
+
+C. PC program  compiling
+
+	1. libz missing
+
+sudo apt-get install libz1g-dev
+
+D. STM32 Compiling/flashing
+
+	1. stlink
+
+	2. openocd
+
+	3. launchpad compiler
+
+	4. .arm_tools
+
+	5. .profile for .arm_tools
+
+E. Java (needed for parameter updating)
+
+	1.  jdk
+

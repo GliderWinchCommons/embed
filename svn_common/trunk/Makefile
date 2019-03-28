@@ -10,7 +10,7 @@ SRCDIR=.
 # stm32 original f4
 # f4 same as original (leave stm32 so's not break Makefiles)
 # SUBDIRS =  PC stm32
-SUBDIRS =  f4 PC f3 f103 libvectormatrixquat stm32
+SUBDIRS =  PC f3 f4 f103 libvectormatrixquat stm32
      
 subdirs:
 	for dir in $(SUBDIRS); do \

@@ -374,7 +374,7 @@ debugA += 1;
 int can_driver_put(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF *pcan, u8 maxretryct, u8 bits)
 {
 	volatile struct CAN_POOLBLOCK* pnew;
-	struct CAN_POOLBLOCK* pfor; 	// Loop pointer for the 'for’ loop.
+	volatile struct CAN_POOLBLOCK* pfor; 	// Loop pointer for the 'for’ loop.
 
 	u32 save[2];	// IER register saved during disable of interrupts
 

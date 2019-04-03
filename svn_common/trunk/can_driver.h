@@ -15,6 +15,9 @@
 #define NULL	0
 #endif
 
+/* CAN ids between the following limits are "medium" priority. */
+#define CANPRIORITYLOW  0xD0000000  // CAN id with higer values than this are "low" priority
+#define CANPRIORITYHIGH 0x00E00000  // CAN id with lower values than this are "high" priority
 
 #include "common_can.h"
 
@@ -84,7 +87,6 @@ struct CAN_POOLBLOCK	// Used for common CAN TX/RX linked lists
 	 struct CANRCVBUF can;		// Msg queued
 volatile struct CAN_POOLBLOCK* volatile plinknext;	// Linked list pointer (low value id -> high value)
 	 union  CAN_X x;			// Extra goodies that are different for TX and RX
-
 };
 
 struct CAN_RCV_PTRS	// Pointers for RX linked lists
@@ -95,17 +97,24 @@ volatile struct CAN_POOLBLOCK*	volatile ptail;	// Pointer Head/Tail, RX0 linked 
 	int	bmx;	// Buffer count max: Maxminum number msg blks allowed by this RX
 };
 
+/* Linked List pointers */
+struct CAN_LIST
+{
+volatile struct CAN_POOLBLOCK  pend;		// Always present block, i.e. list pointer head
+volatile struct CAN_POOLBLOCK* volatile pxprv;	// pxprv->plinknext points to msg being sent.  pxprv is NULL if TX is idle.
+	u32 CAN_MBOXn;   // Mailbox "n" offset
+};
+
 /* Here: everything you wanted to know about a CAN module (i.e. CAN1, CAN2) */
 struct CAN_CTLBLOCK
 {
 	u32	vcan;			// CAN1 or CAN2 base address
 	
-volatile struct CAN_POOLBLOCK  pend;		// Always present block, i.e. list pointer head
-volatile struct CAN_POOLBLOCK* volatile pxprv;	// pxprv->plinknext points to msg being sent.  pxprv is NULL if TX is idle.
-//volatile struct CAN_POOLBLOCK* volatile  pfor; 	// Loop pointer for the 'for’ loop.  pfor is NULL if the ‘for' loop is not active.
+	struct CAN_LIST clist[3]; // Linked List pointers for each mailbox
+	struct CAN_LIST* pclist;  // Working pointer for above clist
 
-	struct CAN_RCV_PTRS	ptrs0;		//
-	struct CAN_RCV_PTRS	ptrs1;		//
+	struct CAN_RCV_PTRS	ptrs0;		// RX0
+	struct CAN_RCV_PTRS	ptrs1;		// RX1
 
 	struct CANWINCHPODCOMMONERRORS can_errors;	// A group of error counts
 	int	txbct;		// Buffer counter: Number of msg blocks commandeered by this TX 

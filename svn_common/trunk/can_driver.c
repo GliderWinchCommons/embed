@@ -74,6 +74,7 @@ void WEAK CAN2_RX1_IRQHandler(void);
 /* subroutine declarations */
 static void loadmbx2(struct CAN_CTLBLOCK* pctl);
 static void moveremove2(struct CAN_CTLBLOCK* pctl);
+static void tx_detail(struct CAN_CTLBLOCK* pctl, u32 tsr);
 
 /* The following variables are used by peripherals in their 'init' routines to set dividers 	*/
 /* (see 'lib/libmiscstm32/clockspecifysetup.c') */
@@ -179,8 +180,15 @@ struct CAN_CTLBLOCK* can_driver_init(struct CAN_PARAMS2 *p, const struct CAN_INI
 	/* Get control block for this CAN module. */
 	pctl = (struct CAN_CTLBLOCK*)calloc(1, sizeof(struct CAN_CTLBLOCK));
 	if (pctl == NULL) return NULL;
-	if (p->cannum == 1) {pctl0 = pctl; pctl->vcan = CAN1;}
+
+	/* Set CAN module base address. */
+	if (p->cannum == 1) {pctl0 = pctl; pctl->vcan = CAN1;} 
 	if (p->cannum == 2) {pctl1 = pctl; pctl->vcan = CAN2;}
+
+	/* Set TX mailbox offsets. */
+	pctl->clist[0].CAN_MBOXn = CAN_MBOX0;
+	pctl->clist[1].CAN_MBOXn = CAN_MBOX1;
+	pctl->clist[2].CAN_MBOXn = CAN_MBOX2;
 	
 	/* Now that we have control block in memory, use it to return errors. 
 	   by setting the error code in pctl->ret. */
@@ -225,12 +233,12 @@ struct CAN_CTLBLOCK* can_driver_init(struct CAN_PARAMS2 *p, const struct CAN_INI
 	if (ret != 0) {pctl->ret = ret - 10; return pctl;} // failed
 
 	/* ---------- Put CAN module into Initialization mode -------------------- */
-	/* Request initialization p 632, 648.  DEBUG freeze bit on */
+	/* Request initialization.  DEBUG freeze bit on */
 	CAN_MCR(pctl->vcan) &= CAN_MCR_DBF;	// Clear DBF since it is set coming out RESET
 	CAN_MCR(pctl->vcan) = ((bitcvt(p->dbf) << 16) | (CAN_MCR_INRQ) );
 
 	/* The initialization request (above) causes the INAK bit to be set.  This bit goes off when 11 consecutive
-	   recessive bits have been received p 633 */
+	   recessive bits have been received. */
 	can_timeout = CAN_TIMEOUT;	// Counter to break loop for timeout
 	while ( ((CAN_MSR(pctl->vcan) & CAN_MSR_INAK) == 0 ) && (can_timeout-- > 0) ); // Wait until initialization mode starts or times out
 	if (can_timeout <= 0 ) {pctl->ret = -6; return pctl;}	// Timed out
@@ -272,7 +280,9 @@ struct CAN_CTLBLOCK* can_driver_init(struct CAN_PARAMS2 *p, const struct CAN_INI
 	/* If mailbox is not empty, then enabling interrupts will result in an immediate
            interrupt, and the TX_IRQHandler will be dealing with an empty pending list! */
 	while ( (CAN_TSR(pctl->vcan) & CAN_TSR_TME0) == 0)         // Wait for transmit mailbox 0 to be empty
-		CAN_TSR(pctl->vcan)  = 0X1;
+	while ( (CAN_TSR(pctl->vcan) & CAN_TSR_TME1) == 0)         // Wait for transmit mailbox 1 to be empty
+	while ( (CAN_TSR(pctl->vcan) & CAN_TSR_TME2) == 0)         // Wait for transmit mailbox 2 to be empty
+//?		CAN_TSR(pctl->vcan)  = 0X1;
 
 pcan_errors = &pctl->can_errors;
 
@@ -386,6 +396,21 @@ int can_driver_put(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF *pcan, u8 maxretr
 		return -2;
 	}
 
+	/* CAN id priority classification: low, med, high. */
+	// Set pointer to linked list head for priority class
+	if (pcan->id > CANPRIORITYLOW)
+	{ // CAN id priority is low
+		pctl->pclist = &pctl->clist[0]; // Low priority linked list pointers
+	}
+	else if (pcan->id <= CANPRIORITYHIGH)
+	{ // CAN id priority is high
+		pctl->pclist = &pctl->clist[1]; // Medium priority linked list pointers
+	}
+	else
+	{ // CAN id priority is medium
+		pctl->pclist = &pctl->clist[2]; // High priority linked list pointers
+	}
+
 	/* Get a free block from the free list. */
 	disable_ints(save);	// TX, RX0, RX1 interrupt might move a msg to the free list.
 	pnew = frii.plinknext;
@@ -395,6 +420,7 @@ int can_driver_put(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF *pcan, u8 maxretr
 		pctl->can_errors.can_msgovrflow += 1;	// Count overflows
 		return -1;	// Return failure: no space & screwed
 	}	
+
 	frii.plinknext = pnew->plinknext;
 	friict -= 1; // Keep running count of free list inventory
 	reenable_ints(save);
@@ -417,7 +443,7 @@ int can_driver_put(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF *pcan, u8 maxretr
            the same CAN id do not get their order of transmission altered. */
  	disable_TXints(save);
 
-	for (pfor = &pctl->pend; pfor->plinknext != NULL; pfor = pfor->plinknext)
+	for (pfor = &pctl->pclist->pend; pfor->plinknext != NULL; pfor = pfor->plinknext)
 	{
 		if (pnew->can.id < (pfor->plinknext)->can.id) // Pay attention: "value" vs "priority"
 			break;
@@ -427,15 +453,15 @@ int can_driver_put(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF *pcan, u8 maxretr
 	pnew->plinknext = pfor->plinknext; 	// Insert new msg into 
 	pfor->plinknext = pnew;			//   pending list.
 	pfor =  NULL;	// Signal TX interrupt that search loop is not active.
-	if (pctl->pxprv == NULL) // Is sending complete?
+	if (pctl->pclist->pxprv == NULL) // Is sending complete?
 	{ // pxprv == NULL means CAN mailbox did not get loaded, so CAN is idle.
 		loadmbx2(pctl); // Start sending
 	}
 	else
 	{ // CAN sending is in progress.
-		if ((pctl->pxprv)->plinknext == pnew) // Does pxprv need adjustment?
+		if (pctl->pclist->pxprv->plinknext == pnew) // Does pxprv need adjustment?
 		{ // Here yes. We inserted a msg between 'pxprv' and 'pxprv->linknext'
-			pctl->pxprv = pnew;	// Update 'pxprv' so that it still points to msg TX using.
+			pctl->pclist->pxprv = pnew;	// Update 'pxprv' so that it still points to msg TX using.
 			pctl->can_errors.can_pxprv_fwd_one += 1;	// Count: Instances that pxprv was adjusted in 'for' loop
 		}
 	}
@@ -450,21 +476,24 @@ int can_driver_put(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF *pcan, u8 maxretr
  ----------------------------------------------------------------------------------------------*/
 static void loadmbx2(struct CAN_CTLBLOCK* pctl)
 {
-	volatile struct CAN_POOLBLOCK* p = pctl->pend.plinknext;
-
+	volatile struct CAN_POOLBLOCK* p = pctl->pclist->pend.plinknext;
+	u32 mbxn;
+	
 	if (p == NULL)
 	{
-		pctl->pxprv = NULL;
+		pctl->pclist->pxprv = NULL;
 		return; // Return if no more to send
 	}
-	pctl->pxprv = &pctl->pend;	// Save in a static var
+	pctl->pclist->pxprv = &pctl->pclist->pend;	// Save
+
+	mbxn = pctl->pclist->CAN_MBOXn;
 
 	/* Load the mailbox with the message.  CAN ID low bit starts xmission. */
-	CAN_TDTxR(pctl->vcan, CAN_MBOX0) =  p->can.dlc;	 	// CAN_TDT0R:  mailbox 0 time & length p 660
-	CAN_TDLxR(pctl->vcan, CAN_MBOX0) =  p->can.cd.ui[0];	// CAN_TDL0RL: mailbox 0 data low  register p 661 
-	CAN_TDHxR(pctl->vcan, CAN_MBOX0) =  p->can.cd.ui[1];	// CAN_TDL0RH: mailbox 0 data low  register p 661 
+	CAN_TDTxR(pctl->vcan, mbxn) =  p->can.dlc;        // CAN_TDT0R:  mailbox 0 time & length
+	CAN_TDLxR(pctl->vcan, mbxn) =  p->can.cd.ui[0];   // CAN_TDL0RL: mailbox 0 data low  register
+	CAN_TDHxR(pctl->vcan, mbxn) =  p->can.cd.ui[1];   // CAN_TDL0RH: mailbox 0 data low  register
 	/* Load CAN ID and set TX Request bit */
-	CAN_TIxR (pctl->vcan, CAN_MBOX0) =  (p->can.id | 0x1); 	// CAN_TI0R:   mailbox 0 identifier register p 659
+	CAN_TIxR (pctl->vcan, mbxn) =  (p->can.id | 0x1); // CAN_TI0R: mailbox 0 identifier register
 	return;
 }
 /******************************************************************************
@@ -522,58 +551,71 @@ Bit 0 RQCP0: Request completed mailbox0
 */
 void CAN_TX_IRQHandler(struct CAN_CTLBLOCK* pctl)
 {
-	 __attribute__((__unused__))int temp;	// Dummy for readback of hardware registers
+	u32 tsr = CAN_TSR(pctl->vcan);	// Copy of status register
 
-
-	/* JIC: mailboxes 1 & 2 are not used and should not have a flag */
-	if ((CAN_TSR(pctl->vcan) & (CAN_TSR_RQCP1 | CAN_TSR_RQCP2)) != 0)
-	{ // Here, something bogus going on.
-		CAN_TSR(pctl->vcan) = (CAN_TSR_RQCP1 | CAN_TSR_RQCP2);	// Turn flags OFF
-		pctl->can_errors.can_cp1cp2 += 1;	// Count: (RQCP1 | RQCP2) unexpectedly ON
-		temp = CAN_TSR(pctl->vcan);	// JIC Prevent tail-chaining
-		return;
+	/* MBX0 */
+	if ( (tsr & CAN_TSR_RQCP0) != 0)
+	{
+		CAN_TSR(pctl->vcan) = CAN_TSR_RQCP0;	// Clear mailbox 0: RQCP0 (which clears TERR0, ALST0, TXOK0)
+		pctl->pclist = &pctl->clist[0]; // Low priority linked list pointers
+		tx_detail(pctl, (tsr >> 0) );
+		
 	}
 
-	u32 tsr = CAN_TSR(pctl->vcan);	// Copy of status register mailbox 0 bits
+	/* MBX1 */
+	else 	if ( (tsr & CAN_TSR_RQCP1) != 0)
+	{
+		CAN_TSR(pctl->vcan) = CAN_TSR_RQCP1;	// Clear mailbox 1
+		pctl->pclist = &pctl->clist[1]; // Medium priority linked list pointers
+		tx_detail(pctl, (tsr >> 8) );
+	}
 
-	/* Do this early so it percolates down into the hardware. */
-	CAN_TSR(pctl->vcan) = CAN_TSR_RQCP0;	// Clear mailbox 0: RQCP0 (which clears TERR0, ALST0, TXOK0)
+	/* MBX2 */
+	else 	if ( (tsr & CAN_TSR_RQCP2) != 0)
+	{
+		CAN_TSR(pctl->vcan) = CAN_TSR_RQCP2;	// Clear mailbox 2
+		pctl->pclist = &pctl->clist[2]; // High priority linked list pointers
+		tx_detail(pctl, (tsr >> 16) );
+	}
 
+	return;
+}
+/* ----------------------------------------------------------------------------------------------
+ * static void tx_detail(struct CAN_CTLBLOCK* pctl, u32 tsr);
+ * @brief	: Handle mailbox 
+ * @pctl		: pctl = pointer to CAN module control block
+ * @tsr		: tsr = Status register right shifted so all mailboxes look like mailbox 0
+ ------------------------------------------------------------------------------------------------ */
+static void tx_detail(struct CAN_CTLBLOCK* pctl, u32 tsr)
+{
 	/* JIC we got a TX completion when we did not load the mailbox, e.g. initialization. */
-	if (pctl->pend.plinknext == NULL) // Is the linked list empty?
+	if (pctl->pclist->pend.plinknext == NULL) // Is the linked list empty?
 	{ // Here, yes.  Something bogus, and never try to remove a block when the list is empty!
 		pctl->can_errors.txint_emptylist += 1; // Count: TX interrupt with pending list empty
 		return;
 	}
 
-	/* Check for a bogus interrupt. */
-	if ( (tsr & CAN_TSR_RQCP0) == 0) // Is mailbox0 RQCP0 (request complete) ON?
-	{ // Here, no RXCPx bits are on, so interrupt is bogus.
-		temp = CAN_TSR(pctl->vcan);	// JIC Prevent tail-chaining
-		return;
-	}
-
-	if ((tsr & CAN_TSR_TXOK0) != 0) // TXOK0: Transmission OK for mailbox 0?
+	if ((tsr & CAN_TSR_TXOK0) != 0) // TXOK0: Transmission OK for mailbox pseudo 0?
 	{ // Here, yes. Flag msg for removal from pending list.
 		moveremove2(pctl);	// remove from pending list, add to free list
 	}
-	else if ((tsr & CAN_TSR_TERR0) != 0) // Transmission error for mailbox 0? 
+	else if ((tsr & CAN_TSR_TERR0) != 0) // Transmission error for mailbox pseudo 0? 
 	{ // Here, TERR error bit, so try it some more.
 		pctl->can_errors.can_txerr += 1; 	// Count total CAN errors
-		pctl->pxprv->plinknext->x.xb[0] += 1;	// Count errors for this msg
-		if (pctl->pxprv->plinknext->x.xb[0] > pctl->pxprv->plinknext->x.xb[1])
+		pctl->pclist->pxprv->plinknext->x.xb[0] += 1;	// Count errors for this msg
+		if (pctl->pclist->pxprv->plinknext->x.xb[0] > pctl->pclist->pxprv->plinknext->x.xb[1])
 		{ // Here, too many error, remove from list
 			pctl->can_errors.can_tx_bombed += 1;	// Number of bombouts
-			moveremove2(pctl);	// Remove msg from pending queue
+			moveremove2(pctl);	// Remove msg from pending linked list
 		}
 	}
-	else if ((tsr & CAN_TSR_ALST0) != 0) // Arbitration lost for mailbox 0?
-	{ // Here, arbitration for mailbox 0 failed.
+	else if ((tsr & CAN_TSR_ALST0) != 0) // Arbitration lost for mailbox pseudo 0?
+	{ // Here, arbitration for mailbox pseudo 0 failed.
 		pctl->can_errors.can_tx_alst0_err += 1; // Running ct of arb lost: Mostly for debugging/monitoring
-		if ((pctl->pxprv->plinknext->x.xb[2] & SOFTNART) != 0)
+		if ((pctl->pclist->pxprv->plinknext->x.xb[2] & SOFTNART) != 0)
 		{ // Here this msg was not to be re-sent, i.e. NART
 			pctl->can_errors.can_tx_alst0_nart_err += 1; // Mostly for debugging/monitoring
-			moveremove2(pctl);	// Remove msg from pending queue
+			moveremove2(pctl);	// Remove msg from pending linked list
 		}
 	}
 	else
@@ -581,8 +623,7 @@ void CAN_TX_IRQHandler(struct CAN_CTLBLOCK* pctl)
 		pctl->can_errors.can_no_flagged += 1; // Count for monitoring purposes
 	}
 
-	loadmbx2(pctl);		// Load mailbox 0.  Mailbox should be available/empty.
-	temp = CAN_TSR(pctl->vcan);	// JIC Prevent tail-chaining
+	loadmbx2(pctl);		// Load mailbox pseudo 0.  Mailbox should be available/empty.
 	return;
 }
 /* --------------------------------------------------------------------------------------
@@ -602,8 +643,8 @@ static void moveremove2(struct CAN_CTLBLOCK* pctl)
 //?		pctl->can_errors.can_pfor_bk_one += 1; // Keep track of instances
 //?	}
 	// Remove from pending list
-	pmov = pctl->pxprv->plinknext;	// Pts to removed item
-	pctl->pxprv->plinknext = pmov->plinknext;
+	pmov = pctl->pclist->pxprv->plinknext;	// Pts to removed item
+	pctl->pclist->pxprv->plinknext = pmov->plinknext;
 
 	// Adding to free list
 	pmov->plinknext = frii.plinknext; 

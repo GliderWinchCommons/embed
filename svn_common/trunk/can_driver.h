@@ -16,7 +16,7 @@
 #endif
 
 /* CAN ids between the following limits are "medium" priority. */
-#define CANPRIORITYLOW  0xD0000000  // CAN id with higer values than this are "low" priority
+#define CANPRIORITYLOW  0xD0000000  // CAN id with higher values than this are "low" priority
 #define CANPRIORITYHIGH 0x00E00000  // CAN id with lower values than this are "high" priority
 
 #include "common_can.h"

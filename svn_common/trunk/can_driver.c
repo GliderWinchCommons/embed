@@ -1,10 +1,14 @@
 /******************************************************************************
 * File Name          : can_driver.c
-* Date First Issued  : 05-28-2015
+* Date First Issued  : 05-28-2015/04-03-2019
 * Board              : F103 or F4
-* Description        : CAN routines common for F103 and F4 CAN drivers
+* Description        : CAN driver using three TX mailboxes and CAN priority ranges
 *******************************************************************************/
 /*
+04-03-2019 -  Hack of can_driver (w/o abort feature).  Three linked lists of TX
+  msgs, loaded by CAN id priority ranges low, medium, high, and each assigned to
+  a TX mailbox.
+
 06/02/2016 - Add rejection of loading bogus CAN ids.
 
 06/14/2015 rev 720: can.driver.[ch] replaced with can.driverR.[ch] and 
@@ -279,9 +283,9 @@ struct CAN_CTLBLOCK* can_driver_init(struct CAN_PARAMS2 *p, const struct CAN_INI
 
 	/* If mailbox is not empty, then enabling interrupts will result in an immediate
            interrupt, and the TX_IRQHandler will be dealing with an empty pending list! */
-	while ( (CAN_TSR(pctl->vcan) & CAN_TSR_TME0) == 0)         // Wait for transmit mailbox 0 to be empty
-	while ( (CAN_TSR(pctl->vcan) & CAN_TSR_TME1) == 0)         // Wait for transmit mailbox 1 to be empty
-	while ( (CAN_TSR(pctl->vcan) & CAN_TSR_TME2) == 0)         // Wait for transmit mailbox 2 to be empty
+	while ( (CAN_TSR(pctl->vcan) & CAN_TSR_TME0) == 0);         // Wait for transmit mailbox 0 to be empty
+	while ( (CAN_TSR(pctl->vcan) & CAN_TSR_TME1) == 0);         // Wait for transmit mailbox 1 to be empty
+	while ( (CAN_TSR(pctl->vcan) & CAN_TSR_TME2) == 0);         // Wait for transmit mailbox 2 to be empty
 //?		CAN_TSR(pctl->vcan)  = 0X1;
 
 pcan_errors = &pctl->can_errors;
@@ -336,8 +340,8 @@ debugC += 1;
 	return;
 }
 /******************************************************************************
- * void can_driver_toss0(struct CAN_CTLBLOCK* pctl);
- * void can_driver_toss1(struct CAN_CTLBLOCK* pctl);
+ * void can_driver_toss0(struct CAN_CTLBLOCK* pctl); // RX0
+ * void can_driver_toss1(struct CAN_CTLBLOCK* pctl); // RX1
  * @brief	: Release msg buffer back to free list
  ******************************************************************************/
 void can_driver_toss0(struct CAN_CTLBLOCK* pctl)
@@ -351,8 +355,8 @@ void can_driver_toss1(struct CAN_CTLBLOCK* pctl)
 	return; 
 }
 /******************************************************************************
- * struct CANRCVBUF* can_driver_peek0(struct CAN_CTLBLOCK* pctl);
- * struct CANRCVBUF* can_driver_peek1(struct CAN_CTLBLOCK* pctl);
+ * struct CANRCVBUF* can_driver_peek0(struct CAN_CTLBLOCK* pctl); // RX0
+ * struct CANRCVBUF* can_driver_peek1(struct CAN_CTLBLOCK* pctl); // RX1
  * @brief	: Get pointer to a received msg CAN msg buffer.
  * @return	: struct with pointer to earliest buffer, ptr = zero if no data
  ******************************************************************************/
@@ -553,29 +557,27 @@ void CAN_TX_IRQHandler(struct CAN_CTLBLOCK* pctl)
 {
 	u32 tsr = CAN_TSR(pctl->vcan);	// Copy of status register
 
-	/* MBX0 */
-	if ( (tsr & CAN_TSR_RQCP0) != 0)
+	if ( (tsr & CAN_TSR_RQCP0) != 0) /* MBX0 */
 	{
 		CAN_TSR(pctl->vcan) = CAN_TSR_RQCP0;	// Clear mailbox 0: RQCP0 (which clears TERR0, ALST0, TXOK0)
 		pctl->pclist = &pctl->clist[0]; // Low priority linked list pointers
-		tx_detail(pctl, (tsr >> 0) );
-		
+		tx_detail(pctl, (tsr >> 0) );		
 	}
-
-	/* MBX1 */
-	else 	if ( (tsr & CAN_TSR_RQCP1) != 0)
+	else if ( (tsr & CAN_TSR_RQCP1) != 0) /* MBX1 */
 	{
 		CAN_TSR(pctl->vcan) = CAN_TSR_RQCP1;	// Clear mailbox 1
 		pctl->pclist = &pctl->clist[1]; // Medium priority linked list pointers
 		tx_detail(pctl, (tsr >> 8) );
 	}
-
-	/* MBX2 */
-	else 	if ( (tsr & CAN_TSR_RQCP2) != 0)
+	else 	if ( (tsr & CAN_TSR_RQCP2) != 0) /* MBX2 */
 	{
 		CAN_TSR(pctl->vcan) = CAN_TSR_RQCP2;	// Clear mailbox 2
 		pctl->pclist = &pctl->clist[2]; // High priority linked list pointers
 		tx_detail(pctl, (tsr >> 16) );
+	}
+	else
+	{ // Here--it must have been an interrupt not caused by CAN 0, 1, or 2.
+		// Maybe some error code or graceful crash code should be put here.
 	}
 
 	return;

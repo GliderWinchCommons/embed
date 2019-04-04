@@ -35,8 +35,8 @@ INSERT INTO PAYLOAD_TYPE VALUES ('xxS32',    14,  6, ' [0]:[1]:[2]-[5]: int32_t,
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8_U32',15,  6, ' [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1],uint32_t,');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8_S32',16,  6, ' [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1], int32_t,');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8_FF',	17,  6, ' [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1], Full Float,');--
-INSERT INTO PAYLOAD_TYPE VALUES ('U16',      18,  2, ' [0]-[2]uint16_t');			--
-INSERT INTO PAYLOAD_TYPE VALUES ('S16',      19,  2, ' [0]-[2] int16_t');			--
+INSERT INTO PAYLOAD_TYPE VALUES ('U16',      18,  2, ' [0]-[1]:uint16_t');			--
+INSERT INTO PAYLOAD_TYPE VALUES ('S16',      19,  2, ' [0]-[1]: int16_t');			--
 INSERT INTO PAYLOAD_TYPE VALUES ('LAT_LON_HT',20, 6, ' [0]:[1]:[2]-[5]: Fix type, bits fields, lat/lon/ht');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_FF',    21,  5, ' [0]:[1]-[4]: uint8_t, Full Float');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_HF',    22,  3, ' [0]:[1]-[2]: uint8_t, Half Float');	--

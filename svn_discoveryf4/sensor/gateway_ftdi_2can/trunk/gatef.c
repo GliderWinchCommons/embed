@@ -69,18 +69,18 @@ void caninB(struct CANRCVBUF* p);  	// Debug
 
 /* Specify msg buffer and max useage for CAN1: TX, RX0, and RX1. */
 const struct CAN_INIT msginit1 = { \
-180,	/* Total number of msg blocks. */
-80,	/* TX can use this huge ammount. */
-80,	/* RX0 can use this many. */
-16	/* RX1 can use this piddling amount. */
+320,	/* Total number of msg blocks. */
+12,	/* TX can use this huge ammount. */
+150,	/* RX0 can use this many. */
+20	/* RX1 can use this piddling amount. */
 };
 
 /* Specify msg buffer and max useage for CAN2: TX, RX0, and RX1. */
 const struct CAN_INIT msginit2 = { \
-180,	/* Total number of msg blocks. */
-140,	/* TX can use this huge ammount. */
-32,	/* RX0 can use this many. */
-8	/* RX1 can use this piddling amount. */
+320,	/* Total number of msg blocks. */
+12,	/* TX can use this huge ammount. */
+150,	/* RX0 can use this many. */
+20	/* RX1 can use this piddling amount. */
 };
 
 
@@ -93,14 +93,18 @@ const struct CAN_INIT msginit2 = { \
 //#define IAMUNITNUMBER	CAN_UNITID_GATE2	// PC<->CAN bus gateway
 /* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& */
 /* ######################### GATEWAY HEARTBEAT CAN ID ############################ */
-//static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY1}; // See CANID_INSERT.sql
+static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY1}; // See CANID_INSERT.sql
 //static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY2}; // See CANID_INSERT.sql
-static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY3}; // See CANID_INSERT.sql
+//static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY3}; // See CANID_INSERT.sql
 //static struct CANRCVBUF can_hb = {CANID_HB_GATEWAY4}; // See CANID_INSERT.sql
 /* ############################################################################### */
 /* %%%%%%%%%%%%% Board hardware setup %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 #define SETUP_CAN1	// Include code for setup of CAN1
 #define SETUP_CAN2	// Include code for setup of CAN2
+
+// Gateway function
+#define GATEWAY_CAN1toCAN2  // Pass all incoming CAN1 to CAN2
+#define GATEWAY_CAN2toCAN1  // Pass all incoming CAN2 to CAN1
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
 /* The following values provide --
@@ -178,7 +182,7 @@ static int CAN_gateway_send(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF* pg)
 		return -1;	// Payload ct too big
 	
 	/* Check if an illegal id combination */
-	if ( ((pg->id & 0x001ffff9) != 0) && ((pg->id & 0x04) == 0) ) 
+	if ( ((pg->id & 0x001ffff8) != 0) && ((pg->id & 0x04) == 0) ) 
 	{ // Here, in the additional 18 extended id bits one or more are on, but IDE flag is for standard id (11 bits)
 		return -2; // Illegal id
 	}
@@ -395,7 +399,7 @@ xprintf (UXPRT, "  dur0 (tick): %d  dur1 (usec): %d\n\r",(f1-f0),(f2-f1)/168);
 	xprintf(UXPRT,"CAN1 initialized OK@ baudrate %d\n\r",CANWINCH_BAUDRATE);
 #endif
 #ifdef SETUP_CAN2
-	/*  Pin usage for CAN1 on DiscoveryF4--
+	/*  Pin usage for CAN2 on DiscoveryF4--CANWINCH_BAUDRATE_CAN2
 	PB13 CAN2  Tx LQFP 82 Header P2|33 WHT
 	PB12 CAN2  Rx LQFP 81 Header P2|36 BLU
 	GRN  (MCP2551 RS pin) Grounded for high speed
@@ -514,19 +518,27 @@ xprintf(UXPRT,"USB_PC_msg_getASCII err: %d %u\n\r", temp, zctr++);
 #ifdef SETUP_CAN1
 		while ( (pc1r1 = can_driver_peek1(pctl1)) != 0)	// Did we receive a HIGH PRIORITY CAN BUS msg?
 		{ // Here yes.  Retrieve it from the CAN buffer and save it in our vast mainline storage buffer ;)
-			canbuf_add(pc1r1);	// Add msg to buffer
+			canbuf_add(pc1r1);	// Add msg to PC buffer
 //canin(pc1r1);
 caninB(pc1r1);
 //printmsg(pc1r1, 1);
+  #ifdef GATEWAY_CAN1toCAN2
+		/* ======= CAN1 --> CAN2 RX1 =========== */
+  			tmp = CAN_gateway_send(pctl2, pc1r1);	// Add to xmit buffer (if OK)
+  #endif
 			can_driver_toss1(pctl1); // Release buffer block, fifo1 linked list
 		}
 
 		while ( (pc1r0 = can_driver_peek0(pctl1)) != 0)		// Did we receive a LESS-THAN-HIGH-PRIORITY CAN BUS msg?
 		{ // Here yes.  Retrieve it from the CAN buffer and save it in our vast mainline storage buffer
-			canbuf_add(pc1r0);	// Add msg to buffer
+			canbuf_add(pc1r0);	// Add msg to PC buffer
 //canin(pc1r0);
 caninB(pc1r0);
 //printmsg(pc1r0, 0);
+  #ifdef GATEWAY_CAN1toCAN2
+		/* ======= CAN1 --> CAN2 RX0 =========== */
+			tmp = CAN_gateway_send(pctl2, pc1r0);	// Add to xmit buffer (if OK)  
+  #endif
 			can_driver_toss0(pctl1); // Release buffer block, fifo0 linked list
 		}
 #endif		
@@ -534,22 +546,29 @@ caninB(pc1r0);
 #ifdef SETUP_CAN2
 		while ( (pc2r1 = can_driver_peek1(pctl2)) != 0)	// Did we receive a HIGH PRIORITY CAN BUS msg?
 		{ // Here yes.  Retrieve it from the CAN buffer and save it in our vast mainline storage buffer ;)
-			canbuf_add(pc2r1);	// Add msg to buffer
+			canbuf_add(pc2r1);	// Add msg to PC buffer
 //canin(pc2r1);
 caninB(pc2r1);
 //printmsg(pc2r1, 1);
+  #ifdef GATEWAY_CAN2toCAN1
+		/* ======= CAN2 --> CAN1 RX1 =========== */
+			tmp = CAN_gateway_send(pctl1, pc2r1);	// Add to xmit buffer (if OK)
+  #endif
 			can_driver_toss1(pctl2); // Release buffer block, fifo1 linked list
 		}
 
 		while ( (pc2r0 = can_driver_peek0(pctl2)) != 0)		// Did we receive a LESS-THAN-HIGH-PRIORITY CAN BUS msg?
 		{ // Here yes.  Retrieve it from the CAN buffer and save it in our vast mainline storage buffer.
-			canbuf_add(pc2r0);	// Add msg to buffer
+			canbuf_add(pc2r0);	// Add msg to PC buffer
 //canin(pc2r0);
 caninB(pc2r0);
 //printmsg(pc2r0, 0);
+  #ifdef GATEWAY_CAN2toCAN1
+		/* ======= CAN2 --> CAN1 RX0 =========== */
+			tmp = CAN_gateway_send(pctl1, pc2r0);	// Add to xmit buffer (if OK)
+  #endif
 			can_driver_toss0(pctl2); // Release buffer block, fifo0 linked list
 		}
-
 #endif	
 //		/* Send test msgs to PC (and not to CAN bus) */
 //		if ( (ptest_pc = CAN_test_msg_PC()) != 0)	// Test msg ready? (CAN to PC direction)

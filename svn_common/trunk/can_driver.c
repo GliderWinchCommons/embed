@@ -40,6 +40,7 @@ void CAN2_RX0_IRQHandler
 void CAN2_RX1_IRQHandler
 */
 // 
+
 #define WEAK __attribute__ ((weak))
 void WEAK CAN1_TX_IRQHandler(void);
 void WEAK CAN1_RX0_IRQHandler(void);
@@ -71,8 +72,29 @@ void WEAK CAN2_RX1_IRQHandler(void);
 #include "../../../../svn_common/trunk/can_driver_port.h"
 #include "DTW_counter.h"
 
+
+u32 dbugabort[32];
+#define DBUGXSZ 64
+struct DBUGX
+{
+	u32 idb4;  // id before MBX load
+	u32 idaf;  // id after MBX loaded
+ 	u16 aflag; // abort flag
+	s16 updn;  // loadmbx2+ interrupt - ctr
+	u32 ct1;   // Num aborts handled
+	u32 mbx2;  // Source of loadmbx2
+   u32 ct;    // Number msgs pending in linked list
+	u32 arbq;  // Ct of arbitration requests
+	u32 bit;   // TME0
+} dbugx[DBUGXSZ];
+u32 dbugxidx = 0;
+u32 arbqctr = 0;
+s16 updn = 0;
+#define YESABORTCODE
+
+
 /* subroutine declarations */
-static void loadmbx2(struct CAN_CTLBLOCK* pctl);
+static void loadmbx2(struct CAN_CTLBLOCK* pctl, u16 dbug);
 static void moveremove2(struct CAN_CTLBLOCK* pctl);
 
 /* The following variables are used by peripherals in their 'init' routines to set dividers 	*/
@@ -87,6 +109,8 @@ static struct CAN_CTLBLOCK* pctl0;	// Pointer to control block for CAN1
 static struct CAN_CTLBLOCK* pctl1;	// Pointer to control block for CAN2
  u32 buffct = 0;	// Number of msg blocks buffered (total)
  int friict = 0;	// Number of msg blocks on the free list
+
+u32 abortflag = 0;	// 1 = ABRQ0 bit in TSR was set.
 
 /*---------------------------------------------------------------------------------------------
  * static void disable_ints(u32* p[2]);
@@ -271,8 +295,7 @@ struct CAN_CTLBLOCK* can_driver_init(struct CAN_PARAMS2 *p, const struct CAN_INI
 
 	/* If mailbox is not empty, then enabling interrupts will result in an immediate
            interrupt, and the TX_IRQHandler will be dealing with an empty pending list! */
-	while ( (CAN_TSR(pctl->vcan) & CAN_TSR_TME0) == 0)         // Wait for transmit mailbox 0 to be empty
-		CAN_TSR(pctl->vcan)  = 0X1;
+	while ( (CAN_TSR(pctl->vcan) & CAN_TSR_TME0) == 0);         // Wait for transmit mailbox 0 to be empty
 
 pcan_errors = &pctl->can_errors;
 
@@ -374,7 +397,7 @@ debugA += 1;
 int can_driver_put(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF *pcan, u8 maxretryct, u8 bits)
 {
 	volatile struct CAN_POOLBLOCK* pnew;
-	struct CAN_POOLBLOCK* pfor; 	// Loop pointer for the 'for’ loop.
+	volatile struct CAN_POOLBLOCK* pfor; 	// Loop pointer for the 'for’ loop.
 
 	u32 save[2];	// IER register saved during disable of interrupts
 
@@ -410,12 +433,12 @@ int can_driver_put(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF *pcan, u8 maxretr
 	pnew->x.xb[2] = bits;	// Use these bits to set some conditions (see .h file)
 	pnew->x.xb[3] = 0;	// not used for now
 	pnew->x.xb[0] = 0;	// Retry counter for TERRs
-
+dbugabort[20] += 1;
 	/* Find location to insert new msg.  Lower value CAN ids are higher priority, 
            and when the CAN id msg to be inserted has the same CAN id as the 'pfor' one
            already in the list, then place the new one further down so that msgs with 
            the same CAN id do not get their order of transmission altered. */
- 	disable_TXints(save);
+ 	disable_ints(save);
 
 	for (pfor = &pctl->pend; pfor->plinknext != NULL; pfor = pfor->plinknext)
 	{
@@ -426,20 +449,74 @@ int can_driver_put(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF *pcan, u8 maxretr
 	/* Add new msg to pending list. (TX interrupt is still disabled) */
 	pnew->plinknext = pfor->plinknext; 	// Insert new msg into 
 	pfor->plinknext = pnew;			//   pending list.
+	pctl->txbct += 1;	// Increment running ct of pending list
 	pfor =  NULL;	// Signal TX interrupt that search loop is not active.
+
 	if (pctl->pxprv == NULL) // Is sending complete?
+//#if ( (pctl->pxprv == NULL) || ((CAN_TSR(pctl->vcan) & CAN_TSR_TME0) != 0) ) // Is sending complete?
 	{ // pxprv == NULL means CAN mailbox did not get loaded, so CAN is idle.
-		loadmbx2(pctl); // Start sending
+		loadmbx2(pctl,0); // Start sending
 	}
 	else
-	{ // CAN sending is in progress.
+   { // Here CAN is supposed to be running
 		if ((pctl->pxprv)->plinknext == pnew) // Does pxprv need adjustment?
 		{ // Here yes. We inserted a msg between 'pxprv' and 'pxprv->linknext'
 			pctl->pxprv = pnew;	// Update 'pxprv' so that it still points to msg TX using.
 			pctl->can_errors.can_pxprv_fwd_one += 1;	// Count: Instances that pxprv was adjusted in 'for' loop
 		}
+/* &&&&&&&&&&&&&& BEGIN ABORT MODS &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& */
+#ifdef YESABORTCODE
+		/* Check if new msg is higher CAN priority than msg in mailbox */
+		if ( (pctl->pend.plinknext)->can.id < (CAN_TIxR (pctl->vcan, CAN_MBOX0) & ~0x1)  )
+		{ // Here, new msg has higher CAN priority than msg in mailbox
+
+/* CAN transmit status register (CAN_TSR) ref manual p.1104 --
+Set by software to abort the transmission request for the corresponding mailbox.
+Cleared by hardware when the mailbox becomes empty.
+Setting this bit has no effect when the mailbox is not pending for transmission. 
+*/
+/* [deh] "no effect"--does this mean the bit does not appear in the register? */
+if (pctl == pctl0)
+{
+dbugabort[0] += 1;
+dbugabort[1] = pctl->txbct;
+dbugabort[8] = (pctl->pend.plinknext)->can.id;
+//$$		CAN_TSR(pctl->vcan) |= CAN_TSR_ABRQ0;	// Set Abort request for mailbox 0.
+dbugabort[9] = CAN_TIxR (pctl->vcan, CAN_MBOX0);
+}
+else
+{
+dbugabort[4] += 1;
+dbugabort[5] = pctl->txbct;
+dbugabort[10] = (pctl->pend.plinknext)->can.id;
+dbugabort[11] = CAN_TIxR (pctl->vcan, CAN_MBOX0);
+
+dbugx[dbugxidx].idb4  = dbugabort[11];
+dbugx[dbugxidx].idaf  = dbugabort[10];
+//$$	CAN_TSR(pctl->vcan) |= CAN_TSR_ABRQ0;	// Set Abort request for mailbox 0.
+dbugx[dbugxidx].aflag = pctl->abortflag;
+dbugx[dbugxidx].bit   = CAN_TSR(pctl->vcan);
+dbugx[dbugxidx].mbx2  = 0xff;
+dbugx[dbugxidx].ct    = pctl->txbct;
+dbugx[dbugxidx].ct1   = dbugabort[6]; // Number of aborts *handled*
+dbugx[dbugxidx].updn = updn;
+arbqctr += 1;
+dbugx[dbugxidx].arbq = arbqctr;
+
+dbugxidx += 1; if (dbugxidx >= DBUGXSZ) dbugxidx = 0;
+dbugx[dbugxidx].idb4 = ~0x2;
+dbugx[dbugxidx].idaf = ~0x7;
+}
+
+			pctl->abortflag = 1;	// Set flag for interrupt routine use
+reenable_ints(save);  // This could result in next msg being aborted!
+			CAN_TSR(pctl->vcan) |= CAN_TSR_ABRQ0;	// Set Abort request for mailbox 0.
+return 0;
+		}
+/* &&&&&&&&&&&&&& END ABORT MODS &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& */
+#endif
 	}
-	pctl->txbct += 1;	// Increment running ct of pending list
+
 	reenable_ints(save);
 
 	return 0;	// Success!
@@ -448,23 +525,59 @@ int can_driver_put(struct CAN_CTLBLOCK* pctl, struct CANRCVBUF *pcan, u8 maxretr
  * static void loadmbx2(struct CAN_CTLBLOCK* pctl)
  * @brief	: Load mailbox
  ----------------------------------------------------------------------------------------------*/
-static void loadmbx2(struct CAN_CTLBLOCK* pctl)
+static void loadmbx2(struct CAN_CTLBLOCK* pctl, u16 dbug)
 {
 	volatile struct CAN_POOLBLOCK* p = pctl->pend.plinknext;
 
+if (pctl == pctl1)
+{
+dbugx[dbugxidx].idb4  = CAN_TIxR (pctl->vcan, CAN_MBOX0);
+dbugx[dbugxidx].aflag = pctl->abortflag;
+dbugx[dbugxidx].mbx2  = dbug;
+dbugx[dbugxidx].ct    = pctl->txbct;
+dbugx[dbugxidx].ct1   = dbugabort[6]; // Number of aborts handled
+dbugx[dbugxidx].bit   = CAN_TSR(pctl->vcan);
+dbugx[dbugxidx].arbq  = arbqctr;
+}
 	if (p == NULL)
 	{
 		pctl->pxprv = NULL;
+
+if (pctl == pctl1)
+{
+dbugx[dbugxidx].idaf = 0xaaaaaaaa;
+dbugxidx += 1; if (dbugxidx >= DBUGXSZ) dbugxidx = 0;
+dbugx[dbugxidx].idb4 = ~0x1;
+dbugx[dbugxidx].idaf = ~0x3;
+}
 		return; // Return if no more to send
 	}
-	pctl->pxprv = &pctl->pend;	// Save in a static var
+	pctl->pxprv = &pctl->pend;	// Save
+
+dbugabort[19] += 1;
 
 	/* Load the mailbox with the message.  CAN ID low bit starts xmission. */
 	CAN_TDTxR(pctl->vcan, CAN_MBOX0) =  p->can.dlc;	 	// CAN_TDT0R:  mailbox 0 time & length p 660
 	CAN_TDLxR(pctl->vcan, CAN_MBOX0) =  p->can.cd.ui[0];	// CAN_TDL0RL: mailbox 0 data low  register p 661 
 	CAN_TDHxR(pctl->vcan, CAN_MBOX0) =  p->can.cd.ui[1];	// CAN_TDL0RH: mailbox 0 data low  register p 661 
 	/* Load CAN ID and set TX Request bit */
+if (pctl== pctl1)
+{
+dbugx[dbugxidx].aflag &= 0x80;
+dbugx[dbugxidx].aflag |= (CAN_TSR (pctl->vcan) & CAN_TSR_TME0) >> (26-7);
+}
 	CAN_TIxR (pctl->vcan, CAN_MBOX0) =  (p->can.id | 0x1); 	// CAN_TI0R:   mailbox 0 identifier register p 659
+
+if (pctl== pctl1)
+{
+updn  += 1;
+dbugx[dbugxidx].updn = updn;
+dbugx[dbugxidx].idaf = CAN_TIxR (pctl->vcan, CAN_MBOX0);
+dbugxidx += 1;
+if (dbugxidx >= DBUGXSZ) dbugxidx = 0;
+dbugx[dbugxidx].idb4 = ~0x1;
+dbugx[dbugxidx].idaf = ~0x1;
+}
 	return;
 }
 /******************************************************************************
@@ -524,6 +637,23 @@ void CAN_TX_IRQHandler(struct CAN_CTLBLOCK* pctl)
 {
 	 __attribute__((__unused__))int temp;	// Dummy for readback of hardware registers
 
+if (pctl == pctl1)
+{
+   updn  -= 1;
+	dbugx[dbugxidx].updn = updn;
+
+dbugx[dbugxidx].idb4  = CAN_TIxR (pctl->vcan, CAN_MBOX0);
+dbugx[dbugxidx].idaf  = 0xbbbbbbbb;
+dbugx[dbugxidx].aflag = pctl->abortflag;
+dbugx[dbugxidx].mbx2  = 33;
+dbugx[dbugxidx].ct    = pctl->txbct;
+dbugx[dbugxidx].ct1   = dbugabort[6]; // Number of aborts handled
+dbugx[dbugxidx].bit   = CAN_TSR(pctl->vcan);
+dbugx[dbugxidx].arbq  = arbqctr;
+dbugxidx += 1; if (dbugxidx >= DBUGXSZ) dbugxidx = 0;
+dbugx[dbugxidx].idb4 = ~0x1f;
+dbugx[dbugxidx].idaf = ~0xf;
+}
 
 	/* JIC: mailboxes 1 & 2 are not used and should not have a flag */
 	if ((CAN_TSR(pctl->vcan) & (CAN_TSR_RQCP1 | CAN_TSR_RQCP2)) != 0)
@@ -531,6 +661,7 @@ void CAN_TX_IRQHandler(struct CAN_CTLBLOCK* pctl)
 		CAN_TSR(pctl->vcan) = (CAN_TSR_RQCP1 | CAN_TSR_RQCP2);	// Turn flags OFF
 		pctl->can_errors.can_cp1cp2 += 1;	// Count: (RQCP1 | RQCP2) unexpectedly ON
 		temp = CAN_TSR(pctl->vcan);	// JIC Prevent tail-chaining
+dbugabort[17] += 1;
 		return;
 	}
 
@@ -543,6 +674,7 @@ void CAN_TX_IRQHandler(struct CAN_CTLBLOCK* pctl)
 	if (pctl->pend.plinknext == NULL) // Is the linked list empty?
 	{ // Here, yes.  Something bogus, and never try to remove a block when the list is empty!
 		pctl->can_errors.txint_emptylist += 1; // Count: TX interrupt with pending list empty
+dbugabort[14] += 1;
 		return;
 	}
 
@@ -550,13 +682,45 @@ void CAN_TX_IRQHandler(struct CAN_CTLBLOCK* pctl)
 	if ( (tsr & CAN_TSR_RQCP0) == 0) // Is mailbox0 RQCP0 (request complete) ON?
 	{ // Here, no RXCPx bits are on, so interrupt is bogus.
 		temp = CAN_TSR(pctl->vcan);	// JIC Prevent tail-chaining
+dbugabort[18] += 1;
 		return;
 	}
 
 	if ((tsr & CAN_TSR_TXOK0) != 0) // TXOK0: Transmission OK for mailbox 0?
-	{ // Here, yes. Flag msg for removal from pending list.
+	{ // Here, yes. 
 		moveremove2(pctl);	// remove from pending list, add to free list
 	}
+
+/* &&&&&&&&&&&&&& BEGIN ABORT MODS &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& */
+#ifdef YESABORTCODE
+	else if (pctl->abortflag != 0) // Transmission not OK.  Was this due to ABRQ0?
+	{ // Here, yes.  Do not remove from pending queue
+if (pctl == pctl0)
+ dbugabort[21] = CAN_TIxR (pctl->vcan, CAN_MBOX0);
+else
+ dbugabort[22] = CAN_TIxR (pctl->vcan, CAN_MBOX0);
+
+		loadmbx2(pctl,5);		// Load mailbox0 with top of pending queue
+		pctl->abortflag = 0;
+
+if (pctl == pctl0)
+{
+dbugabort[2] += 1;
+dbugabort[3] = pctl->txbct;
+dbugabort[13] = CAN_TIxR (pctl->vcan, CAN_MBOX0);
+}
+else
+{
+dbugabort[6] += 1;
+dbugabort[7] = pctl->txbct;
+dbugabort[15] = CAN_TIxR (pctl->vcan, CAN_MBOX0);
+}
+		temp = CAN_TSR(pctl->vcan);	// JIC Prevent tail-chaining
+		return;		
+	}
+#endif
+/* &&&&&&&&&&&&&& END ABORT MODS &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& */
+
 	else if ((tsr & CAN_TSR_TERR0) != 0) // Transmission error for mailbox 0? 
 	{ // Here, TERR error bit, so try it some more.
 		pctl->can_errors.can_txerr += 1; 	// Count total CAN errors
@@ -581,7 +745,10 @@ void CAN_TX_IRQHandler(struct CAN_CTLBLOCK* pctl)
 		pctl->can_errors.can_no_flagged += 1; // Count for monitoring purposes
 	}
 
-	loadmbx2(pctl);		// Load mailbox 0.  Mailbox should be available/empty.
+	loadmbx2(pctl,7);		// Load mailbox 0.  Mailbox should be available/empty.
+/* &&&&&&&&&&&&&& BEGIN ABORT MODS &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& */
+	pctl->abortflag = 0;
+/* &&&&&&&&&&&&&& END ABORT MODS &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& */
 	temp = CAN_TSR(pctl->vcan);	// JIC Prevent tail-chaining
 	return;
 }

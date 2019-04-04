@@ -69,44 +69,42 @@ Program load addresses, or sequence number for other multi-msg data payloads
 #ifndef SPECIALIRQPRIORITIES
 
 /* Interrupt priorities - lower numbers are higher priority.  */
-#define TIM4_PRIORITY				0x20	//   ### Higher than CAN_RX1 (FIFO 1)
-#define ADC1_2_PRIORITY_FOTO			0x40	//   Interrupt priority for ADC1 or ADC2 interrupt
-#define SYSTICK_PRIORITY_SE 			0X50	//   ### Lower than CAN_RX1 (FIFO 1)
-#define TIM4_PRIORITY_SE			0x60	//   RPM sensors for engine.
-//#define DMA1_CH1_PRIORITY			0x80	//   DMA 1/2 and end of buffer interrupt for adc
-#define ADC_FSMC_PRIORITY			0x80	//   Histogram
-#define NVIC_I2C1_EV_IRQ_PRIORITY		0x90	// * Post CAN FIFO 1 interrupt processing
-#define NVIC_I2C1_ER_IRQ_PRIORITY		0xa0	// * Post CAN FIFO 0 interrupt processing
-#define NVIC_I2C2_EV_IRQ_PRIORITY 		0xb0	//   Post
-#define NVIC_I2C2_ER_IRQ_PRIORITY		0xe0	// * Post can_buff interrupt processing
+#define TIM4_PRIORITY              0x20	//   ### Higher than CAN_RX1 (FIFO 1)
+#define ADC1_2_PRIORITY_FOTO       0x40	//   Interrupt priority for ADC1 or ADC2 interrupt
+#define SYSTICK_PRIORITY_SE        0X50	//   ### Lower than CAN_RX1 (FIFO 1)
+#define TIM4_PRIORITY_SE           0x60	//   RPM sensors for engine.
+//#define DMA1_CH1_PRIORITY          0x80	//   DMA 1/2 and end of buffer interrupt for adc
+#define ADC_FSMC_PRIORITY          0x80	//   Histogram
+#define NVIC_I2C1_EV_IRQ_PRIORITY  0x90	// * Post CAN FIFO 1 interrupt processing
+#define NVIC_I2C1_ER_IRQ_PRIORITY  0xa0	// * Post CAN FIFO 0 interrupt processing
+#define NVIC_I2C2_EV_IRQ_PRIORITY  0xb0	//   Post
+#define NVIC_I2C2_ER_IRQ_PRIORITY  0xe0	// * Post can_buff interrupt processing
 #endif
 
-#define NVIC_CAN_RX1_IRQ_PRIORITY		0x70	//   CAN1: Receive FIFO 1 (and related) [time sync]
-#define NVIC_CAN2_RX1_IRQ_PRIORITY		0x70	//   CAN2: Receive FIFO 1 (and related) [time sync]
-#define NVIC_FSMC_PRIORITY			0x70	// * ### Lower than SYSTICK (ADC filtering after DMA interrupt)
-#define NVIC_CAN_SCE_IRQ_PRIORITY		0x70	//   Errors & status change
-#define NVIC_USB_HP_CAN_TX_IRQ_PRIORITY		0x70	//   CAN1: Transmit FIFO
-#define NVIC_CAN2_TX_IRQ_PRIORITY		0x70	//   CAN2: Transmit FIFO
-#define NVIC_USB_LP_CAN_RX0_IRQ_PRIORITY	0x70	//   CAN1: Receive FIFO 0 (and related)
-#define NVIC_CAN2_RX0_IRQ_PRIORITY		0x70	//   CAN2: Receive FIFO 0 (and related)
+#define NVIC_CAN_RX1_IRQ_PRIORITY         0x70	//   CAN1: Receive FIFO 1 (and related) [time sync]
+#define NVIC_CAN2_RX1_IRQ_PRIORITY        0x70	//   CAN2: Receive FIFO 1 (and related) [time sync]
+#define NVIC_FSMC_PRIORITY                0x70	// * ### Lower than SYSTICK (ADC filtering after DMA interrupt)
+#define NVIC_CAN_SCE_IRQ_PRIORITY         0x70	//   Errors & status change
+#define NVIC_USB_HP_CAN_TX_IRQ_PRIORITY   0x70	//   CAN1: Transmit FIFO
+#define NVIC_CAN2_TX_IRQ_PRIORITY         0x70	//   CAN2: Transmit FIFO
+#define NVIC_USB_LP_CAN_RX0_IRQ_PRIORITY  0x70	//   CAN1: Receive FIFO 0 (and related)
+#define NVIC_CAN2_RX0_IRQ_PRIORITY        0x70	//   CAN2: Receive FIFO 0 (and related)
 
 #define CANBAUDRATE	500000	// Name says it all
 
 /* Parameters for CAN WINCH */
-#define CANWINCH_BAUDRATE	500000		// CAN1 baudrate 
-#define CANWINCH_BAUDRATE_CAN2	500000		// CAN2 baudrate
+#define CANWINCH_BAUDRATE       500000		// CAN1 baudrate 
+#define CANWINCH_BAUDRATE_CAN2  500000		// CAN2 baudrate
 
 //(Should the following be in the database ???????????) */
-#define CANWINCH_FIFO1_ID1	0x00000000	// FIFO1 High priority block CAN ID #1
-#define CANWINCH_FIFO1_MSK1	0xFF800000	// FIFO1 High priority block MASK #1
-#define CANWINCH_FIFO0_ID1	0x00000000	// FIFO0 Low  priority block CAN ID #1
-#define CANWINCH_FIFO0_MSK1	0x00000000	// FIFO0 Low  priority block MASK #1
-
+#define CANWINCH_FIFO1_ID1   0x00000000	// FIFO1 High priority block CAN ID #1
+#define CANWINCH_FIFO1_MSK1  0xFF800000	// FIFO1 High priority block MASK #1
+#define CANWINCH_FIFO0_ID1   0x00000000	// FIFO0 Low  priority block CAN ID #1
+#define CANWINCH_FIFO0_MSK1  0x00000000	// FIFO0 Low  priority block MASK #1
 
 #define CAN_IDE	0x4	// IDE bit in CAN msg
 #define CAN_RTR 0x2	// RTR bit in CAN msg
 #define CAN_EXTENDED_MASK 0x001FFFF8	// Bits in extended address mask
-
 
 /* ============================================================================================================================= */
 #define CANOPEN		// CAN Open compatibiilty #define's

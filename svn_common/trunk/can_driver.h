@@ -81,8 +81,8 @@ union CAN_X
 
 struct CAN_POOLBLOCK	// Used for common CAN TX/RX linked lists
 {
-	 struct CANRCVBUF can;		// Msg queued
 volatile struct CAN_POOLBLOCK* volatile plinknext;	// Linked list pointer (low value id -> high value)
+	 struct CANRCVBUF can;		// Msg queued
 	 union  CAN_X x;			// Extra goodies that are different for TX and RX
 
 };
@@ -104,8 +104,10 @@ volatile struct CAN_POOLBLOCK  pend;		// Always present block, i.e. list pointer
 volatile struct CAN_POOLBLOCK* volatile pxprv;	// pxprv->plinknext points to msg being sent.  pxprv is NULL if TX is idle.
 //volatile struct CAN_POOLBLOCK* volatile  pfor; 	// Loop pointer for the 'for’ loop.  pfor is NULL if the ‘for' loop is not active.
 
-	struct CAN_RCV_PTRS	ptrs0;		//
-	struct CAN_RCV_PTRS	ptrs1;		//
+	struct CAN_RCV_PTRS	ptrs0;		// RX0
+	struct CAN_RCV_PTRS	ptrs1;		// RX1
+
+	uint32_t abortflag;	// 1 = ABRQ0 bit in TSR was set.
 
 	struct CANWINCHPODCOMMONERRORS can_errors;	// A group of error counts
 	int	txbct;		// Buffer counter: Number of msg blocks commandeered by this TX 
@@ -113,6 +115,7 @@ volatile struct CAN_POOLBLOCK* volatile pxprv;	// pxprv->plinknext points to msg
 	u32	bogusct;	// Count of bogus CAN IDs rejected
 	s8 	ret;		// Return code from routine call
 };
+
 /* Misc parameters for initializing  CAN1 and CAN1 */
 struct CAN_INIT
 {
@@ -121,6 +124,7 @@ struct CAN_INIT
 	int	rx0max;		// Max block ct, this CAN RX0 can use
 	int	rx1max;		// Max block ct, this CAN RX1 can use
 };
+
 // (1) the 1stnon-zero value is used when two CANs are init'ed
 /* Current counts of blocks commandeered by TX, RX0, RX1 */
 struct CAN_BLOCK_CTS

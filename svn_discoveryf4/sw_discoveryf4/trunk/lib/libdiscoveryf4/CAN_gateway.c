@@ -21,7 +21,7 @@ int CAN_gateway_send(struct CANRCVBUF* pg)
 		return -1;	// Payload ct too big
 	
 	/* Check if an illegal id combination */
-	if ( ((pg->id & 0x001ffff9) != 0) && ((pg->id & 0x04) == 0) ) 
+	if ( ((pg->id & 0x001ffff8) != 0) && ((pg->id & 0x04) == 0) ) 
 	{ // Here, in the additional 18 extended id bits one or more are on, but IDE flag is for standard id (11 bits)
 		return -2; // Illegal id
 	}

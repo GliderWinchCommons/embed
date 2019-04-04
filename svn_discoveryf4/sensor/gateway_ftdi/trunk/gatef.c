@@ -468,7 +468,7 @@ caninB(pfifo0);
 			canbufidxm = adv_index(canbufidxm, CANBUSBUFSIZE);	// Advance outgoing buffer index.
 		}		
 	}
-	return 0;	
+	return 0;
 }
 /* **************************************************************************************
  * static void canbuf_add(struct CANRCVBUF* p);

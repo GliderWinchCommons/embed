@@ -450,6 +450,7 @@ printf("%d %s\n",i, argv[i]);
 					{ // Here, msg did not complete correctly: xret = (-4 <= (return code) < 0)
 						printf("\nPC_msg_get_msg_mode error: %i\n",xret);
 						err_ascii += 1;					
+printf("\n%s\n",&pctogateway.asc[0]);
 					}
 					/* Check for sequence error (even though msg might have had errors). */
 					sequence_prev += 1;

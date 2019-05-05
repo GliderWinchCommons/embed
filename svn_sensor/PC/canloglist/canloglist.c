@@ -1,13 +1,16 @@
 /******************************************************************************
-* File Name          : cancnvt.c
-* Date First Issued  : 10/09/2018
+* File Name          : canloglist.c
+* Date First Issued  : 05/04/2019
 * Board              : Linux PC
-* Description        : Convert gateway format CAN msgs to ascii readable payloads
+* Description        : Read log file, build CAN ID list w payload type if in database
 *******************************************************************************/
 /*
-gcc -Wall cancnvt.c -o cancnvt 
-gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/logcsa/181008_212136
-gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/GliderWinchItems/dynamometer/docs/data/log190428.txt | tee gsm1
+05/04/2019 Hack of cancnvt.c
+
+gcc -Wall canloglist.c -o canloglist 
+gcc -Wall canloglist.c -o canloglist && ./canloglist < ~/logcsa/181008_212136
+gcc -Wall canloglist.c -o canloglist && ./canloglist < ~/GliderWinchItems/dynamometer/docs/data/log190428.txt | tee gsm1
+gcc -Wall canloglist.c -o canloglist && ./canloglist < ~/GliderWinchItems/dynamometer/docs/data/log190428.txt | tee gsm1 | sort -k 1
 
 */
 
@@ -21,6 +24,8 @@ gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/GliderWinchItems/dynamometer/doc
 #include <stdlib.h>
 #include "../../../svn_common/trunk/db/gen_db.h"
 #include "../../../svn_common/trunk/common_can.h"
+
+void cmd_f_do_msg(char* po, struct CANRCVBUF* p);
 
 
 /* Line buffer size */
@@ -45,9 +50,15 @@ struct CANTBL
 	unsigned char uc[8];
 	char tag;			// T = time, S = time sync, blank = all other
 	int	fmt_code;	// E.g. U32 converted to 2
-	char c[NAMESZ];	// CAN_INSERT.sql name	
+	unsigned int ct;  // Number of instances
+	char c[NAMESZ];	// CAN_INSERT.sql payload ascii
+	char p[NAMESZ];   // CAN_INSERT.sql CANID name
 }cantbl[CANTBLSZ];
 int32_t	cantblsz = 0;
+
+#define CANIDLISTSZ 512
+struct CANTBL canidlist[CANIDLISTSZ];
+int32_t canidlistidx = 0;
 
 struct PAYTBL
 {
@@ -118,7 +129,7 @@ int main(int argc, char **argv)
 		printf ("\nInput file did not open: %s\n",paytype); 
 		exit (-1);
 	}
-printf("payload type file opened: %s\n",paytype);
+printf("z payload type file opened: %s\n",paytype);
 	while ( (fgets (&buf[0],LINESZ,fpIn)) != NULL)	// Get a line
 	{
 		if (strncmp(buf,"INSERT",6) == 0)
@@ -137,10 +148,12 @@ printf("payload type file opened: %s\n",paytype);
 			paytblsz += 1;
 		}
 	}
+#ifdef PRINTTABLES
 	for (i = 0; i < paytblsz; i++)
 	{
 		printf("%3d %3d %s\n",i,paytbl[i].code,paytbl[i].ascii);
 	}
+#endif
 	fclose(fpIn);
 	printf("=================================================\n\n");
 
@@ -149,10 +162,10 @@ printf("payload type file opened: %s\n",paytype);
 	/* Convert CANID table ascii format field to numeric code */
 	if ( (fpIn = fopen (canid_insert,"r")) == NULL)
 	{
-		printf ("\nInput file did not open: %s\n",canid_insert); 
+		printf ("\n Input file did not open: %s\n",canid_insert); 
 		exit (-1);
 	}
-printf("canid_insert file opened: %s\n",canid_insert);
+printf("z canid_insert file opened: %s\n",canid_insert);
 
 	while ( (fgets (&buf[0],LINESZ,fpIn)) != NULL)	// Get a line
 	{
@@ -187,32 +200,35 @@ printf("canid_insert file opened: %s\n",canid_insert);
 				{
 //printf("%d 0x%08X %s %d\n",cantblsz,cantbl[i].id,px,paytbl[i].code);
 					cantbl[cantblsz].fmt_code = paytbl[i].code;
+					strncpy(&cantbl[cantblsz].c[0], &paytbl[i].ascii[0],NAMESZ);
 					break;
 				}
 			}
 			cantblsz += 1;
 		}
 	}
+#ifdef PRINTTABLES
 	printf("cntblsz: %d\n",cantblsz);
 	for (i = 0; i < cantblsz; i++)
 	{
 		printf("%3d 0x%08X %3d\n",i,cantbl[i].id,cantbl[i].fmt_code);
 	}
+#endif
 
 	/* --------- SORT BY CAN ID ---------------------------------------------------------------------- */
 	qsort(&cantbl[0], cantblsz, sizeof(struct CANTBL), cmpfunc);// Sort for bsearch'ing
 
+#ifdef PRINTTABLES
 	for (i = 0; i < cantblsz; i++)
 	{
 		printf("S %3d 0x%08X %3d\n",i,cantbl[i].id,cantbl[i].fmt_code);
 	}
-/* ==================== Convert data ================================================ */
+#endif
+/* ==================== Make list of CAN IDs from data file =========================== */
 	int m;
-	int n;
 	unsigned int ui;
 	struct CANTBL cantblx;
 	struct CANTBL* ptbl;
-	char cout[512];
 
 	while ( (fgets (&buf[0],LINESZ,stdin)) != NULL)	// Get a line from stdin
 	{
@@ -226,45 +242,62 @@ printf("canid_insert file opened: %s\n",canid_insert);
 				sscanf(&buf[m],"%2x",&ui);
 				cantblx.id = (cantblx.id << 8) + ui;
 			}
+			if (cantblx.id == 0) 
+				continue;
+
 			sscanf(&buf[10],"%2x",&cantblx.dlc);
-
-			// Get payload bytes	converted to binary
-			for (m = 0; m < cantblx.dlc; m++)
-			{
-				sscanf(&buf[12+2*m],"%2x",(unsigned int*)&cantblx.uc[m]);
-			}
 		
-			// Lookup payload code
-				ptbl = bsearch(&cantblx.id, &cantbl[0], cantblsz, sizeof(struct CANTBL), cmpfunc);
-				if (ptbl != NULL)
+
+			/* Add CAN id to list if not already present. */
+			for (m = 0; m < canidlistidx; m++)
+			{
+				if (canidlist[m].id == cantblx.id)
 				{
-					cantblx.fmt_code = ptbl->fmt_code;
-
-//printf("K %08X %2d: %2d:",cantblx.id,cantblx.dlc,cantblx.fmt_code);
-//for (n = 0; n < cantblx.dlc; n++) printf(" %02x",cantblx.uc[n]);printf("\n");
-
-					n = sprintf(&cout[0],"0x%08X %3d ",cantblx.id,ptbl->fmt_code);
-					payloadcnvt(&cout[n],&cantblx);
+					canidlist[m].ct += 1;
+					break;
 				}
-				else
-				{ // Here CAN id was not in CANID_INSERT.sql table
-//printf("ID: 0x%08X dlc: %d %s \n",cantblx.id, cantblx.dlc,buf);
-					if (!((cantblx.id == 0) || (cantblx.dlc > 8)))
-					{
-						n = sprintf(&cout[0],"0x%08X  99 ",cantblx.id);
-						for (m = 0; m < cantblx.dlc; m++)
-						{
-							sprintf(&cout[m*3+n]," %02X",cantblx.uc[m]);
-						}
+			}
+			if (m == canidlistidx)
+			{ // Here, not found.  Add to list
+				canidlist[canidlistidx].id = cantblx.id;
+				canidlist[canidlistidx].ct = 1;
+				// Lookup database CANID name
+					ptbl = bsearch(&cantblx.id, &cantbl[0], cantblsz, sizeof(struct CANTBL), cmpfunc);
+					if (ptbl != NULL)
+					{ // Found in database list.  Copy info to list
+						canidlist[canidlistidx].fmt_code = ptbl->fmt_code;
+						strncpy(&canidlist[canidlistidx].c[0], &ptbl->c[0],NAMESZ);
 					}
 					else
-					{
-						sprintf(&cout[0],"0x%08X  98 %i\n",cantblx.id,cantblx.dlc);
+					{ // Here, not found in database.  Rogue CAN id!
+						canidlist[canidlistidx].fmt_code = NONE;
+						strncpy(&canidlist[canidlistidx].c[0],"-----------------",NAMESZ);
 					}
-				}
-				printf("%s\n",cout);
+					canidlistidx += 1;
+					if (canidlistidx >= CANIDLISTSZ) canidlistidx -= 1;
+			}
 		}
 	}
+	printf("\n=============================================================\n");
+	printf(" Number of CAN IDs: %i\n",canidlistidx);
+	for (m = 0; m < canidlistidx; m++)
+	{
+		if (canidlist[m].ct < 2) continue;
+		printf("%08X ", canidlist[m].id);
+		if ((canidlist[m].id & 0x4) != 0)
+		{ // Here, 29b address
+			ui = canidlist[m].id >> 3;
+			printf("0X%08x %10i",ui, ui);
+		}
+		else
+		{ // Here, 11b address
+			ui = canidlist[m].id >> 21;
+			printf ("     0X%03X %10i",ui, ui);
+		}
+		printf(" %9i", canidlist[m].ct);
+		printf(" %s\n", &canidlist[m].c[0]);
+
+	}		
 }
 
 /* ******************************************************************************** 

@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2018-10-05 22:25:11.83
+// 2019-05-01 20:36:49.49
 
-#define CANID_COUNT 229
+#define CANID_COUNT 230
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -199,6 +199,7 @@
 #define  CANID_CMD_YOGURT_1R      0x29800004  // YOGURT_1       : Yogurt: YOGURT_1: R Yogurt maker parameters
 #define  CANID_MSG_YOGURT_1       0x29400000  // YOGURT_1       : Yogurt: YOGURT_1: Yogurt maker msgs
 #define  CANID_HB_YOGURT_1        0x29600000  // YOGURT_1       : Yogurt: YOGURT_1: Heart-beats
+#define  CANID_MSG_METER_TORQ1    0x4080000C  // BRIDGE1        : Bridge1: Eng Manifold recomputed
 #define  CANID_UNIT_2             0x04000000  // UNIT_2         : Sensor unit: Drive shaft encoder #1
 #define  CANID_UNIT_3             0x03800000  // UNIT_3         : Sensor unit: Engine
 #define  CANID_UNIT_4             0x03A00000  // UNIT_4         : Sensor unit: Lower sheave shaft encoder
@@ -308,8 +309,8 @@
 #define  U8_U8_U32               15        //  [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1],uint32_t,
 #define  U8_U8_S32               16        //  [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1], int32_t,
 #define  U8_U8_FF                17        //  [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1], Full Float,
-#define  U16                     18        //  [0]-[2]uint16_t                                
-#define  S16                     19        //  [0]-[2] int16_t                                
+#define  U16                     18        //  [0]-[1]:uint16_t                               
+#define  S16                     19        //  [0]-[1]: int16_t                               
 #define  LAT_LON_HT              20        //  [0]:[1]:[2]-[5]: Fix type, bits fields, lat/lon/ht
 #define  U8_FF                   21        //  [0]:[1]-[4]: uint8_t, Full Float               
 #define  U8_HF                   22        //  [0]:[1]-[2]: uint8_t, Half Float               
@@ -808,6 +809,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 743  */
+/* TOTAL COUNT OF #defines = 744  */
 /* Test 2016/06/12 */
 

@@ -25,6 +25,9 @@ gcc -Wall canloglist.c -o canloglist && ./canloglist < ~/GliderWinchItems/dynamo
 #include "../../../svn_common/trunk/db/gen_db.h"
 #include "../../../svn_common/trunk/common_can.h"
 
+/* Print tables from database as they are loaded. */
+//#define PRINTTABLES
+
 void cmd_f_do_msg(char* po, struct CANRCVBUF* p);
 
 
@@ -158,6 +161,7 @@ printf("z payload type file opened: %s\n",paytype);
 	printf("=================================================\n\n");
 
 	/* =============== Read table of CANID v payload type ================================= */
+// INSERT INTO CANID VALUES ('CANID_CMD_CANSENDER_2R',  'A0400004', 'CANSENDER','UNDEF',	'Cansender_2: R Command CANID');
 	
 	/* Convert CANID table ascii format field to numeric code */
 	if ( (fpIn = fopen (canid_insert,"r")) == NULL)
@@ -172,9 +176,9 @@ printf("z canid_insert file opened: %s\n",canid_insert);
 		if (strncmp(buf,"INSERT",6) == 0)
 		{
 //printf("%d %s",cantblsz,buf);
-			po = &cantbl[cantblsz].c[0];
-			pc = strchr(buf,'\''); // Spin forward to ascii CANID name
-			pc++;
+			po = &cantbl[cantblsz].p[0]; // Point to saving name in struct
+			pc = strchr(buf,'\''); // Spin forward to first ' of ascii CANID name
+			pc++; // Point to first char of name
 			i = 0;
 			while ((*pc != '\'')&&(*pc != 0)&&(i++ < NAMESZ)) *po++ = *pc++;
 			*po = 0;
@@ -267,17 +271,28 @@ printf("z canid_insert file opened: %s\n",canid_insert);
 					{ // Found in database list.  Copy info to list
 						canidlist[canidlistidx].fmt_code = ptbl->fmt_code;
 						strncpy(&canidlist[canidlistidx].c[0], &ptbl->c[0],NAMESZ);
+						strncpy(&canidlist[canidlistidx].p[0], &ptbl->p[0],NAMESZ);
 					}
 					else
 					{ // Here, not found in database.  Rogue CAN id!
 						canidlist[canidlistidx].fmt_code = NONE;
 						strncpy(&canidlist[canidlistidx].c[0],"-----------------",NAMESZ);
+						strncpy(&canidlist[canidlistidx].p[0],".................",NAMESZ);
 					}
 					canidlistidx += 1;
 					if (canidlistidx >= CANIDLISTSZ) canidlistidx -= 1;
 			}
 		}
 	}
+/* ============ Print list of CAN ids ============================================*/
+/*
+Column 1:  32b CAN ID in hardware format
+Column 2:  11b or 29b CAN ID right justified hex
+Column 3:  11b or 29b decimal
+Column 4:  Number of msgs for this CAN id
+Column 5:  Database ascii string for payload format; dashes for not found in database
+Column 6:  Database ascii string for CANID name; dots for not found in database
+*/
 	printf("\n=============================================================\n");
 	printf(" Number of CAN IDs: %i\n",canidlistidx);
 	for (m = 0; m < canidlistidx; m++)
@@ -295,7 +310,8 @@ printf("z canid_insert file opened: %s\n",canid_insert);
 			printf ("     0X%03X %10i",ui, ui);
 		}
 		printf(" %9i", canidlist[m].ct);
-		printf(" %s\n", &canidlist[m].c[0]);
+		printf(" %s ", &canidlist[m].c[0]);
+		printf("\t %s\n", &canidlist[m].p[0]);
 
 	}		
 }

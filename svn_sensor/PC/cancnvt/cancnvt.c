@@ -7,7 +7,25 @@
 /*
 gcc -Wall cancnvt.c -o cancnvt 
 gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/logcsa/181008_212136
-gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/GliderWinchItems/dynamometer/docs/data/log190428.txt | tee gsm1
+gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt | tee gsm1
+
+(All caps came from database.  Others are temporarily local.)
+( rx = received from DMOC; tx = sent by GEVCU)
+00400000      0X002          2      7717 U8 	 CANID_HB_TIMESYNC
+05683004 0X00ad0600   11339264       967 -----------------  ..............
+46400000      0X232        562      2775 --Speed tx-------  ...............
+46600000      0X233        563      2775 --Torque tx------  ..............
+46800000      0X234        564      2775 --unchanging-----  ...............
+47400000      0X23A        570      4831 --Torque rx------  ...............
+47600000      0X23B        571      4831 --Speed&status rx  ...............
+47C00000      0X23E        574      4831 --DQ volt amps rx  ..............
+CA000000      0X650       1616      4831 --HV status-rx     ..............
+CA200000      0X651       1617        97 --Temperatures---	...............
+E1000000      0X708       1800       120 UNIXTIME 	 CANID_HB_GPS_TIME_1
+E1200000      0X709       1801        60 NONE 	 CANID_HB_GATEWAY2
+E1800000      0X70C       1804        15 U8_U32 	 CANID_HB_LOGGER_1
+E1C00000      0X70E       1806        29 LAT_LON_HT 	 CANID_HB_GPS_LLH_1
+ Number of CAN IDs: 14
 
 */
 
@@ -22,6 +40,15 @@ gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/GliderWinchItems/dynamometer/doc
 #include "../../../svn_common/trunk/db/gen_db.h"
 #include "../../../svn_common/trunk/common_can.h"
 
+#define SELECT_SINGLECANID
+
+void cmd_f_do_msg(char* po, struct CANRCVBUF* p);
+uint8_t DMOCchecksum(uint32_t id, uint8_t* puc, uint8_t dlc);
+int DMOCstate(char* pc, uint8_t status);
+
+
+/* Temporary payload define until updated in database */
+#define U16_U16	27
 
 /* Line buffer size */
 #define LINESZ 512	// Longest CAN msg line length
@@ -213,6 +240,9 @@ printf("canid_insert file opened: %s\n",canid_insert);
 	struct CANTBL cantblx;
 	struct CANTBL* ptbl;
 	char cout[512];
+int tmp1,tmp2,tmp3;
+double ftmp1,ftmp2;
+int n1;
 
 	while ( (fgets (&buf[0],LINESZ,stdin)) != NULL)	// Get a line from stdin
 	{
@@ -251,20 +281,78 @@ printf("canid_insert file opened: %s\n",canid_insert);
 //printf("ID: 0x%08X dlc: %d %s \n",cantblx.id, cantblx.dlc,buf);
 					if (!((cantblx.id == 0) || (cantblx.dlc > 8)))
 					{
-						n = sprintf(&cout[0],"0x%08X  99 ",cantblx.id);
+						n = sprintf(&cout[0],"0x%08X  99 :dlc %i:",cantblx.id,cantblx.dlc);
 						for (m = 0; m < cantblx.dlc; m++)
 						{
 							sprintf(&cout[m*3+n]," %02X",cantblx.uc[m]);
 						}
+if (cantblx.id == 0xCA000000) // 0X650 - HV bus status
+{
+ tmp1 = cantblx.uc[0]*256+cantblx.uc[1];
+ tmp2 = cantblx.uc[2]*256+cantblx.uc[3];
+ ftmp1 = (double)tmp1 * 0.1;
+ ftmp2 = ((double)tmp2 * 0.1) - 500.0;
+ sprintf(&cout[m*3+n]," HVrx 0x%04X 0x%04X %8d %8d %7.1f %7.1f x%02X",tmp1,tmp2, tmp1,tmp2-5000, ftmp1,ftmp2,DMOCchecksum(cantblx.id,&cantblx.uc[0],cantblx.dlc)   );
+}
+if (cantblx.id == 0xCA200000) // 0X651 - Temperature
+{
+ sprintf(&cout[m*3+n]," TMrx %6d %6d %6d",cantblx.uc[0]-40,cantblx.uc[1]-40,cantblx.uc[2]-40);
+}
+
+if (cantblx.id == 0x47400000)    //  0X23A - Torque
+{
+ tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
+ tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
+ tmp3 = cantblx.uc[4]*(1<<8)+cantblx.uc[5];
+ sprintf(&cout[m*3+n]," TQrx %6d %6d %6d %4u",tmp1-30000,tmp2-30000,tmp3-30000,cantblx.uc[6]);
+}
+if (cantblx.id == 0x47600000) // 0x23B - speed and current operation status
+{
+ tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
+ n1 = sprintf(&cout[m*3+n]," SPrx 0x%04X %6d 0x%02X %2u ",tmp1,tmp1-20000,cantblx.uc[6],cantblx.uc[6]>>4);
+ DMOCstate(&cout[m*3+n+n1], cantblx.uc[6]);
+}
+if (cantblx.id == 0x46800000) //     0X234 
+{
+// tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
+// n1 = sprintf(&cout[m*3+n]," SPrx 0x%04X %6d 0x%02X %2u ",tmp1,tmp1-20000,cantblx.uc[6],cantblx.uc[6]>>4);
+}
+if (cantblx.id == 0x05683004) // 0X00ad0600 unknown 29b DMOC
+{
+ tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
+ tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
+ sprintf(&cout[m*3+n]," ??rx 0x%04X %6d 0x%04X %6d ",tmp1,tmp1,tmp2,tmp2-30000);
+}
+
 					}
 					else
 					{
 						sprintf(&cout[0],"0x%08X  98 %i\n",cantblx.id,cantblx.dlc);
 					}
 				}
+/* Select one CAN id to be printf'd. */
+#ifdef SELECT_SINGLECANID
+//if (cantblx.id == 0xCA000000)
+if (cantblx.id == 0xCA200000)
+//if (cantblx.id == 0x47400000)
+//if (cantblx.id == 0x47600000)
+//if (cantblx.id == 0x46800000)
+//if (cantblx.id == 0x05683004)
+#endif
 				printf("%s\n",cout);
 		}
 	}
+printf("\nTEST\n");
+/*
+uint8_t DMOCchecksum(uint32_t id, uint8_t* puc, uint8_t dlc)
+DMOC 0x232 tx: 0x4E 0x20 0x0 0x0 0x0 0x1 0x96 0xC6
+0x46400000      0X232 
+*/
+
+// Test checksum generation: Note dlc
+uint8_t uc[8] = {0x4E, 0x20, 0x0, 0x0, 0x0, 0x1, 0x96, 0xC6}; // GEVCU log
+uint8_t chk = DMOCchecksum(0x46400000, &uc[0],7); // Test my routine
+printf("0x%02X\n",chk);
 }
 
 /* ******************************************************************************** 
@@ -314,6 +402,13 @@ void payloadcnvt(char* p, struct CANTBL* pcanx)
 
 	switch(pcanx->fmt_code)
 	{
+	case U16_U16:
+		ui = payui(pcanx,0);
+		n = sprintf(p,"%7d  ",ui);
+		ui = payui(pcanx,2);
+		sprintf((p+n),"%7d",ui);
+		break;
+
 	case NONE:
 		break;
 
@@ -459,4 +554,69 @@ void structcnvt(struct CANRCVBUF* pcan, struct CANTBL* ptbl)
 }
 
 
+/* *************************************************************************
+ * uint8_t DMOCchecksum(uint8_t* puc, uint8_t dlc);
+ *	@brief	: Compute CAN msg payload checksum for DMOC
+ * @return	: checksum
+ * *************************************************************************/
+uint8_t DMOCchecksum(uint32_t id, uint8_t* puc, uint8_t dlc)
+{
+	uint8_t i;
+	uint8_t sum;
+	
+	/* Checksum is based on a right justified 11b address. */
+	sum = (id >> 21);
 
+	for (i = 0; i < dlc; i++)
+		sum += puc[i];
+
+	return ((int)256 - (sum + 3));
+}
+/* *************************************************************************
+ * int DMOCstate(char* pc, uint8_t status);
+ *	@brief	: Convert byte 7 of 0x23B from DMOC to status ascii
+ * @param	: pc = pointer to output string, next char to store position
+ * @param	: status = byte 7 from DMOC CAN msg 0x23B
+ * @return	: number of chars added
+ * *************************************************************************/
+int DMOCstate(char* pc, uint8_t status)
+{
+	int n = 0;
+	uint8_t sts = status >> 4; // High nibble holds status code
+	switch (sts)
+	{
+		
+		case 0: //Initializing
+			n = sprintf(pc,"DISABLED");
+			break;
+			
+		case 1: //disabled
+			n = sprintf(pc,"DISABLED");
+			break;
+			
+		case 2: //ready (standby)
+			n = sprintf(pc,"STANDBY");
+			break;
+			
+		case 3: //enabled
+			n = sprintf(pc,"ENABLE");
+			break;
+			
+		case 4: //Power Down
+			n = sprintf(pc,"POWERDOWN");
+			break;
+			
+		case 5: //Fault
+			n = sprintf(pc,"DISABLED");
+			break;
+			
+		case 6: //Critical Fault
+			n = sprintf(pc,"DISABLED");
+			break;
+			
+		case 7: //LOS
+			n = sprintf(pc,"DISABLED");
+			break;
+		}
+	return n;
+}

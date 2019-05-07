@@ -44,6 +44,7 @@ INSERT INTO PAYLOAD_TYPE VALUES ('U8',       23,  1, ' [0]: uint8_t');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('UNIXTIME', 24,  5, ' [0]: U8_U32 with U8 bit field stuff');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8',    25,  2, ' [0]:[1]: uint8_t[0],uint8[1]');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8_U8_U32',26,7, ' [0]:[1]:[2]:[3]-[5]: uint8_t[0],uint8_t[0],uint8_t[1], int32_t,');	--
+INSERT INTO PAYLOAD_TYPE VALUES ('U16_U16',	27,  4, ' [0]-[1]: uint16_t[0]; [2]-[3]: uint16_t[1]');	--
 
 INSERT INTO PAYLOAD_TYPE VALUES ('LVL2B',	249,  6, ' [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('LVL2R',	250,  6, ' [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table');	--

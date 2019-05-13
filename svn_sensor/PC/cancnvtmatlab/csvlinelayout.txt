@@ -1,0 +1,45 @@
+# csvlinelayout.txt - define CAN ids and fields for csv lines
+# 05/04/2019
+# 
+# Column 1: Position in line
+# Column 2: CAN id (32b left justified format)
+# Column 3: payload field number (1,2,3, etc.)
+# Column 4: payload type code (see PAYLOAD_TYPE_INSERT.sql, and cancnvtmatlab.c #define)
+# Column 5: payload ascii name
+#
+# Input data follows --
+#
+# Time tick source
+00 00400000 1 23 "CANID_HB_TIMESYNC"
+# DMOC 
+01 CA200000 1 29 "DMOC Temperature: Rotor:  payload - 40"
+02 CA200000 2 29 "DMOC Temperature: Inverter: payload - 40"
+03 CA200000 3 29 "DMOC Temperature: Stator: payload - 40"
+04 CA000000 1 27 "DMOC HV status: voltage (0.1volts)"
+05 CA000000 2 27 "DMOC HV status: current (amps)"
+06 47600000 1 30 "DMOC Actual Speed (rpm?)"
+07 47600000 2 30 "DMOC Status code (in hi-nibble)"
+08 47C00000 1 31 "DMOC D volts"
+09 47C00000 2 31 "DMOC D amps"
+10 47C00000 3 31 "DMOC Q volts"
+11 47C00000 4 31 "DMOC Q amps"
+12 47400000 1 35 "DMOC Actual Torque: payload - 30000 "
+13 05683004 1 30 "DMOC Torque(?): payload"
+14 05683004 2 30 "DMOC Torque(?): -(payload - 30000)"
+# GEVCU or dynamometer
+15 46400000 1 32 "Command: Speed"
+16 46400000 2 32 "Command: Key state"
+17 46600000 1 33 "Command: Torque"
+18 46600000 2 33 "Command: Torque (copy)"
+19 46600000 3 33 "Command: Torque standby"
+20 46600000 4 33 "Command: Alive byte"
+21 46800000 1 34 "Command: Regen watt limit"
+22 46800000 2 34 "Command: Regen accel limit"
+23 46800000 3 34 "Command: Deg C"
+24 46800000 4 34 "Command: Alive byte"
+# Logger and GPS functions
+25 E1000000 1 24 "UNIXTIME CANID_HB_GPS_TIME_1"
+26 E1200000 1  8 "CANID_HB_GATEWAY2"
+27 E1800000 1  8 "CANID_HB_LOGGER_1"
+28 E1C00000 1 20 "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs)"
+

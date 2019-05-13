@@ -1,6 +1,8 @@
 -- PAYLOAD_TYPE Name of payload arrangement versus code number for calling a routine
 --   CANID.CAN_MSG_FMT specifies the PAYLOAD_TYPE_NAME from the following list, and 
 --   provides a code that can be used to call a routine to parse the payload.
+--  U16 = Little endian 16b unsigned
+--  I16 = Big endian 16b unsigned
 --
 -- PAYLOAD_TYPE_NAME varchar(24) PRIMARY KEY,
 --  Name assigned to this payload layout
@@ -44,7 +46,7 @@ INSERT INTO PAYLOAD_TYPE VALUES ('U8',       23,  1, ' [0]: uint8_t');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('UNIXTIME', 24,  5, ' [0]: U8_U32 with U8 bit field stuff');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8',    25,  2, ' [0]:[1]: uint8_t[0],uint8[1]');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8_U8_U32',26,7, ' [0]:[1]:[2]:[3]-[5]: uint8_t[0],uint8_t[0],uint8_t[1], int32_t,');	--
-INSERT INTO PAYLOAD_TYPE VALUES ('U16_U16',	27,  4, ' [0]-[1]: uint16_t[0]; [2]-[3]: uint16_t[1]');	--
+INSERT INTO PAYLOAD_TYPE VALUES ('I16_I16',	27,  4, ' [1]-[0]: uint16_t[0]; [3]-[2]: uint16_t[1]');	--
 
 INSERT INTO PAYLOAD_TYPE VALUES ('LVL2B',	249,  6, ' [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('LVL2R',	250,  6, ' [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table');	--

@@ -1,13 +1,15 @@
 /******************************************************************************
-* File Name          : cancnvt.c
-* Date First Issued  : 10/09/2018
+* File Name          : ccancnvtmatlab.c
+* Date First Issued  : 05/08/2019
 * Board              : Linux PC
-* Description        : Convert gateway format CAN msgs to ascii readable payloads
+* Description        : Convert gateway format CAN msgs to csv lines for matlab
 *******************************************************************************/
 /*
-gcc -Wall cancnvt.c -o cancnvt 
-gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/logcsa/181008_212136
-gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt | tee gsm1
+Hack of cancnvt 
+
+gcc -Wall cancnvtmatlab.c -o cancnvtmatlab 
+gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab < ~/logcsa/181008_212136
+gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt | tee gsm1
 
 (All caps came from database.  Others are temporarily local.)
 ( rx = received from DMOC; tx = sent by GEVCU)
@@ -27,6 +29,27 @@ E1800000      0X70C       1804        15 U8_U32 	 CANID_HB_LOGGER_1
 E1C00000      0X70E       1806        29 LAT_LON_HT 	 CANID_HB_GPS_LLH_1
  Number of CAN IDs: 14
 
+0x00400000  23      20
+0xCA000000  99 :dlc 8: 0B 02 13 88 00 64 00 FC HVrx 0x0B02 0x1388     2818        0   281.8     0.0
+0x47C00000  99 :dlc 8: 7E 1F 47 E2 01 81 F5 82 DQrx 0x7E1F  32287 0x47E2  18402 
+0xCA200000  99 :dlc 8: 3D 3C 3D 05 3F 00 00 00 TMrx     21     20     21
+0x47400000  99 :dlc 8: 75 30 0C 40 68 EF 05 76 TQrx      0 -26864  -3137    5
+0x05683004  99 :dlc 8: 01 27 74 08 00 00 00 00 ??rx 0x0127    295 0x7408   -296 
+0x47600000  99 :dlc 8: 52 A5 00 00 00 FC 35 9A SPrx 0x52A5   1157 0x35  3 ENABLE
+0x00400000  23      21
+0xCA000000  99 :dlc 8: 0B 02 13 88 00 64 00 FC HVrx 0x0B02 0x1388     2818        0   281.8     0.0
+0x47C00000  99 :dlc 8: 7C 9F 87 DE 03 81 F7 C4 DQrx 0x7C9F  31903 0x87DE  34782 
+0x47400000  99 :dlc 8: 75 30 0C 40 68 EF 07 74 TQrx      0 -26864  -3137    7
+0x47600000  99 :dlc 8: 52 A0 00 00 00 FC 37 9D SPrx 0x52A0   1152 0x37  3 ENABLE
+0x00400000  23      22
+0x46400000  99 :dlc 8: 4E 20 00 00 00 01 92 CA SPtx 0x4E20 0
+0x46600000  99 :dlc 8: 75 30 75 30 75 30 02 D9 ??tx 0x7530      0 0x7530      0 
+0x46800000  99 :dlc 8: B9 8C 92 7C 00 3C 02 38 MWtx 0xB98C  70000 0x927C 150000 
+0xCA000000  99 :dlc 8: 0B 04 13 80 00 64 00 FC HVrx 0x0B04 0x1380     2820       -8   282.0    -0.8
+0x47C00000  99 :dlc 8: 7D 5E 57 DD FF 81 B9 77 DQrx 0x7D5E  32094 0x57DD  22493 
+0x47400000  99 :dlc 8: 75 24 0C 40 68 EF 09 7E TQrx    -12 -26864  -3137    9
+0x47600000  99 :dlc 8: 52 A0 00 00 00 FC 39 9B SPrx 0x52A0   1152 0x39  3 ENABLE
+0x00400000  23      23
 */
 
 #include <stdio.h>
@@ -42,13 +65,42 @@ E1C00000      0X70E       1806        29 LAT_LON_HT 	 CANID_HB_GPS_LLH_1
 
 //#define SELECT_SINGLECANID
 
+union FLDTYPE
+{
+	float f;
+	uint32_t u32;
+	uint16_t u16;
+	uint8_t u8;
+};
+
+#define PAYLDNAMESZ 64	// Size of payload name field
+#define NUMFIELDSMAX 64	// Max number of CSV fields
+struct CSVFIELD
+{
+	union FLDTYPE uf;	// Value of field
+	uint32_t id;		// CAN id
+	uint8_t	pos;		// Position in line
+	uint8_t	upct;		// Number of updates since last line
+	uint8_t	type;		// Field type: float, int, etc.
+	uint8_t	payfld;	// Payload field number
+	char name[PAYLDNAMESZ];		// Payload field name
+
+}csvfield[NUMFIELDSMAX];
+uint16_t csvfieldidx = 0;	// Number of field positions loaded
 void cmd_f_do_msg(char* po, struct CANRCVBUF* p);
 uint8_t DMOCchecksum(uint32_t id, uint8_t* puc, uint8_t dlc);
 int DMOCstate(char* pc, uint8_t status);
 
-
 /* Temporary payload define until updated in database */
-#define U16_U16	27
+#define I16_I16	      27 // 'I16_I16',	      27, 4,'[1]-[2]: uint16_t[0]; [3]-[2]: uint16_t[1]');
+#define I16_I16_X6	   28 // 'I16_I16_X6',     28, 4,'[1]-[2]: uint16_t[0]; [3]-[2]: uint16_t[1]');
+#define U8_U8_U8	      29 // 'U8_U8_U8',       29, 6,'[1]-[2]:[2] uint8_t');--
+#define I16_X6          30 // 'I16_X6',         30, 7,'[1]-[2]: uint16_t,[6]: uint8_t');
+#define I16_I16_I16_I16 31 // 'I16_I16_I16_I16',31, 8,'[1]-[2]:[3]-[2]:[5]-[4]:[7]-[6]:uint16_t');
+#define I16_X6          32 // 'I16_X6',         32, 8,'[1]-[2]:uint16_t, [5]:uint8_t');
+#define I16_I16_I16_X6	33 // 'I16_I16_X6',     33, 8,'[1]-[2]:[3]-[2]:[5]-[4]:uint16_t,[6]:uint8_t');
+#define I16_I16_X_U8_U8 34 // 'I16_I16_X_U8_U8',34, 8,'[1]-[2]:[3]-[2]:uint16_t,[5]:[6]:uint8_t');
+#define I16             35 // 'U16',            18, 2,'[1]-[0]:uint16_t');			--
 
 /* Line buffer size */
 #define LINESZ 512	// Longest CAN msg line length

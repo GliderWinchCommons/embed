@@ -98,9 +98,9 @@ int DMOCstate(char* pc, uint8_t status);
 #define I16_X6          30 // 'I16_X6',         30, 7,'[1]-[2]: uint16_t,[6]: uint8_t');
 #define I16_I16_I16_I16 31 // 'I16_I16_I16_I16',31, 8,'[1]-[2]:[3]-[2]:[5]-[4]:[7]-[6]:uint16_t');
 #define I16_X6          32 // 'I16_X6',         32, 8,'[1]-[2]:uint16_t, [5]:uint8_t');
-#define I16_I16_I16_X6	33 // 'I16_I16_X6',     33, 8,'[1]-[2]:[3]-[2]:[5]-[4]:uint16_t,[6]:uint8_t');
+#define I16_I16_I16_X6	33 // 'I16_I16_I16_X6', 33, 8,'[1]-[2]:[3]-[2]:[5]-[4]:uint16_t,[6]:uint8_t');
 #define I16_I16_X_U8_U8 34 // 'I16_I16_X_U8_U8',34, 8,'[1]-[2]:[3]-[2]:uint16_t,[5]:[6]:uint8_t');
-#define I16             35 // 'U16',            18, 2,'[1]-[0]:uint16_t');			--
+#define I16             35 // 'I16',            18, 2,'[1]-[0]:uint16_t');			--
 
 /* Line buffer size */
 #define LINESZ 512	// Longest CAN msg line length

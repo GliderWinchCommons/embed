@@ -8,8 +8,17 @@
 Hack of cancnvt 
 
 gcc -Wall cancnvtmatlab.c -o cancnvtmatlab 
-gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab < ~/logcsa/181008_212136
-gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt | tee gsm1
+gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout.txt csvfieldselect.txt < ~/logcsa/181008_212136
+
+Arguments: 
+  File with definition of CAN fields
+  File with selection of fields for csv line output
+
+Input: 
+  standard input - raw CAN msgs
+
+Ouput: 
+  standard output - csv lines
 
 (All caps came from database.  Others are temporarily local.)
 ( rx = received from DMOC; tx = sent by GEVCU)
@@ -21,7 +30,7 @@ gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab < ~/GliderWinchIte
 47400000      0X23A        570      4831 --Torque rx------  ...............
 47600000      0X23B        571      4831 --Speed&status rx  ...............
 47C00000      0X23E        574      4831 --DQ volt amps rx  ...............
-CA000000      0X650       1616      4831 --HV status-rx     ...............
+77CA000000      0X650       1616      4831 --HV status-rx     ...............
 CA200000      0X651       1617        97 --Temperatures---	...............
 E1000000      0X708       1800       120 UNIXTIME 	 CANID_HB_GPS_TIME_1
 E1200000      0X709       1801        60 NONE 	 CANID_HB_GATEWAY2
@@ -65,40 +74,14 @@ E1C00000      0X70E       1806        29 LAT_LON_HT 	 CANID_HB_GPS_LLH_1
 
 //#define SELECT_SINGLECANID
 
-union FLDTYPE
-{
-	float f;
-	uint32_t u32;
-	uint16_t u16;
-	uint8_t u8;
-};
-
-#define PAYLDNAMESZ 64	// Size of payload name field
-#define NUMFIELDSMAX 64	// Max number of CSV fields
-struct CSVFIELD
-{
-	union FLDTYPE uf;	// Value of field
-	uint32_t id;		// CAN id
-	uint8_t	pos;		// Position in line
-	uint8_t	upct;		// Number of updates since last line
-	uint8_t	type;		// Field type: float, int, etc.
-	uint8_t	payfld;	// Payload field number
-	char name[PAYLDNAMESZ];		// Payload field name
-
-}csvfield[NUMFIELDSMAX];
-uint16_t csvfieldidx = 0;	// Number of field positions loaded
-void cmd_f_do_msg(char* po, struct CANRCVBUF* p);
-uint8_t DMOCchecksum(uint32_t id, uint8_t* puc, uint8_t dlc);
-int DMOCstate(char* pc, uint8_t status);
-
 /* Temporary payload define until updated in database */
 #define I16_I16	      27 // 'I16_I16',	      27, 4,'[1]-[2]: uint16_t[0]; [3]-[2]: uint16_t[1]');
 #define I16_I16_X6	   28 // 'I16_I16_X6',     28, 4,'[1]-[2]: uint16_t[0]; [3]-[2]: uint16_t[1]');
 #define U8_U8_U8	      29 // 'U8_U8_U8',       29, 6,'[1]-[2]:[2] uint8_t');--
 #define I16_X6          30 // 'I16_X6',         30, 7,'[1]-[2]: uint16_t,[6]: uint8_t');
 #define I16_I16_I16_I16 31 // 'I16_I16_I16_I16',31, 8,'[1]-[2]:[3]-[2]:[5]-[4]:[7]-[6]:uint16_t');
-#define I16_X6          32 // 'I16_X6',         32, 8,'[1]-[2]:uint16_t, [5]:uint8_t');
-#define I16_I16_I16_X6	33 // 'I16_I16_I16_X6', 33, 8,'[1]-[2]:[3]-[2]:[5]-[4]:uint16_t,[6]:uint8_t');
+#define I16__I16        32 // 'I16__I16',       32, 8,'[1]-[0]:uint16_t,[6]-[5]:uint16_t');
+#define I16_I16_I16_X7	33 // 'I16_I16_I16_X6', 33, 8,'[1]-[2]:[3]-[2]:[5]-[4]:uint16_t,[6]:uint8_t');
 #define I16_I16_X_U8_U8 34 // 'I16_I16_X_U8_U8',34, 8,'[1]-[2]:[3]-[2]:uint16_t,[5]:[6]:uint8_t');
 #define I16             35 // 'I16',            18, 2,'[1]-[0]:uint16_t');			--
 
@@ -106,54 +89,65 @@ int DMOCstate(char* pc, uint8_t status);
 #define LINESZ 512	// Longest CAN msg line length
 char buf[LINESZ];
 
-/* One reading field */
-struct FIELD
-{
-	int pos;				// Position on line (1-n)
-	int typ;				// Type: 0 = int; 1 = float
-	char b[LINESZ];	// Reading (string)
-};
-
 /* CAN id selection input file  */
-#define NAMESZ 64	// Max size of name field
-#define CANTBLSZ 512
-struct CANTBL
-{
-	unsigned int id;	// CAN id
-	int dlc;
-	unsigned char uc[8];
-	char tag;			// T = time, S = time sync, blank = all other
-	int	fmt_code;	// E.g. U32 converted to 2
-	char c[NAMESZ];	// CAN_INSERT.sql name	
-}cantbl[CANTBLSZ];
-int32_t	cantblsz = 0;
+#define NAMESZ 128	// Max size of name field
+#define CSVLINESZ 1024	// Max output line size
 
-struct PAYTBL
+/* CAN field selection input list */
+#define CSVSELECTSZ 512
+struct CSVSELECT
 {
-	char ascii[24];
-	int code;
+	unsigned int pos;	   // Position on csv line
+	unsigned int canfld; // CAN field spec linenumber
+	unsigned int layoutidx;  // Index in array (sorted on CAN id)
+	unsigned int canfieldidx;// Index of field within array element
+	struct CANFIELD* pcfld; // Pointer to payfield field in canfldlayout
+	char f[NAMESZ];      // printf format for this field
+	char c[NAMESZ];      // Description field
+}csvselect[CSVSELECTSZ];
+int csvselectsz = 0;    // Number of entries loaded
+
+struct CANFIELD
+{
+	unsigned int linenum; // Line number
+	unsigned int fldnum;  // Payload field number
+	unsigned int paytype; // Payload type number
+	double offset;        // Offset
+   double scale;         // Scale
+	double lgr;           // Last Good Reading
+   char c[NAMESZ];       // Description field
 };
 
-struct PAYTBL paytbl[96];
-unsigned int paytblsz = 0;
+/* CAN field layout list */
+#define CANFLDLAYOUTSZ 512
+#define MAXNUMFIELDS 5
+struct CANFLDLAYOUT	
+{
+	unsigned int id;      // CAN id
+	struct CANFIELD canfield[MAXNUMFIELDS];
+}canfldlayout[CANFLDLAYOUTSZ];
+int canfldlayoutsz = 0;  // Number of entries loaded
 
+unsigned int canidtimetick = 0; // CAN id for GPS 64/sec time ticks
 
 /* Identify time sync and date/time CAN msg CAN ids */
 char tag;	// 'T' for date/time; 'S' for time sync msg
 
-unsigned int canTid;	// CAN id for date/time msg	
-unsigned int canSid;	// CAN id for time sync msg
-
 /* Line number used for locating problems */
 unsigned int linect = 0;
 
-FILE* fpIn;
+#define FILECTSZ 4	// Max number of specification files
+FILE* fpIn[FILECTSZ];
+int filect = 0;
 
 char *paytype = "../../../svn_common/trunk/db/PAYLOAD_TYPE_INSERT.sql";
 char *canid_insert = "../../../svn_common/trunk/db/CANID_INSERT.sql";
-//char *canid_insert = "w";
 
-void payloadcnvt(char* p, struct CANTBL* pcanx);
+void    cmd_f_do_msg(struct CANFIELD* pfld, struct CANRCVBUF* p, int k);
+uint8_t DMOCchecksum(uint32_t id, uint8_t* puc, uint8_t dlc);
+int     DMOCstate(char* pc, uint8_t status);
+void convertpayload(struct CANRCVBUF* play, struct CANFIELD* pfld);
+
 
 /*******************************************************************************
  * static int cmpfunc (const void * a, const void * b);
@@ -162,11 +156,10 @@ void payloadcnvt(char* p, struct CANTBL* pcanx);
 *******************************************************************************/
 static int cmpfunc (const void * a, const void * b)
 {
-	const struct CANTBL *A = (struct CANTBL *)a;
-	const struct CANTBL *B = (struct CANTBL *)b;
+	const struct CANFLDLAYOUT *A = (struct CANFLDLAYOUT *)a;
+	const struct CANFLDLAYOUT *B = (struct CANFLDLAYOUT *)b;
 	long long aa = (unsigned int)A->id;
 	long long bb = (unsigned int)B->id;
-
 
 	if ((aa - bb) > 0 ) return 1;
 	else
@@ -175,380 +168,604 @@ static int cmpfunc (const void * a, const void * b)
 		return 0;
 	}
 }
+/*******************************************************************************
+ * static char* copydesc(char *po, char *pi);
+ * @brief 	: Copy field between two double quotes
+ * @return	: pointer to end of second quotes; NULL = error
+*******************************************************************************/
+static char* copydesc(char *po, char *pi)
+{
+	char* p1 = strchr(pi,'"');
+	if (p1 == NULL) return NULL;
+	p1++;
+	char* p2 = strchr(p1,'"');
+	if (p2 == NULL) return NULL;
+	if ((p2-p1+1) >= NAMESZ) return NULL;
+	strncpy(po,p1,(p2-p1));
+	*(po+(p2-p1)) = '\0';
+	return (p2+1);
+}
 
 /* ************************************************************************************************************ */
 /*  Yes, this is where it starts.                                                                               */
 /* ************************************************************************************************************ */
 int main(int argc, char **argv)
 {
-	char *pc;
-	char *po;
-	char *px;
-	int i;
+	int i,j,k;
+int mm = 0;
 
-	/* **********************************************************************************  */
-   /* Reading file with CAN id versus name.  The sequence in this file is the sequence of */
-   /* the comma separate fields in the final output line                                  */
-	/* **********************************************************************************  */
 
-	/* =============== Read table of payload types ======================================= */
-	if ( (fpIn = fopen (paytype,"r")) == NULL)
+	/* =============== Check command line arguments ===================================== */
+	if (argc < 2)
 	{
-		printf ("\nInput file did not open: %s\n",paytype); 
-		exit (-1);
+		printf("\nError: at least one argument with a file path/name required.  argc = %d\n",argc);
+		return -1;
 	}
-printf("payload type file opened: %s\n",paytype);
-	while ( (fgets (&buf[0],LINESZ,fpIn)) != NULL)	// Get a line
+	if (argc >= FILECTSZ)
 	{
-		if (strncmp(buf,"INSERT",6) == 0)
-		{
-			po = &paytbl[paytblsz].ascii[0];
-			pc = strchr(buf,'\''); // Spin forward to ascii nuemonic
-			pc++;
-			i = 0;
-			while ((*pc != '\'')&&(*pc != 0)&&(i++ < 24)) *po++ = *pc++;
+		printf("\nMore arguments than input files allowed: argc = %d, file ct allowed = %d",argc, FILECTSZ);
+		return -1;
 
-			pc++;
-			i = 0;
-			while ((*pc != ',')&&(*pc != 0)&&(i++ < 24)) pc++;
-			pc++;
-			sscanf(pc,"%d", &paytbl[paytblsz].code);
-			paytblsz += 1;
+	}
+printf("argc: %i\n",argc);
+	/* =============== Read input files ================================================ */
+	while ( (argc-2) >= filect )
+	{
+		if ( (fpIn[filect] = fopen (argv[filect+1],"r")) == NULL)
+		{
+			printf ("\nInput file did not open: %s\n",argv[filect+1]); 
+printf("filect: %i\n",filect);
+			return -1;
+		}
+printf("file #%i opened: %s\n",filect+1, argv[filect+1]);
+int n = 0;
+mm = 0;
+	int flag = 0;
+	unsigned int linenum;
+	unsigned int id;
+	unsigned int fldnum;  // Payload field number
+	unsigned int paytype; // Payload type number
+	double offset;        // Offset
+   double scale;         // Scale
+   char c[NAMESZ];       // Description field
+	char* px;
+	
+
+		/* Load data from this file, ignoring comment lines. */
+		while ( (fgets (&buf[0],LINESZ,fpIn[filect])) != NULL)	// Get a line
+		{
+mm += 1;
+			switch(buf[0])
+			{
+			case 'T': // CAN field layout spec	
+				sscanf(&buf[1],"%i %x %i %i %lf %lf", 
+					&linenum,
+					&id,
+					&fldnum,
+					&paytype,
+					&offset,
+					&scale);
+				px = copydesc(&c[0],&buf[1]); // Extract description 
+				if (px == NULL) {printf("format field extact err c: %s\n",buf); return -1;}
+
+				flag = 0;
+				for (i = 0; i < canfldlayoutsz; i++)
+				{
+					if (canfldlayout[i].id == id)
+					{
+						flag = 1;
+						break;
+					}
+				}
+
+				canfldlayout[i].id = id;
+
+				/* Copy parameters into payload field */
+				if (fldnum >= MAXNUMFIELDS) fldnum = MAXNUMFIELDS-1; // JIC
+				if (fldnum == 0) fldnum = 1; // Field numbers run 1 - n
+				canfldlayout[i].canfield[fldnum-1].fldnum  = fldnum;// Redundant
+				canfldlayout[i].canfield[fldnum-1].linenum = linenum;
+				canfldlayout[i].canfield[fldnum-1].paytype = paytype;
+				canfldlayout[i].canfield[fldnum-1].offset  = offset;
+				canfldlayout[i].canfield[fldnum-1].scale   = scale;
+				canfldlayout[i].canfield[fldnum-1].lgr     = 0;
+				strcpy(&canfldlayout[i].canfield[fldnum-1].c[0],&c[0]);
+
+				if (flag == 0)
+				{ // Here CAN id is not in array, so add it
+					canfldlayoutsz += 1; // Advance index in table
+					if (canfldlayoutsz >= CANFLDLAYOUTSZ)
+					{
+						canfldlayoutsz -= 1;
+						printf("canfldlayout array overflow: %s",buf);
+					}	
+					canfldlayout[canfldlayoutsz].id =	mm;
+				}
+				break;
+
+			case 'S': // CSV field selection
+				sscanf(&buf[1],"%i %i", &csvselect[csvselectsz].pos,&csvselect[csvselectsz].canfld);
+				px = copydesc(&csvselect[csvselectsz].f[0],&buf[1]); // Extract description 
+				if (px == NULL) {printf("format field extact err f: %s\n",buf); return -1;}
+				px = copydesc(&csvselect[csvselectsz].c[0],px); // Extract description 
+				if (px == NULL) {printf("format field extact err c: %s\n",buf); return -1;}
+
+
+				csvselectsz += 1;
+				if (csvselectsz >= CSVSELECTSZ)
+				{
+					csvselectsz -= 1;
+					printf("csvselect array overflow: %s",buf);
+				}
+				break;
+	
+			case '#':
+//				printf("COMMENT: %i %s",n, buf);
+				break;
+
+			default:
+//				printf("NOT DATA: %s",buf);
+				break;
+			}
+n += 1;
+		}
+		filect += 1;
+	}
+#ifdef PRINTUNSORTEDLAYOUTARRAY
+	printf("\nCAN payload layout: %i %i \n",csvselectsz,mm);
+	for (i = 0; i < canfldlayoutsz; i++)
+	{
+		printf("%3i 0x%08X\n",i,canfldlayout[i].id);
+		for (j = 0; j < MAXNUMFIELDS; j++)
+		{
+			printf("\t%3i %3i %3i %3i %f %f",
+					(j+1), 
+					canfldlayout[i].canfield[j].linenum,
+					canfldlayout[i].canfield[j].fldnum,
+					canfldlayout[i].canfield[j].paytype,
+					canfldlayout[i].canfield[j].offset,
+					canfldlayout[i].canfield[j].scale);
+			printf(" %s\n",canfldlayout[i].canfield[j].c);
+		}	
+	}
+#else
+	
+	/* Save this time CAN id jic sorting moves it away from [0]. */
+	canidtimetick = canfldlayout[0].id;
+
+
+	/* Sort canfldlayout array for later bsearch location of CAN id. */
+	qsort(&canfldlayout[0], canfldlayoutsz, sizeof(struct CANFLDLAYOUT), cmpfunc);// Sort for bsearch'ing
+
+	printf("\nCAN payload layout SORTED!\n");
+	for (i = 0; i < canfldlayoutsz; i++)
+	{
+		printf("%3i 0x%08X\n",i,canfldlayout[i].id);
+		for (j = 0; j < MAXNUMFIELDS; j++)
+		{
+			printf("\t%3i %3i %3i %3i %f %f",
+					(j+1), 
+					canfldlayout[i].canfield[j].linenum,
+					canfldlayout[i].canfield[j].fldnum,
+					canfldlayout[i].canfield[j].paytype,
+					canfldlayout[i].canfield[j].offset,
+					canfldlayout[i].canfield[j].scale);
+			printf(" %s\n",canfldlayout[i].canfield[j].c);
 		}
 	}
-	for (i = 0; i < paytblsz; i++)
-	{
-		printf("%3d %3d %s\n",i,paytbl[i].code,paytbl[i].ascii);
-	}
-	fclose(fpIn);
-	printf("=================================================\n\n");
+#endif
 
-	/* =============== Read table of CANID v payload type ================================= */
-	
-	/* Convert CANID table ascii format field to numeric code */
-	if ( (fpIn = fopen (canid_insert,"r")) == NULL)
+	printf("\nCSV field selection\n");
+	for (i = 0; i < csvselectsz; i++)
 	{
-		printf ("\nInput file did not open: %s\n",canid_insert); 
-		exit (-1);
+		printf("%3i %3i %3i",i+1,csvselect[i].pos,csvselect[i].canfld);
+		printf("  %s"  ,csvselect[i].f);
+		printf("\t\t%s\n",csvselect[i].c);
 	}
-printf("canid_insert file opened: %s\n",canid_insert);
 
-	while ( (fgets (&buf[0],LINESZ,fpIn)) != NULL)	// Get a line
+/* ============= Make list of CAN id versus field definition number ================== */
+/*
+struct CSVSELECT
+{
+	unsigned int pos;	   // Position on csv line
+	unsigned int canfld; // CAN field spec linenumber
+	unsigned int layoutidx;  // Index in array (sorted on CAN id)
+	unsigned int canfieldidx;// Index of field within array element
+	struct CANFIELD* pcfld; // Pointer to payfield field in canfldlayout
+	char f[NAMESZ];      // printf format for this field
+	char c[NAMESZ];      // Description field
+}csvselect[CSVSELECTSZ];
+*/
+/*
+struct CANFLDLAYOUTFLDNUM
+{
+	unsigned int fldnum;     // CAN field identification number
+	unsigned int layoutidx;  // Index in array (sorted on CAN id)
+	unsigned int canfieldidx;// Index of field within array element
+}; 
+*/
+
+unsigned int itmp;
+unsigned int kflag;
+	for (i = 0; i < csvselectsz; i++)
 	{
-		if (strncmp(buf,"INSERT",6) == 0)
+		itmp = csvselect[i].canfld; // CAN field identification number
+		kflag = 0;
+		// Search field definition array for this csv field number
+		for (j = 0; j < canfldlayoutsz; j++)
 		{
-//printf("%d %s",cantblsz,buf);
-			po = &cantbl[cantblsz].c[0];
-			pc = strchr(buf,'\''); // Spin forward to ascii CANID name
-			pc++;
-			i = 0;
-			while ((*pc != '\'')&&(*pc != 0)&&(i++ < NAMESZ)) *po++ = *pc++;
-			*po = 0;
-			pc++;
-			pc = strchr(pc,'\''); // Spin forward to ascii CANID hex
-			pc++;
-			sscanf(pc,"%x",&cantbl[cantblsz].id);
-			for (i= 0; i < 4; i++)
+			for (k = 0; k < MAXNUMFIELDS; k++) // Scan fields
 			{
-				pc = strchr(pc,'\''); // Spin forward to ascii format
-				pc++;
-			}
-
-			px = pc;
-			pc = strchr(pc,'\''); // Spin forward to end of ascii format
-			*pc = 0; // String terminator
-
-			// Look up code for this ascii format string
-			strcpy(&cantbl[cantblsz].c[0],"LOOKUP FAILED");
-			for (i = 0; i < paytblsz; i++)
-			{ // Compare CANID_INSERT with PAYLOAD_TYPE ascii
-				if ( (strcmp(px,&paytbl[i].ascii[0])) == 0)
+				if (canfldlayout[j].canfield[k].linenum == itmp)
 				{
-//printf("%d 0x%08X %s %d\n",cantblsz,cantbl[i].id,px,paytbl[i].code);
-					cantbl[cantblsz].fmt_code = paytbl[i].code;
-					break;
+					csvselect[i].layoutidx   = j;
+					csvselect[i].canfieldidx = k;
+					csvselect[i].pcfld = &canfldlayout[j].canfield[k];
+					kflag += 1;
 				}
 			}
-			cantblsz += 1;
+		}
+		if (kflag == 0)
+		{
+			printf("Error: CSV field not in definition list: %i %i %i\n",i,j,k);
+		}
+		if (kflag > 1)
+		{
+			printf("Error: CSV field duplication: %i %i %i %i\n",i,j,k,kflag);
 		}
 	}
-	printf("cntblsz: %d\n",cantblsz);
-	for (i = 0; i < cantblsz; i++)
+	printf("\nCSV field SELECT loaded\n");
+printf("\
+Column 1: canselect array number\n\
+Column 2: CSV line field position number\n\
+Column 3: Field definition: CAN field number\n\
+Column 4: Index in sorted field definition array\n\
+Column 5: Index of payload field within field definition\n\
+Column 6: Format field for printf of this field\n\
+Column 7: Description of field\n");
+	for (i = 0; i < csvselectsz; i++)
 	{
-		printf("%3d 0x%08X %3d\n",i,cantbl[i].id,cantbl[i].fmt_code);
+		printf("%3i %3i %3i %3i %3i",i+1,csvselect[i].pos,csvselect[i].canfld,csvselect[i].layoutidx,csvselect[i].canfieldidx);
+		printf("  %s"  ,csvselect[i].f);
+		printf("\t\t%s\n",csvselect[i].c);
 	}
 
-	/* --------- SORT BY CAN ID ---------------------------------------------------------------------- */
-	qsort(&cantbl[0], cantblsz, sizeof(struct CANTBL), cmpfunc);// Sort for bsearch'ing
 
-	for (i = 0; i < cantblsz; i++)
-	{
-		printf("S %3d 0x%08X %3d\n",i,cantbl[i].id,cantbl[i].fmt_code);
-	}
-/* ==================== Convert data ================================================ */
+return 0;
+
+/* ==================== Convert input data ================================================ */
 	int m;
-	int n;
 	unsigned int ui;
-	struct CANTBL cantblx;
-	struct CANTBL* ptbl;
-	char cout[512];
-int tmp1,tmp2,tmp3;
-double ftmp1,ftmp2;
-int n1;
+	uint32_t nn;
+	struct CANRCVBUF can;
+	struct CANFLDLAYOUT* pcanfldlayout;
+	double dtmp;
+	char* pfmt;
+	char cline[CSVLINESZ];
+	char* pcline;
 
+	pcline = &cline[0];
 	while ( (fgets (&buf[0],LINESZ,stdin)) != NULL)	// Get a line from stdin
 	{
-		if (strlen(buf) > 12)
+		if (strlen(buf) > 12) // Skip lines too short to be useful
 		{
 //printf("%s",buf);
 			// The ascii hex order is little endian.  Convert to an unsigned int
-			cantblx.id = 0;
-			for (m = 10; m >= 2; m-=2)
+			can.id = 0;
+			for (m = 10; m >= 2; m-=2) // Build CAN id
 			{
 				sscanf(&buf[m],"%2x",&ui);
-				cantblx.id = (cantblx.id << 8) + ui;
+				can.id = (can.id << 8) + ui;
 			}
-			sscanf(&buf[10],"%2x",&cantblx.dlc);
+			sscanf(&buf[10],"%2x",&can.dlc); // DLC
 
 			// Get payload bytes	converted to binary
-			for (m = 0; m < cantblx.dlc; m++)
+			for (m = 0; m < can.dlc; m++)
 			{
-				sscanf(&buf[12+2*m],"%2x",(unsigned int*)&cantblx.uc[m]);
+				sscanf(&buf[12+2*m],"%2x",(unsigned int*)&can.cd.uc[m]);
 			}
-		
-			// Lookup payload code
-				ptbl = bsearch(&cantblx.id, &cantbl[0], cantblsz, sizeof(struct CANTBL), cmpfunc);
-				if (ptbl != NULL)
+		// ==== CAN msg has been converted from asci to binary =============== 
+
+			/* Each time tick generates a csv line. */
+			if (canidtimetick == can.id)
+			{ // Here, CAN msg is a time tick msg
+				// Generate CSV line using last-good-reading
+				// Build CSV line
+				for (i = 0; i < csvselectsz; i++)
 				{
-					cantblx.fmt_code = ptbl->fmt_code;
-
-//printf("K %08X %2d: %2d:",cantblx.id,cantblx.dlc,cantblx.fmt_code);
-//for (n = 0; n < cantblx.dlc; n++) printf(" %02x",cantblx.uc[n]);printf("\n");
-
-					n = sprintf(&cout[0],"0x%08X %3d ",cantblx.id,ptbl->fmt_code);
-					payloadcnvt(&cout[n],&cantblx);
+					pfmt  = &csvselect[i].f[0];         // Point to format 
+					dtmp = csvselect[i].pcfld->lgr;  // Get last-good-reading
+					nn = snprintf(pcline,20,pfmt,dtmp); // Convert binary to formatted ascii
+					pcline += nn;       // Add number chars generated
+					strcpy(pcline,","); // Add comma separator
+					pcline += 1;        // Point to next position in output 
+				}
+				if (pcline != &cline[0]) // JIC!
+				{ // Here at least one field generated
+					*(pcline-1) = 0;
+					printf("%s",pcline);
 				}
 				else
-				{ // Here CAN id was not in CANID_INSERT.sql table
-//printf("ID: 0x%08X dlc: %d %s \n",cantblx.id, cantblx.dlc,buf);
-					if (!((cantblx.id == 0) || (cantblx.dlc > 8)))
+					printf("CSV line build total failure\n");
+			}
+			else
+			// Here, not a time tick CAN msg.
+			{ /* Update each Last Good Reading for each of the payload fields.
+			     Update Last-Good-Reading for each payload field in this CAN msg */
+				// Find struct with data layout for this CAN msg
+				pcanfldlayout = bsearch(&can.id, &canfldlayout[0], canfldlayoutsz, sizeof(struct CANFLDLAYOUT), cmpfunc);
+				if (pcanfldlayout != NULL)
+				{ // Found in CAN layout array
+					for (k = 0; k < MAXNUMFIELDS; k++)
 					{
-						n = sprintf(&cout[0],"0x%08X  99 :dlc %i:",cantblx.id,cantblx.dlc);
-						for (m = 0; m < cantblx.dlc; m++)
-						{
-							sprintf(&cout[m*3+n]," %02X",cantblx.uc[m]);
+						if (pcanfldlayout->canfield[k].fldnum != 0)
+						{ // Convert & calibrate payload, and update last good reading (lgr)
+							convertpayload(&can, &pcanfldlayout->canfield[k]);
 						}
-if (cantblx.id == 0xCA000000) // 0X650 - HV bus status
-{
- tmp1 = cantblx.uc[0]*256+cantblx.uc[1];
- tmp2 = cantblx.uc[2]*256+cantblx.uc[3];
- ftmp1 = (double)tmp1 * 0.1;
- ftmp2 = ((double)tmp2 * 0.1) - 500.0;
- sprintf(&cout[m*3+n]," HVrx 0x%04X 0x%04X %8d %8d %7.1f %7.1f",tmp1,tmp2,tmp1,tmp2-5000,ftmp1,ftmp2);
-}
-if (cantblx.id == 0xCA200000) // 0X651 - Temperature
-{
- sprintf(&cout[m*3+n]," TMrx %6d %6d %6d",cantblx.uc[0]-40,cantblx.uc[1]-40,cantblx.uc[2]-40);
-}
-
-if (cantblx.id == 0x47400000)    //  0X23A - Torque
-{
- tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
- tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
- tmp3 = cantblx.uc[4]*(1<<8)+cantblx.uc[5];
- sprintf(&cout[m*3+n]," TQrx %6d %6d %6d %4u",tmp1-30000,tmp2-30000,tmp3-30000,cantblx.uc[6]);
-}
-if (cantblx.id == 0x47600000) // 0x23B - speed and current operation status
-{
- tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
- n1 = sprintf(&cout[m*3+n]," SPrx 0x%04X %6d 0x%02X %2u ",tmp1,tmp1-20000,cantblx.uc[6],cantblx.uc[6]>>4);
- DMOCstate(&cout[m*3+n+n1], cantblx.uc[6]);
-}
-if (cantblx.id == 0x47C00000) //      0X23E --DQ volt amps rx
-{
- tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
- tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
- sprintf(&cout[m*3+n]," DQrx 0x%04X %6d 0x%04X %6d ",tmp1,tmp1,tmp2,tmp2);
-}
-if (cantblx.id == 0x46400000) //      0X232 --Speed tx
-{
-  tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
-  sprintf(&cout[m*3+n]," SPtx 0x%04X %d",tmp1,tmp1-20000);
-}
-if (cantblx.id == 0x46600000) //      0X233 --Torque tx
-{
- tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
- tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
- sprintf(&cout[m*3+n]," ??tx 0x%04X %6d 0x%04X %6d ",tmp1,tmp1-30000,tmp2,tmp2-30000);
-}
-//Power limits plus setting ambient temp and whether to cool power train or go into limp mode
-if (cantblx.id == 0x46800000) //     0X234 
-{
- tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1]; // Regen watt limit ... MaxRegenWatts
- tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3]; // Accel limit ... MaxAccelWatts
- sprintf(&cout[m*3+n]," MWtx 0x%04X %6d 0x%04X %6d ",tmp1,4*(65000-tmp1),tmp2,4*tmp2);
-}
-if (cantblx.id == 0x05683004) // 0X00ad0600 unknown 29b DMOC
-{
- tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
- tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
- sprintf(&cout[m*3+n]," ??rx 0x%04X %6d 0x%04X %6d ",tmp1,tmp1,tmp2,tmp2-30000);
-}
-
-					}
-					else
-					{
-						sprintf(&cout[0],"0x%08X  98 %i\n",cantblx.id,cantblx.dlc);
 					}
 				}
-/* Select one CAN id to be printf'd. */
-#ifdef SELECT_SINGLECANID
-//if (cantblx.id == 0xCA000000)
-//if (cantblx.id == 0xCA200000)
-//if (cantblx.id == 0x47400000)
-//if (cantblx.id == 0x47600000)
-if (cantblx.id == 0x46800000)
-//if (cantblx.id == 0x05683004)
-#endif
-				printf("%s\n",cout);
-		}
+				else
+				{ // Here, Not found: this CAN id does not have a payload layout entry in the array
+					printf("# Not in payload layout array: 0X%0x\n", can.id);
+				}
+			}
+		}		
 	}
-printf("\nTEST of chksum generation\n");
-/*
-uint8_t DMOCchecksum(uint32_t id, uint8_t* puc, uint8_t dlc)
-DMOC 0x232 tx: 0x4E 0x20 0x0 0x0 0x0 0x1 0x96 0xC6
-0x46400000      0X232 
-*/
-
-// Test checksum generation: Note dlc
-uint8_t uc[8] = {0x4E, 0x20, 0x0, 0x0, 0x0, 0x1, 0x96, 0xC6}; // GEVCU log
-uint8_t chk = DMOCchecksum(0x46400000, &uc[0],7); // Test my routine
-printf("From logs: DMOC 0x232 tx: 0x4E 0x20 0x0 0x0 0x0 0x1 0x96 0xC6\n");
-printf("Generationed checksum of above w dlc = 7: 0x%02X\n",chk);
 }
 
 /* ******************************************************************************** 
- * unsigned payui(struct CANTBL* pcanx, int offset)
- * @brief	: Combine 4 bytes of payload into an unsigned int
+ * uintYXX payuYXX(struct CANRCVBUF* pcanx, int offset)
+ * @brief	: Combine bytes to make an unsigned int: Y = U or I, XX = 32 or 16
  * @param	: pcanx = pointer to struct with payload
  * @param	: offset = number of bytes to offset for int
+ * @return	: uint32_t, or uint16_t
  **********************************************************************************/
-unsigned payui(struct CANTBL* pcanx, int offset)
+// Little endian
+uint32_t payU32(struct CANRCVBUF* pcanx, int offset)
 {
 	unsigned int x;
-		x  = pcanx->uc[0+offset] <<  0;
-		x |= pcanx->uc[1+offset] <<  8;
-		x |= pcanx->uc[2+offset] << 16;
-		x |= pcanx->uc[3+offset] << 24;
+		x  = pcanx->cd.uc[0+offset] <<  0;
+		x |= pcanx->cd.uc[1+offset] <<  8;
+		x |= pcanx->cd.uc[2+offset] << 16;
+		x |= pcanx->cd.uc[3+offset] << 24;
 		return x;
 }
-float payff(struct CANTBL* pcanx, int offset)
+uint16_t payU16(struct CANRCVBUF* pcanx, int offset)
 {
+	unsigned int x;
+		x  = pcanx->cd.uc[0+offset] <<  0;
+		x |= pcanx->cd.uc[1+offset] <<  8;
+		return x;
+}
+// Big endian
+uint32_t payI32(struct CANRCVBUF* pcanx, int offset)
+{
+	unsigned int x;
+		x  = pcanx->cd.uc[3+offset] <<  0;
+		x |= pcanx->cd.uc[2+offset] <<  8;
+		x |= pcanx->cd.uc[1+offset] << 16;
+		x |= pcanx->cd.uc[0+offset] << 24;
+		return x;
+}
+uint16_t payI16(struct CANRCVBUF* pcanx, int offset)
+{
+	unsigned int x;
+		x  = pcanx->cd.uc[1+offset] <<  0;
+		x |= pcanx->cd.uc[0+offset] <<  8;
+		return x;
+}
+float payFF(struct CANRCVBUF* pcanx, int offset)
+{
+	union{uint8_t uc[4]; float ff;} ui_ff;
+
+		ui_ff.uc[0]  = pcanx->cd.uc[0+offset] <<  0;
+		ui_ff.uc[1] |= pcanx->cd.uc[1+offset] <<  8;
+		ui_ff.uc[2] |= pcanx->cd.uc[2+offset] << 16;
+		ui_ff.uc[3] |= pcanx->cd.uc[3+offset] << 24;
+		return ui_ff.ff;
+}
+
+/* ******************************************************************************** 
+ * void convertpayload(struct CANRCVBUF* play, struct CANFIELD* pfld)
+ * @brief	: Convert payload bytes and update (double)last-good-reading for payload field
+ * @param	: play = pointer to CANFLDLAYOUT for CAN msg received 
+ * @param	: pfld = pointer to CAN payload field array for this CAN unit
+ **********************************************************************************/
+/*
+struct CANFIELD
+{
+	unsigned int linenum; // Line number
+	unsigned int fldnum;  // Payload field number
+	unsigned int paytype; // Payload type number
+	double offset;        // Offset
+   double scale;         // Scale
+	double lgr;           // Last Good Reading
+   char c[NAMESZ];       // Description field
+};
+
+('NONE',      0,  0, ' No payload bytes');
+('FF',        1,  4, ' [0]-[3]: Full Float');			--
+('FF_FF',     2,  8, ' [0]-[3]: Full Float[0]; [4]-[7]: Full Float[1]');	--
+('U32',		 3,  4, ' [0]-[3]: uint32_t');				--
+('U32_U32',	 4,  8, ' [0]-[3]: uint32_t[0]; [4]-[7]: uint32_t[1]');	--
+('U8_U32',	 5,  5, ' [0]: uint8_t; [1]-[4]: uint32_t');		--
+('S32',		 6,  4, ' [0]-[3]: int32_t');				--
+('S32_S32',	 7,  8, ' [0]-[3]: int32_t[0]; [4]-[7]: int32_t[1]');	--
+('U8_S32',	 8,  5, ' [0]: int8_t; [4]-[7]: int32_t');		--
+('HF',        9,  2, ' [0]-[1]: Half-Float');			--
+('F34F',     10,  3, ' [0]-[2]: 3/4-Float');				--
+('xFF',      11,  5, ' [0]:[1]-[4]: Full-Float, first   byte  skipped');	--
+('xxFF',     12,  6, ' [0]:[1]:[2]-[5]: Full-Float, first 2 bytes skipped');	--
+('xxU32',    13,  6, ' [0]:[1]:[2]-[5]: uint32_t, first 2 bytes skipped');	--
+('xxS32',    14,  6, ' [0]:[1]:[2]-[5]: int32_t, first 2 bytes skipped');	--
+('U8_U8_U32',15,  6, ' [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1],uint32_t,');	--
+('U8_U8_S32',16,  6, ' [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1], int32_t,');	--
+('U8_U8_FF',	17,  6, ' [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1], Full Float,');--
+('U16',      18,  2, ' [0]-[1]:uint16_t');			--
+('S16',      19,  2, ' [0]-[1]: int16_t');			--
+('LAT_LON_HT',20, 6, ' [0]:[1]:[2]-[5]: Fix type, bits fields, lat/lon/ht');	--
+('U8_FF',    21,  5, ' [0]:[1]-[4]: uint8_t, Full Float');	--
+('U8_HF',    22,  3, ' [0]:[1]-[2]: uint8_t, Half Float');	--
+('U8',       23,  1, ' [0]: uint8_t');	--
+('UNIXTIME', 24,  5, ' [0]: U8_U32 with U8 bit field stuff');	--
+('U8_U8',    25,  2, ' [0]:[1]: uint8_t[0],uint8[1]');	--
+('U8_U8_U8_U32',26,7, ' [0]:[1]:[2]:[3]-[5]: uint8_t[0],uint8_t[0],uint8_t[1], int32_t,');	--
+('I16_I16',	      27, 4,'[1]-[0]: uint16_t[0]; [3]-[2]: uint16_t[1]');
+('I16_I16_X6',     28, 4,'[1]-[0]: uint16_t[0]; [3]-[2]: uint16_t[1]');
+('U8_U8_U8',       29, 6,'[1]-[2]:[2] uint8_t');--
+('I16_X6',         30, 7,'[1]-[0]: uint16_t,[6]: uint8_t');
+('I16_I16_I16_I16',31, 8,'[1]-[0]:[3]-[2]:[5]-[4]:[7]-[6]:uint16_t');
+('I16__I16',       32, 8,'[1]-[0]:uint16_t,[6]-[5]:uint16_t');
+('I16_I16_I16_X7', 33, 8,'[1]-[0]:[3]-[2]:[5]-[4]:uint16_t,[6]:uint8_t');
+('I16_I16_X_U8_U8',34, 8,'[1]-[0]:[3]-[2]:uint16_t,[5]:[6]:uint8_t');
+('I16',            35, 2,'[1]-[0]:uint16_t');			--
+
+
+*/
+void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
+{
+	/* k is index into payload field array. */
+	if (pfld->fldnum < 1) return; // JIC field number zero 
+	uint8_t k = pfld->fldnum-1; // k is index to payload field within 8 byte payload array
+
 	union
 	{
 		unsigned int ui;
+		signed int si;
 		float ff;
 	}ui_ff;
-	ui_ff.ui = payui(pcanx,offset);
-	return ui_ff.ff;
-}
-/* ******************************************************************************** 
- * void payloadcnvt(char* p, struct CANTBL* pcanx)
- * @brief	: Convert payload bytes into formatted ascii output
- * @param	: p = pointer to output char array
- * @param	: pcanx = pointer to struct with payload bytes (binary)
- **********************************************************************************/
-void structcnvt(struct CANRCVBUF* pcan, struct CANTBL* ptbl); // Declaration
+	ui_ff.ff = 0;
 
-void payloadcnvt(char* p, struct CANTBL* pcanx)
-{
-	unsigned int ui;
-	unsigned int n;
-	float ff;
-	int m;
-	struct CANRCVBUF can;
+	/* Conversion to double after byte extraction. */
+	// Most are unsigned, so default to 0
+	char flag = 0; // unsigned = 0, signed = 1, float = 2;
 
-	struct tm* tb;
-	char c[96];
+	switch(pfld->paytype)
+	{ 
+	case I16:
+	case I16_I16:
+	case I16_I16_I16_I16:
+		ui_ff.ui = payI16(pcanx,k*2);
+		break;
 
+	case I16_I16_X6:
+		if (k != 2) {ui_ff.ui = payI16(pcanx,k*2); break;}
+		if (k == 2) {ui_ff.ui = pcanx->cd.uc[5];      break;}
+		break;
 
-	switch(pcanx->fmt_code)
-	{
-	case U16_U16:
-		ui = payui(pcanx,0);
-		n = sprintf(p,"%7d  ",ui);
-		ui = payui(pcanx,2);
-		sprintf((p+n),"%7d",ui);
+	case I16_I16_I16_X7:
+		if (k != 3) {ui_ff.ui = payI16(pcanx,k*2);break;}
+		if (k == 3) {ui_ff.ui = pcanx->cd.uc[6];     break;}
+		break;
+
+	case I16_I16_X_U8_U8:
+		if (k < 2)  {ui_ff.ui = payI16(pcanx,k*2);break;}
+		if (k > 2)  {ui_ff.ui = pcanx->cd.uc[k];     break;}
 		break;
 
 	case NONE:
 		break;
 
 	case U8:
-		sprintf(p,"%7d",pcanx->uc[0]);
+	case U8_U8:
+	case U8_U8_U8:
+		ui_ff.ui = pcanx->cd.uc[k];
 		break;
 
 	case U32:
-		ui = payui(pcanx,0);
-		sprintf(p,"%7d",ui);
-		break;
-
 	case U32_U32:
-		ui = payui(pcanx,0);
-		n = sprintf(p,"%7d  ",ui);
-		ui = payui(pcanx,4);
-		sprintf((p+n),"%7d",ui);
+		ui_ff.ui = payU32(pcanx,k*4);
 		break;
 
+	case xxU32:
+		k = 1;
+	case UNIXTIME:
 	case U8_U32:
-		ui = payui(pcanx,1);
-		sprintf(p,"%7d",ui);
+		if (k == 0) {ui_ff.ui = pcanx->cd.uc[0]; break;}
+		if (k == 1) {ui_ff.ui = payU32(pcanx,1); break;}
+		break;
+
+	case U8_U8_U32:
+		if (k == 0) {ui_ff.ui = pcanx->cd.uc[0]; break;}
+		if (k == 1) {ui_ff.ui = pcanx->cd.uc[1]; break;}
+		if (k == 2) {ui_ff.ui = payU32(pcanx,2); break;}
+		break;
+		
+	case U8_U8_S32:
+		if (k == 0) {ui_ff.ui = pcanx->cd.uc[0]; break;}
+		if (k == 1) {ui_ff.ui = pcanx->cd.uc[1]; break;}
+		if (k == 2) 
+		{
+			ui_ff.ui = payU32(pcanx,2); 
+			flag = 1;
+		}
+		break;
+
+	case xxS32:
+		k = 1;
+	case S32:
+	case S32_S32:
+		flag = 1;
+		ui_ff.ui = payU32(pcanx,k*4);
+		break;
+
+	case U8_S32:
+		if (k == 0) {ui_ff.ui = pcanx->cd.uc[0];    break;}
+		if (k == 1) 
+		{
+			ui_ff.ui = payU32(pcanx,1); 
+			flag = 1;
+		}
 		break;
 
 	case FF:
-		ff = payff(pcanx,0);
-		sprintf(p,"%12.6f",ff);
-		break;
-
 	case FF_FF:
-		ff = payff(pcanx,0);
-		n = sprintf(p,"%12.6f  ",ff);
-		ff = payff(pcanx,4);
-		sprintf((p+n),"%12.6f",ff);
+		flag = 2;
+		ui_ff.ff = payFF(pcanx,k*4);
 		break;
 
+	case xxFF:
+		k = 1;
 	case U8_FF:
-		ff = payff(pcanx,1);
-		sprintf(p,"%12.6f",ff);
+		if (k == 0)
+			ui_ff.ui = pcanx->cd.uc[0];
+		break;
+		if (k == 1)
+			flag = 2;
+			ui_ff.ui = payFF(pcanx,1);
 		break;
 
-	case UNIXTIME:
-		ui = payui(pcanx,1);
-		sprintf(p,"X %10i ",ui);
-		tb = gmtime((time_t*)&ui);
-		sprintf(c,"T %4d %2d %2d %2d %2d %2d",tb->tm_year+1900,tb->tm_mon+1,tb->tm_mday,tb->tm_hour,tb->tm_min,tb->tm_sec);
-		strcat(p,c);
-//printf("%s\n",p);
-		break;
+	case U8_U8_FF:
+		if (k == 0) {ui_ff.ui = pcanx->cd.uc[0];    break;}
+		if (k == 1) {ui_ff.ui = pcanx->cd.uc[1];    break;}
+		if (k == 2) 
+		{	
+			flag = 2;
+			ui_ff.ff = payFF(pcanx,2); 
+		}
+		break;		
 
 	case LAT_LON_HT:
-		ui = payui(pcanx,2);
-		structcnvt(&can,pcanx);
-		cmd_f_do_msg(p,&can);
-		break;
-
+		cmd_f_do_msg(pfld, pcanx, k);
+		break;		
+		
 	default:
-		strcat(p,"PAYLOAD NOT PROGRAMMED");
-		m = strlen("PAYLOAD NOT PROGRAMMED");
-		for (n = 0; n < pcanx->dlc; n++)
-		{
-				sprintf((p+n*3+m),"%02X ",pcanx->uc[n]);
-		}
+		printf("\nPAYLOAD NOT PROGRAMMED!: id: 0X%08X paycode: %i\n",pcanx->id, pfld->paytype);
 		break;
 	}
-//printf(":%s:\n",p);
+
+	/* Convert to double */
+	if (flag == 1)
+		pfld->lgr = ui_ff.si; // Signed -> double
+	else
+		pfld->lgr = ui_ff.ui; // Unsigned -> double
+
+	/* Calibrate and update last-good-reading as double */
+	pfld->lgr = (pfld->lgr + pfld->offset) * pfld->scale;
+
 	return;
 }	
+
 /* ********** Following lifted from cangate cmd_f *********************** */
 /* Extract 4 byte unsigned integer from CAN payload */
 unsigned int extract(struct CANRCVBUF* p)
@@ -575,13 +792,18 @@ struct GPSFIX // Lifted from ../svn_sensor/sensor/co1_sensor_ublox/trunk/p1_gps_
 };
 static struct GPSFIX gfx;
 
-void cmd_f_do_msg(char* po, struct CANRCVBUF* p)
+void cmd_f_do_msg(struct CANFIELD* pfld, struct CANRCVBUF* p, int k)
+/*
+k = field index number
+  0 = fix code
+  1 = number sats
+  2 = lat
+  3 = lon
+  4 = ht
+*/
 {
 	unsigned int code;
 	int type;
-	double dlat;	// Conversion to minutes lat
-	double dlon;	// Conversion to minutes lon
-	double dht;		// Conversion of height to meters
 
 	/* Extract bit fields from first two bytes of payload */
 	gfx.fix = p->cd.uc[0] & 0xf; 	// Fix type 0 = NF, 1 = G1, 2 = G3, 3 = G3
@@ -602,115 +824,18 @@ void cmd_f_do_msg(char* po, struct CANRCVBUF* p)
 		break;
 
 	default:
-		sprintf (po,"BAD LAT/LON/HT TYPE CODE: %d code: %d\n",type, code);
+		printf ("BAD LAT/LON/HT TYPE CODE: %d code: %d\n",type, code);
 		return;
 	}
-	dlat = gfx.lat; dlon = gfx.lon; dht = gfx.ht;
-	sprintf(po,"%2d %2d %10.5f  %10.5f  %8.3f",gfx.fix, gfx.nsats,dlat/60.0E5, dlon/60.0E5, dht/1E3);
+//	dlat = gfx.lat; dlon = gfx.lon; dht = gfx.ht;
+//	sprintf(po,"%2d %2d %10.5f  %10.5f  %8.3f",gfx.fix, gfx.nsats,dlat/60.0E5, dlon/60.0E5, dht/1E3);
 
-	return;
-}
-/* ************************************************************ 
- * void structcnvt(struct CANRCVBUF* pcan, struct CANTBL* ptbl);
- * Shameless hack: convert skinny struct to the "standard" struct
- * in order to use lat/long/ht code from other programs
- * ************************************************************/
-void structcnvt(struct CANRCVBUF* pcan, struct CANTBL* ptbl)
-{
-	int i;
-	pcan->id       = ptbl->id;
-	pcan->dlc      = ptbl->dlc;
-	for (i = 0; i < ptbl->dlc; i++)
-	   pcan->cd.uc[i] = ptbl->uc[i];
+	/* Update last-good-reading.  scaling takes place later. */
+	if      (k == 0) pfld->lgr = gfx.fix;
+	else if (k == 1) pfld->lgr = gfx.nsats;
+	else if (k == 2) pfld->lgr = gfx.lat;
+	else if (k == 3) pfld->lgr = gfx.lon;
+	else if (k == 4) pfld->lgr = gfx.ht;
 	return;
 }
 
-
-/* *************************************************************************
- * uint8_t DMOCchecksum(uint8_t* puc, uint8_t dlc);
- *	@brief	: Compute CAN msg payload checksum for DMOC
- * @return	: checksum
- * *************************************************************************/
-uint8_t DMOCchecksum(uint32_t id, uint8_t* puc, uint8_t dlc)
-{
-	uint8_t i;
-	uint8_t sum;
-	
-	/* Checksum is based on a right justified 11b address. */
-	sum = (id >> 21);
-
-	for (i = 0; i < dlc; i++)
-		sum += puc[i];
-
-	return ((int)256 - (sum + 3));
-}
-/* *************************************************************************
- * int DMOCstate(char* pc, uint8_t status);
- *	@brief	: Convert byte 7 of 0x23B from DMOC to status ascii
- * @param	: pc = pointer to output string, next char to store position
- * @param	: status = byte 7 from DMOC CAN msg 0x23B
- * @return	: number of chars added
- * *************************************************************************/
-int DMOCstate(char* pc, uint8_t status)
-{
-	int n = 0;
-	uint8_t sts = status >> 4; // High nibble holds status code
-	switch (sts)
-	{
-		
-		case 0: //Initializing
-			n = sprintf(pc,"DISABLED");
-			break;
-			
-		case 1: //disabled
-			n = sprintf(pc,"DISABLED");
-			break;
-			
-		case 2: //ready (standby)
-			n = sprintf(pc,"STANDBY");
-			break;
-			
-		case 3: //enabled
-			n = sprintf(pc,"ENABLE");
-			break;
-			
-		case 4: //Power Down
-			n = sprintf(pc,"POWERDOWN");
-			break;
-			
-		case 5: //Fault
-			n = sprintf(pc,"DISABLED");
-			break;
-			
-		case 6: //Critical Fault
-			n = sprintf(pc,"DISABLED");
-			break;
-			
-		case 7: //LOS
-			n = sprintf(pc,"DISABLED");
-			break;
-		}
-	return n;
-}
-/*
-void DmocMotorController::sendCmd3() {
-	CAN_FRAME output;
-	output.length = 8;
-	output.id = 0x234;
-	output.extended = 0; //standard frame
-	output.rtr = 0;
-
-	int regenCalc = 65000 - (MaxRegenWatts / 4);
-	int accelCalc = (MaxAccelWatts / 4);
-	output.data.bytes[0] = ((regenCalc & 0xFF00) >> 8); //msb of regen watt limit
-	output.data.bytes[1] = (regenCalc & 0xFF); //lsb
-	output.data.bytes[2] = ((accelCalc & 0xFF00) >> 8); //msb of acceleration limit
-	output.data.bytes[3] = (accelCalc & 0xFF); //lsb
-	output.data.bytes[4] = 0; //not used
-	output.data.bytes[5] = 60; //20 degrees celsius
-	output.data.bytes[6] = alive;
-	output.data.bytes[7] = calcChecksum(output);
-
-	CanHandler::getInstanceEV()->sendFrame(output);
-}
-*/

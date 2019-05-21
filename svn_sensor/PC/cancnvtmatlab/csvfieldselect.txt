@@ -1,0 +1,52 @@
+# csvfieldselect.txt - select CAN fields for csv line output
+# 05/17/2019
+#
+# Column 1: Type of line: 'S' = select field type of line
+# Column 2: CSV line field position number
+# Column 3: Field definition: CAN field number
+# Column 4: Format field for printf of this field
+# Column 5: Description of field
+#
+# Load-cell functions
+S   1  34 "%0.1f"        "Tension_a11: Drum 1 calibrated tension, polled by time msg"
+S   2  35 "%0.1f"        "Tension_a12: Drum 1 calibrated tension, polled by time msg"
+S   3  36 "%0.1f"        "Tension_a11: Heartbeat"
+S   4  37 "%0.1f"        "Tension_a21: Heartbeat"
+S   5   1 "%i"           "DMOC Temperature: Rotor (degC)"
+S   6   2 "%i"           "DMOC Temperature: Inverter: payload (degC)"
+S   7   3 "%i"           "DMOC Temperature: Stator: payload (degC)"
+S   8   4 "%0.1f"        "DMOC HV status: voltage (volts)"
+S   9   5 "%0.1f"        "DMOC HV status: current (amps)"
+S  10   6 "%0.1f"        "DMOC Actual Speed (rpm?)"
+S  11   7 "%i"           "DMOC Status code (in hi-nibble)"
+S  12   8 "%0.1f"        "DMOC D volts"
+S  13   9 "%0.1f"        "DMOC D amps"
+S  14  10 "%0.1f"        "DMOC Q volts"
+S  15  11 "%0.1f"        "DMOC Q amps"
+S  16  12 "%0.1f"        "DMOC Actual Torque"
+S  17  13 "%0.1f"        "DMOC Torque(?)"
+S  18  14 "%0.1f"        "DMOC Torque(?)"
+# GEVCU or dynamometer
+S  19  15 "%0.1f"        "Command: Speed"
+S  20  16 "%0.1f"        "Command: Key state"
+S  21  17 "%0.1f"        "Command: Torque"
+S  22  18 "%0.1f"        "Command: Torque (copy)"
+S  23  19 "%0.1f"        "Command: Torque standby"
+# Logger and GPS functions
+S  25  24 "%i"          "UNIXTIME CANID_HB_GPS_TIME_1: status"
+S  26  24 "%i"           "UNIXTIME CANID_HB_GPS_TIME_1: epoc_secs"
+S  27  27 "%0.1f"        "CANID_HB_GATEWAY2"
+S  28  28 "%0.1f"        "CANID_HB_LOGGER_1"
+S  29  29 "%i"           "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) fix"
+S  30  30 "%i"           "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) nsats"
+S  31  31 "%0.0f"        "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) lat"
+S  32  32 "%0.0f"        "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) lon"
+S  33  33 "%0.0f"        "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) ht"
+#
+# These could be added later
+#S  --  20 "%i"           "Command: Alive byte"
+#S  --  21 "%d"           "Command: Regen watt limit"
+#S  --  22 "%d"           "Command: Regen accel limit"
+#S  --  23 "%d"           "Command: Deg C"
+#S  --  24 "%i"           "Command: Alive byte"
+

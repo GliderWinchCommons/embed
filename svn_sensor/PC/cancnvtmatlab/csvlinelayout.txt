@@ -1,10 +1,24 @@
 # csvlinelayout.txt - define CAN ids and fields for csv lines
 # 05/04/2019; 05/15/2019
 # 
+# Each line in the following defines a payload field
+#
+# Each payload field has a unique identification number
+#
+# A CAN id msg can have many fields
+#
+# Each different payload arrangement has a unique code (PAYLOAD_INSERT.sql)
+#  e.g. U16_U16 defines two 16b unsigned integers, little endian in payload
+#
+# Several payloads have special arrangements, e.g. GPS lat/long/ht
+#
+# Current scheme does not handle payload definition conditional on a byte(s)
+#  e.g. the first byte of a function command specifies the following request.
+#
 # Column 1: Type of line: 'D' = Define CAN fields
-# Column 2: Position in list
+# Column 2: index+1 in list array
 # Column 3: CAN id (32b left justified format)
-# Column 4: payload field number (1,2,3, etc.)
+# Column 4: payload field number (1,2,3, etc.; 0 = not defined)
 # Column 5: payload type code (see PAYLOAD_TYPE_INSERT.sql, and/or cancnvtmatlab.c #define)
 # Column 6: Offset applied to CAN msg field before scaling
 # Column 7: Scale applied after offset
@@ -21,22 +35,22 @@ T   1 CA200000 1  29   -40.0    1.0 "DMOC Temperature: Rotor (degC)"
 T   2 CA200000 2  29   -40.0    1.0 "DMOC Temperature: Inverter: payload (degC)"
 T   3 CA200000 3  29   -40.0    1.0 "DMOC Temperature: Stator: payload (degC)"
 T   4 CA000000 1  27     0.0    0.1 "DMOC HV status: voltage (volts)"
-T   5 CA000000 2  27     0.0    1.0 "DMOC HV status: current (amps)"
-T   6 47600000 1  30     0.0   0.25 "DMOC Actual Speed (rpm?)"
+T   5 CA000000 2  27   -5000    0.1 "DMOC HV status: current (amps)"
+T   6 47600000 1  30  -20000    1.0 "DMOC Actual Speed (rpm?)"
 T   7 47600000 2  30     0.0    0.0 "DMOC Status code (in hi-nibble)"
-T   8 47C00000 1  31     0.0    1.0 "DMOC D volts"
-T   9 47C00000 2  31     0.0    1.0 "DMOC D amps"
-T  10 47C00000 3  31     0.0    1.0 "DMOC Q volts"
-T  11 47C00000 4  31     0.0    1.0 "DMOC Q amps"
+T   8 47C00000 1  31     0.0    0.1 "DMOC D volts"
+T   9 47C00000 2  31   -5000    0.1 "DMOC D amps"
+T  10 47C00000 3  31     0.0    0.1 "DMOC Q volts"
+T  11 47C00000 4  31   -5000    0.1 "DMOC Q amps"
 T  12 47400000 1  35  -30000    1.0 "DMOC Actual Torque"
-T  13 05683004 1  30  -30000    1.0 "DMOC Torque(?)"
-T  14 05683004 2  30  -30000    1.0 "DMOC Torque(?)"
+T  13 05683004 1  30     0.0    1.0 "DMOC Torque(?)"
+T  14 05683004 2  30     0.0    1.0 "DMOC Torque(?)"
 #     GEVCU or dynamometer
-T  15 46400000 1  32     0.0    1.0 "Command: Speed"
+T  15 46400000 1  32  -20000    1.0 "Command: Speed"
 T  16 46400000 2  32     0.0    1.0 "Command: Key state"
-T  17 46600000 1  33     0.0    1.0 "Command: Torque"
-T  18 46600000 2  33     0.0    1.0 "Command: Torque (copy)"
-T  19 46600000 3  33     0.0    1.0 "Command: Torque standby"
+T  17 46600000 1  33  -30000    1.0 "Command: Torque"
+T  18 46600000 2  33  -30000    1.0 "Command: Torque (copy)"
+T  19 46600000 3  33  -30000    1.0 "Command: Torque standby"
 T  20 46600000 4  33     0.0    1.0 "Command: Alive byte"
 T  21 46800000 1  34     0.0    1.0 "Command: Regen watt limit"
 T  22 46800000 2  34     0.0    1.0 "Command: Regen accel limit"
@@ -44,9 +58,15 @@ T  23 46800000 3  34     0.0    1.0 "Command: Deg C"
 T  24 46800000 4  34     0.0    1.0 "Command: Alive byte"
 #     Logger and GPS functions                                     
 T  25 E1000000 1  24     0.0    1.0 "UNIXTIME CANID_HB_GPS_TIME_1"
-T  26 E1200000 1   8     0.0    1.0 "CANID_HB_GATEWAY2"
-T  27 E1800000 1   8     0.0    1.0 "CANID_HB_LOGGER_1"
+T  33 E1000000 2  24     0.0    1.0 "UNIXTIME CANID_HB_GPS_TIME_1"
+T  26 E1200000 1   0     0.0    1.0 "CANID_HB_GATEWAY2"
+T  27 E1800000 2   8     0.0    1.0 "CANID_HB_LOGGER_1"
 T  28 E1C00000 1  20     0.0    1.0 "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs)"
+T  34 E1C00000 2  20     0.0    1.0 "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs)"
+T  35 E1C00000 3  20     0.0    1.0 "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs)"
+T  36 E1C00000 4  20     0.0    1.0 "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs)"
+T  37 E1C00000 5  20     0.0    1.0 "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs)"
+
 # Load-cell functions                                       
 T  29 38000000 2  21     0.0    1.0 "Tension_a11: Drum 1 calibrated tension, polled by time msg"
 T  30 38200000 2  21     0.0    1.0 "Tension_a12: Drum 1 calibrated tension, polled by time msg"

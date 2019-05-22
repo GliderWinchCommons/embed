@@ -8,7 +8,7 @@
 Hack of cancnvt 
 
 gcc -Wall cancnvtmatlab.c -o cancnvtmatlab 
-gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout.txt csvfieldselect.txt < ~/logcsa/181008_212136
+gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout.txt csvfieldselect.txt < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt
 
 Arguments: 
   File with definition of CAN fields
@@ -30,7 +30,7 @@ Ouput:
 47400000      0X23A        570      4831 --Torque rx------  ...............
 47600000      0X23B        571      4831 --Speed&status rx  ...............
 47C00000      0X23E        574      4831 --DQ volt amps rx  ...............
-77CA000000      0X650       1616      4831 --HV status-rx     ...............
+CA000000      0X650       1616      4831 --HV status-rx     ...............
 CA200000      0X651       1617        97 --Temperatures---	...............
 E1000000      0X708       1800       120 UNIXTIME 	 CANID_HB_GPS_TIME_1
 E1200000      0X709       1801        60 NONE 	 CANID_HB_GATEWAY2
@@ -72,9 +72,11 @@ E1C00000      0X70E       1806        29 LAT_LON_HT 	 CANID_HB_GPS_LLH_1
 #include "../../../svn_common/trunk/db/gen_db.h"
 #include "../../../svn_common/trunk/common_can.h"
 
-//#define SELECT_SINGLECANID
+#define PRINTTABLES // Print the tables constructed from the input files
+#define SKIPOUTPUTLINECT 40 // Skip outputting lines of converted for debugging purposes
+#define PRINTCSVPOSITIONNUMBERS // Insert line above CSV line to identify CSV positions easily
 
-/* Temporary payload define until updated in database */
+/* TEMPORARY payload define until updated in SQL database */
 #define I16_I16	      27 // 'I16_I16',	      27, 4,'[1]-[2]: uint16_t[0]; [3]-[2]: uint16_t[1]');
 #define I16_I16_X6	   28 // 'I16_I16_X6',     28, 4,'[1]-[2]: uint16_t[0]; [3]-[2]: uint16_t[1]');
 #define U8_U8_U8	      29 // 'U8_U8_U8',       29, 6,'[1]-[2]:[2] uint8_t');--
@@ -311,8 +313,10 @@ n += 1;
 		}
 		filect += 1;
 	}
-#ifdef PRINTUNSORTEDLAYOUTARRAY
-	printf("\nCAN payload layout: %i %i \n",csvselectsz,mm);
+
+
+#ifdef PRINTTABLES
+	printf("\nCAN payload layout in INPUT FILE order: %i %i \n",csvselectsz,mm);
 	for (i = 0; i < canfldlayoutsz; i++)
 	{
 		printf("%3i 0x%08X\n",i,canfldlayout[i].id);
@@ -328,7 +332,7 @@ n += 1;
 			printf(" %s\n",canfldlayout[i].canfield[j].c);
 		}	
 	}
-#else
+#endif
 	
 	/* Save this time CAN id jic sorting moves it away from [0]. */
 	canidtimetick = canfldlayout[0].id;
@@ -337,7 +341,8 @@ n += 1;
 	/* Sort canfldlayout array for later bsearch location of CAN id. */
 	qsort(&canfldlayout[0], canfldlayoutsz, sizeof(struct CANFLDLAYOUT), cmpfunc);// Sort for bsearch'ing
 
-	printf("\nCAN payload layout SORTED!\n");
+#ifdef PRINTTABLES
+	printf("\nCAN payload layout in CAN id SORTED order:\n");
 	for (i = 0; i < canfldlayoutsz; i++)
 	{
 		printf("%3i 0x%08X\n",i,canfldlayout[i].id);
@@ -355,6 +360,7 @@ n += 1;
 	}
 #endif
 
+#ifdef PRINTTABLES
 	printf("\nCSV field selection\n");
 	for (i = 0; i < csvselectsz; i++)
 	{
@@ -362,6 +368,7 @@ n += 1;
 		printf("  %s"  ,csvselect[i].f);
 		printf("\t\t%s\n",csvselect[i].c);
 	}
+#endif
 
 /* ============= Make list of CAN id versus field definition number ================== */
 /*
@@ -414,8 +421,9 @@ unsigned int kflag;
 			printf("Error: CSV field duplication: %i %i %i %i\n",i,j,k,kflag);
 		}
 	}
+#ifdef PRINTTABLES
 	printf("\nCSV field SELECT loaded\n");
-printf("\
+	printf("\
 Column 1: canselect array number\n\
 Column 2: CSV line field position number\n\
 Column 3: Field definition: CAN field number\n\
@@ -425,13 +433,11 @@ Column 6: Format field for printf of this field\n\
 Column 7: Description of field\n");
 	for (i = 0; i < csvselectsz; i++)
 	{
-		printf("%3i %3i %3i %3i %3i",i+1,csvselect[i].pos,csvselect[i].canfld,csvselect[i].layoutidx,csvselect[i].canfieldidx);
+		printf("%3i %3i %3i %3i %3i",(i+1),csvselect[i].pos,csvselect[i].canfld,csvselect[i].layoutidx,csvselect[i].canfieldidx);
 		printf("  %s"  ,csvselect[i].f);
 		printf("\t\t%s\n",csvselect[i].c);
 	}
-
-
-return 0;
+#endif
 
 /* ==================== Convert input data ================================================ */
 	int m;
@@ -439,17 +445,18 @@ return 0;
 	uint32_t nn;
 	struct CANRCVBUF can;
 	struct CANFLDLAYOUT* pcanfldlayout;
-	double dtmp;
-	char* pfmt;
-	char cline[CSVLINESZ];
-	char* pcline;
+	char* pfmt;            // Point to format for this field
+	double dtmp;           // Temp of last-good-reading
+	char cline[CSVLINESZ]; // CSV output array
+	char* pcline;	        // CSV line pointer
+	int skip = 0; // Skip count to throttle output for debugging
 
 	pcline = &cline[0];
 	while ( (fgets (&buf[0],LINESZ,stdin)) != NULL)	// Get a line from stdin
 	{
 		if (strlen(buf) > 12) // Skip lines too short to be useful
 		{
-//printf("%s",buf);
+//printf("IN : %s",&buf[2]);
 			// The ascii hex order is little endian.  Convert to an unsigned int
 			can.id = 0;
 			for (m = 10; m >= 2; m-=2) // Build CAN id
@@ -464,29 +471,54 @@ return 0;
 			{
 				sscanf(&buf[12+2*m],"%2x",(unsigned int*)&can.cd.uc[m]);
 			}
-		// ==== CAN msg has been converted from asci to binary =============== 
+//printf("CAN: %08X\n",can.id);
 
+		// ==== CAN msg has been converted from asci to binary =============== 
 			/* Each time tick generates a csv line. */
+//			if (canidtimetick == can.id)
+			skip += 1;
 			if (canidtimetick == can.id)
-			{ // Here, CAN msg is a time tick msg
+      	{
+		if (skip > SKIPOUTPUTLINECT)
+		{ 	// Here, CAN msg is a time tick msg
 				// Generate CSV line using last-good-reading
 				// Build CSV line
+  				skip = 0; // Debugging skip count to throttle output
+				pcline = &cline[0];
 				for (i = 0; i < csvselectsz; i++)
 				{
 					pfmt  = &csvselect[i].f[0];         // Point to format 
-					dtmp = csvselect[i].pcfld->lgr;  // Get last-good-reading
-					nn = snprintf(pcline,20,pfmt,dtmp); // Convert binary to formatted ascii
+					j = csvselect[i].layoutidx;
+					k = csvselect[i].canfieldidx;
+					dtmp = canfldlayout[j].canfield[k].lgr;
+					nn = sprintf(pcline,pfmt,dtmp); // Convert binary to formatted ascii
 					pcline += nn;       // Add number chars generated
 					strcpy(pcline,","); // Add comma separator
 					pcline += 1;        // Point to next position in output 
 				}
-				if (pcline != &cline[0]) // JIC!
-				{ // Here at least one field generated
-					*(pcline-1) = 0;
-					printf("%s",pcline);
-				}
-				else
-					printf("CSV line build total failure\n");
+				*(pcline-1) = '\n';
+				printf("%s",cline);
+
+// Line numbers above CSV entries for debugging aid
+#ifdef PRINTCSVPOSITIONNUMBERS 
+pcline = &cline[0];
+char* pcline2 = &cline[0];
+int diff,g;
+for (i = 0; i < csvselectsz-1; i++)
+{
+	nn=printf("%2i",i+1);
+   pcline=strchr(pcline,',');
+	pcline++;
+	diff = (pcline-pcline2)-nn;
+	pcline2=pcline;
+if (diff<0)diff = 0;
+	for (g = 0; g < diff; g++)
+		printf(" ");
+}
+printf(" %2i\n",i+1);
+#endif
+
+		} // End skip if
 			}
 			else
 			// Here, not a time tick CAN msg.
@@ -556,12 +588,12 @@ uint16_t payI16(struct CANRCVBUF* pcanx, int offset)
 }
 float payFF(struct CANRCVBUF* pcanx, int offset)
 {
-	union{uint8_t uc[4]; float ff;} ui_ff;
+	union{uint32_t ui; float ff;} ui_ff;
 
-		ui_ff.uc[0]  = pcanx->cd.uc[0+offset] <<  0;
-		ui_ff.uc[1] |= pcanx->cd.uc[1+offset] <<  8;
-		ui_ff.uc[2] |= pcanx->cd.uc[2+offset] << 16;
-		ui_ff.uc[3] |= pcanx->cd.uc[3+offset] << 24;
+		ui_ff.ui  = pcanx->cd.uc[0+offset] <<  0;
+		ui_ff.ui |= pcanx->cd.uc[1+offset] <<  8;
+		ui_ff.ui |= pcanx->cd.uc[2+offset] << 16;
+		ui_ff.ui |= pcanx->cd.uc[3+offset] << 24;
 		return ui_ff.ff;
 }
 
@@ -627,6 +659,7 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 	/* k is index into payload field array. */
 	if (pfld->fldnum < 1) return; // JIC field number zero 
 	uint8_t k = pfld->fldnum-1; // k is index to payload field within 8 byte payload array
+int w;
 
 	union
 	{
@@ -648,20 +681,28 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 		ui_ff.ui = payI16(pcanx,k*2);
 		break;
 
-	case I16_I16_X6:
-		if (k != 2) {ui_ff.ui = payI16(pcanx,k*2); break;}
-		if (k == 2) {ui_ff.ui = pcanx->cd.uc[5];      break;}
+	case I16_X6:
+		if (k == 0) {ui_ff.ui = payI16(pcanx,0); break;}
+		if (k == 1) {ui_ff.ui = pcanx->cd.uc[5]; break;}
 		break;
 
+	case I16_I16_X6:
+		if (k != 2) {ui_ff.ui = payI16(pcanx,k*2); break;}
+		if (k == 2) {ui_ff.ui = pcanx->cd.uc[5];   break;}
+		break;
+
+	case I16__I16:
+		if (k == 1) k = 2;
 	case I16_I16_I16_X7:
 		if (k != 3) {ui_ff.ui = payI16(pcanx,k*2);break;}
-		if (k == 3) {ui_ff.ui = pcanx->cd.uc[6];     break;}
+		if (k == 3) {ui_ff.ui = pcanx->cd.uc[6];  break;}
 		break;
 
 	case I16_I16_X_U8_U8:
 		if (k < 2)  {ui_ff.ui = payI16(pcanx,k*2);break;}
-		if (k > 2)  {ui_ff.ui = pcanx->cd.uc[k];     break;}
+		if (k > 2)  {ui_ff.ui = pcanx->cd.uc[k];  break;}
 		break;
+
 
 	case NONE:
 		break;
@@ -705,17 +746,12 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 		k = 1;
 	case S32:
 	case S32_S32:
-		flag = 1;
-		ui_ff.ui = payU32(pcanx,k*4);
+		flag = 1; ui_ff.ui = payU32(pcanx,k*4);
 		break;
 
 	case U8_S32:
-		if (k == 0) {ui_ff.ui = pcanx->cd.uc[0];    break;}
-		if (k == 1) 
-		{
-			ui_ff.ui = payU32(pcanx,1); 
-			flag = 1;
-		}
+		if (k == 0) {ui_ff.ui = pcanx->cd.uc[0]; break;}
+		if (k == 1) {flag = 1; ui_ff.ui = payU32(pcanx,1);}
 		break;
 
 	case FF:
@@ -727,22 +763,14 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 	case xxFF:
 		k = 1;
 	case U8_FF:
-		if (k == 0)
-			ui_ff.ui = pcanx->cd.uc[0];
-		break;
-		if (k == 1)
-			flag = 2;
-			ui_ff.ui = payFF(pcanx,1);
+		if (k == 0) {ui_ff.ui = pcanx->cd.uc[0]; break;}
+		if (k == 1) {flag = 2;	ui_ff.ff = payFF(pcanx,1);}
 		break;
 
 	case U8_U8_FF:
 		if (k == 0) {ui_ff.ui = pcanx->cd.uc[0];    break;}
 		if (k == 1) {ui_ff.ui = pcanx->cd.uc[1];    break;}
-		if (k == 2) 
-		{	
-			flag = 2;
-			ui_ff.ff = payFF(pcanx,2); 
-		}
+		if (k == 2) {flag = 2; ui_ff.ff = payFF(pcanx,2); }
 		break;		
 
 	case LAT_LON_HT:
@@ -755,10 +783,12 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 	}
 
 	/* Convert to double */
-	if (flag == 1)
+	if      (flag == 1)
 		pfld->lgr = ui_ff.si; // Signed -> double
-	else
+	else if (flag == 0)
 		pfld->lgr = ui_ff.ui; // Unsigned -> double
+	else if (flag == 2)
+		pfld->lgr = ui_ff.ff; // float -> double
 
 	/* Calibrate and update last-good-reading as double */
 	pfld->lgr = (pfld->lgr + pfld->offset) * pfld->scale;

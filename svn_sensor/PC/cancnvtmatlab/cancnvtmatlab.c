@@ -73,8 +73,9 @@ E1C00000      0X70E       1806        29 LAT_LON_HT 	 CANID_HB_GPS_LLH_1
 #include "../../../svn_common/trunk/common_can.h"
 
 #define PRINTTABLES // Print the tables constructed from the input files
-#define SKIPOUTPUTLINECT 40 // Skip outputting lines of converted for debugging purposes
+#define SKIPOUTPUTLINECT 0 // Skip outputting lines of converted for debugging purposes
 #define PRINTCSVPOSITIONNUMBERS // Insert line above CSV line to identify CSV positions easily
+#define JUSTPRINTTABLES // Exit after printing tables
 
 /* TEMPORARY payload define until updated in SQL database */
 #define I16_I16	      27 // 'I16_I16',	      27, 4,'[1]-[2]: uint16_t[0]; [3]-[2]: uint16_t[1]');
@@ -145,10 +146,27 @@ int filect = 0;
 char *paytype = "../../../svn_common/trunk/db/PAYLOAD_TYPE_INSERT.sql";
 char *canid_insert = "../../../svn_common/trunk/db/CANID_INSERT.sql";
 
+/* Command line switches */
+char argflag = 0;   // Count number of command line switches
+char cmdsw_t;
+char cmdsw_x;
+char cmdsw_c;
+char * helplist = {"\nCommand line layout\n\
+./cancnvtmatlab <options> <path/file input file #1> <path/file input file #2> <path/file input file ...> e.g.\n\
+./cancnvtmatlab -t csvlinelayout.txt csvfieldselect.txt < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt\n\
+  options\n\
+ h - help\n\
+ t - print input tables\n\
+ x - do not convert input data file\n\
+ c - csv position lines between csv data lines\n"};
+
+
+/* Declarations */
 void    cmd_f_do_msg(struct CANFIELD* pfld, struct CANRCVBUF* p, int k);
 uint8_t DMOCchecksum(uint32_t id, uint8_t* puc, uint8_t dlc);
 int     DMOCstate(char* pc, uint8_t status);
 void convertpayload(struct CANRCVBUF* play, struct CANFIELD* pfld);
+
 
 
 /*******************************************************************************
@@ -195,7 +213,7 @@ int main(int argc, char **argv)
 {
 	int i,j,k;
 int mm = 0;
-
+char* pv;
 
 	/* =============== Check command line arguments ===================================== */
 	if (argc < 2)
@@ -203,23 +221,58 @@ int mm = 0;
 		printf("\nError: at least one argument with a file path/name required.  argc = %d\n",argc);
 		return -1;
 	}
-	if (argc >= FILECTSZ)
-	{
-		printf("\nMore arguments than input files allowed: argc = %d, file ct allowed = %d",argc, FILECTSZ);
-		return -1;
 
-	}
-printf("argc: %i\n",argc);
-	/* =============== Read input files ================================================ */
-	while ( (argc-2) >= filect )
+	for (i = 1; i < argc; i++)
 	{
-		if ( (fpIn[filect] = fopen (argv[filect+1],"r")) == NULL)
+		if (**(argv+i) == '-')
+		{ // Here command line switch argument
+			pv = *(argv+i);
+			j = 1;
+			while ( *(pv+j) != 0)
+			{
+				switch ( *(pv+j) )
+				{
+				case 'h':
+				case 'H':
+					printf("%s",helplist);
+					return 0;
+				case 'T':
+				case 't': cmdsw_t = 1; break;// t - print the tables constructed from the input files
+				case 'X':
+				case 'x': cmdsw_x = 1; break;// x - do not convert input data file
+				case 'C':
+				case 'c': cmdsw_c = 1; break;// c - csv position lines between csv data lines
+				default:
+					printf("\nCommand line switch %c is not in list\n%s",*(pv+j), helplist);
+					break;
+				}
+				argflag += 1;
+				j += 1;
+			}
+		}
+	}
+
+	if ((argc - argflag) >= FILECTSZ)
+	{
+		printf("\nMore arguments than input files allowed: argc = %d, command sw ct = %d, file ct allowed = %d\n",argc, argflag, FILECTSZ);
+		return -1;
+	}
+
+//printf("cmdsw: t %i  x %i  c %i\n",cmdsw_t,cmdsw_x,cmdsw_c);	
+
+//printf("argc: %i\n",argc);
+	/* =============== Read input files ================================================ */
+	int ii;
+	for (ii = 1; ii < argc; ii++)
+	{
+		if (**(argv+ii) == '-') continue;
+
+
+		if ( (fpIn[ii] = fopen (argv[ii],"r")) == NULL)
 		{
-			printf ("\nInput file did not open: %s\n",argv[filect+1]); 
-printf("filect: %i\n",filect);
+			printf ("\nInput file did not open: %s\n",argv[ii]); 
 			return -1;
 		}
-printf("file #%i opened: %s\n",filect+1, argv[filect+1]);
 int n = 0;
 mm = 0;
 	int flag = 0;
@@ -234,7 +287,7 @@ mm = 0;
 	
 
 		/* Load data from this file, ignoring comment lines. */
-		while ( (fgets (&buf[0],LINESZ,fpIn[filect])) != NULL)	// Get a line
+		while ( (fgets (&buf[0],LINESZ,fpIn[ii])) != NULL)	// Get a line
 		{
 mm += 1;
 			switch(buf[0])
@@ -248,6 +301,7 @@ mm += 1;
 					&offset,
 					&scale);
 				px = copydesc(&c[0],&buf[1]); // Extract description 
+
 				if (px == NULL) {printf("format field extact err c: %s\n",buf); return -1;}
 
 				flag = 0;
@@ -263,7 +317,7 @@ mm += 1;
 				canfldlayout[i].id = id;
 
 				/* Copy parameters into payload field */
-				if (fldnum >= MAXNUMFIELDS) fldnum = MAXNUMFIELDS-1; // JIC
+				if (fldnum > MAXNUMFIELDS) fldnum = MAXNUMFIELDS-1; // JIC
 				if (fldnum == 0) fldnum = 1; // Field numbers run 1 - n
 				canfldlayout[i].canfield[fldnum-1].fldnum  = fldnum;// Redundant
 				canfldlayout[i].canfield[fldnum-1].linenum = linenum;
@@ -315,24 +369,25 @@ n += 1;
 	}
 
 
-#ifdef PRINTTABLES
-	printf("\nCAN payload layout in INPUT FILE order: %i %i \n",csvselectsz,mm);
-	for (i = 0; i < canfldlayoutsz; i++)
+	if (cmdsw_t != 0) // Print input tables?
 	{
-		printf("%3i 0x%08X\n",i,canfldlayout[i].id);
-		for (j = 0; j < MAXNUMFIELDS; j++)
+		printf("\n#CAN payload layout in INPUT FILE order: %i %i \n",csvselectsz,mm);
+		for (i = 0; i < canfldlayoutsz; i++)
 		{
-			printf("\t%3i %3i %3i %3i %f %f",
-					(j+1), 
-					canfldlayout[i].canfield[j].linenum,
-					canfldlayout[i].canfield[j].fldnum,
-					canfldlayout[i].canfield[j].paytype,
-					canfldlayout[i].canfield[j].offset,
-					canfldlayout[i].canfield[j].scale);
-			printf(" %s\n",canfldlayout[i].canfield[j].c);
-		}	
+			printf("%3i 0x%08X\n",i,canfldlayout[i].id);
+			for (j = 0; j < MAXNUMFIELDS; j++)
+			{
+				printf("\t%3i %3i %3i %3i %f %f",
+						(j+1), 
+						canfldlayout[i].canfield[j].linenum,
+						canfldlayout[i].canfield[j].fldnum,
+						canfldlayout[i].canfield[j].paytype,
+						canfldlayout[i].canfield[j].offset,
+						canfldlayout[i].canfield[j].scale);
+				printf("# %s\n",canfldlayout[i].canfield[j].c);
+			}	
+		}
 	}
-#endif
 	
 	/* Save this time CAN id jic sorting moves it away from [0]. */
 	canidtimetick = canfldlayout[0].id;
@@ -341,34 +396,36 @@ n += 1;
 	/* Sort canfldlayout array for later bsearch location of CAN id. */
 	qsort(&canfldlayout[0], canfldlayoutsz, sizeof(struct CANFLDLAYOUT), cmpfunc);// Sort for bsearch'ing
 
-#ifdef PRINTTABLES
-	printf("\nCAN payload layout in CAN id SORTED order:\n");
-	for (i = 0; i < canfldlayoutsz; i++)
+	if (cmdsw_t != 0) // Print input tables?
 	{
-		printf("%3i 0x%08X\n",i,canfldlayout[i].id);
-		for (j = 0; j < MAXNUMFIELDS; j++)
+		printf("\n#CAN payload layout in CAN id SORTED order:\n");
+		for (i = 0; i < canfldlayoutsz; i++)
 		{
-			printf("\t%3i %3i %3i %3i %f %f",
-					(j+1), 
-					canfldlayout[i].canfield[j].linenum,
-					canfldlayout[i].canfield[j].fldnum,
-					canfldlayout[i].canfield[j].paytype,
-					canfldlayout[i].canfield[j].offset,
-					canfldlayout[i].canfield[j].scale);
-			printf(" %s\n",canfldlayout[i].canfield[j].c);
+			printf("%3i 0x%08X\n",i,canfldlayout[i].id);
+			for (j = 0; j < MAXNUMFIELDS; j++)
+			{
+				printf("\t%3i %3i %3i %3i %f %f",
+						(j+1), 
+						canfldlayout[i].canfield[j].linenum,
+						canfldlayout[i].canfield[j].fldnum,
+						canfldlayout[i].canfield[j].paytype,
+						canfldlayout[i].canfield[j].offset,
+						canfldlayout[i].canfield[j].scale);
+				printf(" %s\n",canfldlayout[i].canfield[j].c);
+			}
 		}
 	}
-#endif
 
-#ifdef PRINTTABLES
-	printf("\nCSV field selection\n");
-	for (i = 0; i < csvselectsz; i++)
+	if (cmdsw_t != 0) // Print input tables?
 	{
-		printf("%3i %3i %3i",i+1,csvselect[i].pos,csvselect[i].canfld);
-		printf("  %s"  ,csvselect[i].f);
-		printf("\t\t%s\n",csvselect[i].c);
+		printf("\n#CSV field selection\n");
+		for (i = 0; i < csvselectsz; i++)
+		{
+			printf("#%3i %3i %3i",i+1,csvselect[i].pos,csvselect[i].canfld);
+			printf("  %s"  ,csvselect[i].f);
+			printf("\t\t%s\n",csvselect[i].c);
+		}
 	}
-#endif
 
 /* ============= Make list of CAN id versus field definition number ================== */
 /*
@@ -421,23 +478,27 @@ unsigned int kflag;
 			printf("Error: CSV field duplication: %i %i %i %i\n",i,j,k,kflag);
 		}
 	}
-#ifdef PRINTTABLES
-	printf("\nCSV field SELECT loaded\n");
-	printf("\
-Column 1: canselect array number\n\
-Column 2: CSV line field position number\n\
-Column 3: Field definition: CAN field number\n\
-Column 4: Index in sorted field definition array\n\
-Column 5: Index of payload field within field definition\n\
-Column 6: Format field for printf of this field\n\
-Column 7: Description of field\n");
-	for (i = 0; i < csvselectsz; i++)
+	if (cmdsw_t != 0) // Print input tables?
 	{
-		printf("%3i %3i %3i %3i %3i",(i+1),csvselect[i].pos,csvselect[i].canfld,csvselect[i].layoutidx,csvselect[i].canfieldidx);
-		printf("  %s"  ,csvselect[i].f);
-		printf("\t\t%s\n",csvselect[i].c);
+		printf("\n#CSV field SELECT loaded\n");
+		printf("\
+#Column 1: canselect array number\n\
+#Column 2: CSV line field position number\n\
+#Column 3: Field definition: CAN field number\n\
+#Column 4: Index in sorted field definition array\n\
+#Column 5: Index of payload field within field definition\n\
+#Column 6: Format field for printf of this field\n\
+#Column 7: Description of field\n");
+		for (i = 0; i < csvselectsz; i++)
+		{
+			printf("%3i %3i %3i %3i %3i",(i+1),csvselect[i].pos,csvselect[i].canfld,csvselect[i].layoutidx,csvselect[i].canfieldidx);
+			printf("  %s"  ,csvselect[i].f);
+			printf("\t\t%s\n",csvselect[i].c);
+		}
 	}
-#endif
+
+	if (cmdsw_x != 0) // Do not convert input data?
+		return 0;
 
 /* ==================== Convert input data ================================================ */
 	int m;
@@ -478,9 +539,7 @@ Column 7: Description of field\n");
 //			if (canidtimetick == can.id)
 			skip += 1;
 			if (canidtimetick == can.id)
-      	{
-		if (skip > SKIPOUTPUTLINECT)
-		{ 	// Here, CAN msg is a time tick msg
+      	{ // Here, CAN msg is a time tick msg
 				// Generate CSV line using last-good-reading
 				// Build CSV line
   				skip = 0; // Debugging skip count to throttle output
@@ -499,47 +558,43 @@ Column 7: Description of field\n");
 				*(pcline-1) = '\n';
 				printf("%s",cline);
 
-// Line numbers above CSV entries for debugging aid
-#ifdef PRINTCSVPOSITIONNUMBERS 
-pcline = &cline[0];
-char* pcline2 = &cline[0];
-int diff,g;
-for (i = 0; i < csvselectsz-1; i++)
-{
-	nn=printf("%2i",i+1);
-   pcline=strchr(pcline,',');
-	pcline++;
-	diff = (pcline-pcline2)-nn;
-	pcline2=pcline;
-if (diff<0)diff = 0;
-	for (g = 0; g < diff; g++)
-		printf(" ");
-}
-printf(" %2i\n",i+1);
-#endif
-
-		} // End skip if
-			}
-			else
-			// Here, not a time tick CAN msg.
-			{ /* Update each Last Good Reading for each of the payload fields.
-			     Update Last-Good-Reading for each payload field in this CAN msg */
-				// Find struct with data layout for this CAN msg
-				pcanfldlayout = bsearch(&can.id, &canfldlayout[0], canfldlayoutsz, sizeof(struct CANFLDLAYOUT), cmpfunc);
-				if (pcanfldlayout != NULL)
-				{ // Found in CAN layout array
-					for (k = 0; k < MAXNUMFIELDS; k++)
+				// Line numbers above CSV entries for debugging aid
+				if (cmdsw_c != 0)
+				{
+					pcline = &cline[0];
+					char* pcline2 = &cline[0];
+					int diff,g;
+					for (i = 0; i < csvselectsz-1; i++)
 					{
-						if (pcanfldlayout->canfield[k].fldnum != 0)
-						{ // Convert & calibrate payload, and update last good reading (lgr)
-							convertpayload(&can, &pcanfldlayout->canfield[k]);
-						}
+						nn=printf("%2i",i+1);
+					   pcline=strchr(pcline,',');
+						pcline++;
+						diff = (pcline-pcline2)-nn;
+						pcline2=pcline;
+						if (diff<0)diff = 0;
+						for (g = 0; g < diff; g++)
+							printf(" ");
+					}
+					printf(" %2i\n",i+1);
+				}
+			}
+			/* Update each Last Good Reading for each of the payload fields.
+			   Update Last-Good-Reading for each payload field in this CAN msg */
+			// Find struct with data layout for this CAN msg
+			pcanfldlayout = bsearch(&can.id, &canfldlayout[0], canfldlayoutsz, sizeof(struct CANFLDLAYOUT), cmpfunc);
+			if (pcanfldlayout != NULL)
+			{ // Found in CAN layout array
+				for (k = 0; k < MAXNUMFIELDS; k++)
+				{
+					if (pcanfldlayout->canfield[k].fldnum != 0)
+					{ // Convert & calibrate payload, and update last good reading (lgr)
+						convertpayload(&can, &pcanfldlayout->canfield[k]);
 					}
 				}
-				else
-				{ // Here, Not found: this CAN id does not have a payload layout entry in the array
-					printf("# Not in payload layout array: 0X%0x\n", can.id);
-				}
+			}
+			else
+			{ // Here, Not found: this CAN id does not have a payload layout entry in the array
+				printf("# Not in payload layout array: 0X%0x\n", can.id);
 			}
 		}		
 	}
@@ -659,7 +714,6 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 	/* k is index into payload field array. */
 	if (pfld->fldnum < 1) return; // JIC field number zero 
 	uint8_t k = pfld->fldnum-1; // k is index to payload field within 8 byte payload array
-int w;
 
 	union
 	{

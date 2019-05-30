@@ -1,5 +1,5 @@
 /******************************************************************************
-* File Name          : cancnvtmatlab.c
+* File Name          : ccancnvtmatlab.c
 * Date First Issued  : 05/08/2019
 * Board              : Linux PC
 * Description        : Convert gateway format CAN msgs to csv lines for matlab

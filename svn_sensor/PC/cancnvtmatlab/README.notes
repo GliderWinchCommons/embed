@@ -1,0 +1,56 @@
+README.notes
+
+05/25/2019
+Notes on running cancnvtmatlab.c
+
+Directory--
+
+~/GliderWinchCommons/embed/svn_sensor/PC/cancnvtmatlab
+
+-rwxrwxr-x 1 deh deh 22552 May 25 16:06 cancnvtmatlab
+-rw-rw-r-- 1 deh deh 30159 May 24 22:17 cancnvtmatlab.c
+-rw-rw-r-- 1 deh deh  2595 May 22 13:09 csvfieldselect.txt
+-rw-rw-r-- 1 deh deh  3818 May 22 14:37 csvlinelayout.txt
+
+
+1. Compile
+
+gcc -Wall cancnvtmatlab.c -o cancnvtmatlab
+
+2. Execute
+
+./cancnvtmatlab <-options> <input file 1> <input file2>  < <data to be converted path/name>
+
+  Options <-option>
+     t - print the tables constructed from the input files
+     x - do not convert input data file
+     c - csv position lines between csv data lines
+     h - help
+     '-' with none of the above chars show help
+
+Example:
+./cancnvtmatlab  csvlinelayout.txt csvfieldselect.txt < ~/GliderWinchItems/dynamometer/docs/data/logfile190524a.txt | tee logfile190524a.csv
+Where:
+Options omitted = print CSV lines only.
+
+Input files:
+csvlinelayout.txt  - CAN id list with defined CAN fields
+csvfieldselect.txt - CAN field selected versus CSV line position, format
+
+Output
+ console and ogfile190524a.csv
+
+
+One or more input files are read and lines with 'T' and 'S' are selected to build the tables.
+
+Errors for lines not passing edit checks are listed regardless of options switches specified.
+
+Printing the list of CAN field definitions versus CAN id and selection list for the CSV lines 
+  using option 't' can be used to verify the entries.  Adding 'x' (-tx) skips the data conversion
+  since the table is printed first and data output may be very long.
+
+The 'c' option prints a line with the numerical position of each field in the CSV output line
+  between each csv data line.  This is useful for locating a csv field on a line manually.
+
+
+

@@ -5,7 +5,33 @@
 * Description        : Power monitoring
 *******************************************************************************/
 /* 
-06/13/2018 Hack of tension.c 
+Some info on the Blue Pill
+
+https://wiki.stm32duino.com/index.php?title=Blue_Pill#128_KB_flash_on_C8_version
+
+https://wiki.stm32duino.com/images/c/c1/Vcc-gnd.com-STM32F103C8-schematic.pdf
+
+SWD-- 
+
+ Blue Pill: Orient pins pointing horizontally to the right, top view
+   4 top    GND.... blk
+   3 mid    swclk.. wht
+   2 mid    swd.... gry
+   1 bottom 3.3v... NC 
+
+ Discovery board--Orient with SWD header at lower right corner, top view
+   6 (top)... NC
+   5 ........ NC
+   4 ........ gry
+   3 ........ blk
+   2 ........ wht
+   1 (bottom) NC
+
+	Two jumper removed on Discovery Board
+
+
+
+06/13/2018  Hack of tension.c 
 07/03/2015
 02-14-2015 Hack of tilt.c (which is not debugged)
 02-13-2015 Hack of se4_h.c w reference to adcpod.c

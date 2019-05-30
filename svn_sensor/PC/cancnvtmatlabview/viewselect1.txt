@@ -1,0 +1,23 @@
+# viewselect1.txt -- Select fields from CSV line for viewing as columns
+# 05/26/2019
+#
+# Column 1: Type of line: 'R' = rates
+# Column 2: CSV line rate (csv lines/sec)
+# Column 3: Output rate for this program (lines/sec)
+R  64  2
+#
+# Column 1: Type of line: 'V' = Identifies as a view select line
+# Column 2: CSV line field position number to be viewed (see csvfieldselect.txt)
+# Column 3: Number of chars allowed for field, including spaced between columns
+# Column 4: Running average (1 - 128)
+# Column 5: IIR filter coeff ( = no IIR filtering)
+# Column 6: Description of field (copy it from csvfieldselect.txt)
+#
+#   2   3  4    5     6
+V   1  12 32  0.0 "Tension_a11: Drum 1 calibrated tension, polled by time msg"
+V   3  12 32  0.0 "Tension_a12: Drum 1 calibrated tension, polled by time msg"
+V   9   7 32  0.0 "DMOC HV status: voltage (volts)"
+V  10   7 32  0.0 "DMOC HV status: current (amps)"
+V  11   8 32  0.0 "DMOC Actual Speed (rpm?)"
+V  17   8 32  0.0 "DMOC Actual Torque"
+

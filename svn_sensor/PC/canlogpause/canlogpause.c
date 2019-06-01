@@ -7,51 +7,61 @@
 /*
 Hack of cancnvtmatlabview.c 
 
+General idea--
+  Read a log file with CAN msgs (gateway ascii format) and
+pace the output of the msgs.  The output is piped to netcat
+which sends to a TCP/IP connection to hub-server.  hub-server
+distributes the msgs as if they were coming realtime from the
+gateway.  
+
 Compile--
 gcc -Wall canlogpause.c -o canlogpause
 
 Execute--
  -i = Hex CAN id for time tick to pace copying
- -u = microseconds between CAN msgs
-./canlogpause -i 00400000 -u 200
-or 
-./canlogpause -p 46800000 -t 15 -u 200
- -p = CAN id for pacing
- -t = milliseconds to pause with CAN id encountered
- -m = microseconds for other CAN msgs
+ -p = microseconds when selected CAN id encountered
+ -m = microseconds between CAN msgs
+./canlogpause -i 00400000 -p 15625 -n 250 < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt
 
+gcc -Wall canlogpause.c -o canlogpause && ./canlogpause -i 00400000 -p 15625 -m 250 < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt
+
+Execute with default timings--
+./canlogpause  < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt | nc localhost 32123
 
 */
 
-#include <stdio.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/stat.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
 #include <fcntl.h>
-#include <string.h>
+#include <errno.h>
+#include <termios.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
 #include <unistd.h>
-#include <math.h>
+#include <string.h>
 #include <time.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include "../../../svn_common/trunk/db/gen_db.h"
 #include "../../../svn_common/trunk/common_can.h"
 
-#include <termios.h>
-#include <time.h>
-
 /* Line buffer size */
 #define LINESZ 2048	// Longest CAN msg line length
 char buf[LINESZ];
 
-char *perror = "\
-./canlogpause -i 00400000 -m 200\n\
+char *phelp = "\
+./canlogpause -i 00400000 -p 15500 -m 200\n\
  -i = Hex CAN id for time tick to pace copying\n\
- -u = microseconds between CAN msgs\n\
-or \n\
-./canlogpause -p 46800000 -t 15000 -m 200\n\
- -p = CAN id for pacing\n\
- -t = microseconds to pause with p CAN id encountered\n\
- -m = microseconds for other CAN msgs\n");
+ -p = microseconds pause when CAN id encountered\n\
+ -m = microseconds between other CAN msgs\n";
 
-
+fd_set	ready;		/* used for select */
+int fdp;	/* port file descriptor */
 
 /* ************************************************************************************************************ */
 /*  Yes, this is where it starts.                                                                               */
@@ -61,90 +71,73 @@ int main(int argc, char **argv)
 	int i;
 
 	// Command line value
-	unsigned int tms;	// Pause time in millisec
-	unsigned int tus; // Between CAN msgs microseconds
-	unsigned int idp; // CAN id for time tick pause
-	unsigned int idt; // CAN id for timed pause
-	// Command line encounted
-	unsigned int tmsx=0;	// Pause time in millisec
-	unsigned int tusx=0; // Between CAN msgs microseconds
-	unsigned int idpx=0; // CAN id for time tick pause
-	unsigned int idtx=0; // CAN id for timed pause
+	unsigned int tms;	// Time between CAN msgs
+	unsigned int tps; // Pause for specified CAN id
 
-	struct tv timem; // CAN duration 
+	struct timeval timem; // Between CAN msg duration (default)
 		timem.tv_sec  = 0;
-		timem.tv_usec = 200; // Time between CAN msgs (microseconds)
+		timem.tv_usec = 250; // Time between CAN msgs (microseconds)
 
-	struct tv timep; // Pacing
+	struct timeval timep; // Pause for specified CAN id (default)
 		timep.tv_sec  = 0;
 		timep.tv_usec = 15625; // Time between bursts (microseconds)
 
+	struct timeval timew; // Working copy
+	
+
+	unsigned int pauseid = 0x00400000; // CAN id to pace bursts (default)
+
 	/* =============== Check command line arguments ===================================== */
-	if (argc < 5) || (argc > 7)
+	if  (argc > 7)
 	{
-		printf("\nNot enough arguments\n",argc);
-		printf("%s",perror);
+		printf("\nToo many arguments: %i\n",argc);
+		printf("%s",phelp);
 		return -1;
 	}
 
+	char* px;
+	char* px1;
 	for (i = 1; i < argc; i++)
 	{
-		if (**(argv+i) == '-')
+		px  = argv[i+0];
+		px1 = argv[i+1];
+//printf("W: %i %s %s\n",i,px, px1);
+		if ( *(px+0) == '-')
 		{ // Here command line switch argument
-			switch ( *((*argv+i)+1) )
+			switch (*(px+1) )
 			{
-			case 'T': case 't':
-				sscanf( *(argv+i+1),"%i",&tms);
-				tmsx = 1;
-				timep.tv_usec = tms;
+			case 'i':
+				sscanf( px1,"%x",&pauseid);
 				i += 1;
 				break;
-			case 'P': case 'p':
-				sscanf( *(argv+i+1),"%x",&idp);
-				idpx = 1;
-				timep.tv_usec = 15625; // 64/sec
+			case 'p':
+				sscanf( px1,"%i",&tps);
 				i += 1;
 				break;
-			case 'M': case 'm':
-				sscanf( *(argv+i+1),"%x",&tus);
-				tusx = 1;
-				timem.tv_usec = tus;
-				i += 1;
-				break;
-			case 'I': case 'i':
-				sscanf( *(argv+i+1),"%x",&idt);
-				idtx = 1;
-				timep.tv_usec = 15625; // 64/sec
+			case 'm':
+				sscanf( px1,"%i",&tms);
+				timem.tv_usec = tms;
 				i += 1;
 				break;
 			default:
-				printf("options switch not recognized: %c\n",((*argv+i)+1));
-				printf("%s",perror);
+				printf("options switch not recognized: %c %s\n",*(px+1),px );
+				printf("%s",phelp);
 				return -1;
 			}
+		}
 		else
 		{ // Here, not an option switch, Maybe
 			printf("argument must be preceded by an option switch\n");
-				printf("%s",perror);
+				printf("%s",phelp);
 				return -1;
 		}
-		if ((idpx != 0) && (idtx != 0)
-		{
-			printf("Having i and p options sws together is confusing\n");
-			printf("%s",perror);
-			return -1;
-		}
 	}
+//	printf("CANid: 0x%08X pause(us): %i intermsg(us): %i\n",pauseid,tps,tms);
+
 /* ==================== Pace in/out of data ================================================ */
 	int m;
 	struct CANRCVBUF can;
-
-
-	if (idtx != 0)
-		time.tv_usec = 15625; // 64/sec
-
-	
-
+	unsigned int ui;
 
 	while ( (fgets (&buf[0],LINESZ,stdin)) != NULL)	// Get a line from stdin
 	{
@@ -166,11 +159,20 @@ int main(int argc, char **argv)
 				sscanf(&buf[12+2*m],"%2x",(unsigned int*)&can.cd.uc[m]);
 			}
 //printf("CAN: %08X\n",can.id);
-			if (idtx != 0)
+			if (can.id == pauseid)
 			{ // Here, use time tick CAN id to pace bursts
-				if (can.id == can.id)
-				{ // Here, time tick ID 
-					select(NULL,NULL,NULL,&timep); // Delay
+				timew = timep; // Delay
+//printf("  TICK ");
+			}
+			else
+			{
+				timew = timem; // Delay
+			}
+			select(1,NULL,NULL,NULL,&timew); // Delay
+
+			printf("%s",buf);	// Write input line to output
+		}
+	}
 }
 
 

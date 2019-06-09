@@ -72,3 +72,4 @@ T  30 38000000 2  21     0.0    1.0 "Tension_a11: Drum 1 calibrated tension, pol
 T  31 38200000 2  21     0.0    1.0 "Tension_a12: Drum 1 calibrated tension, polled by time msg"
 T  32 E0600000 2  21     0.0    1.0 "Tension_a11: Heartbeat"
 T  33 E0C00000 2  21     0.0    1.0 "Tension_a21: Heartbeat"
+T  39 056837fc 1   0     0.0    1.0 "DMOC: Critical Fault: DEADB0FF"

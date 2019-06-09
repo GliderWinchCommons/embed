@@ -30,24 +30,12 @@ Execute with default timings--
 
 */
 
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <termios.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <signal.h>
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "../../../svn_common/trunk/db/gen_db.h"
 #include "../../../svn_common/trunk/common_can.h"
 
 /* Line buffer size */
@@ -59,9 +47,6 @@ char *phelp = "\
  -i = Hex CAN id for time tick to pace copying\n\
  -p = microseconds pause when CAN id encountered\n\
  -m = microseconds between other CAN msgs\n";
-
-fd_set	ready;		/* used for select */
-int fdp;	/* port file descriptor */
 
 /* ************************************************************************************************************ */
 /*  Yes, this is where it starts.                                                                               */

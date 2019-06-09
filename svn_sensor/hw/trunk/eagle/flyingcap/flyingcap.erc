@@ -1,0 +1,11 @@
+EAGLE Version 4.13 Copyright (c) 1988-2004 CadSoft
+
+Electrical Rule Check for /mnt/home/deh/GliderWinchCommons/embed/svn_sensor/hw/trunk/eagle/flyingcap/flyingcap.sch at  6/09/2019 13:00:36 
+
+WARNING: Sheet 1/1: POWER Pin U$3G$2 VCC+ connected to +5V
+WARNING: Sheet 1/1: POWER Pin U$3G$2 VCC- connected to GND
+
+Board and schematic are consistent
+
+    0 errors
+    2 warnings

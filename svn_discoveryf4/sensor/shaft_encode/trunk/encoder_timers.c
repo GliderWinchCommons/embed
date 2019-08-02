@@ -5,7 +5,7 @@
 * Description        : TIM2,TIM5,TIM3--two encoders with speed timing
 *******************************************************************************/
 /* 
-Encoder phase, encoder TIM CHk (pin), timer TIM CH, (pin), wire color, (LED color)
+Encoder phase, encoder TIM CH (pin), timer TIM CH, (pin), wire color, (LED color)
 Encoder #1 --
   A -> TIM2 CH1 (PA15)->TIM3 CH3 (PC8) green wire (GRN)
   B -> TIM2 CH2 (PB3) (BLU)
@@ -198,7 +198,7 @@ int encoder_timers_init(uint32_t canid)
 	f4gpiopins_Config ((volatile u32*)GPIOB, 3, (struct PINCONFIG*)&inputpup1); // TIM2 CH2
 	f4gpiopins_Config ((volatile u32*)GPIOA, 0, (struct PINCONFIG*)&inputpup2); // TIM5 CH1
 	f4gpiopins_Config ((volatile u32*)GPIOA, 1, (struct PINCONFIG*)&inputpup2); // TIM5 CH2
-	f4gpiopins_Config ((volatile u32*)GPIOC, 8, (struct PINCONFIG*)&inputpup33); // TIM3 CH3
+	f4gpiopins_Config ((volatile u32*)GPIOC, 8, (struct PINCONFIG*)&inputpup33);// TIM3 CH3
 	f4gpiopins_Config ((volatile u32*)GPIOC, 9, (struct PINCONFIG*)&inputpup3); // TIM3 CH4
 
 	/* Reload register for encoders (default) */
@@ -229,9 +229,7 @@ int encoder_timers_init(uint32_t canid)
 	TIM3_CCMR2  = (0X01<< 8) | (0X01<<0);
 	TIM3_CCMR2 |= (0x03<<12) | (0x03<<4); // Filter input
 	
-
 	/* Enable capture on TIM3 CH4, CH3. */
-//	TIM3_CCER = (0X0B<<12) | (0X0B<<8); // Both edges
 	TIM3_CCER = (0X03<<12) | (0X03<<8); // Falling edge
 //	TIM3_CCER = (0X01<<12) | (0X01<<8); // Rising edge
 

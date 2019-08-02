@@ -314,6 +314,16 @@ INSERT INTO CANID VALUES ('CANID_DMOC_HV_TEMPS',  'CA200000','DMOC','U8_U8_U8', 
 INSERT INTO CANID VALUES ('CANID_DMOC_CMD_SPEED', '46400000','DMOC','I16_X6',         'DMOC: cmd: speed, key state');
 INSERT INTO CANID VALUES ('CANID_DMOC_CMD_TORQ',  '46600000','DMOC','I16_I16_I16_X6', 'DMOC: cmd: torq,copy,standby,status');
 INSERT INTO CANID VALUES ('CANID_DMOC_CMD_REGEN', '46800000','DMOC','I16_I16_X_U8_U8','DMOC: cmd: watt,accel,degC,alive');
+--
+-- Contactor Blue Pill Motherboard unit #1
+INSERT INTO CANID VALUES ('CANID_HB_CNTCTR1V',    'FF800000','CNTCTR','FF_FF', 'Contactor1: Heartbeat: High voltage1:Current sensor1');
+INSERT INTO CANID VALUES ('CANID_HB_CNTCTR1A',    'FF000000','CNTCTR','FF_FF', 'Contactor1: Heartbeat: High voltage2:Current sensor2');
+INSERT INTO CANID VALUES ('CANID_MSG_CNTCTR1V',   '50400000','CNTCTR','FF_FF', 'Contactor1: poll response: High voltage1:Current sensor1');
+INSERT INTO CANID VALUES ('CANID_MSG_CNTCTR1A',   '50600000','CNTCTR','FF_FF', 'Contactor1: poll response: High voltage2:Current sensor2');
+INSERT INTO CANID VALUES ('CANID_CMD_CNTCTR1I'   ,'E360000C','CNTCTR','U8_VAR','Contactor1: I Command incoming');
+INSERT INTO CANID VALUES ('CANID_CMD_CNTCTR1R'   ,'E3600000','CNTCTR','U8_VAR','Contactor1: R Command response');
+INSERT INTO CANID VALUES ('CANID_CMD_CNTCTRKAI'  ,'E3800000','CNTCTR','U8',    'Contactor1: I KeepAlive and connect command');
+INSERT INTO CANID VALUES ('CANID_CMD_CNTCTRKAR'  ,'E3C00000','CNTCTR','U8_U8', 'Contactor1: R KeepAlive response');
 
 -- Nodes/Units (Loader addresses)
 --                         CANID_NAME       CANNID_HEX   CANID_TYPE    CAN_MSG_FMT     DESCRIPTION
@@ -344,8 +354,9 @@ INSERT INTO CANID VALUES ('CANID_UNIT_1B',	'03E00000', 'UNIT_1B',	'U8','Sensor b
 INSERT INTO CANID VALUES ('CANID_UNIT_1C',	'04200000', 'UNIT_1C',	'U8','Sensor board: DEH spare 1');
 INSERT INTO CANID VALUES ('CANID_UNIT_1D',	'04400000', 'UNIT_1D',	'U8','Sensor board: DEH spare 2');
 INSERT INTO CANID VALUES ('CANID_UNIT_1E',	'04800000', 'UNIT_1E',	'U8','DiscoveryF4 shaft encoder unit 1');
-INSERT INTO CANID VALUES ('CANID_UNIT_1F',	'04A00000', 'UNIT_1F',	'U8','Pwrbox: Blue Pill board');
+INSERT INTO CANID VALUES ('CANID_UNIT_1F',	'04A00000', 'UNIT_1F',	'U8','Pwrbox: Blue Pill perf board');
 INSERT INTO CANID VALUES ('CANID_UNIT_20',	'04E00000', 'UNIT_20',	'U8','Gateway4: 1 CAN');
+INSERT INTO CANID VALUES ('CANID_UNIT_21',	'05000000', 'UNIT_21',	'U8','Contactor1: Blue Pill Mboard');
 
 INSERT INTO CANID VALUES ('CANID_UNIT_99',		'FFFFFF14', 'UNIT_99',	'UNDEF','Dummy for missing CAN IDs');
 INSERT INTO CANID VALUES ('CANID_DUMMY',		   'FFFFFFFC', 'UNIT_NU',	'UNDEF','Dummy ID: Lowest priority possible (Not Used)');

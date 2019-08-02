@@ -54,7 +54,8 @@ INSERT INTO PAYLOAD_TYPE VALUES ('I16_I16_I16_I16',31, 8,'[1]-[0]:[3]-[2]:[5]-[4
 INSERT INTO PAYLOAD_TYPE VALUES ('I16__I16',       32, 8,'[1]-[0]:uint16_t,[6]-[5]:uint16_t');
 INSERT INTO PAYLOAD_TYPE VALUES ('I16_I16_I16_X7', 33, 8,'[1]-[0]:[3]-[2]:[5]-[4]:uint16_t,[6]:uint8_t');
 INSERT INTO PAYLOAD_TYPE VALUES ('I16_I16_X_U8_U8',34, 8,'[1]-[0]:[3]-[2]:uint16_t,[5]:[6]:uint8_t');
-INSERT INTO PAYLOAD_TYPE VALUES ('I16',            35, 2,'[1]-[0]:uint16_t');			--
+INSERT INTO PAYLOAD_TYPE VALUES ('I16',            35, 2,'[1]-[0]:uint16_t');	--
+INSERT INTO PAYLOAD_TYPE VALUES ('U8_VAR',         36, 2,'[0]-uint8_t: [1]-[n]: variable dependent on first byte');	--
 
 INSERT INTO PAYLOAD_TYPE VALUES ('LVL2B',	249,  6, ' [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('LVL2R',	250,  6, ' [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table');	--

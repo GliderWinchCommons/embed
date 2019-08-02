@@ -1,0 +1,6 @@
+#!/bin/bash
+# Convert logged CAN msgs to csv with path and extensions
+# gsmcvt logfile190610150
+# 
+./cnvtTOcsv ~/GliderWinchItems/dynamometer/docs/data/$1.txt $1.csv
+

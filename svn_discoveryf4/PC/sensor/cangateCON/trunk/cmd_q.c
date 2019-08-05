@@ -71,7 +71,7 @@ int cmd_q_init(char *p)
 	char buf[CANIDMAXLINESIZE];	// File input line buffer
 
 	char* p1;
-	int i;
+//	int i;
 	int itmp;
 	int j;
 

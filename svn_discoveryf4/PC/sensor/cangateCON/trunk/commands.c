@@ -24,11 +24,12 @@ This takes care of dispatching keyboard commands.
 #include "cmd_c.h"
 #include "cmd_w.h"
 #include "cmd_s.h"
+#include "cmd_k.h"
 
 extern int fpListsw;
 extern int cmd_q_initsw;
 
-static u32 msg_sw;	// Command in effect
+u32 msg_sw;	// Command in effect
 /* **************************************************************************************
  * void do_command_timeout(void);
  * @brief	: Main loop encountered a timeout
@@ -131,6 +132,12 @@ void do_command_keybrd(char* p)
 		msg_sw = 's';
 		break;
 
+	case 'k': // CONTACTOR: Keep-alive/command testing
+
+		cmd_k_init(p);
+		msg_sw = 'k';
+		break;
+
 	case 'x': // 'x' cancels current command
 		cmd_a_do_stop();  // Disable ascii sending if enabled
 		timer_thread_shutdown(); // Cancel timer thread if running
@@ -194,6 +201,8 @@ void do_canbus_msg(struct CANRCVBUF* p)
 	case 's':
 		cmd_s_do_msg(p);
 
+	case 'k':
+		cmd_k_do_msg(p);
 
 	case 'q':
 		cmd_q_do_msg(p);
@@ -242,7 +251,13 @@ void do_printmenu(void)
 //	printf("p - CAN bus loader: using file for specs, edit-check and load\n");
 	printf("q - Identify received msgs from CANID.sql file\n");
 	printf("r - send high priority RESET\n");
-	printf("s - CONTACTOR: retrieve all readings\n");
+	printf("s - CONTACTOR: command request to retrieve all readings\n");
+	printf("k - CONTACTOR: keep-alive\n\t"
+				"ka - Begin sending keep-alive msgs\n\t"
+				"kx - Stop keep-alive msgs\n\t"
+				"k0 - disconnect\n\t"
+				"k1 - connect\n\t"
+				"k2 - reset\n");
 	printf("c - request & display launch parameters\n");
 	printf("w - list msgs float (wf) or integer (wi) payload with payload byte offset (wi1 E1800000)\n");
 	printf("x - cancel command\n");

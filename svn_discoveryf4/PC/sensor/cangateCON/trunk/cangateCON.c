@@ -53,6 +53,8 @@ or, for 'q' command default file spec
 #include "cmd_p.h"
 #include "cmd_s.h"
 #include "cmd_c.h"
+#include "cmd_k.h"
+
 #include "sockclient.h"
 #include "var_size_chk.h"
 
@@ -415,6 +417,8 @@ printf("%d %s\n",i, argv[i]);
 		tmdetect = TMDETECT;		/* Refresh timeout timer */
 	
 		select (fdp+1, &ready, NULL, NULL, &tmdetect);	/* Wait for something to happen */
+
+		cmd_k_timeout();
 
 		/* Send again if we timed out waiting for an expected response */
 		if ( !( (FD_ISSET(fdp, &ready)) || (FD_ISSET(STDIN_FILENO, &ready)) ) )

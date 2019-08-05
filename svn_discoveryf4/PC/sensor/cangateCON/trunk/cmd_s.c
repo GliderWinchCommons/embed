@@ -36,8 +36,8 @@ static u8 canseqnumber = 0;
 
 static struct CANRCVBUF cantx;
 
-static u32 defaultidrx = 0xE3600000; // CANID_CMD_CNTCTR1R : U8_VAR: Contactor1: R: Command CAN node response
-static u32 defaultidtx = 0xE360000C; // CANID_CMD_CNTCTR1I : U8_VAR: Contactor1: I: Command CANID incoming to CAN node
+#define DEFAULTRX 0xE3600000 // CANID_CMD_CNTCTR1R : U8_VAR: Contactor1: R: Command CAN node response
+#define DEFAULTTX 0xE360000C // CANID_CMD_CNTCTR1I : U8_VAR: Contactor1: I: Command CANID incoming to CAN node
 
 static u32 idrx; // CAN id that CAN node sends (to "us)
 static u32 idtx; // CAN id that "we" send (to CAN node)
@@ -98,8 +98,8 @@ static double gpay(u8* pc)
 *******************************************************************************/
 int cmd_s_init(char* p)
 {
-	idrx = defaultidrx;
-	idtx = defaultidtx;
+	idrx = DEFAULTRX;
+	idtx = DEFAULTTX;
 	if (strlen(p) > 17)
 	{ // Here, use something typed int
 	    	sscanf( (p+1), "%x %x",&idrx, &idtx);

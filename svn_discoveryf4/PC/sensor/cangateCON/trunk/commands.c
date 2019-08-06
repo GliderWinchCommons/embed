@@ -258,6 +258,8 @@ void do_printmenu(void)
 				"k0 - disconnect\n\t"
 				"k1 - connect\n\t"
 				"k2 - reset\n");
+	printf("b - CONTACTOR: display polled msgs\n");
+	printf("e - CONTACTOR: display heartbeat msgs\n");
 	printf("c - request & display launch parameters\n");
 	printf("w - list msgs float (wf) or integer (wi) payload with payload byte offset (wi1 E1800000)\n");
 	printf("x - cancel command\n");

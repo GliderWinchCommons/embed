@@ -50,7 +50,7 @@ SENT by contactor function:
 #define DEFAULTRX  0xE3C00000 // CANID_CMD_CNTCTRKAR: U8_U8 : Contactor1: R KeepAlive response
 #define DEFAULTTX  0xE3800000 // CANID_CMD_CNTCTRKAI:U8 : Contactor1: I KeepAlive and connect command
 
-#define KEEPALIVEDURATION 750 // Duration between keep-alive msgs (ms)
+#define KEEPALIVEDURATION 500 // Duration between keep-alive msgs (ms)
 
 enum CONTACTOR_FAULTCODE
 {
@@ -191,7 +191,7 @@ void cmd_k_do_msg(struct CANRCVBUF* p)
 
 	if ((p->id & 0xfffffffc) != idrx) return;
 
-printf("KA response (staus): %08X %i ",p->id,p->dlc);
+printf("KA response (status): %08X %i ",p->id,p->dlc);
 int i;
 for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 //printf("\n");

@@ -13,6 +13,7 @@ This takes care of dispatching keyboard commands.
 #include "commands.h"
 #include "timer_thread.h"
 #include "cmd_a.h"
+#include "cmd_b.h"
 #include "cmd_f.h"
 #include "cmd_h.h"
 #include "cmd_l.h"
@@ -69,6 +70,11 @@ void do_command_keybrd(char* p)
 	case 'a': // 'a' command (enable unit sendin ascii in CAN msgs & display)
 		if (cmd_a_init(p) == 0)
 		msg_sw = 'a';
+		break;
+
+	case 'b': // 'd' command
+		cmd_b_init(p);
+		msg_sw = 'b';
 		break;
 
 	case 'd': // 'd' command
@@ -170,6 +176,10 @@ void do_canbus_msg(struct CANRCVBUF* p)
 		cmd_a_do_msg(p);
 		break;
 
+	case 'b':
+		cmd_b_do_msg(p);
+		break;
+
 	case 'd':
 		do_pc_to_gateway(p);	// Hex listing of the CAN msg
 		break;
@@ -200,15 +210,19 @@ void do_canbus_msg(struct CANRCVBUF* p)
 
 	case 's':
 		cmd_s_do_msg(p);
+		break;
 
 	case 'k':
 		cmd_k_do_msg(p);
+		break;
 
 	case 'q':
 		cmd_q_do_msg(p);
+		break;
 
 	case 'c':
 		cmd_c_do_msg(p);
+		break;
 
 	case 'w':
 		cmd_w_do_msg(p);
@@ -259,7 +273,6 @@ void do_printmenu(void)
 				"k1 - connect\n\t"
 				"k2 - reset\n");
 	printf("b - CONTACTOR: display polled msgs\n");
-	printf("e - CONTACTOR: display heartbeat msgs\n");
 	printf("c - request & display launch parameters\n");
 	printf("w - list msgs float (wf) or integer (wi) payload with payload byte offset (wi1 E1800000)\n");
 	printf("x - cancel command\n");

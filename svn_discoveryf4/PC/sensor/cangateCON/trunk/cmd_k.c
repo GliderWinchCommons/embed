@@ -65,6 +65,7 @@ enum CONTACTOR_FAULTCODE
 	CONTACTOR1_CLOSED_VOLTSTOOBIG,
 	CONTACTOR2_CLOSED_VOLTSTOOBIG,
 	KEEP_ALIVE_TIMER_TIMEOUT,
+	NO_UART3_HV_READINGS,
 };
 
 
@@ -164,6 +165,7 @@ int cmd_k_init(char* p)
 			state = 4;
 			break;
 
+		case '4':
 		case '2': // 'k2' = Send fault reset command
 			cantx.cd.uc[0] = 0x40; // Request: Reset
 			sendcanmsg(&cantx);
@@ -202,8 +204,11 @@ for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 		return;
 	}
 
+	/* If rcv'd status is RESET, then revert to sending disconnect. */
+	if ((p->cd.uc[0] & 0x40) != 0) cantx.cd.uc[0] = 0x00; // Disconnect cmd
+
 	// Primary state code, Substate code
-	printf(" %2i %2i",(p->cd.uc[0] & 0xf),(p->cd.uc[2] & 0xf));
+	printf(" : %2i %2i",(p->cd.uc[0] & 0xf),(p->cd.uc[2] & 0xf));
 
 	switch (p->cd.uc[1])
 	{
@@ -240,6 +245,9 @@ for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 	case KEEP_ALIVE_TIMER_TIMEOUT: 
 		printf(" KEEP_ALIVE_TIMER_TIMEOUT");
 		break;
+	case NO_UART3_HV_READINGS:
+		printf(" UART3_HV_READINGS: timer timed out");
+		break;
 	default:
 		printf(" ARGH: CODE IS NOT RECOGNIZED!");
 	}
@@ -270,5 +278,4 @@ void cmd_k_timeout(void)
 	}
 	return;
 }
-
 

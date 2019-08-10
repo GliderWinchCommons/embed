@@ -26,6 +26,7 @@ LDFLAGS         = -L../../../../common_all/trunk/PC -lcommon_all -lz -lpthread
 OBJS = $(NAME).o \
 commands.o \
 cmd_a.o \
+cmd_b.o \
 cmd_f.o \
 cmd_h.o \
 cmd_l.o \

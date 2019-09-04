@@ -127,6 +127,22 @@ pins and make it work.
 For a f103Ard board revision--make a eagle library part that has two sets of pads so either
 switcher version can be used.
 
+==== 08/16/2019 =======================================================================
+D. Contactor repo usage notes
+
+1. Add separate 5v regulator for 5v ADC sensors for future layout. 
+
+The switcher ripple shows up in the sensor readings.
+
+For now: Piggyback LM7805 on top of dc-dc switcher for now.
+
+2. Add pull-down resistor option to 74HC14 inputs to prevent glitch during
+bootup.
+
+Resistors to ground piggybacked on B5 and B8 to prevent ON during get-started.
+
+
+
 
 
 

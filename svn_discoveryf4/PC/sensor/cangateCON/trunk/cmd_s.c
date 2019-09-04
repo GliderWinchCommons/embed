@@ -136,10 +136,10 @@ for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 		printf("%6u %10.2f ADCRAW5V,   PA0 IN0  - 5V sensor supply\n",ui16pay(pc+1),gpay(pc+3));
 		break;
 	case 1:
-		printf("%6u %10.1f ADCRAWCUR1, PA5 IN5  - Current sensor: total battery current\n",ui16pay(pc+1),gpay(pc+3));
+		printf("%6u %10.1f ADCRAWCUR1, PA2 IN2  - Current sensor: total battery current\n",ui16pay(pc+1),gpay(pc+3));
 		break;
 	case 2:
-		printf("%6u %10.1f ADCRAWCUR2, PA6 IN6  - Current sensor: motor\n",ui16pay(pc+1),gpay(pc+3));
+		printf("%6u %10.1f ADCRAWCUR2, PA4 IN4  - Current sensor: motor\n",ui16pay(pc+1),gpay(pc+3));
 		break;
 	case 3:
 		printf("%6u %10.1f ADCRAW12V,  PA7 IN7  - +12 Raw power to board\n",ui16pay(pc+1),gpay(pc+3));

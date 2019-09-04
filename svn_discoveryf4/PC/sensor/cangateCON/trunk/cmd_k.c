@@ -52,6 +52,18 @@ SENT by contactor function:
 
 #define KEEPALIVEDURATION 500 // Duration between keep-alive msgs (ms)
 
+enum CONTACTOR_STATE
+{
+	DISCONNECTED,   /*  0 */
+	CONNECTING,     /*  1 */
+	CONNECTED,      /*  2 */
+	FAULTING,       /*  3 */
+	FAULTED,        /*  4 */
+	RESETTING,      /*  5 */
+	DISCONNECTING,  /*  6 */
+	OTOSETTLING,    /*  7 */
+};
+
 enum CONTACTOR_FAULTCODE
 {
 	NOFAULT,
@@ -208,48 +220,78 @@ for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 	if ((p->cd.uc[0] & 0x40) != 0) cantx.cd.uc[0] = 0x00; // Disconnect cmd
 
 	// Primary state code, Substate code
-	printf(" : %2i %2i",(p->cd.uc[0] & 0xf),(p->cd.uc[2] & 0xf));
+	printf(" : %2i %2i ",(p->cd.uc[0] & 0xf),(p->cd.uc[2] & 0xf));
+
+	switch (p->cd.uc[0] & 0xf)
+	{
+	case	DISCONNECTED:   /*  0 */
+		printf("DISCONNECTED"); 
+		break;
+	case	CONNECTING:     /*  1 */
+		printf("CONNECTING");
+		break;	
+	case	CONNECTED:      /*  2 */
+		printf("CONNECTED ");
+		break;	
+	case	FAULTING:       /*  3 */
+		printf("FAULTING  ");
+		break;	
+	case	FAULTED:        /*  4 */
+		printf("FAULTED   ");
+		break;	
+	case	RESETTING:      /*  5 */
+		printf("RESETTING ");
+		break;	
+	case	DISCONNECTING:  /*  6 */
+		printf("DISCONNECTING");
+		break;	
+	case	OTOSETTLING:    /*  7 */
+		printf("OTOSETTLNG"); 
+	default:
+		printf("ARGH: PRIMARY CODE IS NOT RECOGNIZED!");
+	}
+	printf(" : ");
 
 	switch (p->cd.uc[1])
 	{
 	case NOFAULT: 
-		printf(" NOFFAULT");
+		printf("NO_FAULT");
 		break;
 	case BATTERYLOW: 
-		printf(" BATTERYLOW");
+		printf("BATTERYLOW");
 		break;
 	case CONTACTOR1_OFF_AUX1_ON: 
-		printf(" CONTACTOR1_OFF_AUX1_ON");
+		printf("CONTACTOR1_OFF_AUX1_ON");
 		break;
 	case CONTACTOR2_OFF_AUX2_ON: 
-		printf(" CONTACTOR2_OFF_AUX2_ON");
+		printf("CONTACTOR2_OFF_AUX2_ON");
 		break;
 	case CONTACTOR1_ON_AUX1_OFF: 
-		printf(" CONTACTOR1_ON_AUX1_OFF");
+		printf("CONTACTOR1_ON_AUX1_OFF");
 		break;
 	case CONTACTOR2_ON_AUX2_OFF: 
-		printf(" CONTACTOR2_ON_AUX2_OFF");
+		printf("CONTACTOR2_ON_AUX2_OFF");
 		break;
 	case CONTACTOR1_DOES_NOT_APPEAR_CLOSED: 
-		printf(" CONTACTOR1_DOES_NOT_APPEAR_CLOSED");
+		printf("CONTACTOR1_DOES_NOT_APPEAR_CLOSED");
 		break;
 	case PRECHGVOLT_NOTREACHED: 
-		printf(" PRECHGVOLT_NOTREACHED");
+		printf("PRECHGVOLT_NOTREACHED");
 		break;
 	case CONTACTOR1_CLOSED_VOLTSTOOBIG: 
-		printf(" CONTACTOR1_CLOSED_VOLTSTOOBIG");
+		printf("CONTACTOR1_CLOSED_VOLTSTOOBIG");
 		break;
 	case CONTACTOR2_CLOSED_VOLTSTOOBIG: 
-		printf(" CONTACTOR2_CLOSED_VOLTSTOOBIG");
+		printf("CONTACTOR2_CLOSED_VOLTSTOOBIG");
 		break;
 	case KEEP_ALIVE_TIMER_TIMEOUT: 
-		printf(" KEEP_ALIVE_TIMER_TIMEOUT");
+		printf("KEEP_ALIVE_TIMER_TIMEOUT");
 		break;
 	case NO_UART3_HV_READINGS:
-		printf(" UART3_HV_READINGS: timer timed out");
+		printf("UART3_HV_READINGS: timer timed out");
 		break;
 	default:
-		printf(" ARGH: CODE IS NOT RECOGNIZED!");
+		printf("ARGH: FAULT CODE IS NOT RECOGNIZED!");
 	}
 	printf("\n");
 

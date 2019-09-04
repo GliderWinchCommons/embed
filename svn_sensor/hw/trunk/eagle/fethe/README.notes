@@ -110,6 +110,15 @@ Jack & header
     The 2x5 header allows ribbon cable/connectors.  It is not keyed, but pin
     selection should prevent damage if the connector is put on backwards.
 
+08/14/2019 Notes upon usage
+
+1. R8 option to U25-1 for isolated gnd usage.
+
+2. Add FET to drive isolator photodiode so that 74HC14 doesn't have to 
+provide all the current (e.g. 15 ma).
+
+3. Add LED for FET drive observation.
+
 
 
 

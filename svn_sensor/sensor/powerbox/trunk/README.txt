@@ -31,7 +31,7 @@ Flying lead 6P6C jack (FLJ) and wiring to Tamura L01Z is intended to
 match the jack wiring for the pcb 'fethe' (in directory
  ../embed/svn_sensor/hw/trunk/eagle/fethe)
 
-Color coding of flying lead jack, purchased 6P6C cables, and
+Color coding of Flying Lead Jack (FLJ), purchased 6P6C cables, and
 Blue Pill wiring--
 
 Pin desc  FLJ  Cable BPill

@@ -50,7 +50,7 @@ SENT by contactor function:
 #define DEFAULTRX  0xE3C00000 // CANID_CMD_CNTCTRKAR: U8_U8 : Contactor1: R KeepAlive response
 #define DEFAULTTX  0xE3800000 // CANID_CMD_CNTCTRKAI:U8 : Contactor1: I KeepAlive and connect command
 
-#define KEEPALIVEDURATION 500 // Duration between keep-alive msgs (ms)
+#define KEEPALIVEDURATION 300 // Duration between keep-alive msgs (ms)
 
 enum CONTACTOR_STATE
 {
@@ -78,6 +78,7 @@ enum CONTACTOR_FAULTCODE
 	CONTACTOR2_CLOSED_VOLTSTOOBIG,
 	KEEP_ALIVE_TIMER_TIMEOUT,
 	NO_UART3_HV_READINGS,
+	HE_AUTO_ZERO_TOLERANCE_ERR,
 };
 
 
@@ -247,6 +248,7 @@ for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 		break;	
 	case	OTOSETTLING:    /*  7 */
 		printf("OTOSETTLNG"); 
+		break;
 	default:
 		printf("ARGH: PRIMARY CODE IS NOT RECOGNIZED!");
 	}
@@ -289,6 +291,9 @@ for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 		break;
 	case NO_UART3_HV_READINGS:
 		printf("UART3_HV_READINGS: timer timed out");
+		break;
+	case 	HE_AUTO_ZERO_TOLERANCE_ERR:
+		printf("HE_AUTO_ZERO_TOLERANCE_ERR");
 		break;
 	default:
 		printf("ARGH: FAULT CODE IS NOT RECOGNIZED!");

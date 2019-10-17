@@ -20,10 +20,10 @@ enum CONTACTOR_CMD_CODES
 	UARTWHV1,  // Battery voltage
 	UARTWHV2,  // DMOC +
 	UARTWHV3,  // DMOC -
-	CAL5V,     // 5V supply
-	CAL12V,    // CAN raw 12v supply
+/*	CAL5V,     // 5V supply
+	CAL12V,    // CAN raw 12v supply */
 };
-#define NUMCMDREQ 11
+#define NUMCMDREQ 9	// Number of CONTACTOR_CMD_CODES
 
 #include "cmd_s.h"
 #include "gatecomm.h"
@@ -159,17 +159,17 @@ for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 	case 8:
 		printf("%6u %10.2f UARTWHV3, DMOC -\n",ui16pay(pc+1),gpay(pc+3));
 		break;
-	case 9:
-		printf("%6u %10.3f CAL5V, 5V supply\n",ui16pay(pc+1),gpay(pc+3));
-		break;
-	case 10:
-		printf("%6u %10.3f CAL12V, CAN raw 12v supply\n",ui16pay(pc+1),gpay(pc+3));
-		break;
+//	case 9:
+//		printf("%6u %10.3f CAL5V, 5V supply\n",ui16pay(pc+1),gpay(pc+3));
+//		break;
+//	case 10:
+//		printf("%6u %10.3f CAL12V, CAN raw 12v supply\n",ui16pay(pc+1),gpay(pc+3));
+//		break;
 	default:
 		printf("Response sent code for not in list\n");
 		break;
 	}
-	if (cantx.cd.uc[0] <= NUMCMDREQ)
+	if (cantx.cd.uc[0] < NUMCMDREQ)
 	{
 		sendcanmsg(&cantx);
 	}

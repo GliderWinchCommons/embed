@@ -44,7 +44,14 @@ int cmd_b_init(char* p)
 	{
 		printmenu("Too few chars\n");
 		return 0;
+	}
+	if (len < 2)
+	{
+		canid1 = CANID_POLL1;
+		canid2 = CANID_POLL2;
+		return 0;	
 	}	
+
 	switch (*(p+1))
 	{
 	case 'p':

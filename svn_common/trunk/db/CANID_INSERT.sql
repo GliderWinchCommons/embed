@@ -318,12 +318,18 @@ INSERT INTO CANID VALUES ('CANID_DMOC_CMD_REGEN', '46800000','DMOC','I16_I16_X_U
 -- Contactor Blue Pill Motherboard unit #1
 INSERT INTO CANID VALUES ('CANID_HB_CNTCTR1V',    'FF800000','CNTCTR','FF_FF', 'Contactor1: Heartbeat: High voltage1:Current sensor1');
 INSERT INTO CANID VALUES ('CANID_HB_CNTCTR1A',    'FF000000','CNTCTR','FF_FF', 'Contactor1: Heartbeat: High voltage2:Current sensor2');
-INSERT INTO CANID VALUES ('CANID_MSG_CNTCTR1V',   '50400000','CNTCTR','FF_FF', 'Contactor1: poll response: High voltage1:Current sensor1');
-INSERT INTO CANID VALUES ('CANID_MSG_CNTCTR1A',   '50600000','CNTCTR','FF_FF', 'Contactor1: poll response: High voltage2:Current sensor2');
+INSERT INTO CANID VALUES ('CANID_MSG_CNTCTR1V',   '50400000','CNTCTR','FF_FF', 'Contactor1: poll response: HV1:Current sensor1');
+INSERT INTO CANID VALUES ('CANID_MSG_CNTCTR1A',   '50600000','CNTCTR','FF_FF', 'Contactor1: poll response: HV2 battery gnd to: DMOC+, HV3 DMOC-');
 INSERT INTO CANID VALUES ('CANID_CMD_CNTCTR1I'   ,'E360000C','CNTCTR','U8_VAR','Contactor1: I Command incoming');
 INSERT INTO CANID VALUES ('CANID_CMD_CNTCTR1R'   ,'E3600000','CNTCTR','U8_VAR','Contactor1: R Command response');
 INSERT INTO CANID VALUES ('CANID_CMD_CNTCTRKAI'  ,'E3800000','CNTCTR','U8',    'Contactor1: I KeepAlive and connect command');
-INSERT INTO CANID VALUES ('CANID_CMD_CNTCTRKAR'  ,'E3C00000','CNTCTR','U8_U8', 'Contactor1: R KeepAlive response');
+INSERT INTO CANID VALUES ('CANID_CMD_CNTCTRKAR'  ,'E3C00000','CNTCTR','U8_U8_U8', 'Contactor1: R KeepAlive response');
+--
+-- GEVCUr Development & test of DMOCs w motors
+--                         CANID_NAME       CANNID_HEX   CANID_TYPE    CAN_MSG_FMT     DESCRIPTION
+INSERT INTO CANID VALUES ('CANID_CMD_GEVCURKAI'  ,'E4200000','CNTCTR','U8_S8_S8_S8_S8','GEVCUr: I KeepAlive and connect command');
+INSERT INTO CANID VALUES ('CANID_CMD_GEVCURKAR'  ,'E3E00000','CNTCTR','U8_U8', 'GEVCUr: R KeepAlive response');
+
 
 -- Nodes/Units (Loader addresses)
 --                         CANID_NAME       CANNID_HEX   CANID_TYPE    CAN_MSG_FMT     DESCRIPTION
@@ -357,6 +363,8 @@ INSERT INTO CANID VALUES ('CANID_UNIT_1E',	'04800000', 'UNIT_1E',	'U8','Discover
 INSERT INTO CANID VALUES ('CANID_UNIT_1F',	'04A00000', 'UNIT_1F',	'U8','Pwrbox: Blue Pill perf board');
 INSERT INTO CANID VALUES ('CANID_UNIT_20',	'04E00000', 'UNIT_20',	'U8','Gateway4: 1 CAN');
 INSERT INTO CANID VALUES ('CANID_UNIT_21',	'05000000', 'UNIT_21',	'U8','Contactor1: Blue Pill Mboard');
+INSERT INTO CANID VALUES ('CANID_UNIT_22',	'05200000', 'UNIT_22',	'U8','GEVCUr: gevcu replasement: DiscoveyF4 Control Panel');
+
 
 INSERT INTO CANID VALUES ('CANID_UNIT_99',		'FFFFFF14', 'UNIT_99',	'UNDEF','Dummy for missing CAN IDs');
 INSERT INTO CANID VALUES ('CANID_DUMMY',		   'FFFFFFFC', 'UNIT_NU',	'UNDEF','Dummy ID: Lowest priority possible (Not Used)');

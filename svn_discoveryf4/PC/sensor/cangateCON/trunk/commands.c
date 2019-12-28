@@ -117,11 +117,10 @@ void do_command_keybrd(char* p)
 			msg_sw = 'm';
 		break;
 
-//	case 'p': // 'p' command (program loader for selected unit)
-//		cmd_p_init(p);	// Run edit-check on file, then load
-//		msg_sw = 257 ;
-//		msg_sw = 'p';
-//		break;
+	case 'p': // 'p' command (GEVCUr commands)
+		cmd_p_init(p);	
+		msg_sw = 'p';
+		break;
 
 	case 'q': // 'q' CAN bus loader file edit-check only.
 		if (cmd_q_init(p) < 0);	// Run edit-check on file only.
@@ -204,9 +203,9 @@ void do_canbus_msg(struct CANRCVBUF* p)
 		cmd_m_do_msg(p);
 		break;
 
-//	case 'p':
-//		cmd_p_do_msg1(p);
-//		break;
+	case 'p':
+		cmd_p_do_msg(p);
+		break;
 
 	case 's':
 		cmd_s_do_msg(p);
@@ -255,26 +254,33 @@ void do_pc_to_gateway(struct CANRCVBUF* p)
 void do_printmenu(void)
 {
 	printf("a - ascii monitor of a CAN unit\n");
+	printf("b - CONTACTOR: display polled msgs\n");
+	printf("c - request & display launch parameters\n");
 	printf("d - list raw msgs\n");
+	printf("e - GEVCUr: keepalive & command\n\t"
+				"ea - command GEVCUr to begin at initial state\n\t"
+  				"ed - display paramaters *we* have to send\n\t"
+				"ex - set GEVCUr to idle state, continue keep-alive\n");
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");
+   printf("g - GEVCUr: command request to retrieve all readings\n");
 	printf("h - Photodetector level histogram from sensor\n");
-	printf("l - list unix time/date in heartbeat time msgs (l e1000000)\n");
-	printf("n - list msg id's and msg ct during 1 sec (coarse computer timing)\n");
-	printf("u - list msg id's and msg ct between CAN 1 sec time mgs (e.g. u 00600000)\n");
-	printf("m - list msgs for id entered 'm xxxxxxxx (CAN ID as 8 hex digits)'\n");
-//	printf("p - CAN bus loader: using file for specs, edit-check and load\n");
-	printf("q - Identify received msgs from CANID.sql file\n");
-	printf("r - send high priority RESET\n");
-	printf("s - CONTACTOR: command request to retrieve all readings\n");
 	printf("k - CONTACTOR: keep-alive\n\t"
 				"ka - Begin sending keep-alive msgs\n\t"
 				"kx - Stop keep-alive msgs\n\t"
 				"k0 - disconnect\n\t"
 				"k1 - connect\n\t"
 				"k2 - reset\n");
-	printf("b - CONTACTOR: display polled msgs\n");
-	printf("c - request & display launch parameters\n");
-	printf("w - list msgs float (wf) or integer (wi) payload with payload byte offset (wi1 E1800000)\n");
+	printf("l - list unix time/date in heartbeat time msgs (l e1000000)\n");
+	printf("m - list msgs for id entered 'm xxxxxxxx (CAN ID as 8 hex digits)'\n");
+	printf("n - list msg id's and msg ct during 1 sec (coarse computer timing)\n");
+	printf("p - GEVCUr: set parameter\n\t"
+				"p0 xxxxxx.xxxx - set parameter [0] as float\n\t"
+				"pn xxxxxx.xxxx - set paramater [n] as float, n max depends on GEVCUr program\n");
+	printf("q - Identify received msgs from CANID.sql file\n");
+	printf("r - send high priority RESET\n");
+	printf("s - CONTACTOR: command request to retrieve all readings\n");
+	printf("u - list msg id's and msg ct between CAN 1 sec time mgs (e.g. u 00600000)\n");
+	printf("w - list msgs float (wf), integer (wi), BigEnd 2 byte int (wy), byte (wb), with payload byte offset, (wi1 E1800000)\n");
 	printf("x - cancel command\n");
 	printf("Control C to quit program\n");
 	return;

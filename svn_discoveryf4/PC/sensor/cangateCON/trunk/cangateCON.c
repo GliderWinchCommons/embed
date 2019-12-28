@@ -418,7 +418,7 @@ printf("%d %s\n",i, argv[i]);
 	
 		select (fdp+1, &ready, NULL, NULL, &tmdetect);	/* Wait for something to happen */
 
-		cmd_k_timeout(); // If msg_sw == k, send keep-alive contactor msgs.
+//		cmd_k_timeout(); // If msg_sw == k, send keep-alive contactor msgs.
 
 		/* Send again if we timed out waiting for an expected response */
 		if ( !( (FD_ISSET(fdp, &ready)) || (FD_ISSET(STDIN_FILENO, &ready)) ) )

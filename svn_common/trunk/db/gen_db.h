@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2019-08-03 16:13:40.333
+// 2019-12-27 21:31:22.796
 
-#define CANID_COUNT 250
+#define CANID_COUNT 253
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -213,12 +213,14 @@
 #define  CANID_DMOC_CMD_REGEN     0x46800000  // DMOC           : DMOC: cmd: watt,accel,degC,alive
 #define  CANID_HB_CNTCTR1V        0xFF800000  // CNTCTR         : Contactor1: Heartbeat: High voltage1:Current sensor1
 #define  CANID_HB_CNTCTR1A        0xFF000000  // CNTCTR         : Contactor1: Heartbeat: High voltage2:Current sensor2
-#define  CANID_MSG_CNTCTR1V       0x50400000  // CNTCTR         : Contactor1: poll response: High voltage1:Current sensor1
-#define  CANID_MSG_CNTCTR1A       0x50600000  // CNTCTR         : Contactor1: poll response: High voltage2:Current sensor2
+#define  CANID_MSG_CNTCTR1V       0x50400000  // CNTCTR         : Contactor1: poll response: HV1:Current sensor1
+#define  CANID_MSG_CNTCTR1A       0x50600000  // CNTCTR         : Contactor1: poll response: HV2 battery gnd to: DMOC+, HV3 DMOC-
 #define  CANID_CMD_CNTCTR1I       0xE360000C  // CNTCTR         : Contactor1: I Command incoming
 #define  CANID_CMD_CNTCTR1R       0xE3600000  // CNTCTR         : Contactor1: R Command response
 #define  CANID_CMD_CNTCTRKAI      0xE3800000  // CNTCTR         : Contactor1: I KeepAlive and connect command
 #define  CANID_CMD_CNTCTRKAR      0xE3C00000  // CNTCTR         : Contactor1: R KeepAlive response
+#define  CANID_CMD_GEVCURKAI      0xE4200000  // CNTCTR         : GEVCUr: I KeepAlive and connect command
+#define  CANID_CMD_GEVCURKAR      0xE3E00000  // CNTCTR         : GEVCUr: R KeepAlive response
 #define  CANID_UNIT_2             0x04000000  // UNIT_2         : Sensor unit: Drive shaft encoder #1
 #define  CANID_UNIT_3             0x03800000  // UNIT_3         : Sensor unit: Engine
 #define  CANID_UNIT_4             0x03A00000  // UNIT_4         : Sensor unit: Lower sheave shaft encoder
@@ -249,6 +251,7 @@
 #define  CANID_UNIT_1F            0x04A00000  // UNIT_1F        : Pwrbox: Blue Pill perf board
 #define  CANID_UNIT_20            0x04E00000  // UNIT_20        : Gateway4: 1 CAN
 #define  CANID_UNIT_21            0x05000000  // UNIT_21        : Contactor1: Blue Pill Mboard
+#define  CANID_UNIT_22            0x05200000  // UNIT_22        : GEVCUr: gevcu replasement: DiscoveyF4 Control Panel
 #define  CANID_UNIT_99            0xFFFFFF14  // UNIT_99        : Dummy for missing CAN IDs
 #define  CANID_DUMMY              0xFFFFFFFC  // UNIT_NU        : Dummy ID: Lowest priority possible (Not Used)
 #define  CANID_MSG_DUMMY          0xFFFFFF16  // ANY            : Dummy ID: Polled Msg dummy
@@ -310,7 +313,7 @@
 #define  CMD_REQ_HISTOGRAM       40        // Request histogram: [1] ADC #: [2] # consecutive:[3]-[6] # DMA buffers accumuleted in bins
 #define  CMD_THISIS_HISTODATA    41        // Histogram data item: [1] ADC #:[2] bin # (0 - n), [3]-[6] bin count
 
-#define PAYLOAD_TYPE_COUNT 40
+#define PAYLOAD_TYPE_COUNT 41
 #define  NONE                    0         //  No payload bytes                               
 #define  FF                      1         //  [0]-[3]: Full Float                            
 #define  FF_FF                   2         //  [0]-[3]: Full Float[0]; [4]-[7]: Full Float[1] 
@@ -348,6 +351,7 @@
 #define  I16_I16_X_U8_U8         34        // [1]-[0]:[3]-[2]:uint16_t,[5]:[6]:uint8_t        
 #define  I16                     35        // [1]-[0]:uint16_t                                
 #define  U8_VAR                  36        // [0]-uint8_t: [1]-[n]: variable dependent on first byte
+#define  U8_S8_S8_S8_S8          37        // [0]:uint8_t:[1]:[2]:[3]:[4]:int8_t (signed)     
 #define  LVL2B                   249       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
@@ -839,6 +843,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 774  */
+/* TOTAL COUNT OF #defines = 778  */
 /* Test 2016/06/12 */
 

@@ -47,6 +47,10 @@ SENT by contactor function:
 #include "PC_gateway_comm.h"	// Common to PC and STM32
 #include "USB_PC_gateway.h"
 
+#include "timer_thread.h" // Timer thread for sending keep-alive CAN msgs
+
+static void cmd_k_timerthread(void);
+
 #define DEFAULTRX  0xE3C00000 // CANID_CMD_CNTCTRKAR: U8_U8 : Contactor1: R KeepAlive response
 #define DEFAULTTX  0xE3800000 // CANID_CMD_CNTCTRKAI:U8 : Contactor1: I KeepAlive and connect command
 
@@ -93,7 +97,9 @@ static u32 idtx; // CAN id that "we" send (to CAN node)
 static u32 state;
 static u32 kaON;  // 0 = keep-alive is off; 1 = keep-alive = on.
 
-static long long millisec_prev;
+#define KEEPALIVETICKCT 70		// 10 ms count for timing keepalive
+static uint32_t tickctr;
+static int flagnow;
 
 /******************************************************************************
  * static void sendcanmsg(struct CANRCVBUF* pcan);
@@ -114,6 +120,21 @@ printf("TX: %08x %d %02X\n",pcan->id, pcan->dlc, pcan->cd.u8[0]);
 }
 
 /******************************************************************************
+ * static void starttimer(void);
+ * @brief 	: Setup timing
+*******************************************************************************/
+static int starttimer(void)
+{
+	/* Start timer thread for sending CAN msgs. */
+	int ret = timer_thread_init(&cmd_k_timerthread, 10000);
+	if (ret != 0)
+	{
+		printf("\ncommand K: timer thread startup unsucessful\n");
+		return -1;
+	}
+	return 0;
+}
+/******************************************************************************
  * int cmd_k_init(char* p);
  * @brief 	: Setup timing
  * @param	: p = pointer to keyboard input
@@ -121,10 +142,12 @@ printf("TX: %08x %d %02X\n",pcan->id, pcan->dlc, pcan->cd.u8[0]);
 int cmd_k_init(char* p)
 {
 	u32 len = strlen(p);
-   struct timeval te; 
 
 	idrx = DEFAULTRX;
 	idtx = DEFAULTTX;
+
+	tickctr = 0;
+	flagnow = 0;
 
 	if (len == 2)
 	{ // Here, 'k<enter>' entered
@@ -134,7 +157,7 @@ int cmd_k_init(char* p)
 			"where: a = ID PC sends, b = ID PC receives\n");
 		state = 0;
 		kaON = 0;
-		return 0;
+		return starttimer();
 	}
 	if (len >= 20)
 	{ // Here, Op entered the two CAN IDs
@@ -142,7 +165,7 @@ int cmd_k_init(char* p)
 		printf("Using entered CAN IDs: Send %08X  Rcv %08X\n",idtx,idrx);
 		state = 0;
 		kaON = 0;
-		return 0;
+		return starttimer();
 	}
 	if (len == 3)
 	{ // Here one of the following commands entered
@@ -150,38 +173,37 @@ int cmd_k_init(char* p)
 		{
 		case 'a':
 		case 'A': // 'ka' = Start keep-alive msgs (disconnect)
-			gettimeofday(&te, NULL); // get current time
-    		millisec_prev = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
-			millisec_prev += KEEPALIVEDURATION; // Next time for a keep-alive msg
-
-			sendcanmsg(&cantx);
+//			gettimeofday(&te, NULL); // get current time
+//   		millisec_prev = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
+//			millisec_prev += KEEPALIVEDURATION; // Next time for a keep-alive msg
+			flagnow = 1;	 // Send msg upon next timer event
 			kaON = 1;  // Show we are in keep-alive mode
 			state = 1;			
 			break;
 
 		case 'x': // 'kx' = Stop keep-alive msgs (disconnect)
 		case 'X':
-			sendcanmsg(&cantx);
+			flagnow = 1;	 // Send msg upon next timer event
 			kaON = 0;  // Show we are not in keep-alive mode
 			state = 2;			
 			break;
 
-		case '0': // 'k0' = Discoonect (de-energize contactors)
+		case '0': // 'k0' = Disconnect (de-energize contactors)
 			cantx.cd.uc[0]  = 0x00; //  Request: disconnect
-			sendcanmsg(&cantx);
+			flagnow = 1;	 // Send msg upon next timer event
 			state = 3;
 			break;
 
 		case '1': // 'k1' = Connect (energize contactors)
 			cantx.cd.uc[0] = 0x80; // Request: connect
-			sendcanmsg(&cantx);
+			flagnow = 1;	 // Send msg upon next timer event
 			state = 4;
 			break;
 
 		case '4':
 		case '2': // 'k2' = Send fault reset command
 			cantx.cd.uc[0] = 0x40; // Request: Reset
-			sendcanmsg(&cantx);
+			flagnow = 1;	 // Send msg upon next timer event
 			state = 5;
 			break;
 
@@ -190,7 +212,7 @@ int cmd_k_init(char* p)
 			return -1;
 		}
 	}
-	return 0;
+	return starttimer();
 }
 /******************************************************************************
  * void cmd_k_do_msg(struct CANRCVBUF* p);
@@ -292,7 +314,8 @@ for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 	case NO_UART3_HV_READINGS:
 		printf("UART3_HV_READINGS: timer timed out");
 		break;
-	case 	HE_AUTO_ZERO_TOLERANCE_ERR:
+	case 	HE_AUTO_ZERO_TOLERANCE_ERR:			flagnow = 1;	 // Send msg upon next timer event
+
 		printf("HE_AUTO_ZERO_TOLERANCE_ERR");
 		break;
 	default:
@@ -302,27 +325,27 @@ for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 
 	return;
 }
+
 /******************************************************************************
- * void cmd_k_timeout(void);
+ * static void cmd_k_timerthread(void);
  * @brief 	: Send keep-alive msg
-*******************************************************************************/
-void cmd_k_timeout(void)
+*******************************************************************************/	
+static void cmd_k_timerthread(void)
 {
-	if (msg_sw != 'k') return;	// Command in effect
-
-   struct timeval te; 
-	gettimeofday(&te, NULL); // get current time
-	long long millisec = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
-	if (millisec < millisec_prev) return;
-	{ // Here, time has expired, so send another keep-alive msg.
-		millisec_prev = millisec + KEEPALIVEDURATION; // Next time for a keep-alive msg
-
-		if (kaON != 0)
-		{
-			/* Send keep-alive msg with the current command code in payload [0] */
-			sendcanmsg(&cantx);		
-		}
+	tickctr += 1;
+	if (tickctr >= KEEPALIVETICKCT)
+	{
+		tickctr = 0;
+		
+	/* Send keep-alive msg with the current command code in payload [0] */
+		sendcanmsg(&cantx);		
 	}
+	if (flagnow != 0)
+	{
+		flagnow = 0;
+		sendcanmsg(&cantx);		
+	}
+
 	return;
 }
 

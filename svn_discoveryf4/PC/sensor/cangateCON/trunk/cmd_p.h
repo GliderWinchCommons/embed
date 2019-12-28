@@ -1,8 +1,8 @@
 /******************************************************************************
 * File Name          : cmd_p.h
-* Date First Issued  : 09/21/2013
+* Date First Issued  : 11/21/2019
 * Board              : PC
-* Description        : Program load for one unit
+* Description        : GEVCUr - send keep-alive and commands
 *******************************************************************************/
 
 #ifndef __CMD_P_PC
@@ -24,23 +24,20 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-#include "../../../../../svn_common/trunk/common_can.h"
-//#include "../../../../../svn_common/trunk/db/can_db.h"
+#include "common_can.h"	// Definitions common to CAN and this project.
 
 /******************************************************************************/
+void cmd_p_do_msg(struct CANRCVBUF* p);
+/* @brief 	: Send CAN msgs
+ * @param	: p = pointer to CAN msg
+*******************************************************************************/
 int cmd_p_init(char* p);
-/* @brief 	: Get path/file from input file for program loading
- * @param	: fpList = file with path/file lines
- * @param	: 0 = init was OK; -1 = failed
+/* @brief 	: Setup timing
+ * @param	: p = pointer to keyboard input
 *******************************************************************************/
-void cmd_p_do_msg1(struct CANRCVBUF* p);
-/* @brief 	: Deal with incoming CAN msgs
- * @param	: pointer to struct with CAN msg
+void cmd_p_timeout(void);
+/* @brief 	: Send keep-alive msg
 *******************************************************************************/
-
-
-extern int ldfilesopen_sw;	// 0 = .bin & .srec files have not been opened
-extern int cmd_p_sw;
 
 #endif
 

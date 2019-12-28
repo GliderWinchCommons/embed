@@ -1,9 +1,6 @@
 # Makefile - PC
 # 11/28/2013
 
-
-
-
 # Name of the .c file with 'main' as well as output file name
 NAME		= cangateCON
 
@@ -27,17 +24,18 @@ OBJS = $(NAME).o \
 commands.o \
 cmd_a.o \
 cmd_b.o \
+cmd_c.o \
 cmd_f.o \
 cmd_h.o \
+cmd_k.o \
 cmd_l.o \
-cmd_n.o \
 cmd_m.o \
+cmd_n.o \
+cmd_p.o \
 cmd_q.o \
 cmd_r.o \
 cmd_s.o \
-cmd_c.o \
 cmd_w.o \
-cmd_k.o \
 sockclient.o \
 timer_thread.o \
 var_size_chk.o \

@@ -332,6 +332,8 @@ for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 *******************************************************************************/	
 static void cmd_k_timerthread(void)
 {
+	if (kaON == 0) return; // No keep-alive msgs
+
 	tickctr += 1;
 	if (tickctr >= KEEPALIVETICKCT)
 	{

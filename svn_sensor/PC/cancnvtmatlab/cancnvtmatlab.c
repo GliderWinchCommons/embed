@@ -7,8 +7,11 @@
 /*
 Hack of cancnvt 
 
+cd ~/GliderWinchCommons/embed/svn_sensor/PC/cancnvtmatlab
 gcc -Wall cancnvtmatlab.c -o cancnvtmatlab 
-gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout.txt csvfieldselect.txt < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt
+./cancnvtmatlab csvlinelayout200321.txt csvfieldselect200321.txt < ~/GliderWinchItems/GEVCUr/docs/data/log200220-2.txt
+gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout200321.txt csvfieldselect200321.txt < ~/GliderWinchItems/GEVCUr/docs/data/log200220-2.txt
+gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout200321.txt csvfieldselect200321.txt < ~/GliderWinchItems/GEVCUr/docs/data/log200220-2.txt | tee log200220-2.csv
 
 Arguments: 
   Options <-option>
@@ -16,6 +19,7 @@ Arguments:
      x - do not convert input data file
      c - csv position lines between csv data lines
      h - help
+     # - Skip listing output lines for CAN ids not in table
      '-' with none of the above chars show help
 	
   Files:
@@ -87,17 +91,6 @@ E1C00000      0X70E       1806        29 LAT_LON_HT 	 CANID_HB_GPS_LLH_1
 #define PRINTCSVPOSITIONNUMBERS // Insert line above CSV line to identify CSV positions easily
 #define JUSTPRINTTABLES // Exit after printing tables
 
-/* TEMPORARY payload define until updated in SQL database */
-#define I16_I16	      27 // 'I16_I16',	      27, 4,'[1]-[2]: uint16_t[0]; [3]-[2]: uint16_t[1]');
-#define I16_I16_X6	   28 // 'I16_I16_X6',     28, 4,'[1]-[2]: uint16_t[0]; [3]-[2]: uint16_t[1]');
-#define U8_U8_U8	      29 // 'U8_U8_U8',       29, 6,'[1]-[2]:[2] uint8_t');--
-#define I16_X6          30 // 'I16_X6',         30, 7,'[1]-[2]: uint16_t,[6]: uint8_t');
-#define I16_I16_I16_I16 31 // 'I16_I16_I16_I16',31, 8,'[1]-[2]:[3]-[2]:[5]-[4]:[7]-[6]:uint16_t');
-#define I16__I16        32 // 'I16__I16',       32, 8,'[1]-[0]:uint16_t,[6]-[5]:uint16_t');
-#define I16_I16_I16_X7	33 // 'I16_I16_I16_X6', 33, 8,'[1]-[2]:[3]-[2]:[5]-[4]:uint16_t,[6]:uint8_t');
-#define I16_I16_X_U8_U8 34 // 'I16_I16_X_U8_U8',34, 8,'[1]-[2]:[3]-[2]:uint16_t,[5]:[6]:uint8_t');
-#define I16             35 // 'I16',            18, 2,'[1]-[0]:uint16_t');			--
-
 /* Line buffer size */
 #define LINESZ 512	// Longest CAN msg line length
 char buf[LINESZ];
@@ -161,6 +154,7 @@ char argflag = 0;   // Count number of command line switches
 char cmdsw_t;
 char cmdsw_x;
 char cmdsw_c;
+char cmdsw_b;
 char * helplist = {"\nCommand line layout\n\
 ./cancnvtmatlab <options> <path/file input file #1> <path/file input file #2> <path/file input file ...> e.g.\n\
 ./cancnvtmatlab -t csvlinelayout.txt csvfieldselect.txt < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt\n\
@@ -168,16 +162,14 @@ char * helplist = {"\nCommand line layout\n\
  h - help\n\
  t - print input tables\n\
  x - do not convert input data file\n\
- c - csv position lines between csv data lines\n"};
-
+ c - csv position lines between csv data lines\n\
+ # - skip printing missing CAN ids\n"};
 
 /* Declarations */
 void    cmd_f_do_msg(struct CANFIELD* pfld, struct CANRCVBUF* p, int k);
 uint8_t DMOCchecksum(uint32_t id, uint8_t* puc, uint8_t dlc);
 int     DMOCstate(char* pc, uint8_t status);
 void convertpayload(struct CANRCVBUF* play, struct CANFIELD* pfld);
-
-
 
 /*******************************************************************************
  * static int cmpfunc (const void * a, const void * b);
@@ -252,6 +244,7 @@ char* pv;
 				case 'x': cmdsw_x = 1; break;// x - do not convert input data file
 				case 'C':
 				case 'c': cmdsw_c = 1; break;// c - csv position lines between csv data lines
+				case '#': cmdsw_b = 1; break;// # - skip listing lines with missing CAN ids
 				default:
 					printf("\nCommand line switch %c is not in list\n%s",*(pv+j), helplist);
 					break;
@@ -268,7 +261,7 @@ char* pv;
 		return -1;
 	}
 
-//printf("cmdsw: t %i  x %i  c %i\n",cmdsw_t,cmdsw_x,cmdsw_c);	
+//printf("cmdsw: t %i  x %i  c %i #%i\n",cmdsw_t,cmdsw_x,cmdsw_c,cmdsw_b);	
 
 //printf("argc: %i\n",argc);
 	/* =============== Read input files ================================================ */
@@ -356,7 +349,9 @@ mm += 1;
 				px = copydesc(&csvselect[csvselectsz].c[0],px); // Extract description 
 				if (px == NULL) {printf("format field extact err c: %s\n",buf); return -1;}
 
-
+				/* This was a quick way to make the order of lines the csv position, since the
+					old method used the input file number and was cumbersome to make changes in the file. */
+				csvselect[csvselectsz].pos = csvselectsz;
 				csvselectsz += 1;
 				if (csvselectsz >= CSVSELECTSZ)
 				{
@@ -604,7 +599,8 @@ unsigned int kflag;
 			}
 			else
 			{ // Here, Not found: this CAN id does not have a payload layout entry in the array
-				printf("# Not in payload layout array: 0X%08x\n", can.id);
+				if (cmdsw_b == 0)	// Skip this line command line switch is off
+					printf("# Not in payload layout array: 0X%08X\n", can.id);
 			}
 		}		
 	}
@@ -708,17 +704,23 @@ struct CANFIELD
 ('U8_U8',    25,  2, ' [0]:[1]: uint8_t[0],uint8[1]');	--
 ('U8_U8_U8_U32',26,7, ' [0]:[1]:[2]:[3]-[5]: uint8_t[0],uint8_t[0],uint8_t[1], int32_t,');	--
 ('I16_I16',	      27, 4,'[1]-[0]: uint16_t[0]; [3]-[2]: uint16_t[1]');
-('I16_I16_X6',     28, 4,'[1]-[0]: uint16_t[0]; [3]-[2]: uint16_t[1]');
+('I16_I16_X6',     28, 4,'[1]-[0]: uint16_t[0]; [3]-[2]: uint16_t[1]; X');
 ('U8_U8_U8',       29, 6,'[1]-[2]:[2] uint8_t');--
 ('I16_X6',         30, 7,'[1]-[0]: uint16_t,[6]: uint8_t');
 ('I16_I16_I16_I16',31, 8,'[1]-[0]:[3]-[2]:[5]-[4]:[7]-[6]:uint16_t');
 ('I16__I16',       32, 8,'[1]-[0]:uint16_t,[6]-[5]:uint16_t');
 ('I16_I16_I16_X7', 33, 8,'[1]-[0]:[3]-[2]:[5]-[4]:uint16_t,[6]:uint8_t');
 ('I16_I16_X_U8_U8',34, 8,'[1]-[0]:[3]-[2]:uint16_t,[5]:[6]:uint8_t');
-('I16',            35, 2,'[1]-[0]:uint16_t');			--
+('I16',            35, 2,'[1]-[0]:uint16_t');	--
+('U8_VAR',         36, 2,'[0]-uint8_t: [1]-[n]: variable dependent on first byte');	--
+('U8_S8_S8_S8_S8', 37, 5,'[0]:uint8_t:[1]:[2]:[3]:[4]:int8_t (signed)');	--
 
 
+('LVL2B',	249,  6, ' [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table');	--
+('LVL2R',	250,  6, ' [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table');	--
+('UNDEF',	255,  8, ' Undefined');			--
 */
+
 void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 {
 	/* k is index into payload field array. */

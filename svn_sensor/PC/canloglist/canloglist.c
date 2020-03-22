@@ -7,6 +7,7 @@
 /*
 05/04/2019 Hack of cancnvt.c
 
+cd ~/GliderWinchCommons/embed/svn_sensor/PC/canloglist
 gcc -Wall canloglist.c -o canloglist 
 gcc -Wall canloglist.c -o canloglist && ./canloglist < ~/logcsa/181008_212136
 gcc -Wall canloglist.c -o canloglist && ./canloglist < ~/GliderWinchItems/dynamometer/docs/data/log190428.txt | tee gsm1
@@ -294,6 +295,14 @@ Column 5:  Database ascii string for payload format; dashes for not found in dat
 Column 6:  Database ascii string for CANID name; dots for not found in database
 */
 	printf("\n=============================================================\n");
+	printf("\
+zColumn 1:  32b CAN ID in hardware format\n\
+zColumn 2:  11b or 29b CAN ID right justified hex\n\
+zColumn 3:  11b or 29b decimal\n\
+zColumn 4:  Number of msgs for this CAN id\n\
+zColumn 5:  Database ascii string for payload format; dashes for not found in database\n\
+zColumn 6:  Database ascii string for CANID name; dots for not found in database\n");
+
 	printf(" Number of CAN IDs: %i\n",canidlistidx);
 	for (m = 0; m < canidlistidx; m++)
 	{

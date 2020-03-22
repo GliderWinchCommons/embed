@@ -52,7 +52,7 @@ INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8_U8',       29, 6,'[1]-[2]:[2] uint8_t');
 INSERT INTO PAYLOAD_TYPE VALUES ('I16_X6',         30, 7,'[1]-[0]: uint16_t,[6]: uint8_t');
 INSERT INTO PAYLOAD_TYPE VALUES ('I16_I16_I16_I16',31, 8,'[1]-[0]:[3]-[2]:[5]-[4]:[7]-[6]:uint16_t');
 INSERT INTO PAYLOAD_TYPE VALUES ('I16__I16',       32, 8,'[1]-[0]:uint16_t,[6]-[5]:uint16_t');
-INSERT INTO PAYLOAD_TYPE VALUES ('I16_I16_I16_X7', 33, 8,'[1]-[0]:[3]-[2]:[5]-[4]:uint16_t,[6]:uint8_t');
+INSERT INTO PAYLOAD_TYPE VALUES ('I16_I16_I16_X6', 33, 8,'[1]-[0]:[3]-[2]:[5]-[4]:uint16_t,[6]:uint8_t');
 INSERT INTO PAYLOAD_TYPE VALUES ('I16_I16_X_U8_U8',34, 8,'[1]-[0]:[3]-[2]:uint16_t,[5]:[6]:uint8_t');
 INSERT INTO PAYLOAD_TYPE VALUES ('I16',            35, 2,'[1]-[0]:uint16_t');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_VAR',         36, 2,'[0]-uint8_t: [1]-[n]: variable dependent on first byte');	--

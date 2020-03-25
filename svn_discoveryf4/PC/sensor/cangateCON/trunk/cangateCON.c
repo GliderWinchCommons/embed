@@ -1,5 +1,5 @@
 /******************************************************************************
-* File Name          : cangate.c
+* File Name          : cangateCON.c
 * Date First Issued  : 09/12/2013
 * Board              : PC
 * Description        : CAN Bus via 'gateway' (stm32)
@@ -19,12 +19,12 @@
   Hack of 'canldr.c'
 
 compile and execute--
-cd ~/GliderWinchCommons/embed/svn_discoveryf4/PC/sensor/cangate/trunk
-./mm && ./cangate 127.0.0.1 32123 -t $HOME/GliderWinchCommons/embed/svn_common/trunk/params/testmsg2C.txt
+cd ~/GliderWinchCommons/embed/svn_discoveryf4/PC/sensor/cangateCON/trunk
+./mm && ./cangateCON 127.0.0.1 32123 -t $HOME/GliderWinchCommons/embed/svn_common/trunk/params/testmsg2C.txt
 or, for 'q' command file specified
-./mm && ./cangate 127.0.0.1 32123 -i $HOME/GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
+./mm && ./cangateCON 127.0.0.1 32123 -i $HOME/GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
 or, for 'q' command default file spec
-./mm && ./cangate 127.0.0.1 32123
+./mm && ./cangateCON 127.0.0.1 32123
 
 */
 #include <sys/types.h>

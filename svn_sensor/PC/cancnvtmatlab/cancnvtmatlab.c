@@ -264,7 +264,7 @@ char* pv;
 //printf("cmdsw: t %i  x %i  c %i #%i\n",cmdsw_t,cmdsw_x,cmdsw_c,cmdsw_b);	
 
 //printf("argc: %i\n",argc);
-	/* =============== Read input files ================================================ */
+	/* =============== Read input specification files ================================================ */
 	int ii;
 	for (ii = 1; ii < argc; ii++)
 	{
@@ -642,11 +642,20 @@ uint32_t payI32(struct CANRCVBUF* pcanx, int offset)
 }
 uint16_t payI16(struct CANRCVBUF* pcanx, int offset)
 {
-	unsigned int x;
+	uint16_t x;
 		x  = pcanx->cd.uc[1+offset] <<  0;
 		x |= pcanx->cd.uc[0+offset] <<  8;
 		return x;
 }
+int16_t payY16(struct CANRCVBUF* pcanx, int offset)
+{
+	int16_t x;
+		x  = pcanx->cd.uc[1+offset] <<  0;
+		x |= pcanx->cd.uc[0+offset] <<  8;
+		return x;
+}
+float payFF(struct CANRCVBUF* pcanx, int offset)
+
 float payFF(struct CANRCVBUF* pcanx, int offset)
 {
 	union{uint32_t ui; float ff;} ui_ff;
@@ -735,6 +744,9 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 	}ui_ff;
 	ui_ff.ff = 0;
 
+	int16_t y16x;
+	int16_t y16off;
+
 	/* Conversion to double after byte extraction. */
 	// Most are unsigned, so default to 0
 	char flag = 0; // unsigned = 0, signed = 1, float = 2;
@@ -769,6 +781,10 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 		if (k > 2)  {ui_ff.ui = pcanx->cd.uc[k];  break;}
 		break;
 
+	case Y16_Y16_Y16_Y16:
+		y16x = payY16(pcanx,k*2);
+		flag = 3;
+		break;
 
 	case NONE:
 		break;
@@ -847,7 +863,7 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 		printf("\nPAYLOAD NOT PROGRAMMED!: id: 0X%08X paycode: %i\n",pcanx->id, pfld->paytype);
 		break;
 	}
-
+#ifdef USEOLDCODE
 	/* Convert to double */
 	if      (flag == 1)
 		pfld->lgr = ui_ff.si; // Signed -> double
@@ -855,10 +871,35 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 		pfld->lgr = ui_ff.ui; // Unsigned -> double
 	else if (flag == 2)
 		pfld->lgr = ui_ff.ff; // float -> double
-
+#else
 	/* Calibrate and update last-good-reading as double */
 	pfld->lgr = (pfld->lgr + pfld->offset) * pfld->scale;
 
+	switch(flag)
+	{
+	case 0: // Unsigned -> double
+		pfld->lgr = ui_ff.ui; // Unsigned -> double
+		pfld->lgr = (pfld->lgr + pfld->offset) * pfld->scale;
+		break;
+	
+	case 1:  // Signed -> double
+		pfld->lgr = ui_ff.si;
+		pfld->lgr = (pfld->lgr + pfld->offset) * pfld->scale;
+		break;
+
+	case 2: // Float
+		pfld->lgr = ui_ff.ff; // float -> double
+		pfld->lgr = (pfld->lgr + pfld->offset) * pfld->scale;
+		break;
+
+	case 3: // 16b w rollover
+		y16off = pfld->offset;    // Convert double -> 16b signed
+		y16x   = (y16x + y16off); // Apply offset (signed)
+		pfld->lgr = y16x;         // Convert 16b to double
+		pfld->lgr = pfld->lgr * pfld->scale; // Apply scaling
+		break;
+	}
+#endif
 	return;
 }	
 

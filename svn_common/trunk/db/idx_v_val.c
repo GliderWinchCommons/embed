@@ -1,4 +1,4 @@
-// 2019-12-27 21:31:24.32
+// 2020-03-24 12:13:41.519
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -842,7 +842,7 @@ const uint32_t paramval23[] = {
 
 #define CAN_UNIT_3_CMDID_TABLE_SIZE 8	// Logger_1: R 
 
-#define CAN_UNIT_E_CMDID_TABLE_SIZE 4	// Tension_a: R Tension drum #1 AD7799 #1
+#define CAN_UNIT_E_CMDID_TABLE_SIZE 4	// Cable angle: R AD7799 #2 drum #1
 
 #define CAN_UNIT_F_CMDID_TABLE_SIZE 4
 
@@ -986,9 +986,9 @@ const struct FUNC_CANID func_canid12[] = {
 #ifdef CAN_UNIT_F	// a #define is used to select the following
 const struct FUNC_CANID func_canid13[] = {
 {   0x01E0000C, CAN_UNIT_F_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
-{1003,  0x05C0803C }, /*   1 CAN_UNIT_F           CANID_CMD_TENSION_a1WR	 Tension_a: R Tension drum #1 AD7799 #1*/
-{   3,  0x05C0003C }, /*   2 CAN_UNIT_F           CANID_CMD_TENSION_a1WI	 Tension_a: I Tension drum #1 AD7799 #1*/
-{1005,  0x0620000C }, /*   3 CAN_UNIT_F           CANID_CMD_CABLE_ANGLE_1R	 Cable angle: R AD7799 #2 drum #1*/
-{   5,  0x06200000 }, /*   4 CAN_UNIT_F           CANID_CMD_CABLE_ANGLE_1I	 Cable angle: I AD7799 #2 drum #1*/
+{1005,  0x0620000C }, /*   1 CAN_UNIT_F           CANID_CMD_CABLE_ANGLE_1R	 Cable angle: R AD7799 #2 drum #1*/
+{   5,  0x06200000 }, /*   2 CAN_UNIT_F           CANID_CMD_CABLE_ANGLE_1I	 Cable angle: I AD7799 #2 drum #1*/
+{1003,  0x05C0803C }, /*   3 CAN_UNIT_F           CANID_CMD_TENSION_a1WR	 Tension_a: R Tension drum #1 AD7799 #1*/
+{   3,  0x05C0003C }, /*   4 CAN_UNIT_F           CANID_CMD_TENSION_a1WI	 Tension_a: I Tension drum #1 AD7799 #1*/
 };
 #endif

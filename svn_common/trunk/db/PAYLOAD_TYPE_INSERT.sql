@@ -1,8 +1,12 @@
 -- PAYLOAD_TYPE Name of payload arrangement versus code number for calling a routine
 --   CANID.CAN_MSG_FMT specifies the PAYLOAD_TYPE_NAME from the following list, and 
---   provides a code that can be used to call a routine to parse the payload.
---  U16 = Little endian 16b unsigned
---  I16 = Big endian 16b unsigned
+--   provides a code that can be used to call a routine to parse the payload.--
+--  Prefix: 
+--      Little Endian: 'U' = unsigned; 'I' = signed
+--      Big Endian: 'I' = unsigned; 'Y' = signed
+--  Example:
+--    U16 = Little endian 16b unsigned
+--    I16 = Big endian 16b unsigned
 --
 -- PAYLOAD_TYPE_NAME varchar(24) PRIMARY KEY,
 --  Name assigned to this payload layout
@@ -31,7 +35,7 @@ INSERT INTO PAYLOAD_TYPE VALUES ('U8_S32',	 8,  5, ' [0]: int8_t; [4]-[7]: int32
 INSERT INTO PAYLOAD_TYPE VALUES ('HF',        9,  2, ' [0]-[1]: Half-Float');			--
 INSERT INTO PAYLOAD_TYPE VALUES ('F34F',     10,  3, ' [0]-[2]: 3/4-Float');				--
 INSERT INTO PAYLOAD_TYPE VALUES ('xFF',      11,  5, ' [0]:[1]-[4]: Full-Float, first   byte  skipped');	--
-INSERT INTO PAYLOAD_TYPE VALUES ('xxFF',     12,  6, ' [0]:[1]:[2]-[5]: Full-Float, first 2 bytes skipped');	--
+INSERT INTO PAYLOAD_TYPE VALUES ('xxFF',     12,  6, ' [0]:[1]:[2]-[5]: Full-Float, first 2 bytes skipped'); --
 INSERT INTO PAYLOAD_TYPE VALUES ('xxU32',    13,  6, ' [0]:[1]:[2]-[5]: uint32_t, first 2 bytes skipped');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('xxS32',    14,  6, ' [0]:[1]:[2]-[5]: int32_t, first 2 bytes skipped');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8_U32',15,  6, ' [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1],uint32_t,');	--
@@ -39,7 +43,7 @@ INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8_S32',16,  6, ' [0]:[1]:[2]-[5]: uint8_t[
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8_FF',	17,  6, ' [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1], Full Float,');--
 INSERT INTO PAYLOAD_TYPE VALUES ('U16',      18,  2, ' [0]-[1]:uint16_t');			--
 INSERT INTO PAYLOAD_TYPE VALUES ('S16',      19,  2, ' [0]-[1]: int16_t');			--
-INSERT INTO PAYLOAD_TYPE VALUES ('LAT_LON_HT',20, 6, ' [0]:[1]:[2]-[5]: Fix type, bits fields, lat/lon/ht');	--
+INSERT INTO PAYLOAD_TYPE VALUES ('LAT_LON_HT',20, 6, ' [0]:[1]:[2]-[5]: Fix type, bits fields, lat/lon/ht'); --
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_FF',    21,  5, ' [0]:[1]-[4]: uint8_t, Full Float');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_HF',    22,  3, ' [0]:[1]-[2]: uint8_t, Half Float');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('U8',       23,  1, ' [0]: uint8_t');	--
@@ -57,6 +61,7 @@ INSERT INTO PAYLOAD_TYPE VALUES ('I16_I16_X_U8_U8',34, 8,'[1]-[0]:[3]-[2]:uint16
 INSERT INTO PAYLOAD_TYPE VALUES ('I16',            35, 2,'[1]-[0]:uint16_t');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_VAR',         36, 2,'[0]-uint8_t: [1]-[n]: variable dependent on first byte');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_S8_S8_S8_S8', 37, 5,'[0]:uint8_t:[1]:[2]:[3]:[4]:int8_t (signed)');	--
+INSERT INTO PAYLOAD_TYPE VALUES ('Y16_Y16_Y16_Y16',38, 8,'[1]-[0]:[3]-[2]:[5]-[4]:[7]-[6]:int16_t');
 
 
 INSERT INTO PAYLOAD_TYPE VALUES ('LVL2B',	249,  6, ' [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table');	--

@@ -113,9 +113,9 @@ void cmd_w_do_msg(struct CANRCVBUF* p)
 
 	if (!((p->id & 0xfffffffc) == (keybrd_id & 0xfffffffc))) return;
 
-	if (p->dlc < (payloadidx + 3))
+	if (p->dlc < (payloadidx + 2))
 	{
-		printf("%08X %d dlc should be %d\n",p->id, p->dlc,(payloadidx + 3));
+		printf("%08X %d dlc should be %d\n",p->id, p->dlc,(payloadidx + 2));
 		return;
 	}
 	switch (payloadtype)

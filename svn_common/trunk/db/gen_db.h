@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2019-12-27 21:31:22.796
+// 2020-03-24 12:13:39.342
 
 #define CANID_COUNT 253
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -313,7 +313,7 @@
 #define  CMD_REQ_HISTOGRAM       40        // Request histogram: [1] ADC #: [2] # consecutive:[3]-[6] # DMA buffers accumuleted in bins
 #define  CMD_THISIS_HISTODATA    41        // Histogram data item: [1] ADC #:[2] bin # (0 - n), [3]-[6] bin count
 
-#define PAYLOAD_TYPE_COUNT 41
+#define PAYLOAD_TYPE_COUNT 42
 #define  NONE                    0         //  No payload bytes                               
 #define  FF                      1         //  [0]-[3]: Full Float                            
 #define  FF_FF                   2         //  [0]-[3]: Full Float[0]; [4]-[7]: Full Float[1] 
@@ -347,11 +347,12 @@
 #define  I16_X6                  30        // [1]-[0]: uint16_t,[6]: uint8_t                  
 #define  I16_I16_I16_I16         31        // [1]-[0]:[3]-[2]:[5]-[4]:[7]-[6]:uint16_t        
 #define  I16__I16                32        // [1]-[0]:uint16_t,[6]-[5]:uint16_t               
-#define  I16_I16_I16_X7          33        // [1]-[0]:[3]-[2]:[5]-[4]:uint16_t,[6]:uint8_t    
+#define  I16_I16_I16_X6          33        // [1]-[0]:[3]-[2]:[5]-[4]:uint16_t,[6]:uint8_t    
 #define  I16_I16_X_U8_U8         34        // [1]-[0]:[3]-[2]:uint16_t,[5]:[6]:uint8_t        
 #define  I16                     35        // [1]-[0]:uint16_t                                
 #define  U8_VAR                  36        // [0]-uint8_t: [1]-[n]: variable dependent on first byte
 #define  U8_S8_S8_S8_S8          37        // [0]:uint8_t:[1]:[2]:[3]:[4]:int8_t (signed)     
+#define  Y16_Y16_Y16_Y16         38        // [1]-[0]:[3]-[2]:[5]-[4]:[7]-[6]:int16_t         
 #define  LVL2B                   249       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
@@ -843,6 +844,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 778  */
+/* TOTAL COUNT OF #defines = 779  */
 /* Test 2016/06/12 */
 

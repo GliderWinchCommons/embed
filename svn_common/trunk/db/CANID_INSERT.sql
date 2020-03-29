@@ -315,6 +315,9 @@ INSERT INTO CANID VALUES ('CANID_DMOC_CMD_SPEED', '46400000','DMOC','I16_X6',   
 INSERT INTO CANID VALUES ('CANID_DMOC_CMD_TORQ',  '46600000','DMOC','I16_I16_I16_X6', 'DMOC: cmd: torq,copy,standby,status');
 INSERT INTO CANID VALUES ('CANID_DMOC_CMD_REGEN', '46800000','DMOC','I16_I16_X_U8_U8','DMOC: cmd: watt,accel,degC,alive');
 --
+-- Logging data: messages sent for logging capture and analysis
+INSERT INTO CANID VALUES ('CANID_LOG_DMOCCMDSPD', 'E4000000','LOG','FF', 'GEVCUr: Desired speed');
+--
 -- Contactor Blue Pill Motherboard unit #1
 INSERT INTO CANID VALUES ('CANID_HB_CNTCTR1V',    'FF800000','CNTCTR','FF_FF', 'Contactor1: Heartbeat: High voltage1:Current sensor1');
 INSERT INTO CANID VALUES ('CANID_HB_CNTCTR1A',    'FF000000','CNTCTR','FF_FF', 'Contactor1: Heartbeat: High voltage2:Current sensor2');

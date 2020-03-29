@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2020-03-24 12:13:39.342
+// 2020-03-28 12:55:09.8
 
-#define CANID_COUNT 253
+#define CANID_COUNT 254
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -211,6 +211,7 @@
 #define  CANID_DMOC_CMD_SPEED     0x46400000  // DMOC           : DMOC: cmd: speed, key state
 #define  CANID_DMOC_CMD_TORQ      0x46600000  // DMOC           : DMOC: cmd: torq,copy,standby,status
 #define  CANID_DMOC_CMD_REGEN     0x46800000  // DMOC           : DMOC: cmd: watt,accel,degC,alive
+#define  CANID_LOG_DMOCCMDSPD     0xE4000000  // LOG            : GEVCUr: Desired speed
 #define  CANID_HB_CNTCTR1V        0xFF800000  // CNTCTR         : Contactor1: Heartbeat: High voltage1:Current sensor1
 #define  CANID_HB_CNTCTR1A        0xFF000000  // CNTCTR         : Contactor1: Heartbeat: High voltage2:Current sensor2
 #define  CANID_MSG_CNTCTR1V       0x50400000  // CNTCTR         : Contactor1: poll response: HV1:Current sensor1
@@ -844,6 +845,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 779  */
+/* TOTAL COUNT OF #defines = 780  */
 /* Test 2016/06/12 */
 

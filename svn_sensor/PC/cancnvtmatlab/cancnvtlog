@@ -1,0 +1,18 @@
+#!/bin/bash
+# Convert log file to csv file script
+# cancnvtlog <file>
+# Assume log file is of the name of log file
+# Example: 
+# cancnvtlog 200329-1.txt
+
+# Log file path
+LOGDIR=~/GliderWinchItems/GEVCUr/docs/data
+
+# CSV field select and Line layout input files
+SELECT=csvfieldselect200329.txt
+LAYOUT=csvlinelayout200329.txt
+
+# Directory for routine
+cd ~/GliderWinchCommons/embed/svn_sensor/PC/cancnvtmatlab
+
+./cancnvtmatlab $LAYOUT $SELECT  < $LOGDIR/$1.txt | tee $LOGDIR/$1.csv

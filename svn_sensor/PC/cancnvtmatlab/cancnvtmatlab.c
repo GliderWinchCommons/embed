@@ -8,10 +8,20 @@
 Hack of cancnvt 
 
 cd ~/GliderWinchCommons/embed/svn_sensor/PC/cancnvtmatlab
+
 gcc -Wall cancnvtmatlab.c -o cancnvtmatlab 
+
 ./cancnvtmatlab csvlinelayout200321.txt csvfieldselect200321.txt < ~/GliderWinchItems/GEVCUr/docs/data/log200220-2.txt
+
 gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout200321.txt csvfieldselect200321.txt < ~/GliderWinchItems/GEVCUr/docs/data/log200220-2.txt
+
 gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout200321.txt csvfieldselect200321.txt < ~/GliderWinchItems/GEVCUr/docs/data/log200220-2.txt | tee log200220-2.csv
+
+gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout200328.txt csvfieldselect200328.txt < ~/GliderWinchItems/GEVCUr/docs/data/log200328-1.txt | tee log200328.csv
+
+gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout200329.txt csvfieldselect200329.txt < ~/GliderWinchItems/GEVCUr/docs/data/log200329-1.txt | tee log200329.csv
+
+
 
 Arguments: 
   Options <-option>
@@ -305,7 +315,7 @@ mm += 1;
 					&scale);
 				px = copydesc(&c[0],&buf[1]); // Extract description 
 
-				if (px == NULL) {printf("format field extact err c: %s\n",buf); return -1;}
+				if (px == NULL) {printf("format field extract err c: %s\n",buf); return -1;}
 
 				flag = 0;
 				for (i = 0; i < canfldlayoutsz; i++)
@@ -654,7 +664,6 @@ int16_t payY16(struct CANRCVBUF* pcanx, int offset)
 		x |= pcanx->cd.uc[0+offset] <<  8;
 		return x;
 }
-float payFF(struct CANRCVBUF* pcanx, int offset)
 
 float payFF(struct CANRCVBUF* pcanx, int offset)
 {
@@ -771,7 +780,7 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 
 	case I16__I16:
 		if (k == 1) k = 2;
-	case I16_I16_I16_X7:
+	case I16_I16_I16_X6:
 		if (k != 3) {ui_ff.ui = payI16(pcanx,k*2);break;}
 		if (k == 3) {ui_ff.ui = pcanx->cd.uc[6];  break;}
 		break;

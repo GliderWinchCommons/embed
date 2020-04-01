@@ -1,0 +1,69 @@
+# csvfieldselect.txt - select CAN fields for csv line output
+# 05/17/2019
+#
+# Column 1: Type of line: 'S' = select field type of line
+# Column 2: CSV line field position number (=>IGNORED<=)
+# Column 3: Field definition: CAN field identification number
+# Column 4: Format field for printf of this field
+# Column 5: Description of field
+#
+# NOTE: format field must be a 'f' type as the last-good-reading is always a double
+#
+# NOTE: The following order of lines is the csv field position
+#
+#  -- field format       description
+# csv  id
+S   0   1 "%0.0f"        "CANID_HB_TIMESYNC: (0-63)"
+S   0  18 "%0.1f"        "Command: Torque"
+S   0  13 "%0.1f"        "DMOC Actual Torque"
+S   0  16 "%0.1f"        "Command: Speed"
+S   0   7 "%0.1f"        "DMOC Actual Speed (rpm?)"
+S   0  42 "%0.1f"        "Contactor1: poll response: HV1 battery"
+S   0   5 "%0.1f"        "DMOC HV status: voltage (volts)"
+S   0  43 "%0.1f"        "Contactor1: poll response: Battery Current sensor1"
+S   0   6 "%0.1f"        "DMOC HV status: current (amps)"
+S   0  40 "%0.1f"        "Contactor1: poll response: HV2 battery gnd to: DMOC+"
+S   0  41 "%0.1f"        "Contactor1: poll response: HV3 battery gnd to:DMOC-"
+S   0  30 "%0.3f"        "Tension_a11: Drum 1 calibrated tension, polled by time msg"
+S   0  31 "%0.3f"        "Tension_a12: Drum 1 calibrated tension, polled by time msg"
+S   0   2 "%0.0f"        "DMOC Temperature: Rotor (degC)"
+S   0   3 "%0.0f"        "DMOC Temperature: Inverter: payload (degC)"
+S   0   4 "%0.0f"        "DMOC Temperature: Stator: payload (degC)"
+S   0   8 "%0.0f"        "DMOC Status code (in hi-nibble)"
+S   0   9 "%0.1f"        "DMOC D volts"
+S   0  10 "%0.1f"        "DMOC D amps"
+S   0  11 "%0.1f"        "DMOC Q volts"
+S   0  12 "%0.1f"        "DMOC Q amps"
+S   0  26 "%0.0f"        "UNIXTIME CANID_HB_GPS_TIME_1: status"
+S   0  34 "%0.0f"        "UNIXTIME CANID_HB_GPS_TIME_1: epoc_secs"
+S   0  25 "%0.0f"        "Command: Alive byte"
+S   0  44 "%0.1f"        "Contactor1: R KeepAlive response [0] bit[6-7] command:bit [0-3] main state"
+S   0  45 "%0.1f"        "Contactor1: R KeepAlive response [1] error code: 0 = no error"
+S   0  46 "%0.1f"        "Contactor1: R KeepAlive response [2] substates"
+S   0  47 "%0.1f"        "Contactor1: I KeepAlive: bit[6-7] command"
+S   0  17 "%0.0f"        "Command: Key state"
+S   0  48 "%0.0f"        "GEVCUr: CANID_LOG_DMOCCMDSPD: Desired speed"
+S   0  49 "%0.0f"        "GEVCUr: CANID_LOG_DMOCCMDSPD: Integrator"
+
+#
+# NOTE: format field must be a 'f' type as the last-good-reading is always a double
+# Uncomment to added the following to the CSV line
+#  csv  id
+#S  --  25 "%0.0f"           "Command: Alive byte"
+#S  --  22 "%0.0f"           "Command: Regen watt limit"
+#S  --  23 "%0.0f"           "Command: Regen accel limit"
+#S  --  24 "%0.0f"           "Command: Deg C"
+#S  --  28 "%0.0f"        "CANID_HB_LOGGER_1"
+#S  --  29 "%0.0f"        "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) fix"
+#S  --  35 "%0.0f"        "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) nsats"
+#S  --  36 "%0.0f"        "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) lat"
+#S  --  37 "%0.0f"        "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) lon"
+#S  --  38 "%0.0f"        "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) ht"
+#S  --  27 "%0.0f"        "CANID_HB_GATEWAY2"
+#S  --  19 "%0.1f"        "Command: Torque (copy)"
+#S  --  20 "%0.1f"        "Command: Torque standby"
+#S  --  14 "%0.1f"        "DMOC Torque(29b msg?)"
+#S  --  15 "%0.1f"        "DMOC Torque(29b msg?)"
+#S  --  32 "%0.3f"        "Tension_a11: Heartbeat"
+#S  --  33 "%0.3f"        "Tension_a21: Heartbeat"
+

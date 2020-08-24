@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2020-03-28 12:55:09.8
+// 2020-08-20 21:35:17.449
 
-#define CANID_COUNT 254
+#define CANID_COUNT 257
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -211,7 +211,7 @@
 #define  CANID_DMOC_CMD_SPEED     0x46400000  // DMOC           : DMOC: cmd: speed, key state
 #define  CANID_DMOC_CMD_TORQ      0x46600000  // DMOC           : DMOC: cmd: torq,copy,standby,status
 #define  CANID_DMOC_CMD_REGEN     0x46800000  // DMOC           : DMOC: cmd: watt,accel,degC,alive
-#define  CANID_LOG_DMOCCMDSPD     0xE4000000  // LOG            : GEVCUr: Desired speed
+#define  CANID_LOG_DMOCCMDSPD     0xE4000000  // LOG            : GEVCUr: Control law: Desired speed: integrator
 #define  CANID_HB_CNTCTR1V        0xFF800000  // CNTCTR         : Contactor1: Heartbeat: High voltage1:Current sensor1
 #define  CANID_HB_CNTCTR1A        0xFF000000  // CNTCTR         : Contactor1: Heartbeat: High voltage2:Current sensor2
 #define  CANID_MSG_CNTCTR1V       0x50400000  // CNTCTR         : Contactor1: poll response: HV1:Current sensor1
@@ -222,6 +222,9 @@
 #define  CANID_CMD_CNTCTRKAR      0xE3C00000  // CNTCTR         : Contactor1: R KeepAlive response
 #define  CANID_CMD_GEVCURKAI      0xE4200000  // CNTCTR         : GEVCUr: I KeepAlive and connect command
 #define  CANID_CMD_GEVCURKAR      0xE3E00000  // CNTCTR         : GEVCUr: R KeepAlive response
+#define  CANID_TST_STEPCMD        0xE4600000  // DRUM1          : DRUM1: U8: Enable,Direction, FF: CL position
+#define  CANID_HB_DRUM1           0xE4800000  // DRUM1          : DRUM1: U8: Status U32: odometer (encoder ticks)
+#define  CANID_MSG_DRUM1          0xE4A00000  // DRUM1          : DRUM1: FF: Speed (m/s) FF: odometer (m)
 #define  CANID_UNIT_2             0x04000000  // UNIT_2         : Sensor unit: Drive shaft encoder #1
 #define  CANID_UNIT_3             0x03800000  // UNIT_3         : Sensor unit: Engine
 #define  CANID_UNIT_4             0x03A00000  // UNIT_4         : Sensor unit: Lower sheave shaft encoder
@@ -235,7 +238,6 @@
 #define  CANID_UNIT_E             0x01C0000C  // UNIT_E         : Logger1: sensor board w ublox gps & SD card GSM 18-09-17
 #define  CANID_UNIT_F             0x01E0000C  // UNIT_F         : Tension_1 & Cable_angle_1 Unit
 #define  CANID_UNIT_10            0x0200000C  // UNIT_10        : Gateway1: 2 CAN
-#define  CANID_UNIT_19            0x02800000  // UNIT_19        : Master Controller
 #define  CANID_UNIT_11            0x02200000  // UNIT_11        : Tension: 1 AD7799 VE POD brd 1
 #define  CANID_UNIT_12            0x02400000  // UNIT_12        : Tension: 2 AD7799 VE POD brd 2 GSM 18-09-17
 #define  CANID_UNIT_13            0x02600000  // UNIT_13        : Yogurt: Olimex board
@@ -244,6 +246,7 @@
 #define  CANID_UNIT_16            0x02C00000  // UNIT_16        : Tension: 2 AD7799 VE POD brd 5 GSM
 #define  CANID_UNIT_17            0x03200000  // UNIT_17        : Gateway2: 1 CAN GSM 18-09-17
 #define  CANID_UNIT_18            0x03400000  // UNIT_18        : Gateway3: 1 CAN
+#define  CANID_UNIT_19            0x02800000  // UNIT_19        : Master Controller
 #define  CANID_UNIT_1A            0x03600000  // UNIT_1A        : Logger2: sensor board w ublox gps & SD card
 #define  CANID_UNIT_1B            0x03E00000  // UNIT_1B        : Sensor board: CAW experiments
 #define  CANID_UNIT_1C            0x04200000  // UNIT_1C        : Sensor board: DEH spare 1
@@ -845,6 +848,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 780  */
+/* TOTAL COUNT OF #defines = 783  */
 /* Test 2016/06/12 */
 

@@ -21,12 +21,16 @@ Execute--
  -i = Hex CAN id for time tick to pace copying
  -p = microseconds when selected CAN id encountered
  -m = microseconds between CAN msgs
-./canlogpause -i 00400000 -p 15625 -n 250 < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt
+./canlogpause -i 00400000 -p 15625 -m 250 < ~/GliderWinchItems/data/GEVCUr/Log200328/log200328-1.txt
 
-gcc -Wall canlogpause.c -o canlogpause && ./canlogpause -i 00400000 -p 15625 -m 250 < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt
+gcc -Wall canlogpause.c -o canlogpause && ./canlogpause -i 00400000 -p 15625 -m 250 < ~/GliderWinchItems/data/GEVCUr/Log200328/log200328-1.txt
 
 Execute with default timings--
-./canlogpause  < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt | nc localhost 32123
+hub-server localhost 32123 &
+./canlogpause  < ~/GliderWinchItems/data/GEVCUr/Log200328/log200328-1.txt | nc localhost 32123
+[To monitor the above command's progress--]
+nc localhost 32123
+
 
 */
 

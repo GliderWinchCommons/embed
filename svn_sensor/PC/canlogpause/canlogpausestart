@@ -1,0 +1,7 @@
+#!/bin/bash
+# 04/07/2020
+# Pace running a CAN log file into hub-server
+#  canlogpausestart Log200328/log200328-1.txt
+hub-server localhost 32123 &
+cd ~/GliderWinchCommons/embed/svn_sensor/PC/canlogpause
+./canlogpause  < $1 | nc localhost 32123

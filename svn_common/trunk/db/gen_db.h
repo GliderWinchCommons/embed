@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2020-08-20 21:35:17.449
+// 2020-10-02 12:44:39.062
 
-#define CANID_COUNT 257
+#define CANID_COUNT 260
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -88,24 +88,6 @@
 #define  CANID_CMD_LOGGER_1R      0xD1C0005C  // LOGGER         : Logger_1: R Command Logger 1
 #define  CANID_CMD_LOGGER_2I      0xD1C00064  // LOGGER         : Logger_2: I Command Logger 2
 #define  CANID_CMD_LOGGER_2R      0xD1C0006C  // LOGGER         : Logger_2: R Command Logger 2
-#define  CANID_MC_SYSTEM_STATE    0x50000000  // MC             : MC: System state msg
-#define  CANID_MC_DRUM_SELECT     0xD0800814  // MC             : MC: Drum selection
-#define  CANID_HB_MC_MOTOR_1_KPALIVE 0xA0800000  // MC             : MC: Curtis Controller keepalive
-#define  CANID_MC_REQUEST_PARAM   0xD0800824  // MC             : MC: Request parameters from HC
-#define  CANID_MC_CONTACTOR       0x23000000  // MC             : MC: Contactor OPEN/CLOSE
-#define  CANID_MC_BRAKES          0x21000000  // MC             : MC: Brakes APPLY/RELEASE
-#define  CANID_MC_GUILLOTINE      0x22000000  // MC             : MC: Fire guillotine
-#define  CANID_MC_RQ_LAUNCH_PARAM 0x27000000  // MC             : MC: Fire request launch parameters
-#define  CANID_MSG_TIME_POLL      0x20000000  // MC             : MC: Time msg/Group polling
-#define  CANID_MC_STATE           0x26000000  // MC             : MC: Launch state msg
-#define  CANID_MC_TORQUE          0x25800000  // MC             : MC: Motor torque
-#define  CANID_CMD_MCLI           0xFFE00000  // MCL            : MCL: Master Controller Launch parameters I (HC)
-#define  CANID_CMD_MCLR           0xFFE00004  // MCL            : MCL: Master Controller Launch parameters R (MC)
-#define  CANID_CP_CTL_RMT         0x29000000  // CP             : Control Panel: Control lever remote
-#define  CANID_CP_CTL_LCL         0x29200000  // CP             : Control Panel: Control lever local
-#define  CANID_CP_CTL_IN_RMT      0x24C00000  // CP             : Control Panel: Control lever remote: input
-#define  CANID_CP_CTL_IN_LCL      0x25000000  // CP             : Control Panel: Control lever  local: input
-#define  CANID_CP_CTL_OUT_RMT     0x2A000000  // CP             : Control Panel: Control lever output
 #define  CANID_CMD_SHAFT1I        0xA0600000  // DRIVE_SHAFT    : Shaft1: I Command CAN: incoming
 #define  CANID_CMD_SHAFT1R        0xE2C00000  // DRIVE_SHAFT    : Shaft1: R Command CAN: repsonse
 #define  CANID_MSG_SHAFT1_SPEED   0x82A00000  // DRIVE_SHAFT    : Shaft1: Speed (RPM), polled msg
@@ -212,6 +194,22 @@
 #define  CANID_DMOC_CMD_TORQ      0x46600000  // DMOC           : DMOC: cmd: torq,copy,standby,status
 #define  CANID_DMOC_CMD_REGEN     0x46800000  // DMOC           : DMOC: cmd: watt,accel,degC,alive
 #define  CANID_LOG_DMOCCMDSPD     0xE4000000  // LOG            : GEVCUr: Control law: Desired speed: integrator
+#define  CANID_MC_SYSTEM_STATE    0x50000000  // MC             : MC: System state msg
+#define  CANID_MC_DRUM_SELECT     0xD0800814  // MC             : MC: Drum selection
+#define  CANID_HB_MC_MOTOR_1_KPALIVE 0xA0800000  // MC             : MC: Curtis Controller keepalive
+#define  CANID_MC_REQUEST_PARAM   0xD0800824  // MC             : MC: Request parameters from HC
+#define  CANID_MC_GUILLOTINE      0x22000000  // MC             : MC: Fire guillotine
+#define  CANID_MC_RQ_LAUNCH_PARAM 0x27000000  // MC             : MC: Fire request launch parameters
+#define  CANID_MSG_TIME_POLL      0x20000000  // MC             : MC: Time msg/Group polling
+#define  CANID_MC_STATE           0x26000000  // MC             : MC: Launch state msg
+#define  CANID_MC_TORQUE          0x25800000  // MC             : MC: Motor torque
+#define  CANID_CMD_MCLI           0xFFE00000  // MCL            : MCL: Master Controller Launch parameters I (HC)
+#define  CANID_CMD_MCLR           0xFFE00004  // MCL            : MCL: Master Controller Launch parameters R (MC)
+#define  CANID_CP_CTL_RMT         0x29000000  // CP             : Control Panel: Control lever remote
+#define  CANID_CP_CTL_LCL         0x29200000  // CP             : Control Panel: Control lever local
+#define  CANID_CP_CTL_IN_RMT      0x24C00000  // CP             : Control Panel: Control lever remote: input
+#define  CANID_CP_CTL_IN_LCL      0x25000000  // CP             : Control Panel: Control lever  local: input
+#define  CANID_CP_CTL_OUT_RMT     0x2A000000  // CP             : Control Panel: Control lever output
 #define  CANID_HB_CNTCTR1V        0xFF800000  // CNTCTR         : Contactor1: Heartbeat: High voltage1:Current sensor1
 #define  CANID_HB_CNTCTR1A        0xFF000000  // CNTCTR         : Contactor1: Heartbeat: High voltage2:Current sensor2
 #define  CANID_MSG_CNTCTR1V       0x50400000  // CNTCTR         : Contactor1: poll response: HV1:Current sensor1
@@ -224,7 +222,12 @@
 #define  CANID_CMD_GEVCURKAR      0xE3E00000  // CNTCTR         : GEVCUr: R KeepAlive response
 #define  CANID_TST_STEPCMD        0xE4600000  // DRUM1          : DRUM1: U8: Enable,Direction, FF: CL position
 #define  CANID_HB_DRUM1           0xE4800000  // DRUM1          : DRUM1: U8: Status U32: odometer (encoder ticks)
-#define  CANID_MSG_DRUM1          0xE4A00000  // DRUM1          : DRUM1: FF: Speed (m/s) FF: odometer (m)
+#define  CANID_HB_STEPPER         0xE4A00000  // STEPPER        : STEPPER: U8: Status, U32: stepper position accum
+#define  CANID_MSG_DRUM1          0xE4C00000  // DRUM1          : DRUM1: FF: Speed (m/s) FF: odometer (m)
+#define  CANID_CMD_BRAKEI1        0x21000000  // BRAKE          : BRAKE: I1 U8: command code, U8: tbd, FF: application level 
+#define  CANID_CMD_BRAKEI8        0x21E00000  // BRAKE          : BRAKE: I8 U8: command code, U8: tbd, FF: application level 
+#define  CANID_CMD_BRAKER1        0x31000000  // BRAKE          : BRAKE: R1 U8: command code, U8: tbd, FF: tbd 
+#define  CANID_CMD_BRAKER8        0x31E00000  // BRAKE          : BRAKE: R8 U8: command code, U8: tbd, FF: tbd 
 #define  CANID_UNIT_2             0x04000000  // UNIT_2         : Sensor unit: Drive shaft encoder #1
 #define  CANID_UNIT_3             0x03800000  // UNIT_3         : Sensor unit: Engine
 #define  CANID_UNIT_4             0x03A00000  // UNIT_4         : Sensor unit: Lower sheave shaft encoder
@@ -848,6 +851,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 783  */
+/* TOTAL COUNT OF #defines = 786  */
 /* Test 2016/06/12 */
 

@@ -163,28 +163,6 @@ INSERT INTO CANID VALUES ('CANID_CMD_LOGGER_1R',	'D1C0005C', 'LOGGER','UNDEF','L
 INSERT INTO CANID VALUES ('CANID_CMD_LOGGER_2I',	'D1C00064', 'LOGGER','UNDEF','Logger_2: I Command Logger 2');
 INSERT INTO CANID VALUES ('CANID_CMD_LOGGER_2R',	'D1C0006C', 'LOGGER','UNDEF','Logger_2: R Command Logger 2');
 
--- Master Controller
-INSERT INTO CANID VALUES ('CANID_MC_SYSTEM_STATE',      '50000000', 'MC',	'UNDEF','MC: System state msg');
-INSERT INTO CANID VALUES ('CANID_MC_DRUM_SELECT',       'D0800814', 'MC', 	'UNDEF','MC: Drum selection');
-INSERT INTO CANID VALUES ('CANID_HB_MC_MOTOR_1_KPALIVE','A0800000', 'MC', 	'UNDEF','MC: Curtis Controller keepalive');
-INSERT INTO CANID VALUES ('CANID_MC_REQUEST_PARAM',     'D0800824', 'MC', 	'UNDEF','MC: Request parameters from HC');
-INSERT INTO CANID VALUES ('CANID_MC_CONTACTOR',         '23000000', 'MC',	'UNDEF','MC: Contactor OPEN/CLOSE');
-INSERT INTO CANID VALUES ('CANID_MC_BRAKES',            '21000000', 'MC',	'UNDEF','MC: Brakes APPLY/RELEASE');
-INSERT INTO CANID VALUES ('CANID_MC_GUILLOTINE',        '22000000', 'MC',	'UNDEF','MC: Fire guillotine');
-INSERT INTO CANID VALUES ('CANID_MC_RQ_LAUNCH_PARAM',   '27000000', 'MC',	'UNDEF','MC: Fire request launch parameters');
-INSERT INTO CANID VALUES ('CANID_MSG_TIME_POLL',        '20000000', 'MC', 	'UNDEF','MC: Time msg/Group polling');
-INSERT INTO CANID VALUES ('CANID_MC_STATE',             '26000000', 'MC', 	'UNDEF','MC: Launch state msg');
-INSERT INTO CANID VALUES ('CANID_MC_TORQUE',            '25800000', 'MC', 	'UNDEF','MC: Motor torque');
-INSERT INTO CANID VALUES ('CANID_CMD_MCLI',             'FFE00000', 'MCL',	'UNDEF','MCL: Master Controller Launch parameters I (HC)');
-INSERT INTO CANID VALUES ('CANID_CMD_MCLR',             'FFE00004', 'MCL',	'UNDEF','MCL: Master Controller Launch parameters R (MC)');
-
--- Control Panel
-INSERT INTO CANID VALUES ('CANID_CP_CTL_RMT',		'29000000', 'CP', 	'UNDEF','Control Panel: Control lever remote');
-INSERT INTO CANID VALUES ('CANID_CP_CTL_LCL',		'29200000', 'CP', 	'UNDEF','Control Panel: Control lever local');
-INSERT INTO CANID VALUES ('CANID_CP_CTL_IN_RMT',	'24C00000', 'CP', 	'UNDEF','Control Panel: Control lever remote: input');
-INSERT INTO CANID VALUES ('CANID_CP_CTL_IN_LCL',	'25000000', 'CP', 	'UNDEF','Control Panel: Control lever  local: input');
-INSERT INTO CANID VALUES ('CANID_CP_CTL_OUT_RMT',	'2A000000', 'CP', 	'UNDEF','Control Panel: Control lever output');
-
 -- Sensor board reflective shaft encoder (../svn_sensor/sensor/shaft/trunk)
 INSERT INTO CANID VALUES ('CANID_CMD_SHAFT1I'      ,'A0600000', 'DRIVE_SHAFT','UNDEF' ,'Shaft1: I Command CAN: incoming');
 INSERT INTO CANID VALUES ('CANID_CMD_SHAFT1R'      ,'E2C00000', 'DRIVE_SHAFT','UNDEF' ,'Shaft1: R Command CAN: repsonse');
@@ -317,16 +295,36 @@ INSERT INTO CANID VALUES ('CANID_DMOC_CMD_REGEN', '46800000','DMOC','I16_I16_X_U
 --
 -- Logging data: messages sent for logging capture and analysis
 INSERT INTO CANID VALUES ('CANID_LOG_DMOCCMDSPD', 'E4000000','LOG','FF_FF', 'GEVCUr: Control law: Desired speed: integrator');
+
+-- Master Controller
+INSERT INTO CANID VALUES ('CANID_MC_SYSTEM_STATE',      '50000000', 'MC',	'UNDEF','MC: System state msg');
+INSERT INTO CANID VALUES ('CANID_MC_DRUM_SELECT',       'D0800814', 'MC', 	'UNDEF','MC: Drum selection');
+INSERT INTO CANID VALUES ('CANID_HB_MC_MOTOR_1_KPALIVE','A0800000', 'MC', 	'UNDEF','MC: Curtis Controller keepalive');
+INSERT INTO CANID VALUES ('CANID_MC_REQUEST_PARAM',     'D0800824', 'MC', 	'UNDEF','MC: Request parameters from HC');
+INSERT INTO CANID VALUES ('CANID_MC_GUILLOTINE',        '22000000', 'MC',	'UNDEF','MC: Fire guillotine');
+INSERT INTO CANID VALUES ('CANID_MC_RQ_LAUNCH_PARAM',   '27000000', 'MC',	'UNDEF','MC: Fire request launch parameters');
+INSERT INTO CANID VALUES ('CANID_MSG_TIME_POLL',        '20000000', 'MC', 	'UNDEF','MC: Time msg/Group polling');
+INSERT INTO CANID VALUES ('CANID_MC_STATE',             '26000000', 'MC', 	'UNDEF','MC: Launch state msg');
+INSERT INTO CANID VALUES ('CANID_MC_TORQUE',            '25800000', 'MC', 	'UNDEF','MC: Motor torque');
+INSERT INTO CANID VALUES ('CANID_CMD_MCLI',             'FFE00000', 'MCL',	'UNDEF','MCL: Master Controller Launch parameters I (HC)');
+INSERT INTO CANID VALUES ('CANID_CMD_MCLR',             'FFE00004', 'MCL',	'UNDEF','MCL: Master Controller Launch parameters R (MC)');
+
+-- Control Panel
+INSERT INTO CANID VALUES ('CANID_CP_CTL_RMT',		'29000000', 'CP', 	'UNDEF','Control Panel: Control lever remote');
+INSERT INTO CANID VALUES ('CANID_CP_CTL_LCL',		'29200000', 'CP', 	'UNDEF','Control Panel: Control lever local');
+INSERT INTO CANID VALUES ('CANID_CP_CTL_IN_RMT',	'24C00000', 'CP', 	'UNDEF','Control Panel: Control lever remote: input');
+INSERT INTO CANID VALUES ('CANID_CP_CTL_IN_LCL',	'25000000', 'CP', 	'UNDEF','Control Panel: Control lever  local: input');
+INSERT INTO CANID VALUES ('CANID_CP_CTL_OUT_RMT',	'2A000000', 'CP', 	'UNDEF','Control Panel: Control lever output');
 --
 -- Contactor Blue Pill Motherboard unit #1
-INSERT INTO CANID VALUES ('CANID_HB_CNTCTR1V',    'FF800000','CNTCTR','FF_FF', 'Contactor1: Heartbeat: High voltage1:Current sensor1');
-INSERT INTO CANID VALUES ('CANID_HB_CNTCTR1A',    'FF000000','CNTCTR','FF_FF', 'Contactor1: Heartbeat: High voltage2:Current sensor2');
-INSERT INTO CANID VALUES ('CANID_MSG_CNTCTR1V',   '50400000','CNTCTR','FF_FF', 'Contactor1: poll response: HV1:Current sensor1');
-INSERT INTO CANID VALUES ('CANID_MSG_CNTCTR1A',   '50600000','CNTCTR','FF_FF', 'Contactor1: poll response: HV2 battery gnd to: DMOC+, HV3 DMOC-');
+INSERT INTO CANID VALUES ('CANID_HB_CNTCTR1V'    ,'FF800000','CNTCTR','FF_FF', 'Contactor1: Heartbeat: High voltage1:Current sensor1');
+INSERT INTO CANID VALUES ('CANID_HB_CNTCTR1A'    ,'FF000000','CNTCTR','FF_FF', 'Contactor1: Heartbeat: High voltage2:Current sensor2');
+INSERT INTO CANID VALUES ('CANID_MSG_CNTCTR1V'   ,'50400000','CNTCTR','FF_FF', 'Contactor1: poll response: HV1:Current sensor1');
+INSERT INTO CANID VALUES ('CANID_MSG_CNTCTR1A'   ,'50600000','CNTCTR','FF_FF', 'Contactor1: poll response: HV2 battery gnd to: DMOC+, HV3 DMOC-');
 INSERT INTO CANID VALUES ('CANID_CMD_CNTCTR1I'   ,'E360000C','CNTCTR','U8_VAR','Contactor1: I Command incoming');
 INSERT INTO CANID VALUES ('CANID_CMD_CNTCTR1R'   ,'E3600000','CNTCTR','U8_VAR','Contactor1: R Command response');
 INSERT INTO CANID VALUES ('CANID_CMD_CNTCTRKAI'  ,'E3800000','CNTCTR','U8',    'Contactor1: I KeepAlive and connect command');
-INSERT INTO CANID VALUES ('CANID_CMD_CNTCTRKAR'  ,'E3C00000','CNTCTR','U8_U8_U8', 'Contactor1: R KeepAlive response');
+INSERT INTO CANID VALUES ('CANID_CMD_CNTCTRKAR'  ,'E3C00000','CNTCTR','U8_U8_U8','Contactor1: R KeepAlive response');
 --
 -- GEVCUr Development & test of DMOCs w motors
 --                         CANID_NAME       CANNID_HEX   CANID_TYPE    CAN_MSG_FMT     DESCRIPTION
@@ -335,9 +333,20 @@ INSERT INTO CANID VALUES ('CANID_CMD_GEVCURKAR'  ,'E3E00000','CNTCTR','U8_U8', '
 --
 -- Drum node (level wind stepper, brake solenoid and air pressure, drum speed and odometer)
 --                         CANID_NAME       CANNID_HEX   CANID_TYPE    CAN_MSG_FMT     DESCRIPTION
-INSERT INTO CANID VALUES ('CANID_TST_STEPCMD'    ,'E4600000','DRUM1','U8_FF' ,'DRUM1: U8: Enable,Direction, FF: CL position');
-INSERT INTO CANID VALUES ('CANID_HB_DRUM1'       ,'E4800000','DRUM1','U8_U32','DRUM1: U8: Status U32: odometer (encoder ticks)');
-INSERT INTO CANID VALUES ('CANID_MSG_DRUM1'      ,'E4A00000','DRUM1','FF_FF' ,'DRUM1: FF: Speed (m/s) FF: odometer (m)');
+INSERT INTO CANID VALUES ('CANID_TST_STEPCMD'  ,'E4600000','DRUM1',  'U8_FF' ,'DRUM1: U8: Enable,Direction, FF: CL position');
+INSERT INTO CANID VALUES ('CANID_HB_DRUM1'     ,'E4800000','DRUM1',  'U8_U32','DRUM1: U8: Status U32: odometer (encoder ticks)');
+INSERT INTO CANID VALUES ('CANID_HB_STEPPER'   ,'E4A00000','STEPPER','U8_U32','STEPPER: U8: Status, U32: stepper position accum');
+INSERT INTO CANID VALUES ('CANID_MSG_DRUM1'    ,'E4C00000','DRUM1',  'FF_FF' ,'DRUM1: FF: Speed (m/s) FF: odometer (m)');
+-- Drum node: Brake function
+--     Node RECEIVES (I = incoming)
+INSERT INTO CANID VALUES ('CANID_CMD_BRAKEI1'    ,'21000000','BRAKE','U8_U8_FF' ,'BRAKE: I1 U8: command code, U8: tbd, FF: application level ');
+--     Drums 2-7 inbetween
+INSERT INTO CANID VALUES ('CANID_CMD_BRAKEI8'    ,'21E00000','BRAKE','U8_U8_FF' ,'BRAKE: I8 U8: command code, U8: tbd, FF: application level ');
+--     Node TRANSMITS (R = response)
+INSERT INTO CANID VALUES ('CANID_CMD_BRAKER1'    ,'31000000','BRAKE','U8_U8_FF' ,'BRAKE: R1 U8: command code, U8: tbd, FF: tbd ');
+--     Drums 2-7 inbetween
+INSERT INTO CANID VALUES ('CANID_CMD_BRAKER8'    ,'31E00000','BRAKE','U8_U8_FF' ,'BRAKE: R8 U8: command code, U8: tbd, FF: tbd ');
+
 
 -- Nodes/Units (Loader addresses)
 --                         CANID_NAME       CANNID_HEX   CANID_TYPE    CAN_MSG_FMT     DESCRIPTION

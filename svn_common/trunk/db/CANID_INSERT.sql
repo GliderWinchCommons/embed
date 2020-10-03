@@ -340,11 +340,11 @@ INSERT INTO CANID VALUES ('CANID_MSG_DRUM1'    ,'E4C00000','DRUM1',  'FF_FF' ,'D
 -- Drum node: Brake function
 --     Node RECEIVES (I = incoming)
 INSERT INTO CANID VALUES ('CANID_CMD_BRAKEI1'    ,'21000000','BRAKE','U8_U8_FF' ,'BRAKE: I1 U8: command code, U8: tbd, FF: application level ');
---     Drums 2-7 inbetween
+--     Drums 2-7 inbetween 21200000 21400000 21600000 21800000 21A00000 21C00000
 INSERT INTO CANID VALUES ('CANID_CMD_BRAKEI8'    ,'21E00000','BRAKE','U8_U8_FF' ,'BRAKE: I8 U8: command code, U8: tbd, FF: application level ');
 --     Node TRANSMITS (R = response)
 INSERT INTO CANID VALUES ('CANID_CMD_BRAKER1'    ,'31000000','BRAKE','U8_U8_FF' ,'BRAKE: R1 U8: command code, U8: tbd, FF: tbd ');
---     Drums 2-7 inbetween
+--     Drums 2-7 inbetween 31200000 31400000 31600000 31800000 31A00000 31C00000
 INSERT INTO CANID VALUES ('CANID_CMD_BRAKER8'    ,'31E00000','BRAKE','U8_U8_FF' ,'BRAKE: R8 U8: command code, U8: tbd, FF: tbd ');
 
 

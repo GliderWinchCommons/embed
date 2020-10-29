@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2020-10-02 12:44:39.062
+// 2020-10-28 22:07:30.325
 
-#define CANID_COUNT 260
+#define CANID_COUNT 261
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -199,7 +199,7 @@
 #define  CANID_HB_MC_MOTOR_1_KPALIVE 0xA0800000  // MC             : MC: Curtis Controller keepalive
 #define  CANID_MC_REQUEST_PARAM   0xD0800824  // MC             : MC: Request parameters from HC
 #define  CANID_MC_GUILLOTINE      0x22000000  // MC             : MC: Fire guillotine
-#define  CANID_MC_RQ_LAUNCH_PARAM 0x27000000  // MC             : MC: Fire request launch parameters
+#define  CANID_MC_RQ_LAUNCH_PARAM 0x27000000  // MC             : MC: Request launch parameters
 #define  CANID_MSG_TIME_POLL      0x20000000  // MC             : MC: Time msg/Group polling
 #define  CANID_MC_STATE           0x26000000  // MC             : MC: Launch state msg
 #define  CANID_MC_TORQUE          0x25800000  // MC             : MC: Motor torque
@@ -224,10 +224,11 @@
 #define  CANID_HB_DRUM1           0xE4800000  // DRUM1          : DRUM1: U8: Status U32: odometer (encoder ticks)
 #define  CANID_HB_STEPPER         0xE4A00000  // STEPPER        : STEPPER: U8: Status, U32: stepper position accum
 #define  CANID_MSG_DRUM1          0xE4C00000  // DRUM1          : DRUM1: FF: Speed (m/s) FF: odometer (m)
-#define  CANID_CMD_BRAKEI1        0x21000000  // BRAKE          : BRAKE: I1 U8: command code, U8: tbd, FF: application level 
-#define  CANID_CMD_BRAKEI8        0x21E00000  // BRAKE          : BRAKE: I8 U8: command code, U8: tbd, FF: application level 
-#define  CANID_CMD_BRAKER1        0x31000000  // BRAKE          : BRAKE: R1 U8: command code, U8: tbd, FF: tbd 
-#define  CANID_CMD_BRAKER8        0x31E00000  // BRAKE          : BRAKE: R8 U8: command code, U8: tbd, FF: tbd 
+#define  CANID_TST_LVLWIND        0xE4D00000  // LEVELWIND      : DRUM1:  
+#define  CANID_HB_CPV1            0xE5000000  // CPSWSV1        : HB_CPV1 1: U8:U8: bit fields,U8:drum bits,U8:spare,FF:CtlLever(0-100.0)
+#define  CANID_CMD_BRAKEbI        0x21000000  // BRAKE          : BRAKE: I U8: drum bit, U8: command code, U8: tbd, FF: braking force 
+#define  CANID_CMD_BRAKEbR        0x31000000  // BRAKE          : BRAKE: R U8: drum bit, U8: command code, U8: tbd, FF: tbd 
+#define  CANID_CMD_BEEPERV1I1     0xD3000000  // BRAKE          : BEEPERV1: R U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq
 #define  CANID_UNIT_2             0x04000000  // UNIT_2         : Sensor unit: Drive shaft encoder #1
 #define  CANID_UNIT_3             0x03800000  // UNIT_3         : Sensor unit: Engine
 #define  CANID_UNIT_4             0x03A00000  // UNIT_4         : Sensor unit: Lower sheave shaft encoder
@@ -320,34 +321,34 @@
 #define  CMD_REQ_HISTOGRAM       40        // Request histogram: [1] ADC #: [2] # consecutive:[3]-[6] # DMA buffers accumuleted in bins
 #define  CMD_THISIS_HISTODATA    41        // Histogram data item: [1] ADC #:[2] bin # (0 - n), [3]-[6] bin count
 
-#define PAYLOAD_TYPE_COUNT 42
-#define  NONE                    0         //  No payload bytes                               
-#define  FF                      1         //  [0]-[3]: Full Float                            
-#define  FF_FF                   2         //  [0]-[3]: Full Float[0]; [4]-[7]: Full Float[1] 
-#define  U32                     3         //  [0]-[3]: uint32_t                              
-#define  U32_U32                 4         //  [0]-[3]: uint32_t[0]; [4]-[7]: uint32_t[1]     
-#define  U8_U32                  5         //  [0]: uint8_t; [1]-[4]: uint32_t                
-#define  S32                     6         //  [0]-[3]: int32_t                               
-#define  S32_S32                 7         //  [0]-[3]: int32_t[0]; [4]-[7]: int32_t[1]       
-#define  U8_S32                  8         //  [0]: int8_t; [4]-[7]: int32_t                  
-#define  HF                      9         //  [0]-[1]: Half-Float                            
-#define  F34F                    10        //  [0]-[2]: 3/4-Float                             
-#define  xFF                     11        //  [0]:[1]-[4]: Full-Float, first   byte  skipped 
-#define  xxFF                    12        //  [0]:[1]:[2]-[5]: Full-Float, first 2 bytes skipped
-#define  xxU32                   13        //  [0]:[1]:[2]-[5]: uint32_t, first 2 bytes skipped
-#define  xxS32                   14        //  [0]:[1]:[2]-[5]: int32_t, first 2 bytes skipped
-#define  U8_U8_U32               15        //  [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1],uint32_t,
-#define  U8_U8_S32               16        //  [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1], int32_t,
-#define  U8_U8_FF                17        //  [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1], Full Float,
-#define  U16                     18        //  [0]-[1]:uint16_t                               
-#define  S16                     19        //  [0]-[1]: int16_t                               
-#define  LAT_LON_HT              20        //  [0]:[1]:[2]-[5]: Fix type, bits fields, lat/lon/ht
-#define  U8_FF                   21        //  [0]:[1]-[4]: uint8_t, Full Float               
-#define  U8_HF                   22        //  [0]:[1]-[2]: uint8_t, Half Float               
-#define  U8                      23        //  [0]: uint8_t                                   
-#define  UNIXTIME                24        //  [0]: U8_U32 with U8 bit field stuff            
-#define  U8_U8                   25        //  [0]:[1]: uint8_t[0],uint8[1]                   
-#define  U8_U8_U8_U32            26        //  [0]:[1]:[2]:[3]-[5]: uint8_t[0],uint8_t[0],uint8_t[1], int32_t,
+#define PAYLOAD_TYPE_COUNT 44
+#define  NONE                    0         // No payload bytes                                
+#define  FF                      1         // [0]-[3]: Full Float                             
+#define  FF_FF                   2         // [0]-[3]: Full Float[0]; [4]-[7]: Full Float[1]  
+#define  U32                     3         // [0]-[3]: uint32_t                               
+#define  U32_U32                 4         // [0]-[3]: uint32_t[0]; [4]-[7]: uint32_t[1]      
+#define  U8_U32                  5         // [0]: uint8_t; [1]-[4]: uint32_t                 
+#define  S32                     6         // [0]-[3]: int32_t                                
+#define  S32_S32                 7         // [0]-[3]: int32_t[0]; [4]-[7]: int32_t[1]        
+#define  U8_S32                  8         // [0]: int8_t; [4]-[7]: int32_t                   
+#define  HF                      9         // [0]-[1]: Half-Float                             
+#define  F34F                    10        // [0]-[2]: 3/4-Float                              
+#define  xFF                     11        // [0]:[1]-[4]: Full-Float, first   byte  skipped  
+#define  xxFF                    12        // [0]:[1]:[2]-[5]: Full-Float, first 2 bytes skipped
+#define  xxU32                   13        // [0]:[1]:[2]-[5]: uint32_t, first 2 bytes skipped
+#define  xxS32                   14        // [0]:[1]:[2]-[5]: int32_t, first 2 bytes skipped 
+#define  U8_U8_U32               15        // [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1],uint32_t,
+#define  U8_U8_S32               16        // [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1], int32_t,
+#define  U8_U8_FF                17        // [0]:[1]:[2]-[5]: uint8_t[0],uint8_t[1], Full Float,
+#define  U16                     18        // [0]-[1]:uint16_t                                
+#define  S16                     19        // [0]-[1]: int16_t                                
+#define  LAT_LON_HT              20        // [0]:[1]:[2]-[5]: Fix type, bits fields, lat/lon/ht
+#define  U8_FF                   21        // [0]:[1]-[4]: uint8_t, Full Float                
+#define  U8_HF                   22        // [0]:[1]-[2]: uint8_t, Half Float                
+#define  U8                      23        // [0]:uint8_t                                     
+#define  UNIXTIME                24        // [0]:U8_U32 with U8 bit field stuff              
+#define  U8_U8                   25        // [0]:[1]: uint8_t[0],uint8[1]                    
+#define  U8_U8_U8_U32            26        // [0]:[1]:[2]:[3]-[5]: uint8_t[0],uint8_t[0],uint8_t[1], int32_t,
 #define  I16_I16                 27        // [1]-[0]: uint16_t[0]; [3]-[2]: uint16_t[1]      
 #define  I16_I16_X6              28        // [1]-[0]: uint16_t[0]; [3]-[2]: uint16_t[1]; X   
 #define  U8_U8_U8                29        // [1]-[2]:[2] uint8_t                             
@@ -360,6 +361,8 @@
 #define  U8_VAR                  36        // [0]-uint8_t: [1]-[n]: variable dependent on first byte
 #define  U8_S8_S8_S8_S8          37        // [0]:uint8_t:[1]:[2]:[3]:[4]:int8_t (signed)     
 #define  Y16_Y16_Y16_Y16         38        // [1]-[0]:[3]-[2]:[5]-[4]:[7]-[6]:int16_t         
+#define  U8_U8_U8_U8_FF          39        // [0]:[1]:[2]:[3]:uint8_t,[4-7]:Full-Float        
+#define  U8_U8_U8_S8_U16         40        // [0]:[1]:[2]:uint8_t,[3]:int_8,[[4]-[5]:uint16_t 
 #define  LVL2B                   249       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
@@ -809,7 +812,7 @@
 #define  USEME_TENSION_BIT_7     	0x40      // TENSION             useme: spare 0x40                               
 #define  USEME_TENSION_BIT_8     	0x80      // TENSION             useme: spare 0x80                               
 
-#define FUNCTION_TYPE_COUNT 23
+#define FUNCTION_TYPE_COUNT 31
 #define  FUNCTION_TYPE_SHAFT_ENCODER           	1         // Sensor, shaft: Drive shaft encoder              
 #define  FUNCTION_TYPE_ENGINE_SENSOR           	2         // Sensor, engine: rpm, manifold pressure, throttle setting, temperature
 #define  FUNCTION_TYPE_TENSION_a               	3         // Tension_a: Tension AD7799 #1                    
@@ -833,6 +836,14 @@
 #define  FUNCTION_TYPE_ENG_T2                  	21        // Sensor, engine: temperature 2                   
 #define  FUNCTION_TYPE_DRIVE_SHAFT             	22        // Sensor, shaft: ../sensor/shaft/trunk version    
 #define  FUNCTION_TYPE_PWRBOX                  	23        // Pwrbox, input power voltage monitor             
+#define  FUNCTION_TYPE_BRAKE                   	24        // Drum brake                                      
+#define  FUNCTION_TYPE_LEVELWIND               	25        // Levelwind                                       
+#define  FUNCTION_TYPE_DRUM                    	26        // Drum speed, odometer, cable management          
+#define  FUNCTION_TYPE_CPDISPLAY20x4           	27        // Control Panel: Display: 20x4 LCD                
+#define  FUNCTION_TYPE_CPSWS_V1                	28        // Control Panel: Switches & Control Lever: version 1
+#define  FUNCTION_TYPE_CPLEDS_V1               	29        // Control Panel: LEDs: version 1                  
+#define  FUNCTION_TYPE_BEEPER_V1               	30        // Beeper: version 1                               
+#define  FUNCTION_TYPE_CNTCTR                  	31        // Contactor: original                             
 
 #define READINGS_BOARD_COUNT 15
 #define  PROG_TENSION_READINGS_BOARD_NUM_AD7799	1         // Number of AD7799 that successfully initialized  
@@ -851,6 +862,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 786  */
+/* TOTAL COUNT OF #defines = 797  */
 /* Test 2016/06/12 */
 

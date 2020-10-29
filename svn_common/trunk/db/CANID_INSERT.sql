@@ -302,7 +302,7 @@ INSERT INTO CANID VALUES ('CANID_MC_DRUM_SELECT',       'D0800814', 'MC', 	'UNDE
 INSERT INTO CANID VALUES ('CANID_HB_MC_MOTOR_1_KPALIVE','A0800000', 'MC', 	'UNDEF','MC: Curtis Controller keepalive');
 INSERT INTO CANID VALUES ('CANID_MC_REQUEST_PARAM',     'D0800824', 'MC', 	'UNDEF','MC: Request parameters from HC');
 INSERT INTO CANID VALUES ('CANID_MC_GUILLOTINE',        '22000000', 'MC',	'UNDEF','MC: Fire guillotine');
-INSERT INTO CANID VALUES ('CANID_MC_RQ_LAUNCH_PARAM',   '27000000', 'MC',	'UNDEF','MC: Fire request launch parameters');
+INSERT INTO CANID VALUES ('CANID_MC_RQ_LAUNCH_PARAM',   '27000000', 'MC',	'UNDEF','MC: Request launch parameters');
 INSERT INTO CANID VALUES ('CANID_MSG_TIME_POLL',        '20000000', 'MC', 	'UNDEF','MC: Time msg/Group polling');
 INSERT INTO CANID VALUES ('CANID_MC_STATE',             '26000000', 'MC', 	'UNDEF','MC: Launch state msg');
 INSERT INTO CANID VALUES ('CANID_MC_TORQUE',            '25800000', 'MC', 	'UNDEF','MC: Motor torque');
@@ -333,19 +333,25 @@ INSERT INTO CANID VALUES ('CANID_CMD_GEVCURKAR'  ,'E3E00000','CNTCTR','U8_U8', '
 --
 -- Drum node (level wind stepper, brake solenoid and air pressure, drum speed and odometer)
 --                         CANID_NAME       CANNID_HEX   CANID_TYPE    CAN_MSG_FMT     DESCRIPTION
-INSERT INTO CANID VALUES ('CANID_TST_STEPCMD'  ,'E4600000','DRUM1',  'U8_FF' ,'DRUM1: U8: Enable,Direction, FF: CL position');
-INSERT INTO CANID VALUES ('CANID_HB_DRUM1'     ,'E4800000','DRUM1',  'U8_U32','DRUM1: U8: Status U32: odometer (encoder ticks)');
-INSERT INTO CANID VALUES ('CANID_HB_STEPPER'   ,'E4A00000','STEPPER','U8_U32','STEPPER: U8: Status, U32: stepper position accum');
-INSERT INTO CANID VALUES ('CANID_MSG_DRUM1'    ,'E4C00000','DRUM1',  'FF_FF' ,'DRUM1: FF: Speed (m/s) FF: odometer (m)');
+INSERT INTO CANID VALUES ('CANID_TST_STEPCMD'  ,'E4600000','DRUM1',    'U8_FF' ,'DRUM1: U8: Enable,Direction, FF: CL position');
+INSERT INTO CANID VALUES ('CANID_HB_DRUM1'     ,'E4800000','DRUM1',    'U8_U32','DRUM1: U8: Status U32: odometer (encoder ticks)');
+INSERT INTO CANID VALUES ('CANID_HB_STEPPER'   ,'E4A00000','STEPPER',  'U8_U32','STEPPER: U8: Status, U32: stepper position accum');
+INSERT INTO CANID VALUES ('CANID_MSG_DRUM1'    ,'E4C00000','DRUM1',    'FF_FF' ,'DRUM1: FF: Speed (m/s) FF: odometer (m)');
+INSERT INTO CANID VALUES ('CANID_TST_LVLWIND'  ,'E4D00000','LEVELWIND','U8_U8_U8' ,'DRUM1:  ');
+--
+-- Control Panel Switches
+INSERT INTO CANID VALUES ('CANID_HB_CPV1' ,'E5000000','CPSWSV1','U8_U8_U8_U8_FF','HB_CPV1 1: U8:U8: bit fields,U8:drum bits,U8:spare,FF:CtlLever(0-100.0)');
+
+
 -- Drum node: Brake function
---     Node RECEIVES (I = incoming)
-INSERT INTO CANID VALUES ('CANID_CMD_BRAKEI1'    ,'21000000','BRAKE','U8_U8_FF' ,'BRAKE: I1 U8: command code, U8: tbd, FF: application level ');
---     Drums 2-7 inbetween 21200000 21400000 21600000 21800000 21A00000 21C00000
-INSERT INTO CANID VALUES ('CANID_CMD_BRAKEI8'    ,'21E00000','BRAKE','U8_U8_FF' ,'BRAKE: I8 U8: command code, U8: tbd, FF: application level ');
---     Node TRANSMITS (R = response)
-INSERT INTO CANID VALUES ('CANID_CMD_BRAKER1'    ,'31000000','BRAKE','U8_U8_FF' ,'BRAKE: R1 U8: command code, U8: tbd, FF: tbd ');
---     Drums 2-7 inbetween 31200000 31400000 31600000 31800000 31A00000 31C00000
-INSERT INTO CANID VALUES ('CANID_CMD_BRAKER8'    ,'31E00000','BRAKE','U8_U8_FF' ,'BRAKE: R8 U8: command code, U8: tbd, FF: tbd ');
+--     Node with Brake ('b') RECEIVES (I = incoming) (b = drum #1 bit position, bit 1 = drum #1)
+INSERT INTO CANID VALUES ('CANID_CMD_BRAKEbI'    ,'21000000','BRAKE','U8_U8_U8_FF' ,'BRAKE: I U8: drum bit, U8: command code, U8: tbd, FF: braking force ');
+--     Node with Brake ('b') TRANSMITS (R = response) (b = drum #1 bit position, bit 1 = drum #1)
+INSERT INTO CANID VALUES ('CANID_CMD_BRAKEbR'    ,'31000000','BRAKE','U8_U8_U8_FF' ,'BRAKE: R U8: drum bit, U8: command code, U8: tbd, FF: tbd ');
+
+-- BEEPERV1 function (V1 = first version, 1 = first instance)
+--   BEEPERV1  RECEIVES (I = incoming) 
+INSERT INTO CANID VALUES ('CANID_CMD_BEEPERV1I1' ,'D3000000','BRAKE','U8_U8_U8_S8_U16' ,'BEEPERV1: R U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq');
 
 
 -- Nodes/Units (Loader addresses)

@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2020-10-28 22:07:30.325
+// 2020-10-30 12:44:54.008
 
 #define CANID_COUNT 261
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -194,7 +194,7 @@
 #define  CANID_DMOC_CMD_TORQ      0x46600000  // DMOC           : DMOC: cmd: torq,copy,standby,status
 #define  CANID_DMOC_CMD_REGEN     0x46800000  // DMOC           : DMOC: cmd: watt,accel,degC,alive
 #define  CANID_LOG_DMOCCMDSPD     0xE4000000  // LOG            : GEVCUr: Control law: Desired speed: integrator
-#define  CANID_MC_SYSTEM_STATE    0x50000000  // MC             : MC: System state msg
+#define  CANID_MC_SYSTEM_STATE    0x50000000  // MC             : MC: System state: U8 = high|low nibbles 
 #define  CANID_MC_DRUM_SELECT     0xD0800814  // MC             : MC: Drum selection
 #define  CANID_HB_MC_MOTOR_1_KPALIVE 0xA0800000  // MC             : MC: Curtis Controller keepalive
 #define  CANID_MC_REQUEST_PARAM   0xD0800824  // MC             : MC: Request parameters from HC

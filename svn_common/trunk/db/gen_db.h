@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2020-10-30 12:44:54.008
+// 2020-11-03 20:37:59.971
 
-#define CANID_COUNT 261
+#define CANID_COUNT 243
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -42,13 +42,21 @@
 #define  CANID_CMD_TENSION_a2GR   0xF800808C  // TENSION_a      : Tension_a2: R 2 AD7799 VE POD GSM 1st board sent (_16)
 #define  CANID_CMD_TENSION_2I     0x05C0005C  // TENSION_2      : Tension_2: I Tension_2: Command code: [0] command code, [1]-[8] depends on code
 #define  CANID_CMD_TENSION_2R     0x05C0805C  // TENSION_2      : Tension_2: R Tension_2: Command code: [0] command code, [1]-[8] depends on code
+#define  CANID_HB_TENSION_0       0xE0400000  // TENSION_0      : Tension_0: Heartbeat
+#define  CANID_HB_TENSION_a11     0xE0600000  // TENSION_a      : Tension_a11: Heartbeat
+#define  CANID_HB_TENSION_a21     0xE0C00000  // TENSION_a      : Tension_a21: Heartbeat
+#define  CANID_HB_TENSION_a12     0xE0800000  // TENSION_a      : Tension_a12: Heartbeat
+#define  CANID_HB_TENSION_a22     0xE0E00000  // TENSION_a      : Tension_a22: Heartbeat
+#define  CANID_HB_TENSION_a1G     0xE0E20000  // TENSION_a      : Tension_a1G: Heartbeat
+#define  CANID_HB_TENSION_a2G     0xE0E40000  // TENSION_a      : Tension_a2G: Heartbeat
 #define  CANID_MOTOR_1            0x2D000000  // MOTOR_1        : MOTOR_1: Motor speed
-#define  CANID_CMD_CABLE_ANGLE_0I 0x06000000  // CABLE_ANGLE_0  : Cable_Angle0: I Default measurement canid
-#define  CANID_CMD_CABLE_ANGLE_0R 0x0600000C  // CABLE_ANGLE_0  : Cable_Angle0: R Default measurement canid
-#define  CANID_CMD_CABLE_ANGLE_1I 0x06200000  // CABLE_ANGLE_1  : Cable_Angle1: I [0] command code, [1]-[8] depends on code
-#define  CANID_CMD_CABLE_ANGLE_1R 0x0620000C  // CABLE_ANGLE_1  : Cable_Angle1: R [0] command code, [1]-[8] depends on code
-#define  CANID_MSG_CABLE_ANGLE_1  0x3A000000  // CABLE_ANGLE_1  : Cable_Angle1: for drum #1
-#define  CANID_MSG_CABLE_ANGLE_1_ALARM 0x2B000000  // CABLE_ANGLE_1  : Cable_Angle1: unreliable for drum #1
+#define  CANID_CMD_CABLE_ANGLE_0R 0x0600000C  // CABLE_ANGLE_0  : Cable_Angle_0: R Default measurement canid
+#define  CANID_MSG_CABLE_ANGLE_1  0x3A000000  // CABLE_ANGLE_1  : Cable_Angle_1: for drum #1
+#define  CANID_MSG_CABLE_ANGLE_1_ALARM 0x2B000000  // CABLE_ANGLE_1  : Cable_Angle_1: unreliable for drum #1
+#define  CANID_HB_CABLE_ANGLE_1   0xE0A00000  // CABLE_ANGLE_1  : Cable_Angle_1: Heartbeat
+#define  CANID_CMD_CABLE_ANGLE_1R 0x0620000C  // CABLE_ANGLE_1  : Cable_Angle_1: R [0] command code, [1]-[8] depends on code
+#define  CANID_CMD_CABLE_ANGLE_0I 0x06000000  // GENCMD         : Cable_Angle0: I Default measurement canid
+#define  CANID_CMD_CABLE_ANGLE_1I 0x06200000  // GENCMD         : Cable_Angle1: I [0] command code, [1]-[8] depends on code
 #define  CANID_CMD_ENG1_I         0x80600000  // ENGINE_SENSOR  : Engine: code: I [0] command code, [1]-[8] depends on code
 #define  CANID_CMD_ENG1_R         0x80800000  // ENGINE_SENSOR  : Engine: code: R [0] command code, [1]-[8] depends on code
 #define  CANID_MSG_ENG1_RPMMANFLD_R 0x40600000  // ENGINE_SENSOR  : Engine: rpm:manifold pressure
@@ -76,30 +84,34 @@
 #define  CANID_HB_LG_ER1          0xD1C00004  // GPS            : GPS: 1st code  CANID-UNITID_CO_OLI GPS checksum error
 #define  CANID_HB_LG_ER2          0xD1C00014  // GPS            : GPS: 2nd code  CANID-UNITID_CO_OLI GPS Fix error
 #define  CANID_HB_LG_ER3          0xD1C00024  // GPS            : GPS: 3rd code  CANID-UNITID_CO_OLI GPS Time out of step
-#define  CANID_HB_TIMESYNC        0x00400000  // GPS            : GPS_1: GPS time sync distribution msg
-#define  CANID_HB_TIMESYNC_2      0x00600000  // GPS            : GPS_2: GPS time sync distribution msg
-#define  CANID_HB_TIMESYNC_X      0x03000000  // GPS            : GPS_2: Obsolete GPS time sync distribution msg
-#define  CANID_HB_UNIVERSAL_RESET 0x00200000  // GPS            : Highest priority: reserved for Universal (if/when implemented)
-#define  CANID_CMD_GPS_1I         0xD1C00044  // GPS            : GPS_1: I CANID Command GPS 1
 #define  CANID_CMD_GPS_1R         0xD1C0004C  // GPS            : GPS_1: R CANID Command GPS 1
-#define  CANID_CMD_GPS_2I         0xD1C00074  // GPS            : GPS_2: I CANID Command GPS 2
 #define  CANID_CMD_GPS_2R         0xD1C0007C  // GPS            : GPS_2: R CANID Command GPS 2
-#define  CANID_CMD_LOGGER_1I      0xD1C00054  // LOGGER         : Logger_1: I Command Logger 1
+#define  CANID_HB_GPS_LLH_1       0xE1C00000  // GPS            : GPS_1: Heartbeat (3 separate msgs) lattitude longitude height
+#define  CANID_HB_GPS_LLH_2       0xE2600000  // GPS            : GPS_2: Heartbeat (3 separate msgs) lattitude longitude height
+#define  CANID_CMD_GPS_1I         0xD1C00044  // GENCMD         : GPS_1: I CANID Command GPS 1
+#define  CANID_CMD_GPS_2I         0xD1C00074  // GENCMD         : GPS_2: I CANID Command GPS 2
+#define  CANID_HB_TIMESYNC        0x00400000  // TIMESYNC       : GPS_1: GPS time sync distribution msg
+#define  CANID_HB_TIMESYNC_2      0x00600000  // TIMESYNC       : GPS_2: GPS time sync distribution msg
+#define  CANID_HB_TIMESYNC_X      0x03000000  // TIMESYNC       : GPS_2: Obsolete GPS time sync distribution msg
+#define  CANID_HB_UNIVERSAL_RESET 0x00200000  // TIMESYNC       : Highest priority: reserved for Universal (if/when implemented)
 #define  CANID_CMD_LOGGER_1R      0xD1C0005C  // LOGGER         : Logger_1: R Command Logger 1
-#define  CANID_CMD_LOGGER_2I      0xD1C00064  // LOGGER         : Logger_2: I Command Logger 2
+#define  CANID_HB_LOGGER_1        0xE1800000  // LOGGER         : Logger_1: Heartbeat logging ctr
 #define  CANID_CMD_LOGGER_2R      0xD1C0006C  // LOGGER         : Logger_2: R Command Logger 2
-#define  CANID_CMD_SHAFT1I        0xA0600000  // DRIVE_SHAFT    : Shaft1: I Command CAN: incoming
+#define  CANID_HB_LOGGER_2        0xE1A00000  // LOGGER         : Logger_2: Heartbeat logging ctr
+#define  CANID_CMD_LOGGER_1I      0xD1C00054  // GENCMD         : Logger_1: I Command Logger 1
+#define  CANID_CMD_LOGGER_2I      0xD1C00064  // GENCMD         : Logger_2: I Command Logger 2
 #define  CANID_CMD_SHAFT1R        0xE2C00000  // DRIVE_SHAFT    : Shaft1: R Command CAN: repsonse
 #define  CANID_MSG_SHAFT1_SPEED   0x82A00000  // DRIVE_SHAFT    : Shaft1: Speed (RPM), polled msg
 #define  CANID_MSG_SHAFT1_COUNT   0x82E00000  // DRIVE_SHAFT    : Shaft1: Cumulative count, polled msg
 #define  CANID_HB_SHAFT1_SPEED    0xE2800000  // DRIVE_SHAFT    : Shaft1: Speed (RPM), hearbeat
 #define  CANID_HB_SHAFT1_COUNT    0xE2A00000  // DRIVE_SHAFT    : Shaft1: Cumulative count, hearbeat
+#define  CANID_CMD_SHAFT1I        0xA0600000  // GENCMD         : Shaft1: I Command CAN: incoming
 #define  CANID_SE2H_ADC3_HistB    0xD0800034  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: ADC3 HistogramB tx: bin number, rx: send bin count
 #define  CANID_SE2H_COUNTERnSPEED 0x30800000  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: (Lower sheave) Count and speed
 #define  CANID_SE2H_ERR_1         0xD0800014  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: error1
 #define  CANID_SE2H_ERR_2         0xD0800074  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: error2
-#define  CANID_CMD_LOWERSHVI      0xD0800000  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: I Command CAN: send commands to subsystem
 #define  CANID_CMD_LOWERSHVR      0xD0800004  // SHAFT_LOWERSHV : Shaft encoder: Lower sheave:SE2: R Command CAN: send commands to subsystem
+#define  CANID_CMD_LOWERSHVI      0xD0800000  // GENCMD         : Shaft encoder: Lower sheave:SE2: I Command CAN: send commands to subsystem
 #define  CANID_SE3H_ADC2_HistA    0xD0A00044  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: ADC2 HistogramA tx:req ct, switch buff;rx send ct
 #define  CANID_SE3H_ADC2_HistB    0xD0A00054  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: ADC2 HistogramB tx: bin number,rx: send bin ct
 #define  CANID_SE3H_ADC3_ADC2_RD  0xD0A00064  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: ADC3 ADC2 readings readout
@@ -108,79 +120,53 @@
 #define  CANID_SE3H_COUNTERnSPEED 0x30A00000  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: (upper sheave) Count and Speed
 #define  CANID_SE3H_ERR_1         0xD0A00014  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: error1
 #define  CANID_SE3H_ERR_2         0xD0A00004  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: error2
-#define  CANID_CMD_UPPERSHVI      0xD0600000  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: I Command CAN: send commands to subsystem
 #define  CANID_CMD_UPPERSHVR      0xD0600004  // SHAFT_UPPERSHV : Shaft encoder: Upper sheave:SE3: R Command CAN: send commands to subsystem
+#define  CANID_CMD_UPPERSHVI      0xD0600000  // GENCMD         : Shaft encoder: Upper sheave:SE3: I Command CAN: send commands to subsystem
 #define  CANID_SE4H_ADC2_HistA    0xD0400044  // DRIVE_SHAFT    : Drive shaft: ADC2 HistogramA tx: request count, switch buffers; rx send count
 #define  CANID_SE4H_ADC2_HistB    0xD0400054  // DRIVE_SHAFT    : Drive shaft: ADC2 HistogramB tx: bin number, rx: send bin count
 #define  CANID_SE4H_ADC3_ADC2_RD  0xD0400064  // DRIVE_SHAFT    : Drive shaft: ADC3 ADC2 readings readout
 #define  CANID_SE4H_ADC3_HistA    0xD0400024  // DRIVE_SHAFT    : Drive shaft: ADC3 HistogramA tx: request count, switch buffers. rx: send count
 #define  CANID_SE4H_ADC3_HistB    0xD0400034  // DRIVE_SHAFT    : Drive shaft: ADC3 HistogramB tx: bin number, rx: send bin count
-#define  CANID_CMD_DRIVE_SHAFTI   0xD0C00000  // DRIVE_SHAFT    : Drive shaft: I Command CAN: send commands to subsystem
 #define  CANID_CMD_DRIVE_SHAFTR   0xD0C00004  // DRIVE_SHAFT    : Drive shaft: R Command CAN: send commands to subsystem
 #define  CANID_SE4H_COUNTERnSPEED 0x30400000  // DRIVE_SHAFT    : Drive shaft: (drive shaft) count and speed
 #define  CANID_SE4H_ERR_1         0xD0400014  // DRIVE_SHAFT    : Drive shaft: [2]elapsed_ticks_no_adcticks<2000 ct  [3]cic not in sync
 #define  CANID_SE4H_ERR_2         0xD0400004  // DRIVE_SHAFT    : Drive shaft: [0]encode_state er ct [1]adctick_diff<2000 ct
-#define  CANID_CMD_UPPER1_HI      0xD0E00000  // SHEAVE_UP_H    : F4 shaft_encoder: Upper sheave hi-res: I Command CAN: send commands to subsystem
+#define  CANID_CMD_DRIVE_SHAFTI   0xD0C00000  // GENCMD         : Drive shaft: I Command CAN: send commands to subsystem
 #define  CANID_CMD_UPPER1_HR      0xD0E00004  // SHEAVE_UP_H    : F4 shaft_encoder: Upper sheave hi-res: R Command CAN: subsystem responds
 #define  CANID_MSG_UPPER1_H_RAW   0xD1000000  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: msg--upper raw count and delta time
 #define  CANID_MSG_UPPER1_H_CAL   0xD1200000  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: msg--upper calibrated--distance and speed
 #define  CANID_HB_UPPER1_H_RAW    0xD1E00000  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: heartbeat--upper raw count and delta time
 #define  CANID_HB_UPPER1_H_CAL    0xD2000000  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: heartbeat--upper calibrated--distance and speed
 #define  CANID_TST_SHEAVE_1UP     0xD2000004  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: testing poll UP
-#define  CANID_CMD_LOWER1_HI      0xD1400000  // SHEAVE_LO_H    : F4 shaft_encoder: Lower sheave hi-res: I Command CAN: send commands to subsystem
+#define  CANID_CMD_UPPER1_HI      0xD0E00000  // GENCMD         : F4 shaft_encoder: Upper sheave hi-res: I Command CAN: send commands to subsystem
 #define  CANID_CMD_LOWER1_HR      0xD1600004  // SHEAVE_LO_H    : F4 shaft_encoder: Lower sheave hi-res: R Command CAN: subsystem responds
 #define  CANID_MSG_LOWER1_H_RAW   0xD2400000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: msg--lower raw count
 #define  CANID_MSG_LOWER1_H_CAL   0xD1A00000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: msg--lower calibrated--distance and speed
 #define  CANID_HB_LOWER1_H_RAW    0xD1800000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: heartbeat--lower raw count
 #define  CANID_HB_LOWER1_H_CAL    0xD1C00000  // SHEAVE_LO_H    : F4 shaft_encoder: hi-res: heartbeat--lower calibrated--distance and speed
 #define  CANID_TST_SHEAVE_1LO     0xD2200004  // SHEAVE_UP_H    : F4 shaft_encoder: hi-res: testing poll LO
+#define  CANID_CMD_LOWER1_HI      0xD1400000  // GENCMD         : F4 shaft_encoder: Lower sheave hi-res: I Command CAN: send commands to subsystem
 #define  CANID_TILT_ALARM         0x00A00000  // TILT_SENSE     : Tilt: alarm: Vector angle exceeds limit
 #define  CANID_TILT_ANGLE         0x42E00000  // TILT_SENSE     : Tilt: Calibrated angles (X & Y)
 #define  CANID_TILT_XYZ           0x42800000  // TILT_SENSE     : Tilt: Calibrated to angle: x,y,z tilt readings
 #define  CANID_TILT_XYZ_CAL       0xFFFFFFCC  // TILT_SENSE     : Tilt: CANID: Raw tilt ADC readings
 #define  CANID_TILT_XYZ_RAW       0x4280000C  // TILT_SENSE     : Tilt: Tilt:Raw tilt ADC readings
-#define  CANID_CMD_TILTI          0x42C00000  // TILT_SENSE     : Tilt: I Command CANID
 #define  CANID_CMD_TILTR          0x42C00004  // TILT_SENSE     : Tilt: R Command CANID
+#define  CANID_CMD_TILTI          0x42C00000  // GENCMD         : Tilt: I Command CANID
 #define  CANID_HB_GATEWAY1        0xE0200000  // GATEWAY        : Gateway1: Heartbeat
 #define  CANID_HB_GATEWAY2        0xE1200000  // GATEWAY        : Gateway2: Heartbeat
 #define  CANID_HB_GATEWAY3        0xE1400000  // GATEWAY        : Gateway3: Heartbeat
 #define  CANID_HB_GATEWAY4        0xE2E00000  // GATEWAY        : Gateway4: Heartbeat
-#define  CANID_HB_TENSION_0       0xE0400000  // TENSION_0      : Tension_0: Heartbeat
-#define  CANID_HB_TENSION_a11     0xE0600000  // TENSION_a      : Tension_a11: Heartbeat
-#define  CANID_HB_TENSION_a21     0xE0C00000  // TENSION_a      : Tension_a21: Heartbeat
-#define  CANID_HB_TENSION_a12     0xE0800000  // TENSION_a      : Tension_a12: Heartbeat
-#define  CANID_HB_TENSION_a22     0xE0E00000  // TENSION_a      : Tension_a22: Heartbeat
-#define  CANID_HB_CABLE_ANGLE_1   0xE0A00000  // CABLE_ANGLE_1  : Cable_Angle_1: Heartbeat
-#define  CANID_HB_TENSION_a1G     0xE0E20000  // TENSION_a      : Tension_a1G: Heartbeat
-#define  CANID_HB_TENSION_a2G     0xE0E40000  // TENSION_a      : Tension_a2G: Heartbeat
 #define  CANID_HB_GPS_TIME_1      0xE1000000  // GPS            : GPS_1: Heartbeat unix time
 #define  CANID_HB_GPS_TIME_2      0xE1E00000  // GPS            : GPS_2: Heartbeat unix time
-#define  CANID_HB_GPS_LLH_1       0xE1C00000  // GPS            : GPS_1: Heartbeat (3 separate msgs) lattitude longitude height
-#define  CANID_HB_GPS_LLH_2       0xE2600000  // GPS            : GPS_2: Heartbeat (3 separate msgs) lattitude longitude height
-#define  CANID_HB_LOGGER_1        0xE1800000  // LOGGER         : Logger_1: Heartbeat logging ctr
-#define  CANID_HB_LOGGER_2        0xE1A00000  // LOGGER         : Logger_2: Heartbeat logging ctr
-#define  CANID_HB_CANSENDER_1     0xF0200000  // CANSENDER      : Cansender_1: Heartbeat w ctr
-#define  CANID_HB_CANSENDER_2     0xF0400000  // CANSENDER      : Cansender_2: Heartbeat w ctr
-#define  CANID_CMD_CANSENDER_1I   0xA0200000  // CANSENDER      : Cansender_1: I Command CANID
-#define  CANID_CMD_CANSENDER_1R   0xA0200004  // CANSENDER      : Cansender_1: R Command CANID
-#define  CANID_CMD_CANSENDER_2I   0xA0400000  // CANSENDER      : Cansender_2: I Command CANID
-#define  CANID_CMD_CANSENDER_2R   0xA0400004  // CANSENDER      : Cansender_2: R Command CANID
-#define  CANID_POLL_CANSENDER     0xE2000000  // CANSENDER      : Cansender: Poll cansenders
-#define  CANID_POLLR_CANSENDER_1  0xE2200000  // CANSENDER      : Cansender_1: Response to POLL
-#define  CANID_POLLR_CANSENDER_2  0xE2400000  // CANSENDER      : Cansender_2: Response to POLL
-#define  CANID_CMD_PWRBOX1I       0xE320000C  // PWRBOX         : Pwrbox1: I Command CANID
 #define  CANID_CMD_PWRBOX1R       0xE3200000  // PWRBOX         : Pwrbox1: R Command CANID
-#define  CANID_HB_PWRBOX1         0xFF200000  // PWRBOX         : Pwrbox1: Heartbeat w input voltage
-#define  CANID_MSG_PWRBOX1        0xE3000000  // PWRBOX         : Pwrbox1: Polled msg
+#define  CANID_HB_PWRBOX1         0xFF200000  // PWRBOX         : Pwrbox1: Polled msg
 #define  CANID_ALM_PWRBOX1        0x00800000  // PWRBOX         : Pwrbox1: Input voltage low alarm msg
 #define  CANID_LVL_HB_PWRBOX1     0xFF400000  // PWRBOX         : Pwrbox1: Heartbeat: level wind motor current
 #define  CANID_LVL_MSG_PWRBOX1    0xE3400000  // PWRBOX         : Pwrbox1: Msg: level wind motor current
-#define  CANID_CMD_SANDBOX_1I     0x28E00000  // SANDBOX_1      : HC: SANDBOX_1: I Launch parameters
+#define  CANID_CMD_PWRBOX1I       0xE320000C  // GENCMD         : Pwrbox1: I Command CANID
 #define  CANID_CMD_SANDBOX_1R     0x28E00004  // SANDBOX_1      : HC: SANDBOX_1: R Launch parameters
-#define  CANID_CMD_YOGURT_1I      0x29800000  // YOGURT_1       : Yogurt: YOGURT_1: I Yogurt maker parameters
-#define  CANID_CMD_YOGURT_1R      0x29800004  // YOGURT_1       : Yogurt: YOGURT_1: R Yogurt maker parameters
-#define  CANID_MSG_YOGURT_1       0x29400000  // YOGURT_1       : Yogurt: YOGURT_1: Yogurt maker msgs
-#define  CANID_HB_YOGURT_1        0x29600000  // YOGURT_1       : Yogurt: YOGURT_1: Heart-beats
+#define  CANID_CMD_SANDBOX_1I     0x28E00000  // GENCMD         : HC: SANDBOX_1: I Launch parameters
 #define  CANID_MSG_METER_TORQ1    0x4080000C  // BRIDGE1        : Bridge1: Eng Manifold recomputed
 #define  CANID_MSG_ENG1_RPM2      0x40A0000C  // BRIDGE1        : Bridge1: Eng RPM recomputed
 #define  CANID_DMOC_ACTUALTORQ    0x47400000  // DMOC           : DMOC: Actual Torque: payload-30000
@@ -190,45 +176,41 @@
 #define  CANID_DMOC_CRITICAL_F    0x056837fc  // DMOC           : DMOC: Critical Fault: payload = DEADB0FF
 #define  CANID_DMOC_HV_STATUS     0xCA000000  // DMOC           : DMOC: HV volts:amps, status
 #define  CANID_DMOC_HV_TEMPS      0xCA200000  // DMOC           : DMOC: Temperature:rotor,invert,stator
-#define  CANID_DMOC_CMD_SPEED     0x46400000  // DMOC           : DMOC: cmd: speed, key state
-#define  CANID_DMOC_CMD_TORQ      0x46600000  // DMOC           : DMOC: cmd: torq,copy,standby,status
-#define  CANID_DMOC_CMD_REGEN     0x46800000  // DMOC           : DMOC: cmd: watt,accel,degC,alive
-#define  CANID_LOG_DMOCCMDSPD     0xE4000000  // LOG            : GEVCUr: Control law: Desired speed: integrator
+#define  CANID_DMOC_CMD_SPEED     0x46400000  // MMC            : DMOC: cmd: speed, key state
+#define  CANID_DMOC_CMD_TORQ      0x46600000  // MMC            : DMOC: cmd: torq,copy,standby,status
+#define  CANID_DMOC_CMD_REGEN     0x46800000  // MMC            : DMOC: cmd: watt,accel,degC,alive
+#define  CANID_LOG_DMOCCMDSPD     0xE4000000  // GENCMD         : GEVCUr: Control law: Desired speed: integrator
 #define  CANID_MC_SYSTEM_STATE    0x50000000  // MC             : MC: System state: U8 = high|low nibbles 
 #define  CANID_MC_DRUM_SELECT     0xD0800814  // MC             : MC: Drum selection
-#define  CANID_HB_MC_MOTOR_1_KPALIVE 0xA0800000  // MC             : MC: Curtis Controller keepalive
-#define  CANID_MC_REQUEST_PARAM   0xD0800824  // MC             : MC: Request parameters from HC
 #define  CANID_MC_GUILLOTINE      0x22000000  // MC             : MC: Fire guillotine
-#define  CANID_MC_RQ_LAUNCH_PARAM 0x27000000  // MC             : MC: Request launch parameters
 #define  CANID_MSG_TIME_POLL      0x20000000  // MC             : MC: Time msg/Group polling
 #define  CANID_MC_STATE           0x26000000  // MC             : MC: Launch state msg
 #define  CANID_MC_TORQUE          0x25800000  // MC             : MC: Motor torque
-#define  CANID_CMD_MCLI           0xFFE00000  // MCL            : MCL: Master Controller Launch parameters I (HC)
-#define  CANID_CMD_MCLR           0xFFE00004  // MCL            : MCL: Master Controller Launch parameters R (MC)
-#define  CANID_CP_CTL_RMT         0x29000000  // CP             : Control Panel: Control lever remote
-#define  CANID_CP_CTL_LCL         0x29200000  // CP             : Control Panel: Control lever local
-#define  CANID_CP_CTL_IN_RMT      0x24C00000  // CP             : Control Panel: Control lever remote: input
-#define  CANID_CP_CTL_IN_LCL      0x25000000  // CP             : Control Panel: Control lever  local: input
-#define  CANID_CP_CTL_OUT_RMT     0x2A000000  // CP             : Control Panel: Control lever output
+#define  CANID_MC_REQUEST_PARAM   0xD0800824  // MC             : MC: Request parameters from HC
+#define  CANID_MC_RQ_LAUNCH_PARAM 0x27000000  // MC             : MC: Request launch parameters
+#define  CANID_CMD_MCLR           0xFFE00004  // MC             : MC: Master Controller Launch parameters R (MC)
+#define  CANID_CMD_MCLI           0xFFE00000  // HC             : MCL: Master Controller Launch parameters I (HC)
 #define  CANID_HB_CNTCTR1V        0xFF800000  // CNTCTR         : Contactor1: Heartbeat: High voltage1:Current sensor1
 #define  CANID_HB_CNTCTR1A        0xFF000000  // CNTCTR         : Contactor1: Heartbeat: High voltage2:Current sensor2
 #define  CANID_MSG_CNTCTR1V       0x50400000  // CNTCTR         : Contactor1: poll response: HV1:Current sensor1
 #define  CANID_MSG_CNTCTR1A       0x50600000  // CNTCTR         : Contactor1: poll response: HV2 battery gnd to: DMOC+, HV3 DMOC-
-#define  CANID_CMD_CNTCTR1I       0xE360000C  // CNTCTR         : Contactor1: I Command incoming
 #define  CANID_CMD_CNTCTR1R       0xE3600000  // CNTCTR         : Contactor1: R Command response
-#define  CANID_CMD_CNTCTRKAI      0xE3800000  // CNTCTR         : Contactor1: I KeepAlive and connect command
 #define  CANID_CMD_CNTCTRKAR      0xE3C00000  // CNTCTR         : Contactor1: R KeepAlive response
-#define  CANID_CMD_GEVCURKAI      0xE4200000  // CNTCTR         : GEVCUr: I KeepAlive and connect command
 #define  CANID_CMD_GEVCURKAR      0xE3E00000  // CNTCTR         : GEVCUr: R KeepAlive response
-#define  CANID_TST_STEPCMD        0xE4600000  // DRUM1          : DRUM1: U8: Enable,Direction, FF: CL position
-#define  CANID_HB_DRUM1           0xE4800000  // DRUM1          : DRUM1: U8: Status U32: odometer (encoder ticks)
-#define  CANID_HB_STEPPER         0xE4A00000  // STEPPER        : STEPPER: U8: Status, U32: stepper position accum
-#define  CANID_MSG_DRUM1          0xE4C00000  // DRUM1          : DRUM1: FF: Speed (m/s) FF: odometer (m)
+#define  CANID_CMD_GEVCURKAI      0xE4200000  // CNTCTR         : GEVCUr: I KeepAlive and connect command
+#define  CANID_CMD_CNTCTR1I       0xE360000C  // GENCMD         : Contactor1: I Command incoming
+#define  CANID_CMD_CNTCTRKAI      0xE3800000  // GENCMD         : Contactor1: I KeepAlive and connect command
+#define  CANID_HB_DRUM1           0xE4800000  // DRUM           : DRUM1: U8: Status U32: odometer (encoder ticks)
+#define  CANID_MSG_DRUM1          0xE4C00000  // DRUM           : DRUM1: FF: Speed (m/s) FF: odometer (m)
 #define  CANID_TST_LVLWIND        0xE4D00000  // LEVELWIND      : DRUM1:  
-#define  CANID_HB_CPV1            0xE5000000  // CPSWSV1        : HB_CPV1 1: U8:U8: bit fields,U8:drum bits,U8:spare,FF:CtlLever(0-100.0)
-#define  CANID_CMD_BRAKEbI        0x21000000  // BRAKE          : BRAKE: I U8: drum bit, U8: command code, U8: tbd, FF: braking force 
-#define  CANID_CMD_BRAKEbR        0x31000000  // BRAKE          : BRAKE: R U8: drum bit, U8: command code, U8: tbd, FF: tbd 
-#define  CANID_CMD_BEEPERV1I1     0xD3000000  // BRAKE          : BEEPERV1: R U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq
+#define  CANID_TST_STEPCMD        0xE4600000  // DRUM           : DRUM1: U8: Enable,Direction, FF: CL position
+#define  CANID_HB_STEPPER         0xE4A00000  // STEPPER        : STEPPER: U8: Status, U32: stepper position accum
+#define  CANID_HB_CPSWSV1         0x60000000  // CPSWSV1        : HB_CPV1 1: U8[8]: switches,switches,drum sel,spare,spare,spare,spare,CtlLever(0-200)
+#define  CANID_CMD_BRAKE1I        0x21000000  // GENCMD         : BRAKE1: I U8: command code, FF: braking force 
+#define  CANID_HB_BRAKE1R         0xA1000000  // BRAKE          : BRAKE1: R U8: tbd, FF: tbd 
+#define  CANID_CMD_BRAKE2I        0x21200000  // GENCMD         : BRAKE2: I U8: command code, FF: braking force 
+#define  CANID_HB_BRAKE2R         0xA1200000  // BRAKE          : BRAKE2: R U8: tbd, FF: tbd 
+#define  CANID_CMD_BEEPERV1I1     0xD3000000  // BRAKE          : BEEPERV1:R U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq
 #define  CANID_UNIT_2             0x04000000  // UNIT_2         : Sensor unit: Drive shaft encoder #1
 #define  CANID_UNIT_3             0x03800000  // UNIT_3         : Sensor unit: Engine
 #define  CANID_UNIT_4             0x03A00000  // UNIT_4         : Sensor unit: Lower sheave shaft encoder
@@ -321,7 +303,7 @@
 #define  CMD_REQ_HISTOGRAM       40        // Request histogram: [1] ADC #: [2] # consecutive:[3]-[6] # DMA buffers accumuleted in bins
 #define  CMD_THISIS_HISTODATA    41        // Histogram data item: [1] ADC #:[2] bin # (0 - n), [3]-[6] bin count
 
-#define PAYLOAD_TYPE_COUNT 44
+#define PAYLOAD_TYPE_COUNT 45
 #define  NONE                    0         // No payload bytes                                
 #define  FF                      1         // [0]-[3]: Full Float                             
 #define  FF_FF                   2         // [0]-[3]: Full Float[0]; [4]-[7]: Full Float[1]  
@@ -363,6 +345,7 @@
 #define  Y16_Y16_Y16_Y16         38        // [1]-[0]:[3]-[2]:[5]-[4]:[7]-[6]:int16_t         
 #define  U8_U8_U8_U8_FF          39        // [0]:[1]:[2]:[3]:uint8_t,[4-7]:Full-Float        
 #define  U8_U8_U8_S8_U16         40        // [0]:[1]:[2]:uint8_t,[3]:int_8,[[4]-[5]:uint16_t 
+#define  U8_8                    41        // [0]-[7]: unit8_t[8]                             
 #define  LVL2B                   249       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
@@ -812,7 +795,7 @@
 #define  USEME_TENSION_BIT_7     	0x40      // TENSION             useme: spare 0x40                               
 #define  USEME_TENSION_BIT_8     	0x80      // TENSION             useme: spare 0x80                               
 
-#define FUNCTION_TYPE_COUNT 31
+#define FUNCTION_TYPE_COUNT 34
 #define  FUNCTION_TYPE_SHAFT_ENCODER           	1         // Sensor, shaft: Drive shaft encoder              
 #define  FUNCTION_TYPE_ENGINE_SENSOR           	2         // Sensor, engine: rpm, manifold pressure, throttle setting, temperature
 #define  FUNCTION_TYPE_TENSION_a               	3         // Tension_a: Tension AD7799 #1                    
@@ -844,6 +827,9 @@
 #define  FUNCTION_TYPE_CPLEDS_V1               	29        // Control Panel: LEDs: version 1                  
 #define  FUNCTION_TYPE_BEEPER_V1               	30        // Beeper: version 1                               
 #define  FUNCTION_TYPE_CNTCTR                  	31        // Contactor: original                             
+#define  FUNCTION_TYPE_GENCMD                  	32        // Generic command (MC, PC, HC, etc.               
+#define  FUNCTION_TYPE_PCCMD                   	33        // PC command                                      
+#define  FUNCTION_TYPE_RC                      	34        // Remote Controller                               
 
 #define READINGS_BOARD_COUNT 15
 #define  PROG_TENSION_READINGS_BOARD_NUM_AD7799	1         // Number of AD7799 that successfully initialized  
@@ -862,6 +848,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 797  */
+/* TOTAL COUNT OF #defines = 783  */
 /* Test 2016/06/12 */
 

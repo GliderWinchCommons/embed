@@ -47,7 +47,9 @@ INSERT INTO FUNCTIONS_TYPE VALUES ('CPSWS_V1',     28, 'Control Panel: Switches 
 INSERT INTO FUNCTIONS_TYPE VALUES ('CPLEDS_V1',    29, 'Control Panel: LEDs: version 1' );
 INSERT INTO FUNCTIONS_TYPE VALUES ('BEEPER_V1',    30, 'Beeper: version 1' );
 INSERT INTO FUNCTIONS_TYPE VALUES ('CNTCTR',       31, 'Contactor: original' );
-
+INSERT INTO FUNCTIONS_TYPE VALUES ('GENCMD',       32, 'Generic command (MC, PC, HC, etc.' );
+INSERT INTO FUNCTIONS_TYPE VALUES ('PCCMD',        33, 'PC command' );
+INSERT INTO FUNCTIONS_TYPE VALUES ('RC',           34, 'Remote Controller' );
 
 
 

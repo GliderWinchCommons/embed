@@ -1,4 +1,4 @@
-// 2020-10-30 12:44:55.699
+// 2020-11-03 20:38:02.294
 
 // =========== PARAMETER ARRAY/TABLE SIZES ============================
 // Note: The instances of the same function types should have the same size. 
@@ -62,9 +62,9 @@ const uint32_t paramval01[] = {
  0x00000000 , /*   1 0                    6  Cansender_1: 1 CRC                                                              */
  0x00000001 , /*   2 1                    5  Cansender_1: 2 Version number                                                   */
  0x000001F4 , /*   3 500                  6  Cansender_1: 3 Heartbeat count of time (ms) between msgs                        */
- 0xF0200000 , /*   4 CANID_HB_CANSENDER_1  17  Cansender_1: 4 CANID: Hearbeat sends running count                              */
- 0xE2000000 , /*   5 CANID_POLL_CANSENDER  17  Cansender_1: 5 CANID: Poll this cansender                                       */
- 0xE2200000 , /*   6 CANID_POLLR_CANSENDER_1  17  Cansender_1: 6 CANID: Response to POLL                                          */
+ 0x## CAN ID NOT FOUND ## , /*   4 CANID_HB_CANSENDER_1  17  Cansender_1: 4 CANID: Hearbeat sends running count                              */
+ 0x## CAN ID NOT FOUND ## , /*   5 CANID_POLL_CANSENDER  17  Cansender_1: 5 CANID: Poll this cansender                                       */
+ 0x## CAN ID NOT FOUND ## , /*   6 CANID_POLLR_CANSENDER_1  17  Cansender_1: 6 CANID: Response to POLL                                          */
 };
 #endif
 
@@ -75,9 +75,9 @@ const uint32_t paramval02[] = {
  0x00000000 , /*   1 0                    6  Cansender_2: 1 CRC                                                              */
  0x00000001 , /*   2 1                    5  Cansender_2: 2 Version number                                                   */
  0x00000177 , /*   3 375                  6  Cansender_2: 3 Heartbeat count of time (ms) between msgs                        */
- 0xF0400000 , /*   4 CANID_HB_CANSENDER_2  17  Cansender_2: 4 CANID: Hearbeat sends running count                              */
- 0xE2000000 , /*   5 CANID_POLL_CANSENDER  17  Cansender_2: 5 CANID: Poll this cansender                                       */
- 0xE2400000 , /*   6 CANID_POLLR_CANSENDER_2  17  Cansender_2: 6 CANID: Response to POLL                                          */
+ 0x## CAN ID NOT FOUND ## , /*   4 CANID_HB_CANSENDER_2  17  Cansender_2: 4 CANID: Hearbeat sends running count                              */
+ 0x## CAN ID NOT FOUND ## , /*   5 CANID_POLL_CANSENDER  17  Cansender_2: 5 CANID: Poll this cansender                                       */
+ 0x## CAN ID NOT FOUND ## , /*   6 CANID_POLLR_CANSENDER_2  17  Cansender_2: 6 CANID: Response to POLL                                          */
 };
 #endif
 
@@ -311,7 +311,7 @@ const uint32_t paramval13[] = {
  0x00000080 , /*  26 128                  6  26 Pwrbox1: IIR4 Filter 3 factor: Power source volts                            */
  0x00000002 , /*  27 2                    6  27 Pwrbox1: IIR4 Filter 3 scale : Power source volts                            */
  0xFF200000 , /*  28 CANID_HB_PWRBOX1    17  28 Pwrbox: CANID: Heartbeat: input voltage, bus voltage                         */
- 0xE3000000 , /*  29 CANID_MSG_PWRBOX1   17  29 Pwrbox: CANID: Msg: input voltage, bus voltage                               */
+ 0x## CAN ID NOT FOUND ## , /*  29 CANID_MSG_PWRBOX1   17  29 Pwrbox: CANID: Msg: input voltage, bus voltage                               */
  0x00800000 , /*  30 CANID_ALM_PWRBOX1   17  30 Pwrbox: CANID: Alarm: input voltage, bus voltage                             */
  0x00000032 , /*  31 50                   6  31 Pwrbox: Time (ms) between alarm msgs, when below threshold                   */
  0x41280000 , /*  32 10.5                11  32 Pwrbox: Voltage threshold for alarm msgs                                     */
@@ -804,9 +804,9 @@ const uint32_t paramval23[] = {
  0x463B8000 , /*  45 12000.0             11  Yogurt_1: 45 Control loop: Proportional coeff                                   */
  0x40C00000 , /*  46 6.0                 11  Yogurt_1: 46 Control loop: Integral coeff                                       */
  0x486A6000 , /*  47 240.0E3             11  Yogurt_1: 47 Control loop: Derivative coeff                                     */
- 0x29800004 , /*  48 CANID_CMD_YOGURT_1R  17  Yogurt_1: 48 CANID: cid_yog_cmd: Yogurt maker parameters                        */
- 0x29400000 , /*  49 CANID_MSG_YOGURT_1  17  Yogurt_1: 49 CANID: cid_yog_msg: Yogurt maker msgs                              */
- 0x29600000 , /*  50 CANID_HB_YOGURT_1   17  Yogurt_1: 50 CANID: cid_yog_hb: Yogurt maker heart-beats                        */
+ 0x## CAN ID NOT FOUND ## , /*  48 CANID_CMD_YOGURT_1R  17  Yogurt_1: 48 CANID: cid_yog_cmd: Yogurt maker parameters                        */
+ 0x## CAN ID NOT FOUND ## , /*  49 CANID_MSG_YOGURT_1  17  Yogurt_1: 49 CANID: cid_yog_msg: Yogurt maker msgs                              */
+ 0x## CAN ID NOT FOUND ## , /*  50 CANID_HB_YOGURT_1   17  Yogurt_1: 50 CANID: cid_yog_hb: Yogurt maker heart-beats                        */
  0x3C23D70A , /*  51 0.0100              11  Yogurt_1: 51  Control, stored heat const Pasteur phase                          */
  0x3CA3D70A , /*  52 0.0200              11  Yogurt_1: 52  Control, stored heat const Ferment phase                          */
  0xC57A0000 , /*  53 -4000.0             11  Yogurt_1: 53  Control, integrator initialization, a of  a + b*x                 */
@@ -871,8 +871,8 @@ const struct FUNC_CANID func_canid01[] = {
 #ifdef CAN_UNIT_13	// a #define is used to select the following
 const struct FUNC_CANID func_canid02[] = {
 {   0x02600000, CAN_UNIT_13_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
-{1011,  0x29800004 }, /*   1 CAN_UNIT_13          CANID_CMD_YOGURT_1R	 Yogurt_1: R Ver 1 of maker    */
-{  11,  0x29800000 }, /*   2 CAN_UNIT_13          CANID_CMD_YOGURT_1I	 Yogurt_1: I Ver 1 of maker    */
+{1011,  0x## CAN ID NOT FOUND ## }, /*   1 CAN_UNIT_13          CANID_CMD_YOGURT_1R	 Yogurt_1: R Ver 1 of maker    */
+{  11,  0x## CAN ID NOT FOUND ## }, /*   2 CAN_UNIT_13          CANID_CMD_YOGURT_1I	 Yogurt_1: I Ver 1 of maker    */
 };
 #endif
 
@@ -922,8 +922,8 @@ const struct FUNC_CANID func_canid06[] = {
 #ifdef CAN_UNIT_1B	// a #define is used to select the following
 const struct FUNC_CANID func_canid07[] = {
 {   0x03E00000, CAN_UNIT_1B_CMDID_TABLE_SIZE },	/* {Unit CAN ID, Number of CAN IDs that follow} */
-{1014,  0xA0200004 }, /*   1 CAN_UNIT_1B          CANID_CMD_CANSENDER_1R	 Cansender_1: R Sensor board test*/
-{  14,  0xA0200000 }, /*   2 CAN_UNIT_1B          CANID_CMD_CANSENDER_1I	 Cansender_1: I Sensor board test*/
+{1014,  0x## CAN ID NOT FOUND ## }, /*   1 CAN_UNIT_1B          CANID_CMD_CANSENDER_1R	 Cansender_1: R Sensor board test*/
+{  14,  0x## CAN ID NOT FOUND ## }, /*   2 CAN_UNIT_1B          CANID_CMD_CANSENDER_1I	 Cansender_1: I Sensor board test*/
 };
 #endif
 

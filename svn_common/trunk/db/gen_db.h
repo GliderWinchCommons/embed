@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2020-11-03 20:37:59.971
+// 2020-11-07 20:11:18.493
 
-#define CANID_COUNT 243
+#define CANID_COUNT 269
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -180,9 +180,8 @@
 #define  CANID_DMOC_CMD_TORQ      0x46600000  // MMC            : DMOC: cmd: torq,copy,standby,status
 #define  CANID_DMOC_CMD_REGEN     0x46800000  // MMC            : DMOC: cmd: watt,accel,degC,alive
 #define  CANID_LOG_DMOCCMDSPD     0xE4000000  // GENCMD         : GEVCUr: Control law: Desired speed: integrator
-#define  CANID_MC_SYSTEM_STATE    0x50000000  // MC             : MC: System state: U8 = high|low nibbles 
 #define  CANID_MC_DRUM_SELECT     0xD0800814  // MC             : MC: Drum selection
-#define  CANID_MC_GUILLOTINE      0x22000000  // MC             : MC: Fire guillotine
+#define  CANID_MC_GUILLOTINE      0x22000004  // MC             : MC: Fire guillotine
 #define  CANID_MSG_TIME_POLL      0x20000000  // MC             : MC: Time msg/Group polling
 #define  CANID_MC_STATE           0x26000000  // MC             : MC: Launch state msg
 #define  CANID_MC_TORQUE          0x25800000  // MC             : MC: Motor torque
@@ -200,17 +199,44 @@
 #define  CANID_CMD_GEVCURKAI      0xE4200000  // CNTCTR         : GEVCUr: I KeepAlive and connect command
 #define  CANID_CMD_CNTCTR1I       0xE360000C  // GENCMD         : Contactor1: I Command incoming
 #define  CANID_CMD_CNTCTRKAI      0xE3800000  // GENCMD         : Contactor1: I KeepAlive and connect command
-#define  CANID_HB_DRUM1           0xE4800000  // DRUM           : DRUM1: U8: Status U32: odometer (encoder ticks)
+#define  CANID_HB_DRUM1           0xE4800000  // DRUM           : DRUM1: U8:Status,U32: odometer (encoder ticks)
 #define  CANID_MSG_DRUM1          0xE4C00000  // DRUM           : DRUM1: FF: Speed (m/s) FF: odometer (m)
-#define  CANID_TST_LVLWIND        0xE4D00000  // LEVELWIND      : DRUM1:  
-#define  CANID_TST_STEPCMD        0xE4600000  // DRUM           : DRUM1: U8: Enable,Direction, FF: CL position
+#define  CANID_TST_LVLWIND        0xE4D00000  // LEVELWIND      : TEST DRUM1
+#define  CANID_HB_LEVELWIND_1     0x80000000  // LEVELWIND      : DRUM 1: S8:Status,U8:LW switches
+#define  CANID_HB_LEVELWIND_2     0x80200000  // LEVELWIND      : DRUM 2: S8:Status,U8:LW switches
+#define  CANID_HB_LEVELWIND_3     0x80400000  // LEVELWIND      : DRUM 3: S8:Status,U8:LW switches
+#define  CANID_HB_LEVELWIND_4     0x80600004  // LEVELWIND      : DRUM 4: S8:Status,U8:LW switches
+#define  CANID_HB_LEVELWIND_5     0x80800004  // LEVELWIND      : DRUM 5: S8:Status,U8:LW switches
+#define  CANID_HB_LEVELWIND_6     0x80A00004  // LEVELWIND      : DRUM 6: S8:Status,U8:LW switches
+#define  CANID_HB_LEVELWIND_7     0x80C00000  // LEVELWIND      : DRUM 7: S8:Status,U8:LW switches
+#define  CANID_CMD_LEVELWIND_1I   0xB1000014  // GENCMD         : 1 incoming: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_2I   0xB1000024  // GENCMD         : 2:incoming: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_3I   0xB1000034  // GENCMD         : 3:incoming: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_4I   0xB1000044  // GENCMD         : 4:incoming: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_1R   0xB1000114  // LEVELWIND      : 1: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_2R   0xB1000124  // LEVELWIND      : 2: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_3R   0xB1000134  // LEVELWIND      : 3: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_4R   0xB1000144  // LEVELWIND      : 4: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_5R   0xB1000154  // LEVELWIND      : 5: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_6R   0xB1000164  // LEVELWIND      : 6: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_7R   0xB1000174  // LEVELWIND      : 7: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_TST_STEPCMD        0xE4600000  // GENCMD         : DRUM1: U8: Enable,Direction, FF: CL position
 #define  CANID_HB_STEPPER         0xE4A00000  // STEPPER        : STEPPER: U8: Status, U32: stepper position accum
-#define  CANID_HB_CPSWSV1         0x60000000  // CPSWSV1        : HB_CPV1 1: U8[8]: switches,switches,drum sel,spare,spare,spare,spare,CtlLever(0-200)
-#define  CANID_CMD_BRAKE1I        0x21000000  // GENCMD         : BRAKE1: I U8: command code, FF: braking force 
+#define  CANID_HB_CPSWSV1_1       0x31000000  // CPMC           : HB_CPSWSV1 1: S8:status,U8[7]: status,switches,drum sel,operational,spare,spare
+#define  CANID_HB_CPSWSV1_2       0x31200000  // CPREMOTE       : HB_CPSWSV1 2: S8:status,U8[7]: status,switches,drum sel,operational,spare,spare
+#define  CANID_HB_CPSWSV1_3       0x31400000  // CPHC           : HB_CPSWSV1 3: S8:status,U8[7]: status,switches,drum sel,operational,spare,spare
+#define  CANID_HB_CPSWSV1_4       0x31600000  // GENCMD         : HB_CPSWSV1 4: S8:status,U8[7]: status,switches,drum sel,operational,spare,spare
+#define  CANID_HB_CPSWSCLV1_1     0x31800000  // CPMC           : HB_CPSWSV1 1:S8:status, S16 CL: (+/-10000 )
+#define  CANID_HB_CPSWSCLV1_2     0x31A00000  // CPREMOTE       : HB_CPSWSV1 2:S8:status, S16 CL: (+/-10000 )
+#define  CANID_HB_CPSWSCLV1_3     0x31C00000  // CPHC           : HB_CPSWSV1 3:S8:status, S16 CL: (+/-10000 )
+#define  CANID_HB_CPSWSCLV1_4     0x31E00000  // GENCMD         : HB_CPSWSV1 4:S8:status, S16 CL: (+/-10000 )
+#define  CANID_CMD_BRAKE1I        0x22000000  // GENCMD         : BRAKE1: I U8: command code, FF: braking force 
 #define  CANID_HB_BRAKE1R         0xA1000000  // BRAKE          : BRAKE1: R U8: tbd, FF: tbd 
-#define  CANID_CMD_BRAKE2I        0x21200000  // GENCMD         : BRAKE2: I U8: command code, FF: braking force 
+#define  CANID_CMD_BRAKE2I        0x21400000  // GENCMD         : BRAKE2: I U8: command code, FF: braking force 
 #define  CANID_HB_BRAKE2R         0xA1200000  // BRAKE          : BRAKE2: R U8: tbd, FF: tbd 
-#define  CANID_CMD_BEEPERV1I1     0xD3000000  // BRAKE          : BEEPERV1:R U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq
+#define  CANID_CMD_BEEPERV1_1     0xD3000000  // BEEPERV1       : BEEPERV1 1 MC: U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq
+#define  CANID_CMD_BEEPERV1_2     0xD3200000  // BEEPERV1       : BEEPERV1 2 CP sws: U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq
+#define  CANID_CMD_BEEPERV1_3     0xD3400000  // BEEPERV1       : BEEPERV1 3 Health: U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq
 #define  CANID_UNIT_2             0x04000000  // UNIT_2         : Sensor unit: Drive shaft encoder #1
 #define  CANID_UNIT_3             0x03800000  // UNIT_3         : Sensor unit: Engine
 #define  CANID_UNIT_4             0x03A00000  // UNIT_4         : Sensor unit: Lower sheave shaft encoder
@@ -303,7 +329,7 @@
 #define  CMD_REQ_HISTOGRAM       40        // Request histogram: [1] ADC #: [2] # consecutive:[3]-[6] # DMA buffers accumuleted in bins
 #define  CMD_THISIS_HISTODATA    41        // Histogram data item: [1] ADC #:[2] bin # (0 - n), [3]-[6] bin count
 
-#define PAYLOAD_TYPE_COUNT 45
+#define PAYLOAD_TYPE_COUNT 48
 #define  NONE                    0         // No payload bytes                                
 #define  FF                      1         // [0]-[3]: Full Float                             
 #define  FF_FF                   2         // [0]-[3]: Full Float[0]; [4]-[7]: Full Float[1]  
@@ -346,6 +372,9 @@
 #define  U8_U8_U8_U8_FF          39        // [0]:[1]:[2]:[3]:uint8_t,[4-7]:Full-Float        
 #define  U8_U8_U8_S8_U16         40        // [0]:[1]:[2]:uint8_t,[3]:int_8,[[4]-[5]:uint16_t 
 #define  U8_8                    41        // [0]-[7]: unit8_t[8]                             
+#define  S8_U8_7                 42        // [0]:int8_t,unit8_t[7]                           
+#define  S8_S16_FF_V             43        // [0]:int8_t,uint16_t, added FF if DLC = 7        
+#define  U8_U8_X4                44        // [0]:uint8_t:drum bits,uint8_t:command,X4:four byte value
 #define  LVL2B                   249       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
@@ -848,6 +877,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 783  */
+/* TOTAL COUNT OF #defines = 812  */
 /* Test 2016/06/12 */
 

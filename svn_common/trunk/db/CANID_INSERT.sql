@@ -300,9 +300,9 @@ INSERT INTO CANID VALUES ('CANID_DMOC_CMD_REGEN', '46800000','MMC',1,1,'I16_I16_
 -- Logging data: messages sent for logging capture and analysis
 INSERT INTO CANID VALUES ('CANID_LOG_DMOCCMDSPD', 'E4000000','GENCMD',1,18,'FF_FF','GEVCUr: Control law: Desired speed: integrator');
 -- Master Controller
-INSERT INTO CANID VALUES ('CANID_MC_SYSTEM_STATE',   '50000000','MC',1,1,'U8',   'MC: System state: U8 = high|low nibbles ');
+--INSERT INTO CANID VALUES ('CANID_MC_SYSTEM_STATE',   '50000000','MC',1,1,'U8_U8',   'MC: System state: U8 = high|low nibbles ');
 INSERT INTO CANID VALUES ('CANID_MC_DRUM_SELECT',    'D0800814','MC',1,2,'UNDEF','MC: Drum selection');
-INSERT INTO CANID VALUES ('CANID_MC_GUILLOTINE',     '22000000','MC',1,3,'UNDEF','MC: Fire guillotine');
+INSERT INTO CANID VALUES ('CANID_MC_GUILLOTINE',     '22000004','MC',1,3,'UNDEF','MC: Fire guillotine');
 INSERT INTO CANID VALUES ('CANID_MSG_TIME_POLL',     '20000000','MC',1,4,'UNDEF','MC: Time msg/Group polling');
 INSERT INTO CANID VALUES ('CANID_MC_STATE',          '26000000','MC',1,5,'UNDEF','MC: Launch state msg');
 INSERT INTO CANID VALUES ('CANID_MC_TORQUE',         '25800000','MC',1,6,'UNDEF','MC: Motor torque');
@@ -330,21 +330,61 @@ INSERT INTO CANID VALUES ('CANID_CMD_CNTCTR1I', 'E360000C','GENCMD',1,19,'U8_VAR
 INSERT INTO CANID VALUES ('CANID_CMD_CNTCTRKAI','E3800000','GENCMD',1,20,'U8',     'Contactor1: I KeepAlive and connect command');
 -- GEVCUr Development & test of DMOCs w motors
 -- Drum node (level wind stepper, brake solenoid and air pressure, drum speed and odometer)
-INSERT INTO CANID VALUES ('CANID_HB_DRUM1'     ,'E4800000','DRUM', 1,2,   'U8_U32','DRUM1: U8: Status U32: odometer (encoder ticks)');
-INSERT INTO CANID VALUES ('CANID_MSG_DRUM1'    ,'E4C00000','DRUM', 1,3,   'FF_FF' ,'DRUM1: FF: Speed (m/s) FF: odometer (m)');
-INSERT INTO CANID VALUES ('CANID_TST_LVLWIND'  ,'E4D00000','LEVELWIND',1,1,'U8_U8_U8' ,'DRUM1:  ');
+INSERT INTO CANID VALUES ('CANID_HB_DRUM1',      'E4800000','DRUM', 1,2,   'U8_U32','DRUM1: U8:Status,U32: odometer (encoder ticks)');
+INSERT INTO CANID VALUES ('CANID_MSG_DRUM1',     'E4C00000','DRUM', 1,3,   'FF_FF' ,'DRUM1: FF: Speed (m/s) FF: odometer (m)');
 
-INSERT INTO CANID VALUES ('CANID_TST_STEPCMD'  ,'E4600000','DRUM', 1,4,   'U8_FF' ,'DRUM1: U8: Enable,Direction, FF: CL position');
+INSERT INTO CANID VALUES ('CANID_TST_LVLWIND'  , 'E4D00000','LEVELWIND',1,1,'S8_U8_U8','TEST DRUM1');
+INSERT INTO CANID VALUES ('CANID_HB_LEVELWIND_1','80000000','LEVELWIND',1,2,'S8_U8','DRUM 1: S8:Status,U8:LW switches');
+INSERT INTO CANID VALUES ('CANID_HB_LEVELWIND_2','80200000','LEVELWIND',2,2,'S8_U8','DRUM 2: S8:Status,U8:LW switches');
+INSERT INTO CANID VALUES ('CANID_HB_LEVELWIND_3','80400000','LEVELWIND',3,2,'S8_U8','DRUM 3: S8:Status,U8:LW switches');
+INSERT INTO CANID VALUES ('CANID_HB_LEVELWIND_4','80600004','LEVELWIND',4,2,'S8_U8','DRUM 4: S8:Status,U8:LW switches');
+INSERT INTO CANID VALUES ('CANID_HB_LEVELWIND_5','80800004','LEVELWIND',5,2,'S8_U8','DRUM 5: S8:Status,U8:LW switches');
+INSERT INTO CANID VALUES ('CANID_HB_LEVELWIND_6','80A00004','LEVELWIND',6,2,'S8_U8','DRUM 6: S8:Status,U8:LW switches');
+INSERT INTO CANID VALUES ('CANID_HB_LEVELWIND_7','80C00000','LEVELWIND',7,2,'S8_U8','DRUM 7: S8:Status,U8:LW switches');
+-- General purpose command. Drum bits and commmand code determine functions and nature of response
+INSERT INTO CANID VALUES ('CANID_CMD_LEVELWIND_I1','B1000014','GENCMD',1,23,'U8_U8_U8_X4','1 incoming: U8:drum bits,U8:command code,X4:four byte value');
+INSERT INTO CANID VALUES ('CANID_CMD_LEVELWIND_I2','B1000024','GENCMD',1,24,'U8_U8_U8_X4','2:incoming: U8:drum bits,U8:command code,X4:four byte value');
+INSERT INTO CANID VALUES ('CANID_CMD_LEVELWIND_I3','B1000034','GENCMD',1,25,'U8_U8_U8_X4','3:incoming: U8:drum bits,U8:command code,X4:four byte value');
+INSERT INTO CANID VALUES ('CANID_CMD_LEVELWIND_I4','B1000044','GENCMD',1,26,'U8_U8_U8_X4','4:incoming: U8:drum bits,U8:command code,X4:four byte value');
+-- Response to command. X4 = undefined four byte type, e.g. uin32_t, int32_t, float
+INSERT INTO CANID VALUES ('CANID_CMD_LEVELWIND_R1','B1000114','LEVELWIND',1,3,'U8_U8_U8_X4','1: U8:drum bits,U8:command code,X4:four byte value');
+INSERT INTO CANID VALUES ('CANID_CMD_LEVELWIND_R2','B1000124','LEVELWIND',2,3,'U8_U8_U8_X4','2: U8:drum bits,U8:command code,X4:four byte value');
+INSERT INTO CANID VALUES ('CANID_CMD_LEVELWIND_R3','B1000134','LEVELWIND',3,3,'U8_U8_U8_X4','3: U8:drum bits,U8:command code,X4:four byte value');
+INSERT INTO CANID VALUES ('CANID_CMD_LEVELWIND_R4','B1000144','LEVELWIND',4,3,'U8_U8_U8_X4','4: U8:drum bits,U8:command code,X4:four byte value');
+INSERT INTO CANID VALUES ('CANID_CMD_LEVELWIND_R5','B1000154','LEVELWIND',5,3,'U8_U8_U8_X4','5: U8:drum bits,U8:command code,X4:four byte value');
+INSERT INTO CANID VALUES ('CANID_CMD_LEVELWIND_R6','B1000164','LEVELWIND',6,3,'U8_U8_U8_X4','6: U8:drum bits,U8:command code,X4:four byte value');
+INSERT INTO CANID VALUES ('CANID_CMD_LEVELWIND_R7','B1000174','LEVELWIND',7,3,'U8_U8_U8_X4','7: U8:drum bits,U8:command code,X4:four byte value');
+
+
+--
+
+
+INSERT INTO CANID VALUES ('CANID_TST_STEPCMD'  ,'E4600000','GENCMD', 1,4, 'U8_FF' ,'DRUM1: U8: Enable,Direction, FF: CL position');
 INSERT INTO CANID VALUES ('CANID_HB_STEPPER'   ,'E4A00000','STEPPER',1,1, 'U8_U32','STEPPER: U8: Status, U32: stepper position accum');
 -- Control Panel Switches: Version 1
-INSERT INTO CANID VALUES ('CANID_HB_CPSWSV1','60000000','CPSWSV1',1,1,'U8_8','HB_CPV1 1: U8[8]: switches,switches,drum sel,spare,spare,spare,spare,CtlLever(0-200)');
+INSERT INTO CANID VALUES ('CANID_HB_CPSWSV1_1','31000000','CPMC',    1,1,'S8_U8_7','HB_CPSWSV1 1: S8:status,U8[7]: status,switches,drum sel,operational,spare,spare');
+INSERT INTO CANID VALUES ('CANID_HB_CPSWSV1_2','31200000','CPREMOTE',1,2,'S8_U8_7','HB_CPSWSV1 2: S8:status,U8[7]: status,switches,drum sel,operational,spare,spare');
+INSERT INTO CANID VALUES ('CANID_HB_CPSWSV1_3','31400000','CPHC',    1,3,'S8_U8_7','HB_CPSWSV1 3: S8:status,U8[7]: status,switches,drum sel,operational,spare,spare');
+INSERT INTO CANID VALUES ('CANID_HB_CPSWSV1_4','31600000','GENCMD',  1,4,'S8_U8_7','HB_CPSWSV1 4: S8:status,U8[7]: status,switches,drum sel,operational,spare,spare');
+
+INSERT INTO CANID VALUES ('CANID_HB_CPSWSCLV1_1','31800000','CPMC',    2,1,'S8_S16_FF_V','HB_CPSWSV1 1:S8:status, S16 CL: (+/-10000 )');
+INSERT INTO CANID VALUES ('CANID_HB_CPSWSCLV1_2','31A00000','CPREMOTE',2,2,'S8_S16_FF_V','HB_CPSWSV1 2:S8:status, S16 CL: (+/-10000 )');
+INSERT INTO CANID VALUES ('CANID_HB_CPSWSCLV1_3','31C00000','CPHC',    2,3,'S8_S16_FF_V','HB_CPSWSV1 3:S8:status, S16 CL: (+/-10000 )');
+INSERT INTO CANID VALUES ('CANID_HB_CPSWSCLV1_4','31E00000','GENCMD',  2,4,'S8_S16_FF_V','HB_CPSWSV1 4:S8:status, S16 CL: (+/-10000 )');
 --     Brake function
-INSERT INTO CANID VALUES ('CANID_CMD_BRAKE1I','21000000','GENCMD',1,21,'U8_FF','BRAKE1: I U8: command code, FF: braking force ');
+INSERT INTO CANID VALUES ('CANID_CMD_BRAKE1I','22000000','GENCMD',1,21,'U8_FF','BRAKE1: I U8: command code, FF: braking force ');
 INSERT INTO CANID VALUES ('CANID_HB_BRAKE1R' ,'A1000000','BRAKE' ,1,1, 'U8_FF','BRAKE1: R U8: tbd, FF: tbd ');
-INSERT INTO CANID VALUES ('CANID_CMD_BRAKE2I','21200000','GENCMD',1,22,'U8_FF','BRAKE2: I U8: command code, FF: braking force ');
+INSERT INTO CANID VALUES ('CANID_CMD_BRAKE2I','21400000','GENCMD',1,22,'U8_FF','BRAKE2: I U8: command code, FF: braking force ');
 INSERT INTO CANID VALUES ('CANID_HB_BRAKE2R' ,'A1200000','BRAKE' ,2,1, 'U8_FF','BRAKE2: R U8: tbd, FF: tbd ');
 -- BEEPERV1 function (V1 = first version, 1 = first instance)
-INSERT INTO CANID VALUES ('CANID_CMD_BEEPERV1I1' ,'D3000000','BRAKE',1,1,'U8_U8_U8_S8_U16','BEEPERV1:R U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq');
+INSERT INTO CANID VALUES ('CANID_CMD_BEEPERV1_1' ,'D3000000','BEEPERV1',1,1,'U8_U8_U8_S8_U16','BEEPERV1 1 MC: U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq');
+INSERT INTO CANID VALUES ('CANID_CMD_BEEPERV1_2' ,'D3200000','BEEPERV1',1,2,'U8_U8_U8_S8_U16','BEEPERV1 2 CP sws: U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq');
+INSERT INTO CANID VALUES ('CANID_CMD_BEEPERV1_3' ,'D3400000','BEEPERV1',1,3,'U8_U8_U8_S8_U16','BEEPERV1 3 Health: U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq');
+--
+
+
+
+
 -- Nodes/Units (Loader addresses)
 INSERT INTO CANID VALUES ('CANID_UNIT_2', '04000000','UNIT_2', 1,1,'U8','Sensor unit: Drive shaft encoder #1');
 INSERT INTO CANID VALUES ('CANID_UNIT_3', '03800000','UNIT_3', 1,1,'U8','Sensor unit: Engine');

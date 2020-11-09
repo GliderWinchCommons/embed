@@ -65,6 +65,9 @@ INSERT INTO PAYLOAD_TYPE VALUES ('Y16_Y16_Y16_Y16',38,8,'[1]-[0]:[3]-[2]:[5]-[4]
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8_U8_U8_FF' ,39,8,'[0]:[1]:[2]:[3]:uint8_t,[4-7]:Full-Float');
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8_U8_S8_U16',40,6,'[0]:[1]:[2]:uint8_t,[3]:int_8,[[4]-[5]:uint16_t');
 INSERT INTO PAYLOAD_TYPE VALUES ('U8_8'           ,41,8,'[0]-[7]: unit8_t[8]');
+INSERT INTO PAYLOAD_TYPE VALUES ('S8_U8_7'        ,42,8,'[0]:int8_t,unit8_t[7]');
+INSERT INTO PAYLOAD_TYPE VALUES ('S8_S16_FF_V'    ,43,7,'[0]:int8_t,uint16_t, added FF if DLC = 7');
+INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8_U8_X4'    ,44,7,'[0]:uint8_t:drum bits,uint8_t:command,uin8_t:subcmd,X4:four byte value');
 
 
 INSERT INTO PAYLOAD_TYPE VALUES ('LVL2B',	249,  6, ' [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table');	--

@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2020-11-07 20:11:18.493
+// 2020-11-10 20:29:49.716
 
 #define CANID_COUNT 269
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -202,24 +202,24 @@
 #define  CANID_HB_DRUM1           0xE4800000  // DRUM           : DRUM1: U8:Status,U32: odometer (encoder ticks)
 #define  CANID_MSG_DRUM1          0xE4C00000  // DRUM           : DRUM1: FF: Speed (m/s) FF: odometer (m)
 #define  CANID_TST_LVLWIND        0xE4D00000  // LEVELWIND      : TEST DRUM1
-#define  CANID_HB_LEVELWIND_1     0x80000000  // LEVELWIND      : DRUM 1: S8:Status,U8:LW switches
-#define  CANID_HB_LEVELWIND_2     0x80200000  // LEVELWIND      : DRUM 2: S8:Status,U8:LW switches
-#define  CANID_HB_LEVELWIND_3     0x80400000  // LEVELWIND      : DRUM 3: S8:Status,U8:LW switches
-#define  CANID_HB_LEVELWIND_4     0x80600004  // LEVELWIND      : DRUM 4: S8:Status,U8:LW switches
-#define  CANID_HB_LEVELWIND_5     0x80800004  // LEVELWIND      : DRUM 5: S8:Status,U8:LW switches
-#define  CANID_HB_LEVELWIND_6     0x80A00004  // LEVELWIND      : DRUM 6: S8:Status,U8:LW switches
-#define  CANID_HB_LEVELWIND_7     0x80C00000  // LEVELWIND      : DRUM 7: S8:Status,U8:LW switches
-#define  CANID_CMD_LEVELWIND_1I   0xB1000014  // GENCMD         : 1 incoming: U8:drum bits,U8:command code,X4:four byte value
-#define  CANID_CMD_LEVELWIND_2I   0xB1000024  // GENCMD         : 2:incoming: U8:drum bits,U8:command code,X4:four byte value
-#define  CANID_CMD_LEVELWIND_3I   0xB1000034  // GENCMD         : 3:incoming: U8:drum bits,U8:command code,X4:four byte value
-#define  CANID_CMD_LEVELWIND_4I   0xB1000044  // GENCMD         : 4:incoming: U8:drum bits,U8:command code,X4:four byte value
-#define  CANID_CMD_LEVELWIND_1R   0xB1000114  // LEVELWIND      : 1: U8:drum bits,U8:command code,X4:four byte value
-#define  CANID_CMD_LEVELWIND_2R   0xB1000124  // LEVELWIND      : 2: U8:drum bits,U8:command code,X4:four byte value
-#define  CANID_CMD_LEVELWIND_3R   0xB1000134  // LEVELWIND      : 3: U8:drum bits,U8:command code,X4:four byte value
-#define  CANID_CMD_LEVELWIND_4R   0xB1000144  // LEVELWIND      : 4: U8:drum bits,U8:command code,X4:four byte value
-#define  CANID_CMD_LEVELWIND_5R   0xB1000154  // LEVELWIND      : 5: U8:drum bits,U8:command code,X4:four byte value
-#define  CANID_CMD_LEVELWIND_6R   0xB1000164  // LEVELWIND      : 6: U8:drum bits,U8:command code,X4:four byte value
-#define  CANID_CMD_LEVELWIND_7R   0xB1000174  // LEVELWIND      : 7: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_HB_LEVELWIND_1     0x80000000  // LEVELWIND      : DRUM 1: S8:Status,U8:state
+#define  CANID_HB_LEVELWIND_2     0x80200000  // LEVELWIND      : DRUM 2: S8:Status,U8:state
+#define  CANID_HB_LEVELWIND_3     0x80400000  // LEVELWIND      : DRUM 3: S8:Status,U8:state
+#define  CANID_HB_LEVELWIND_4     0x80600004  // LEVELWIND      : DRUM 4: S8:Status,U8:state
+#define  CANID_HB_LEVELWIND_5     0x80800004  // LEVELWIND      : DRUM 5: S8:Status,U8:state
+#define  CANID_HB_LEVELWIND_6     0x80A00004  // LEVELWIND      : DRUM 6: S8:Status,U8:state
+#define  CANID_HB_LEVELWIND_7     0x80C00000  // LEVELWIND      : DRUM 7: S8:Status,U8:state
+#define  CANID_CMD_LEVELWIND_I1   0xB1000014  // GENCMD         : 1 incoming: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_I2   0xB1000024  // GENCMD         : 2:incoming: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_I3   0xB1000034  // GENCMD         : 3:incoming: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_I4   0xB1000044  // GENCMD         : 4:incoming: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_R1   0xB1000114  // LEVELWIND      : 1: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_R2   0xB1000124  // LEVELWIND      : 2: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_R3   0xB1000134  // LEVELWIND      : 3: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_R4   0xB1000144  // LEVELWIND      : 4: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_R5   0xB1000154  // LEVELWIND      : 5: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_R6   0xB1000164  // LEVELWIND      : 6: U8:drum bits,U8:command code,X4:four byte value
+#define  CANID_CMD_LEVELWIND_R7   0xB1000174  // LEVELWIND      : 7: U8:drum bits,U8:command code,X4:four byte value
 #define  CANID_TST_STEPCMD        0xE4600000  // GENCMD         : DRUM1: U8: Enable,Direction, FF: CL position
 #define  CANID_HB_STEPPER         0xE4A00000  // STEPPER        : STEPPER: U8: Status, U32: stepper position accum
 #define  CANID_HB_CPSWSV1_1       0x31000000  // CPMC           : HB_CPSWSV1 1: S8:status,U8[7]: status,switches,drum sel,operational,spare,spare
@@ -329,7 +329,7 @@
 #define  CMD_REQ_HISTOGRAM       40        // Request histogram: [1] ADC #: [2] # consecutive:[3]-[6] # DMA buffers accumuleted in bins
 #define  CMD_THISIS_HISTODATA    41        // Histogram data item: [1] ADC #:[2] bin # (0 - n), [3]-[6] bin count
 
-#define PAYLOAD_TYPE_COUNT 48
+#define PAYLOAD_TYPE_COUNT 49
 #define  NONE                    0         // No payload bytes                                
 #define  FF                      1         // [0]-[3]: Full Float                             
 #define  FF_FF                   2         // [0]-[3]: Full Float[0]; [4]-[7]: Full Float[1]  
@@ -374,7 +374,8 @@
 #define  U8_8                    41        // [0]-[7]: unit8_t[8]                             
 #define  S8_U8_7                 42        // [0]:int8_t,unit8_t[7]                           
 #define  S8_S16_FF_V             43        // [0]:int8_t,uint16_t, added FF if DLC = 7        
-#define  U8_U8_X4                44        // [0]:uint8_t:drum bits,uint8_t:command,X4:four byte value
+#define  U8_U8_U8_X4             44        // [0]:uint8_t:drum bits,uint8_t:command,uin8_t:subcmd,X4:four byte value
+#define  S8_U8                   45        // [0]:int8_t,unit8_t                              
 #define  LVL2B                   249       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
@@ -877,6 +878,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 812  */
+/* TOTAL COUNT OF #defines = 813  */
 /* Test 2016/06/12 */
 

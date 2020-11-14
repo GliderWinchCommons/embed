@@ -58,8 +58,7 @@ static void sendcanmsg(struct CANRCVBUF* pcan)
 	pctogateway.mode_link = MODE_LINK;	// Set mode for routines that receive and send CAN msgs
 	pctogateway.cmprs.seq = canseqnumber++;	// Add sequence number (for PC checking for missing msgs)
 	USB_toPC_msg_mode(fdp, &pctogateway, pcan); 	// Send to file descriptor (e.g. serial port)
-printf("TX: %08x %d %2d %2d: ",pcan->id, pcan->dlc, pcan->cd.u8[0],pcan->cd.u8[0]);
-	cantx.cd.uc[2] += 1;
+printf("TX: %08X %d %2d %2d %2d: ",pcan->id, pcan->dlc, pcan->cd.u8[0],pcan->cd.u8[1],pcan->cd.u8[2]);
 	return;
 }
 
@@ -94,7 +93,7 @@ int cmd_j_init(char* p)
 	    	sscanf( (p+1), "%x %x",&idrx, &idtx);
 	}
   	printf ("ID: CAN node sends to us: %08X  We send to CAN node: %08X\n",idrx,idtx);
-	cantx.cd.uc[0] = 0; // All drums
+	cantx.cd.uc[0] = 1; // ====> Drum #1 <=====
 	cantx.cd.uc[1] = CMD_GET_READING;
 	cantx.cd.uc[2] = 0;
 	cantx.dlc      = 7;
@@ -117,10 +116,10 @@ void cmd_j_do_msg(struct CANRCVBUF* p)
 printf("RX %08X %i ",p->id,p->dlc);
 int i;
 for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
-//printf("\n");
+printf("\:");
 	
 	/* Drum bits, General command code. */
-	printf("%2X %2i ",p->cd.uc[0],p->cd.uc[1]);
+	printf("%2X %2i: ",p->cd.uc[0],p->cd.uc[1]);
 
 	/* The general command can do many things. */
 	switch(p->cd.uc[1])
@@ -145,7 +144,6 @@ static void get_reading (struct CANRCVBUF* p)
 	int i;
 	int j;
 	union X4 x4;
-	u8* pc = &p->cd.uc[2];
 /*
  0 =  Levelwind switches (uint32_t)
      	payload[3-7] = Port E switches, right justified: (PE14-PE7) >> 7
@@ -165,18 +163,18 @@ ManualSw_MSN_NO_Pin GPIO_			PIN_7
 #define LimitSw_MS_NC_Pin GPIO_	PIN_13
 #define OverrunSwes_NO_Pin GPIO_	PIN_14
 */	
-	x4 = x4pay(pc);
+	/* Load pay[3]-[7] into union. */
+	x4 = x4pay(&p->cd.uc[3]);
+printf(":%2i:",p->cd.uc[2]);
 	switch (p->cd.uc[2])
 	{
 	case 0:
-		printf("SWITCHES PE14-PE7 \n");
-
-		printf("OVR_NO MS_NO MSN_NO MAN_NO\n");
-		printf("   MS_NC  MSN_NC Mxxneeds fixing\n");
-		for (i = 6; i >= 0; i--)
+		printf("\n    PE7   PE8   PE9  PE10  PE11  PE12  PE13  PE14\n");
+		for (i = 0; i < 8; i++)
 		{
-			j = (p->cd.uc[1] & (1 << i)); if (j != 0) j = 1;	printf("%5i",j);
+			j = (x4.u32 & (1 << i)); if (j != 0) j = 1;	printf("%6i",j);
 		}
+		printf("\n");
 		break;
 	case 1:
 		printf("%10.1f CAN bus volts\n",x4.ff);

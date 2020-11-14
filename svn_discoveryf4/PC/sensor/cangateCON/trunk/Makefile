@@ -27,6 +27,8 @@ cmd_b.o \
 cmd_c.o \
 cmd_f.o \
 cmd_h.o \
+cmd_i.o \
+cmd_j.o \
 cmd_k.o \
 cmd_l.o \
 cmd_m.o \

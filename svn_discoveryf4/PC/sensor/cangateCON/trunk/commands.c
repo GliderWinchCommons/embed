@@ -16,6 +16,8 @@ This takes care of dispatching keyboard commands.
 #include "cmd_b.h"
 #include "cmd_f.h"
 #include "cmd_h.h"
+#include "cmd_i.h"
+#include "cmd_j.h"
 #include "cmd_l.h"
 #include "cmd_m.h"
 #include "cmd_n.h"
@@ -89,6 +91,15 @@ void do_command_keybrd(char* p)
 	case 'h': // 'h' command: histogram readout
 		if (cmd_h_init(p) >= 0) // negative return means invalid input
 			msg_sw = 'h';
+		break;
+
+	case 'i': // LEVELWIND: display hearteate: status & state
+		msg_sw = 'i';
+		break;
+
+	case 'j': // LEVELWIND: send command & display retrieved reading
+		cmd_j_init(p);
+		msg_sw = 'j';
 		break;
 
 	case 'l': // Display time from time sync msg
@@ -191,6 +202,14 @@ void do_canbus_msg(struct CANRCVBUF* p)
 		cmd_h_do_msg(p);
 		break;
 
+	case 'i':
+		cmd_i_do_msg(p);
+		break;
+
+	case 'j':
+		cmd_j_do_msg(p);
+		break;
+
 	case 'l':
 		cmd_l_datetime(p);
 		break;
@@ -264,6 +283,8 @@ void do_printmenu(void)
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");
    printf("g - GEVCUr: command request to retrieve all readings\n");
 	printf("h - Photodetector level histogram from sensor\n");
+	printf("i - LEVELWIND: display status & state\n");
+	printf("j - LEVELWIND: send command display response\n");
 	printf("k - CONTACTOR: keep-alive\n\t"
 				"ka - Begin sending keep-alive msgs\n\t"
 				"kx - Stop keep-alive msgs\n\t"

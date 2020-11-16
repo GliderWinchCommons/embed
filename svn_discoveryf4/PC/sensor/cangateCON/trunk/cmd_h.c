@@ -12,76 +12,10 @@
 #include "cmd_q.h"
 #include "USB_PC_gateway.h"
 
-/* Subroutine prototypes */
-static void cmd_h_sendmsg(struct CANRCVBUF* p);
+#define DEFAULTRX   0x26000000 //CANID_MC_STATE MC',1,5,'U8_U8','MC: Launch state msg');
 
-/* From cangate */
-extern FILE *fpList;	// canldr.c File with paths and program names
-extern int fdp;		// File descriptor for input file
+static u32 idrx; // CAN id that CAN node sends (to "us)
 
-static struct CANRCVBUF canmsg;
-static u8 canseqnumber = 0;
-static struct PCTOGATEWAY pctogateway; 
-
-#define CMD_REQ_HISTOGRAM 40
-#define CMD_THISIS_HISTODATA 41
-
-/* Default values */
-#define RESPONSE_ID 0xE2C00000 // 05/05/2018 CANID_UNIT_2:CANID_CMD_SHAFT1I
-#define REQUEST_ID  0xA0600000 // 05/05/2018 CANID_UNIT_2:CANID_CMD_SHAFT1R
-#define ADCNUM 4			// This must be 2,3, or 4 (both)
-#define SWCT 1				// Number of consecutive histograms sent
-#define DUR  17000		// Number of DMA buffers used in histogram
-static int otosw = 0;	// One time default
-
-/* Keyboard entered */
-static u32 response_id;	// CAN id: response with histogram data
-static u32 keybrd_id;	// CAN id: request for historgram data
-static u32 adcnum;
-static u32 swct;
-static u32 dur;
-
-
-static void printerror(char *p)
-{
-	printf("%s",p);
-	printf("h<enter> error, needs to be one of the following\n");
-	printf("hr xxxxxxxx [where x is Command CAN id for response\n");
-	printf("hx<enter> repeats previous h command\n");
-	printf("h zzzzzzzz a b ccccc\n");
-	printf("  zzzzzzzz = Command CAN id (suffix I)\n");
-	printf("  a = ADC number: 2, 3 or 4 for both\n");
-	printf("  b = Number of consecutive histograms sent (e.g. 1)\n");
-	printf("  ccccc = Number of DMA buffers accumulated (e.g. 17000 approx 1 sec for ADC2)\n");
-	return;
-}
-static void printcommand(char *p)
-{
-	printf("%s",p);
-	printf("Command to request histogram to be sent:\n");
-	printf("  CAN id  adc sw duration\tCAN id response\n");
-	printf("0x%0X %2d %2d %d\t\t0x%08X\n",keybrd_id,adcnum,swct,dur,response_id);
-	return;
-}
-
-/******************************************************************************
- * static void canmsg_load(struct CANRCVBUF* pcan);
- * @brief 	: One-Time-Only populate CAN msgs with defaults
-*******************************************************************************/
-
-static void canmsg_default(void)
-{
-	if (otosw != 0) return;
-	
-	keybrd_id = REQUEST_ID;
-	adcnum = ADCNUM;
-	swct = SWCT;
-	dur = DUR;	
-	response_id = RESPONSE_ID;
-	otosw = 1;
-
-	return;
-}
 /******************************************************************************
  * static void send_command(void);
  * @brief 	: Send command
@@ -92,23 +26,6 @@ static void canmsg_default(void)
 		uint8_t b[4];
 	}u32b;
 
-static void send_command(struct CANRCVBUF* pcan)
-{
-	u32b.ui = dur; // Convert int to bytes
-
-	// Load CAN msg that requests histogram 
-	pcan->id = keybrd_id;
-	pcan->dlc = 7;
-	pcan->cd.uc[0] = CMD_REQ_HISTOGRAM;
-	pcan->cd.uc[1] = adcnum;
-	pcan->cd.uc[2] = swct;
-	pcan->cd.uc[3] = u32b.b[0];
-	pcan->cd.uc[4] = u32b.b[1];
-	pcan->cd.uc[5] = u32b.b[2];
-	pcan->cd.uc[6] = u32b.b[3];
-
-	cmd_h_sendmsg(&canmsg);
-}
 /******************************************************************************
  * int cmd_h_init(char* p);
  * @brief 	: Reset 
@@ -117,41 +34,7 @@ static void send_command(struct CANRCVBUF* pcan)
 *******************************************************************************/
 int cmd_h_init(char* p)
 {
-	canmsg_default(); // oto, set up defaults
-
-	if (strlen(p) < 3)
-	{ // Here too few chars
-		printerror("Too few chars\n");
-		return -1;
-	}
-
-	if (strlen(p) > 2) 
-	{
-		switch (*(p+1))
-		{
-		case 'r': // Send what was previously entered
-			printcommand("Repeat command\n");
-			send_command(&canmsg);
-			break;
-
-		case 'x': // Enter response CAN ID
-			sscanf((p+2),"%x",&response_id);
-			printf("Response CAN id: 0x%08X\n",response_id);
-			break;
-
-		case ' ': // Request 			
-			if (strlen(p) < 9)
-			{
-				printerror("Not enough chars for a valid command\n");
-				return -1;
-			}
-			/* Here, enough chars for a command */
-			sscanf((p+1), "%x %d %d %d",&keybrd_id,&adcnum,&swct,&dur);
-			printcommand("Use this command\n");
-			send_command(&canmsg);
-			break;
-		}
-	}
+	idrx = DEFAULTRX;	
 	return 0;
 }
 
@@ -160,33 +43,51 @@ int cmd_h_init(char* p)
  * @brief 	: Output msgs for the id that was entered with the 'h' command
  * @param	: 
 *******************************************************************************/
+// Master Controller state machine  definitions 
+// Major state names
+#define MC_INIT     ( 0 << 3)
+#define MC_SAFE     ( 1 << 3)
+#define MC_PREP     ( 2 << 3)
+#define MC_ARMED    ( 3 << 3)
+#define MC_GRNDRTN  ( 4 << 3)
+#define MC_RAMP     ( 5 << 3)
+#define MC_CLIMB    ( 6 << 3)
+#define MC_RECOVERY ( 7 << 3)
+#define MC_RETRIEVE ( 8 << 3)
+#define MC_ABORT    ( 9 << 3)
+#define MC_STOP     (10 << 3)
+#define MC_TEST     (11 << 3)
 
 void cmd_h_do_msg(struct CANRCVBUF* p)
 {
-	union U32B ub;
 
-		if ((p->id & ~0x3) == (response_id & ~0x3)) 
-		{
-			ub.b[0] = p->cd.uc[3];
-			ub.b[1] = p->cd.uc[4];
-			ub.b[2] = p->cd.uc[5];
-			ub.b[3] = p->cd.uc[6];
+	/* Select CAN msg that is the response to our command. */
+	if ((p->id & 0xfffffffc) != idrx) return;
 
-			printf("# %2d %1d %3d %5u %8u\n",p->cd.uc[0],p->cd.uc[1],p->cd.uc[2],p->cd.uc[2]*64,ub.ui);
-		}
+// Debugging
+printf("%08X %i ",p->id,p->dlc);
+int i;
+for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
+printf(":  ");
+
+	switch(p->cd.uc[0])
+	{
+case MC_INIT:     printf("INIT     "); break;
+case MC_SAFE:     printf("SAFE     "); break;
+case MC_PREP:     printf("PREP     "); break;
+case MC_ARMED:    printf("ARMED    "); break;
+case MC_GRNDRTN:  printf("GRNDRTN  "); break;
+case MC_RAMP:     printf("RAMP     "); break;
+case MC_CLIMB:    printf("CLIMB    "); break;
+case MC_RECOVERY: printf("RECOVERY "); break;
+case MC_RETRIEVE: printf("RETRIEVE "); break; 
+case MC_ABORT:    printf("ABORT    "); break;
+case MC_STOP:     printf("STOP     "); break;
+case MC_TEST:     printf("TEST     "); break;
+default:          printf("NONE: 0x%02X ",p->cd.uc[1]); break;
+	}
+
+	printf(": sub%3i\n",p->cd.uc[1]);
+
   return;
 }
-/******************************************************************************
- * static void cmd_h_sendmsg(struct CANRCVBUF* p);
- * @brief 	: Send the msg
- * @param	: p = Pointer struct with msg
-*******************************************************************************/
-static void cmd_h_sendmsg(struct CANRCVBUF* p)
-{
-	pctogateway.mode_link = MODE_LINK;		// Set mode for routines that receive and send CAN msgs
-	pctogateway.cmprs.seq = canseqnumber++;		// Add sequence number (for PC checking for missing msgs)
-	USB_toPC_msg_mode(fdp, &pctogateway, p); 	// Send to file descriptor (e.g. serial port)
-
-	return;
-}
-

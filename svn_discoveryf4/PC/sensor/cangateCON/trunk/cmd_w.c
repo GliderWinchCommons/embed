@@ -61,6 +61,9 @@ int cmd_w_init(char* p)
 	case 'i': // Payload as integer
 		payloadtype = 'i';
 		break;
+	case 'h': // Payload as half word
+		payloadtype = 'h';
+		break;
 	case 'y': // Payload as 2 byte int: Big Endian
 		payloadtype = 'y';
 		break;
@@ -107,6 +110,7 @@ void cmd_w_do_msg(struct CANRCVBUF* p)
 	{
 		float f;
 		uint8_t uc[4];
+		uint16_t u16[2];
 		uint32_t i;
 		int32_t n;
 	}uf;
@@ -127,6 +131,11 @@ void cmd_w_do_msg(struct CANRCVBUF* p)
 		printf("%08X %d %8d\n",p->id, p->dlc, uf.i);
 		break;
 
+	case 'h':
+		uf.u16[0] = (p->cd.uc[payloadidx+1] << 8) + p->cd.uc[payloadidx];
+		printf("%08X %d %8d\n",p->id, p->dlc, uf.u16[0]);
+		break;
+		
 	case 'y': // Big Endian 2 byte int payload
 			uf.i = (p->cd.uc[payloadidx] << 8) + p->cd.uc[payloadidx+1];
 		printf("%08X %d %d %8d\n",p->id, payloadidx, p->dlc, uf.n );

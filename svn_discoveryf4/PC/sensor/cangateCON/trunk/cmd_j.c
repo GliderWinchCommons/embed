@@ -116,7 +116,7 @@ void cmd_j_do_msg(struct CANRCVBUF* p)
 printf("RX %08X %i ",p->id,p->dlc);
 int i;
 for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
-printf("\:");
+printf(":");
 	
 	/* Drum bits, General command code. */
 	printf("%2X %2i: ",p->cd.uc[0],p->cd.uc[1]);

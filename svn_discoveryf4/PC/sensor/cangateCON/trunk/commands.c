@@ -281,8 +281,8 @@ void do_printmenu(void)
   				"ed - display paramaters *we* have to send\n\t"
 				"ex - set GEVCUr to idle state, continue keep-alive\n");
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");
-   printf("g - GEVCUr: command request to retrieve all readings\n");
-	printf("h - Photodetector level histogram from sensor\n");
+    printf("g - GEVCUr: command request to retrieve all readings\n");
+	printf("h - MC_STATE: monitor \n");
 	printf("i - LEVELWIND: display status & state\n");
 	printf("j - LEVELWIND: send command display response\n");
 	printf("k - CONTACTOR: keep-alive\n\t"
@@ -301,7 +301,7 @@ void do_printmenu(void)
 	printf("r - send high priority RESET\n");
 	printf("s - CONTACTOR: command request to retrieve all readings\n");
 	printf("u - list msg id's and msg ct between CAN 1 sec time mgs (e.g. u 00600000)\n");
-	printf("w - list msgs float (wf), integer (wi), BigEnd 2 byte int (wy), byte (wb), with payload byte offset, (wi1 E1800000)\n");
+	printf("w - list msgs float (wf), integer (wi), half (wh), BigEnd 2 byte int (wy), byte (wb), with payload byte offset, (wi1 E1800000)\n");
 	printf("x - cancel command\n");
 	printf("Control C to quit program\n");
 	return;

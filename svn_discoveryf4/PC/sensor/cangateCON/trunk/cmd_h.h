@@ -1,8 +1,8 @@
 /******************************************************************************
 * File Name          : cmd_h.h
-* Date First Issued  : 02/06/2014
+* Date First Issued  : 11/15/2020
 * Board              : PC
-* Description        : histogram readout from shaft sensor
+* Description        : Monitor and display names of MC_STATE CAN msgs
 *******************************************************************************/
 
 #ifndef __CMD_H_PC

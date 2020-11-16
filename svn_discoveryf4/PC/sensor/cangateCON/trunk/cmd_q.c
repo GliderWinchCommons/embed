@@ -97,6 +97,7 @@ int cmd_q_init(char *p)
 		strcpy(&canidlistnotfound.type[0], "         ");
 		strcpy(&canidlistnotfound.msg_fmt[0], "UNDEF       ");
 		
+		rewind(fpList1);
 		while ( (fgets (&buf[0],CANIDMAXLINESIZE,fpList1)) != NULL)
 		{
 			itmp = strncmp(buf,psql,strlen(psql));

@@ -101,25 +101,25 @@ for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 
 	/* state */
 
-	printf("%2X ",p->cd.uc[1]); // State code
+	printf("%02X ",p->cd.uc[1]); // State code
 	switch (p->cd.uc[1])
 	{
 	case LW_OFF:  // (0 << 4)
 		printf("LW_OFF    "); break;  
 	case LW_OVERRUN: // (1 << 4)
-		printf("LW_OVERRUN");; break;  
+		printf("LW_OVERRUN"); break;  
 	case LW_MANUAL:  // (2 << 4)
-		printf("LW_MANUAL ");; break;  
+		printf("LW_MANUAL "); break;  
 	case LW_CENTER:  // (3 << 4)
-		printf("LW_CENTER ");; break;  
+		printf("LW_CENTER "); break;  
 	case LW_INDEX:   // (4 << 4)
-		printf("LW_INDEX  ");; break;  
+		printf("LW_INDEX  "); break;  
 	case LW_TRACK:   // (5 << 4)
-		printf("LW_TRACK  ");; break;  
+		printf("LW_TRACK  "); break;  
 	case LW_LOS:     // (6 << 4)
-		printf("LW_LOS    ");; break;  
+		printf("LW_LOS    "); break;  
 	default:
-		printf("no decode ");; break;  
+		printf("no decode "); break;  
 	}
 	printf("\n");
 

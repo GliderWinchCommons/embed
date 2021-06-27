@@ -36,8 +36,9 @@ void hs_free(void *p)
 
 void hs_assert(int assertion, char *msg0, char *msg1)
 {
-    if(assertion)
+    if(assertion){
     	return;
+	}
 
 	syslog(LOG_ERR, "assert failed: ");
     if(msg0 && *msg0) syslog(LOG_ERR, "%s", msg0);

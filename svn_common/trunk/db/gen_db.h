@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2021-11-06 21:42:19.007
+// 2022-01-19 11:18:26.596
 
-#define CANID_COUNT 303
+#define CANID_COUNT 306
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -237,6 +237,7 @@
 #define  CANID_CMD_BEEPERV1_1     0xD3000000  // BEEPERV1       : BEEPERV1 1 MC: U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq
 #define  CANID_CMD_BEEPERV1_2     0xD3200000  // BEEPERV1       : BEEPERV1 2 CP sws: U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq
 #define  CANID_CMD_BEEPERV1_3     0xD3400000  // BEEPERV1       : BEEPERV1 3 Health: U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq
+#define  CANID_UNI_BMS_I          0xB0000000  // BMSV1          : BMSV1 UNIversal BMS Incoming msg to BMS: X4=target CANID
 #define  CANID_CMD_BMS_CELLVQ     0xB0200000  // BMSV1          : BMSV1 U8: EMC requests to BMS to send cellv, cmd code
 #define  CANID_MSG_BMS_CELLV11R   0xB0201114  // BMSV1          : 11 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
 #define  CANID_MSG_BMS_CELLV12R   0xB0201124  // BMSV1          : 12 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
@@ -271,6 +272,8 @@
 #define  CANID_CMD_BMS_MISC26R    0xB0401264  // BMSV1          : 26 BMSV1 U8:module_ID,U8:cmd code,U8:spare,X4:4 byte value 
 #define  CANID_CMD_BMS_MISC27R    0xB0401274  // BMSV1          : 27 BMSV1 U8:module_ID,U8:cmd code,U8:spare,X4:4 byte value 
 #define  CANID_CMD_BMS_MISC28R    0xB0401284  // BMSV1          : 28 BMSV1 U8:module_ID,U8:cmd code,U8:spare,X4:4 byte value 
+#define  CANID_UNIT_BMS01         0xB0600000  // UNIT_BMS01     : BMS BQ76952  #01
+#define  CANID_UNIT_BMS02         0xB0800000  // UNIT_BMS02     : BMS MAX14921 #01
 #define  CANID_UNIT_2             0x04000000  // UNIT_2         : Sensor unit: Drive shaft encoder #1
 #define  CANID_UNIT_3             0x03800000  // UNIT_3         : Sensor unit: Engine
 #define  CANID_UNIT_4             0x03A00000  // UNIT_4         : Sensor unit: Lower sheave shaft encoder
@@ -325,7 +328,7 @@
 #define  TYP_ASC                 16        // 4           ascii chars
 #define  TYP_CANID               17        // 1           CANID (handled differently than a U32)
 
-#define CMD_CODES_COUNT 36
+#define CMD_CODES_COUNT 40
 #define  LDR_SET_ADDR            1         // 5 Set address pointer (not FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_SET_ADDR_FL         2         // 5 Set address pointer (FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_CRC                 3         // 8 Get CRC: 2-4 = count; 5-8 = start address; Reply CRC 2-4 na, 5-8 computed CRC 
@@ -362,8 +365,12 @@
 #define  CMD_SEND_LAUNCH_PARM    39        // Send msg to send burst of parameters
 #define  CMD_REQ_HISTOGRAM       40        // Request histogram: [1] ADC #: [2] # consecutive:[3]-[6] # DMA buffers accumuleted in bins
 #define  CMD_THISIS_HISTODATA    41        // Histogram data item: [1] ADC #:[2] bin # (0 - n), [3]-[6] bin count
+#define  CMD_CMD_TYPE1           42        // [1]-[7] format 1
+#define  CMD_CMD_TYPE2           43        // [1]-[7] format 2
+#define  CMD_CMD_TYPE3           44        // [1]-[7] format 3
+#define  CMD_CMD_HEARTBEAT       45        // [1]-[7] Heartbeat format specific to unit
 
-#define PAYLOAD_TYPE_COUNT 50
+#define PAYLOAD_TYPE_COUNT 51
 #define  NONE                    0         // No payload bytes                                
 #define  FF                      1         // [0]-[3]: Full Float                             
 #define  FF_FF                   2         // [0]-[3]: Full Float[0]; [4]-[7]: Full Float[1]  
@@ -410,7 +417,8 @@
 #define  S8_S16_FF_V             43        // [0]:int8_t,uint16_t, added FF if DLC = 7        
 #define  U8_U8_U8_X4             44        // [0]:uint8_t:drum bits,uint8_t:command,uin8_t:subcmd,X4:four byte value
 #define  S8_U8                   45        // [0]:int8_t,unit8_t                              
-#define  U8_U16_U16_U16          46        // [0]:uint8_t,[1:2],[3:4],[5:6]-uint16_t          
+#define  U8_U8_U16_U16_U16       46        // [0]:uint8_t,[1]:uint8_t,[2:3],[4:5],[6:7]:uint16_t
+#define  U16_U16_U16_U16         47        // [0:1],[2:3],[4:5],[6:7]:uint16_t                
 #define  LVL2B                   249       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
@@ -913,6 +921,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 848  */
+/* TOTAL COUNT OF #defines = 856  */
 /* Test 2016/06/12 */
 

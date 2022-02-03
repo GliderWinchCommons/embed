@@ -83,8 +83,8 @@ void do_command_keybrd(char* p)
 		break;
 
 	case 'd': // 'd' command
-		cmd_d_init(p);
-		msg_sw = 'd';
+		if (cmd_d_init(p) >= 0)
+			msg_sw = 'd';
 		break;
 
 	case 'f': // 'f' command: Display gps fix: lat/lon/ht
@@ -284,7 +284,11 @@ void do_printmenu(void)
 	printf("a - ascii monitor of a CAN unit\n");
 	printf("b - CONTACTOR: display polled msgs\n");
 	printf("c - request & display launch parameters\n");
-	printf("d - BMS cell readings\n");
+	printf("d - BMS heartbeat\n\t"
+				"d  - default (cell readings: CANID B0201114)\n\t"
+				"dc aaaaaaaa  (cell readings: CANID: aaaaaaaa\n\t"
+				"ds - (bms status: CANID B0201114)\n\t"
+				"ds aaaaaaaa  (bms status: CANID: aaaaaaaa)\n");
 	printf("e - ??\n");
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");
     printf("g - GEVCUr: command request to retrieve all readings\n");

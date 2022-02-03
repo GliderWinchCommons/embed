@@ -9,8 +9,24 @@
 
 #include "cmd_d.h"
 
+#include "../../../../../svn_common/trunk/db/gen_db.h"
+
 #define CANID_HB1   0xB0201114
 #define NCELL 16 // Max number of cells 
+
+ #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
+ #define MISCQ_STATUS      1 // status
+ #define MISCQ_CELLV_CAL   2 // cell voltage: calibrated
+ #define MISCQ_CELLV_ADC   3 // cell voltage: adc counts
+ #define MISCQ_TEMP_CAL    4 // temperature sensor: calibrated
+ #define MISCQ_TEMP_ADC    5 // temperature sensor: adc counts
+ #define MISCQ_DCDC_V      6 // isolated dc-dc converter output voltage
+ #define MISCQ_CHGR_V      7 // charger hv voltage
+ #define MISCQ_HALL_CAL    8 // Hall sensor: calibrated
+ #define MISCQ_HALL_ADC    9 // Hall sensor: adc counts
+ #define MISCQ_CELLV_HI   10 // Highest cell voltage
+ #define MISCQ_CELLV_LO   11 // Lowest cell voltage
+ #define MISCQ_FETBALBITS 12 // FET on/off discharge bits
 
 struct CELLMSG
 {
@@ -22,6 +38,7 @@ struct CELLMSG
 static 	u32 canid1;
 static struct CELLMSG cellmsg[NCELL];
 static uint8_t hbseq;
+static uint8_t request;
 
 /******************************************************************************
  * static printmenu(char* p);
@@ -30,8 +47,31 @@ static uint8_t hbseq;
 *******************************************************************************/
 static void printmenu(char* p)
 {
-
-//	printf(" d aaaaaaaa [CANid]\n");
+	printf(" d aaaaaaaa [CANid]\n");
+	return;
+}
+/******************************************************************************
+ * static printstatus(void);
+ * @brief 	: Print bit meaninngs for status msg
+*******************************************************************************/
+static printstatus(void)
+{
+	printf(
+"BSTATUS_NOREADING (1 << 0) // Exactly zero = no reading\n"
+"BSTATUS_OPENWIRE  (1 << 1) // Negative or over 5v indicative of open wire\n"
+"BSTATUS_CELLTOOHI (1 << 2) // One or more cells above max limit\n"
+"BSTATUS_CELLTOOLO (1 << 3) // One or more cells below min limit\n"
+"BSTATUS_CELLBAL   (1 << 4) // Cell balancing in progress\n"
+"BSTATUS_CHARGING  (1 << 5) // Charging in progress\n"
+"BSTATUS_DUMPTOV   (1 << 6) // Dump to a voltage in progress\n\n"
+"FET_DUMP     (1 << 0) // 1 = DUMP FET ON\n"
+"FET_HEATER   (1 << 1) // 1 = HEATER FET ON\n"
+"FET_DUMP2    (1 << 2) // 1 = DUMP2 FET ON (external charger)\n"
+"FET_CHGR     (1 << 3) // 1 = Charger FET enabled: Normal charge rate\n"
+"FET_CHGR_VLC (1 << 4) // 1 = Charger FET enabled: Very Low Charge rate\n\n"
+"CELLBALANCE Discharge FET bits; e.g., 0x0001 = cell #1 FET ON\n\n"
+"Battery FET CELLBALANCE\n"
+	);
 	return;
 }
 /******************************************************************************
@@ -45,27 +85,67 @@ int cmd_d_init(char* p)
 	uint32_t len = strlen(p);
 	uint32_t i;
 
-	printf("%c %i\n",*p,len);
+	printf("%c%c %i\n",*p,*(p+1),len);
+
+	request = 'c';
 	canid1 = CANID_HB1;
+
 	if (len < 2)
 	{
 		printmenu("Too few chars\n");
 		return -1;
 	}
-	else if (len > 3)
+	else if (len >= 3)
 	{	
-		sscanf( (p+1), "%x",&canid1);
-	}
-	printf ("  ID: %08X\n",canid1);
+		switch ( *(p+1) )
+		{ 
+		case 'c': // Cell readings display request
+			request = 'c';
+			break;
 
-	/* Show no readings received. print header */
-	printf("\n  ");
-	for (i = 0; i < NCELL; i++)
+		case 's': // Status display request
+			request = 's';
+			
+			break;
+
+		case ' ': // default to cell readings & default CANID
+		case '\n':
+			request = 'c';
+			break;
+
+		default:
+			printf("2nd char not recognized: %c\n", *(p+1));
+			canid1 = 0;
+			return -1;
+		}
+
+		if ((len < 13) && (len > 4))
+		{ // Likely a CANID has beed added to command
+			sscanf( (p+2), "%x",&canid1);		
+		}
+	}
+
+	printf("request %c",request);
+	if (request == 'c')
+		printf(": cell readings");
+	else
+		printf(": status");
+
+	printf ("\tCANID: %08X\n",canid1);
+
+	/* For cell readings, show no readings received & print header */
+	if (request == 'c')
 	{
-		cellmsg[i].flag = 0;
-		printf("%8d",i+1);
+		printf("\n  ");
+		for (i = 0; i < NCELL; i++)
+		{
+			cellmsg[i].flag = 0;
+			printf("%8d",i+1);
+		}
+		printf("\n");
 	}
-
+	else
+		printstatus();
 	return 0;
 }
 
@@ -92,49 +172,75 @@ void cmd_d_do_msg(struct CANRCVBUF* p)
 //printf("\n%08X %X", p->cd.uc[1]);
 
 	/* Here, CAN msg is for us. */
-	// Check msg is for the same reading group
-	if ((p->cd.uc[1] & 0xf) != (hbseq & 0xf))
-	{ // Here sequence number changed
-		// Print readings accumulated
-		printf("\n%2d: ",hbseq);
-		for (i = 0; i < NCELL; i++)
-		{
-			if (cellmsg[i].flag != 0)
-			{
-				dtmp = cellmsg[i].u16; // Convert to float
-				printf("%8.1f",dtmp*0.1); 
-				cellmsg[i].flag = 0; // Clear was-read flag
-			}
-			else
-			{ // No readings for this cell
-				printf("  ......");
-			}
-		}
-		/* Update to new sequence number. */
-		hbseq = p->cd.uc[1] & 0xf;
-	}
-
-	/* Add readings in payload into array cell positions. */
-	// Check payload size 
-	switch(dlc)
+	// Is it cell readings or "misc"?
+	if ((p->cd.uc[0] == CMD_CMD_TYPE1)  && (request == 'c'))
 	{
-		case 4: n = 1; break; 
-		case 6: n = 2; break; 
-		case 8: n = 3; break; 
-
-		default:
+		// Check msg is for the same reading group
+		if ((p->cd.uc[1] & 0xf) != (hbseq & 0xf))
+		{ // Here sequence number changed
+			// Print readings accumulated
+			printf("\n%2d: ",hbseq);
+			for (i = 0; i < NCELL; i++)
 			{
-				printf("\nDLC not 4,6,or8 %d",dlc);
-				return;
+				if (cellmsg[i].flag != 0)
+				{
+					dtmp = cellmsg[i].u16; // Convert to float
+					printf("%8.1f",dtmp*0.1); 
+					cellmsg[i].flag = 0; // Clear was-read flag
+				}
+				else
+				{ // No readings for this cell
+					printf("  ......");
+				}
 			}
-	}
-	// Cell number of 1st payload U16
-	celln = (p->cd.uc[1] >> 4) & 0xf;
-	for (i =0 ; i < n; i++)
-		{
-			cellmsg[celln+i].u16 = p->cd.us[i+1];
-			cellmsg[celln+i].flag = 1;
+			/* Update to new sequence number. */
+			hbseq = p->cd.uc[1] & 0xf;
 		}
+
+		/* Add readings in payload into array cell positions. */
+		// Check payload size 
+		switch(dlc)
+		{
+			case 4: n = 1; break; 
+			case 6: n = 2; break; 
+			case 8: n = 3; break; 
+
+			default:
+				{
+					printf("\nDLC not 4,6,or8 %d",dlc);
+					return;
+				}
+		}
+		// Cell number of 1st payload U16
+		celln = (p->cd.uc[1] >> 4) & 0xf;
+		for (i =0 ; i < n; i++)
+			{
+				cellmsg[celln+i].u16 = p->cd.us[i+1];
+				cellmsg[celln+i].flag = 1;
+			}
+		return;
+	}
+	/* Here, not a cell msg. */
+	/*
+#define BSTATUS_NOREADING (1 << 0)	// Exactly zero = no reading
+#define BSTATUS_OPENWIRE  (1 << 1)  // Negative or over 5v indicative of open wire
+#define BSTATUS_CELLTOOHI (1 << 2)  // One or more cells above max limit
+#define BSTATUS_CELLTOOLO (1 << 3)  // One or more cells below min limit
+#define BSTATUS_CELLBAL   (1 << 4)  // Cell balancing in progress
+#define BSTATUS_CHARGING  (1 << 5)  // Charging in progress
+#define BSTATUS_DUMPTOV   (1 << 6)  // Dump to a voltage in progress
+
+#define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
+#define FET_HEATER   (1 << 1) // 1 = HEATER FET ON
+#define FET_DUMP2    (1 << 2) // 1 = DUMP2 FET ON (external charger)
+#define FET_CHGR     (1 << 3) // 1 = Charger FET enabled: Normal charge rate
+#define FET_CHGR_VLC (1 << 4) // 1 = Charger FET enabled: Very Low Charge rate
+
+	*/	
+	if ((p->cd.uc[0] == CMD_CMD_TYPE2)  && (request == 's'))
+	{ // Here, status msgs
+		printf("%02X %02X %04X\n",p->cd.uc[4],p->cd.uc[5],p->cd.us[3] );
+	}
 	return;
 }
 

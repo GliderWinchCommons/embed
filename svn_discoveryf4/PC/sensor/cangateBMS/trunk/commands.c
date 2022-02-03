@@ -285,11 +285,13 @@ void do_printmenu(void)
 	printf("b - CONTACTOR: display polled msgs\n");
 	printf("c - request & display launch parameters\n");
 	printf("d - BMS heartbeat\n\t"
-				"d  - default (cell readings: CANID B0201114)\n\t"
-				"dc aaaaaaaa  (cell readings: CANID: aaaaaaaa\n\t"
-				"ds - (bms status: CANID B0201114)\n\t"
+				"d  - default (cell readings by cell number: CANID: B0201114)\n\t"
+				"dc aaaaaaaa  (cell readings by cell number: CANID: aaaaaaaa\n\t"
+				"dz - default (cell readings voltage sorted: CANID: B0201114)\n\t"
+				"dz aaaaaaaa  (cell readings voltage sorted: CANID: aaaaaaaa\n\t"
+				"ds -         (bms status: CANID: B0201114)\n\t"
 				"ds aaaaaaaa  (bms status: CANID: aaaaaaaa)\n");
-	printf("e - ??\n");
+	printf("e - not implemented\n");
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");
     printf("g - GEVCUr: command request to retrieve all readings\n");
 	printf("h - MC_STATE: monitor \n");

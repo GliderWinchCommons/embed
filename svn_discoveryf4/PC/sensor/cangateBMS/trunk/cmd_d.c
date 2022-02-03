@@ -8,8 +8,9 @@
 */
 
 #include "cmd_d.h"
-
 #include "../../../../../svn_common/trunk/db/gen_db.h"
+
+static int compare_v(const void *a, const void *b);
 
 #define CANID_HB1   0xB0201114
 #define NCELL 16 // Max number of cells 
@@ -30,9 +31,10 @@
 
 struct CELLMSG
 {
-	float f;
-	uint16_t u16;
-	uint8_t flag;
+	float f;      // u16 converted to float
+	uint16_t u16; // reading (100uv)
+	uint8_t flag; // 0 = no reading; 1 = reading received
+	uint8_t num;  // Cell number
 };
 
 static 	u32 canid1;
@@ -54,7 +56,7 @@ static void printmenu(char* p)
  * static printstatus(void);
  * @brief 	: Print bit meaninngs for status msg
 *******************************************************************************/
-static printstatus(void)
+static void printstatus(void)
 {
 	printf(
 "BSTATUS_NOREADING (1 << 0) // Exactly zero = no reading\n"
@@ -108,6 +110,10 @@ int cmd_d_init(char* p)
 			
 			break;
 
+		case 'z': // Sorted by cell voltage
+			request = 'z';
+			break;
+
 		case ' ': // default to cell readings & default CANID
 		case '\n':
 			request = 'c';
@@ -127,20 +133,24 @@ int cmd_d_init(char* p)
 
 	printf("request %c",request);
 	if (request == 'c')
-		printf(": cell readings");
+		printf(": cell readings by cell number");
+	else if (request == 'z')
+		printf(": cell readings sorted by voltage");
 	else
 		printf(": status");
 
 	printf ("\tCANID: %08X\n",canid1);
 
 	/* For cell readings, show no readings received & print header */
-	if (request == 'c')
+	if ((request == 'c') || (request == 'z'))
 	{
 		printf("\n  ");
 		for (i = 0; i < NCELL; i++)
 		{
-			cellmsg[i].flag = 0;
-			printf("%8d",i+1);
+			cellmsg[i].flag = 0;    // Set to no readings
+			cellmsg[i].num = (i+1); // Cell numbers
+			if (request == 'c')
+				printf("%5d   ",i+1);
 		}
 		printf("\n");
 	}
@@ -173,13 +183,31 @@ void cmd_d_do_msg(struct CANRCVBUF* p)
 
 	/* Here, CAN msg is for us. */
 	// Is it cell readings or "misc"?
-	if ((p->cd.uc[0] == CMD_CMD_TYPE1)  && (request == 'c'))
+	if ( (p->cd.uc[0] == CMD_CMD_TYPE1)  && ((request == 'c') || (request == 'z')) )
 	{
 		// Check msg is for the same reading group
 		if ((p->cd.uc[1] & 0xf) != (hbseq & 0xf))
-		{ // Here sequence number changed
-			// Print readings accumulated
-			printf("\n%2d: ",hbseq);
+		{ // Here sequence number changed. Assume all received
+			// 
+			if (request == 'z')
+			{ // Here, sort array by voltage
+				for (i = 0; i < NCELL; i++)
+				{ // Set no-reading cells to zero
+					if (cellmsg[i].flag == 0)
+						  cellmsg[i].u16 = 0;
+				}
+				/* Sort on Cell voltages (ascending) */
+				qsort(&cellmsg[0], NCELL, sizeof(struct CELLMSG), compare_v);
+				// Print cell number header
+				for (i = 0; i < NCELL; i++)
+				{
+					printf("%6i  ",cellmsg[i].num);
+				}
+				printf("\n");				
+
+			}
+
+
 			for (i = 0; i < NCELL; i++)
 			{
 				if (cellmsg[i].flag != 0)
@@ -193,6 +221,7 @@ void cmd_d_do_msg(struct CANRCVBUF* p)
 					printf("  ......");
 				}
 			}
+			printf("\n"); // print line
 			/* Update to new sequence number. */
 			hbseq = p->cd.uc[1] & 0xf;
 		}
@@ -242,5 +271,15 @@ void cmd_d_do_msg(struct CANRCVBUF* p)
 		printf("%02X %02X %04X\n",p->cd.uc[4],p->cd.uc[5],p->cd.us[3] );
 	}
 	return;
+}
+/* ************************************************************************************************************ 
+ * Comparison function for qsort
+ * ************************************************************************************************************ */
+static int compare_v(const void *a, const void *b)
+{
+    const struct CELLMSG *da = (const struct CELLMSG *) a;
+    const struct CELLMSG *db = (const struct CELLMSG *) b;
+     
+    return (da->u16 > db->u16) - (da->u16 < db->u16);
 }
 

@@ -1,8 +1,8 @@
 /******************************************************************************
 * File Name          : cmd_e.h
-* Date First Issued  : 08/04/2019
+* Date First Issued  : 02/03/2022
 * Board              : PC
-* Description        : Display contactor heartbeat msgs
+* Description        : Display BMS misc polled command responses
 *******************************************************************************/
 
 #ifndef __CMD_E_PC
@@ -35,7 +35,7 @@ int cmd_e_init(char* p);
 void cmd_e_do_msg(struct CANRCVBUF* p);
 /* @brief 	: Output msgs for the id that was entered with the 'm' command
 *******************************************************************************/
-
+extern uint32_t kaON;  // 0 = keep-alive is off; 1 = keep-alive = on.
 
 #endif
 

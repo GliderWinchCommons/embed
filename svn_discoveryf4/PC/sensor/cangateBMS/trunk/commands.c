@@ -18,6 +18,7 @@ This takes care of dispatching keyboard commands.
 #include "cmd_b.h"
 #include "cmd_c.h"
 #include "cmd_d.h"
+#include "cmd_e.h"
 #include "cmd_f.h"
 #include "cmd_h.h"
 #include "cmd_i.h"
@@ -86,6 +87,11 @@ void do_command_keybrd(char* p)
 		if (cmd_d_init(p) >= 0)
 			msg_sw = 'd';
 		break;
+
+	case 'e': // 'e' command
+		if (cmd_e_init(p) >= 0)
+			msg_sw = 'e';
+		break;		
 
 	case 'f': // 'f' command: Display gps fix: lat/lon/ht
 		if (cmd_f_init(p) >= 0) // negative return means invalid input
@@ -164,6 +170,7 @@ void do_command_keybrd(char* p)
 		do_printmenu();	  // Nice display for the hapless Op.
 		msg_sw = 'x';
 		cmd_q_initsw = 0;	// OTO initialization switch
+		kaON = 0; // cmd_e timer by-pass
 		break;
 
 	case 'c': // 'c' requests & displays launch parameters
@@ -203,9 +210,9 @@ void do_canbus_msg(struct CANRCVBUF* p)
 //		do_pc_to_gateway(p);	// Hex listing of the CAN msg
 		break;
 
-//	case 'e':
-//		cmd_e_do_msg(p);
-//		break;		
+	case 'e':
+		cmd_e_do_msg(p);
+		break;		
 
 	case 'f':
 		cmd_f_do_msg(p);		// Display fix
@@ -285,13 +292,23 @@ void do_printmenu(void)
 	printf("b - CONTACTOR: display polled msgs\n");
 	printf("c - request & display launch parameters\n");
 	printf("d - BMS heartbeat\n\t"
-				"d  - default (cell readings by cell number: CANID: B0201114)\n\t"
+				"d  - default (cell readings by cell number: CANID: B0201124)\n\t"
 				"dc aaaaaaaa  (cell readings by cell number: CANID: aaaaaaaa\n\t"
-				"dz - default (cell readings voltage sorted: CANID: B0201114)\n\t"
+				"dz - default (cell readings voltage sorted: CANID: B0201124)\n\t"
 				"dz aaaaaaaa  (cell readings voltage sorted: CANID: aaaaaaaa\n\t"
-				"ds -         (bms status: CANID: B0201114)\n\t"
+				"ds -         (bms status: CANID: B0201124)\n\t"
 				"ds aaaaaaaa  (bms status: CANID: aaaaaaaa)\n");
-	printf("e - not implemented\n");
+
+	printf("e - BMS polling misc TYPE2 msgs\n\t"
+				"e x  default  (CANID: BMS B0201124 POLL B0000000)\n\t"
+				"emx  aaaaaaaa <pppppppp>(CANID: BMS aaaaaaaa POLL pppppppp) \n\t"
+				"eax  <pppppppp> a (all BMS nodes respond)\n\t"
+				"esx  <pppppppp> s (String number: 1-n)\n\t"
+				" where--\n\t"
+				"  x = a: ADC cell calibration readings\n\t"
+				"  x = h: Trickle charger high voltage\n\t"
+				"  x = t; temperatures\n");
+
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");
     printf("g - GEVCUr: command request to retrieve all readings\n");
 	printf("h - MC_STATE: monitor \n");
@@ -303,6 +320,7 @@ void do_printmenu(void)
 				"k0 - disconnect\n\t"
 				"k1 - connect\n\t"
 				"k2 - reset\n");
+
 	printf("l - list unix time/date in heartbeat time msgs (l e1000000)\n");
 	printf("m - list msgs for id entered 'm xxxxxxxx (CAN ID as 8 hex digits)'\n");
 	printf("n - list msg id's and msg ct during 1 sec (coarse computer timing)\n");

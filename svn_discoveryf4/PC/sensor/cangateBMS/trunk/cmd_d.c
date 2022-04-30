@@ -12,7 +12,7 @@
 
 static int compare_v(const void *a, const void *b);
 
-#define CANID_HB1   0xB0201114
+#define CANID_HB1   0xB0201124
 #define NCELL 16 // Max number of cells 
 
  #define MISCQ_HEARTBEAT   0   // reserved for heartbeat

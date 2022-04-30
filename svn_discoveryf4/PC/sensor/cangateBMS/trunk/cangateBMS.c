@@ -19,15 +19,15 @@
   Hack of 'canldr.c'
 
 compile and execute--
-cd ~/GliderWinchCommons/embed/svn_discoveryf4/PC/sensor/cangateCON/trunk
-./mm && ./cangateCON 127.0.0.1 32123 -t $HOME/GliderWinchCommons/embed/svn_common/trunk/params/testmsg2C.txt
+cd ~/GliderWinchCommons/embed/svn_discoveryf4/PC/sensor/cangateBMS/trunk
+./mm && ./cangateBMS 127.0.0.1 32123 -t $HOME/GliderWinchCommons/embed/svn_common/trunk/params/testmsg2C.txt
 or, for 'q' command file specified
-./mm && ./cangateCON 127.0.0.1 32123 -i $HOME/GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
+./mm && ./cangateBMS 127.0.0.1 32123 -i $HOME/GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
 or, for 'q' command default file spec
-./mm && ./cangateCON 127.0.0.1 32123
+./mm && ./cangateBMS 127.0.0.1 32123
 
 01/31/2022
-  Hack cangateCON for BMS test & development
+  Hack cangateBMS for BMS test & development
 
 */
 #include <sys/types.h>
@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
 	int	port;	// Socket port number
 //	char xbuf[256];
 
-printf ("\n### CANGATECON ### 11/15/2020\n\n");
+printf ("\n### CANGATECON ### 02/03/2022\n\n");
 
 printf("BAUDRATE is FIXED AT: %s baud\n",baudratesetting);
 

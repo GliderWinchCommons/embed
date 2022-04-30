@@ -57,3 +57,4 @@ INSERT INTO CMD_CODES  VALUES ('CMD_CMD_TYPE1',		42,	'[1]-[7] format 1');
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_TYPE2',		43,	'[1]-[7] format 2');
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_TYPE3',		44,	'[1]-[7] format 3');
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_HEARTBEAT', 45,	'[1]-[7] Heartbeat format specific to unit');
+INSERT INTO CMD_CODES  VALUES ('CMD_CMD_TYPE4',     46,	'[1]-[7] format 4');

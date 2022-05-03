@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2022-01-19 11:18:26.596
+// 2022-05-02 21:26:59.719
 
 #define CANID_COUNT 306
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -239,8 +239,8 @@
 #define  CANID_CMD_BEEPERV1_3     0xD3400000  // BEEPERV1       : BEEPERV1 3 Health: U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq
 #define  CANID_UNI_BMS_I          0xB0000000  // BMSV1          : BMSV1 UNIversal BMS Incoming msg to BMS: X4=target CANID
 #define  CANID_CMD_BMS_CELLVQ     0xB0200000  // BMSV1          : BMSV1 U8: EMC requests to BMS to send cellv, cmd code
-#define  CANID_MSG_BMS_CELLV11R   0xB0201114  // BMSV1          : 11 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV12R   0xB0201124  // BMSV1          : 12 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
+#define  CANID_MSG_BMS_CELLV11R   0xB0201114  // BMSV1          : 01 BQ76952  #BQ01 U16:id,U16:cellv n+1,U16:cellv n+2
+#define  CANID_MSG_BMS_CELLV12R   0xB0201124  // BMSV1          : 02 MAX14921 #MX01 U16:id,U16:cellv n+1,U16:cellv n+2
 #define  CANID_MSG_BMS_CELLV13R   0xB0201134  // BMSV1          : 13 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
 #define  CANID_MSG_BMS_CELLV14R   0xB0201144  // BMSV1          : 14 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
 #define  CANID_MSG_BMS_CELLV15R   0xB0201154  // BMSV1          : 15 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
@@ -328,7 +328,7 @@
 #define  TYP_ASC                 16        // 4           ascii chars
 #define  TYP_CANID               17        // 1           CANID (handled differently than a U32)
 
-#define CMD_CODES_COUNT 40
+#define CMD_CODES_COUNT 41
 #define  LDR_SET_ADDR            1         // 5 Set address pointer (not FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_SET_ADDR_FL         2         // 5 Set address pointer (FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_CRC                 3         // 8 Get CRC: 2-4 = count; 5-8 = start address; Reply CRC 2-4 na, 5-8 computed CRC 
@@ -369,6 +369,7 @@
 #define  CMD_CMD_TYPE2           43        // [1]-[7] format 2
 #define  CMD_CMD_TYPE3           44        // [1]-[7] format 3
 #define  CMD_CMD_HEARTBEAT       45        // [1]-[7] Heartbeat format specific to unit
+#define  CMD_CMD_TYPE4           46        // [1]-[7] format 4
 
 #define PAYLOAD_TYPE_COUNT 51
 #define  NONE                    0         // No payload bytes                                
@@ -921,6 +922,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 856  */
+/* TOTAL COUNT OF #defines = 857  */
 /* Test 2016/06/12 */
 

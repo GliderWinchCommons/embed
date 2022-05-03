@@ -28,6 +28,7 @@ static int compare_v(const void *a, const void *b);
  #define MISCQ_CELLV_HI   10 // Highest cell voltage
  #define MISCQ_CELLV_LO   11 // Lowest cell voltage
  #define MISCQ_FETBALBITS 12 // FET on/off discharge bits
+ #define MISCQ_TOPOFSTACK 18 // BMS top-of-stack voltage
 
 struct CELLMSG
 {

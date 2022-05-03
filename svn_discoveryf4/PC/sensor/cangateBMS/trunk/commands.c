@@ -305,9 +305,14 @@ void do_printmenu(void)
 				"eax  <pppppppp> a (all BMS nodes respond)\n\t"
 				"esx  <pppppppp> s (String number: 1-n)\n\t"
 				" where--\n\t"
-				"  x = a: ADC cell calibration readings\n\t"
+				"  x = a: Cell calibrated readings\n\t"
+				"  x = A: Cell ADC calibration readings\n\t"
 				"  x = h: Trickle charger high voltage\n\t"
-				"  x = t; temperatures\n");
+				"  x = t: Temperature calibrated readings (T1, T2, T3)\n\t"
+				"  x = T: Temperature ADC calibration readings (T1, T2, T3)\n\t"
+				"  x = s: BMS measured top-of-stack voltage\n\t"
+				"  x = d: DC-DC converter voltage\n\t"
+				);
 
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");
     printf("g - GEVCUr: command request to retrieve all readings\n");

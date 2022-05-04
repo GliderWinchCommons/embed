@@ -68,10 +68,11 @@ union UF
 struct CELLMSG
 {
 	double     d; // u32 converted to double
+
 	uint32_t u32; // reading
 	uint16_t u16; // reading (100uv)
 	uint8_t flag; // 0 = no reading; 1 = reading received
-	uint8_t  num; // Cell number
+	uint8_t  max; // reading index: max encountered
 };
 
 static struct CELLMSG cellmsg[NSTRING][NMODULE][NCELL];
@@ -81,19 +82,17 @@ static uint32_t canid_tx;
 static uint8_t  whom;  // To whom is this addressed?
 static uint8_t  reqtype; // Request type (miscq code)
 static uint8_t  canseqnumber;
-static uint8_t  cellidx;
 
 /* Readings returned determines if string and modules are present. */
 static uint8_t yesstring[NSTRING]; // 0 = string number (0-NSTRING) not present
 static uint8_t yesmodule[NSTRING][NMODULE]; // 0 = module number (0 - NMODULE) not present
-static uint8_t nstring;
-static uint8_t nmodule;
+static uint8_t nstring; // String number-1: 0-3
+static uint8_t nmodule; // Module number-1: 0-15
 
 uint32_t kaON;  // 0 = keep-alive is off; 1 = keep-alive = on.
-static int flagnow;  // Timer tick counter
-static int flagnext; // Next timer count
-static int flagnext1; // Next timer count
-static uint8_t timerflag1;
+#define TIMERNEXTCOUNT 100 // 1.00 sec between outputs
+static uint32_t timerctr;
+static uint32_t timernext; // Next timer count
 
 static uint8_t ncell_prev;
 static uint8_t headerctr;
@@ -142,9 +141,9 @@ static uint8_t storeandcheckstringandmodule(struct CANRCVBUF* p)
 static void printcanmsg(struct CANRCVBUF* p)
 {
 	int i;
-	printf(" %08X %01d: ",p->id,p->dlc);
+	printf(" %08X %01d:",p->id,p->dlc);
 	for (i = 0; i < p->dlc; i++)
-		printf ("%02X",p->cd.uc[i]);
+		printf (" %02X",p->cd.uc[i]);
 	return;
 }
 /******************************************************************************
@@ -286,19 +285,16 @@ int cmd_e_init(char* p)
 		case 'A': // Cell ADC accumlation for calibation
 			printf("Poll: Cells: ADC Readings\n");
 			cantx.cd.uc[1] = MISCQ_CELLV_ADC; //  TYPE2 code
-			cellidx = 0;
 			break;
 
 		case 't': // Temperature calibrated readings
 			printf("Poll: calibrated temperatures\n");
-			cantx.cd.uc[1] = MISCQ_TEMP_CAL; //  TYPE2 code
-			cellidx = 0;
+			cantx.cd.uc[1] = MISCQ_TEMP_CAL; //  TYPE2 code			
 			break;
 
 		case 'T': // Temperature ADC for calibration
 			printf("Poll: thermistor ADC readings\n");
-			cantx.cd.uc[1] = MISCQ_TEMP_ADC; //  TYPE2 code
-			cellidx = 0;
+			cantx.cd.uc[1] = MISCQ_TEMP_ADC; //  TYPE2 code			
 			break;
 
 		case 's': // BMS measured top-of-stack voltage MISCQ_TOPOFSTACK	
@@ -323,10 +319,9 @@ int cmd_e_init(char* p)
 
 	ncell_prev =   0;
 	headerctr  = 254;
-	flagnext   =  10;
-	flagnext1  =  11;
-	timerflag1 =   1;
 	kaON       =   1;
+	timerctr   = 0;
+	timernext  = TIMERNEXTCOUNT;
 	starttimer();
 	return 0;
 }
@@ -358,6 +353,14 @@ void cmd_e_do_msg(struct CANRCVBUF* p)
 
 	// Extract string and module numbers and check for out-of-range
 	storeandcheckstringandmodule(p);
+
+/* debug
+printcanmsg(p);
+printf(" :%1d:%1d:",nstring,nmodule);
+int jdx = p->cd.uc[3];
+float ftmp = extractfloat(&p->cd.uc[4]);	
+printf("%2d %f\n",jdx,ftmp);
+*/
 
 	// Handle payload based on request code
 	switch (p->cd.uc[1])
@@ -414,23 +417,16 @@ static void sendcanmsg(struct CANRCVBUF* pcan)
  * static void cmd_e_timerthread(void);
  * @brief 	: Send keep-alive msg
 *******************************************************************************/	
-
 static void cmd_e_timerthread(void)
 {
 	if (kaON == 0) return; // No timer generated msgs
 
-	flagnow += 1;
-	if ((flagnow > flagnext1) && (timerflag1 == 0))
-	{
-		timerflag1 = 1;
+	timerctr += 1; // 10 ms tick counter
+	if ((int)(timerctr - timernext) > 0)
+	{ // Time to output accumulated readings
+		timernext += TIMERNEXTCOUNT*2;
 		timer_printresults();
-	}
-	if (flagnow > flagnext)
-	{
-		flagnow  = 0;		
-		timerflag1 = 0;
-		sendcanmsg(&cantx);		
-//printf("\nSend flagnow\n");
+		sendcanmsg(&cantx);	// Send next request
 	}
 	return;
 }
@@ -485,10 +481,6 @@ static void miscq_cellv_adc(struct CANRCVBUF* p)
 		{
 			cellmsg[nstring][nmodule][idx].d = extractfloat(&p->cd.uc[4]);
 			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag
-
-			flagnext1 =  50; // 1 into flagnext delay
-			flagnext  = 100; // 2 sec delay
-			timerflag1 = 0;
 		}
 	return;		
 }
@@ -512,13 +504,8 @@ static void miscq_cellv_cal(struct CANRCVBUF* p)
 		else
 		{
 			// Convert payload to float and scale to volts
-			cellmsg[nstring][nmodule][idx].d = (extractfloat(&p->cd.uc[4]) * 1E-4);
-			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag
-
-			// Keep reseting until CAN responses end
-			flagnext1 =  50; // 1 sec until printout
-			flagnext  = 100; // 2 sec cycle
-			flagnow   =   0; // Timer flag
+			cellmsg[nstring][nmodule][idx].d = (extractfloat(&p->cd.uc[4]));
+			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag		
 		}
 		return;
 }
@@ -532,7 +519,7 @@ Calibrated voltages are sent as
 */
 static void miscq_temp_cal(struct CANRCVBUF* p)
 {
-	int idx = (p->cd.uc[3] - 16);
+	int idx = (p->cd.uc[3]);
 		if ((idx > 2) || (idx < 0))
 		{ // Here, index is too high.
 			printcanmsg(p);
@@ -544,11 +531,6 @@ static void miscq_temp_cal(struct CANRCVBUF* p)
 			// Convert payload to float and scale to deg F
 			cellmsg[nstring][nmodule][idx].d = (extractfloat(&p->cd.uc[4]));
 			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag
-
-			// Keep reseting until CAN responses end
-			flagnext1 =  50; // 1 sec until printout
-			flagnext  = 100; // 2 sec cycle
-			flagnow   =   0; // Timer flag
 		}
 		return;
 }
@@ -562,7 +544,7 @@ Calibrated voltages are sent as
 */
 static void miscq_temp_adc(struct CANRCVBUF* p)
 {
-	int idx = (p->cd.uc[3] - 16);
+	int idx = (p->cd.uc[3]);
 		if ((idx > 2) || (idx < 0))
 		{ // Here,  is not 0-2
 			printcanmsg(p);
@@ -574,11 +556,6 @@ static void miscq_temp_adc(struct CANRCVBUF* p)
 			// Convert payload to float and scale to deg F
 			cellmsg[nstring][nmodule][idx].d = (extractfloat(&p->cd.uc[4]));
 			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag
-
-			// Keep reseting until CAN responses end
-			flagnext1 =  50; // 1 sec until printout
-			flagnext  = 100; // 2 sec cycle
-			flagnow   =   0; // Timer flag
 		}
 		return;
 }		
@@ -592,11 +569,6 @@ static void miscq_topofstack(struct CANRCVBUF* p)
 	// Convert payload to float and scale to deg F
 	cellmsg[nstring][nmodule][0].d = (extractfloat(&p->cd.uc[4]));
 	cellmsg[nstring][nmodule][0].flag = 1; // Reset new readings flag
-
-			// Keep reseting until CAN responses end
-	flagnext1 =  50; // 1 sec until printout
-	flagnext  = 100; // 2 sec cycle
-	flagnow   =   0; // Timer flag
 	return;
 }
 /******************************************************************************
@@ -609,11 +581,6 @@ static void miscq_miscq_dcdc_v(struct CANRCVBUF* p)
 	// Convert payload to float and scale to deg F
 	cellmsg[nstring][nmodule][0].d = (extractfloat(&p->cd.uc[4]));
 	cellmsg[nstring][nmodule][0].flag = 1; // Reset new readings flag
-
-			// Keep reseting until CAN responses end
-	flagnext1 =  50; // 1 sec until printout
-	flagnext  = 100; // 2 sec cycle
-	flagnow   =   0; // Timer flag
 	return;
 }
 
@@ -639,6 +606,7 @@ static void timer_printresults(void)
 
 		case 'T': // Temperature ADC for calibration
 			print_cal_adc("%8.1f",NTHERM);
+			break;
 
 		case 's': // BMS measured top-of-stack voltage MISCQ_TOPOFSTACK	
 			print_cal_adc("%8.2f",1);
@@ -648,7 +616,6 @@ static void timer_printresults(void)
 			print_cal_adc("%8.2f",1);
  			break;		
 
-
 		default:
 			printf("Timer oops: not coded: %c\n",reqtype);
 			break;
@@ -657,7 +624,7 @@ static void timer_printresults(void)
 }
 /******************************************************************************
  * static void print_cal_adc(char* pfmt, uint8_t ncol);
- * @brief 	: Timer: flagnext1: Output accumulated readings
+ * @brief 	: Output accumulated readings
  * @param   : pfmt = pointer to format string
  * @param   : ncol = number of columns (readings) on a line
 *******************************************************************************/

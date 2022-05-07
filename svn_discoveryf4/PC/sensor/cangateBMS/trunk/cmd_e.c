@@ -18,18 +18,22 @@ extern int fdp;	/* port file descriptor */
 
 static void printcanmsg(struct CANRCVBUF* p);
 static float extractfloat(uint8_t* puc);
+static uint32_t extractu32(uint8_t* puc);
 static void miscq_cellv_cal(struct CANRCVBUF* p);
 static void miscq_cellv_adc(struct CANRCVBUF* p);
 static void miscq_temp_cal(struct CANRCVBUF* p);
 static void miscq_temp_adc(struct CANRCVBUF* p);
 static void miscq_topofstack(struct CANRCVBUF* p);
 static void miscq_miscq_dcdc_v(struct CANRCVBUF* p);
+static void miscq_fetbalbits (struct CANRCVBUF* p);
+static void miscq_proc_cal(struct CANRCVBUF* p);
+static void miscq_proc_adc(struct CANRCVBUF* p);
 static void timer_printresults(void);
 static void print_cal_adc(char* pfmt, uint8_t ncol);
+static void print_processor_adc_header(void);
 
 static void cmd_e_timerthread(void);
 static int starttimer(void);
-
 
 #define CANID_RX_DEFAULT CANID_MSG_BMS_CELLV12R // 0xB0201124 // Default BMS
 #define CANID_TX_DEFAULT CANID_UNI_BMS_I        // 0XB0000000 // Default pollster
@@ -53,11 +57,17 @@ static int starttimer(void);
  #define MISCQ_HEATER_OFF 16 // Turn Heater mode off.
  #define MISCQ_TRICKL_OFF 17 // Turn trickle charger off for no more than ‘payload [3]’ secs
  #define MISCQ_TOPOFSTACK 18 // BMS top-of-stack voltage
+ #define MISCQ_PROC_CAL   19 // Processor ADC calibrated readings
+ #define MISCQ_PROC_ADC   20 // Processor ADC raw adc counts for making calibrations
 
 #define NSTRING  2 // Max number of strings in a winch
 #define NMODULE  8 // Max number of modules in a string
 #define NCELL   18 // Max number of cells   in a module
 #define NTHERM   3 // Max number of thermistors in a module
+#define TIMERNEXTCOUNT 80 // 10 ms tick count between outputs
+#define ADCDIRECTMAX 10   // Number of ADCs read in one scan with DMA
+
+#define HEADERMAX 16 // Number of print groups between placing a header
 
 union UF
 {
@@ -71,7 +81,7 @@ struct CELLMSG
 
 	uint32_t u32; // reading
 	uint16_t u16; // reading (100uv)
-	uint8_t flag; // 0 = no reading; 1 = reading received
+	uint8_t flag; // 0 = no reading; 1 = new reading; 2 = new bit reading
 	uint8_t  max; // reading index: max encountered
 };
 
@@ -90,7 +100,6 @@ static uint8_t nstring; // String number-1: 0-3
 static uint8_t nmodule; // Module number-1: 0-15
 
 uint32_t kaON;  // 0 = keep-alive is off; 1 = keep-alive = on.
-#define TIMERNEXTCOUNT 100 // 1.00 sec between outputs
 static uint32_t timerctr;
 static uint32_t timernext; // Next timer count
 
@@ -282,7 +291,7 @@ int cmd_e_init(char* p)
 			cantx.cd.uc[1] = MISCQ_CELLV_CAL; //  TYPE2 code
 			break;
 
-		case 'A': // Cell ADC accumlation for calibation
+		case 'A': // Cell ADC raw adc counts for making calibrations
 			printf("Poll: Cells: ADC Readings\n");
 			cantx.cd.uc[1] = MISCQ_CELLV_ADC; //  TYPE2 code
 			break;
@@ -292,7 +301,7 @@ int cmd_e_init(char* p)
 			cantx.cd.uc[1] = MISCQ_TEMP_CAL; //  TYPE2 code			
 			break;
 
-		case 'T': // Temperature ADC for calibration
+		case 'T': // Temperature raw adc counts for making calibrations
 			printf("Poll: thermistor ADC readings\n");
 			cantx.cd.uc[1] = MISCQ_TEMP_ADC; //  TYPE2 code			
 			break;
@@ -307,6 +316,21 @@ int cmd_e_init(char* p)
 			cantx.cd.uc[1] = MISCQ_DCDC_V;  //  TYPE2 code
 			break;
 
+		case 'f': // FET status for discharge
+			printf("Poll: discharge FET status bits\n");
+			cantx.cd.uc[1] = MISCQ_FETBALBITS;  //  TYPE2 code
+			break;
+
+		case 'w': // Processor ADC calibrated readings
+			printf("Poll: Processor ADC calibrated readings\n");
+			cantx.cd.uc[1] = MISCQ_PROC_CAL;  //  TYPE2 code
+			break;
+
+		case 'W': // Processor ADC raw adc counts for making calibrations
+			printf("Poll: Processor ADC raw counts for making calibrations\n");
+			cantx.cd.uc[1] = MISCQ_PROC_ADC;  //  TYPE2 code
+			break;			
+
 		default:
 			printf("3rd char not recognized: %c\n", *(p+2));
 			return -1;
@@ -318,7 +342,7 @@ int cmd_e_init(char* p)
 	printf ("\tCANID: BMS %08X  POLLER %08X\n",canid_rx,cantx.id);
 
 	ncell_prev =   0;
-	headerctr  = 254;
+	headerctr  = HEADERMAX;
 	kaON       =   1;
 	timerctr   = 0;
 	timernext  = TIMERNEXTCOUNT;
@@ -336,22 +360,50 @@ turned on by the hapless Op typing 'm' as the first char and hitting return.
 */
 void cmd_e_do_msg(struct CANRCVBUF* p)
 {
-	if ((p->id & 0xfffffffc) != canid_rx)
+	/* Expect the BMS node CAN msg format TYPE1, TYPE2, etc
+	     and skip other CAN IDs.
+	   These #defines originate from the processing of the .sql file
+	     ~/GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
+	   which generates the file
+	     ../../../../../svn_common/trunk/db/gen_db.h */
+	switch(p->id & 0xfffffffc)
 	{
-		return; // Msg is not for us.
+		case CANID_MSG_BMS_CELLV11R:
+		case CANID_MSG_BMS_CELLV12R:
+		case CANID_MSG_BMS_CELLV13R:
+		case CANID_MSG_BMS_CELLV14R:
+		case CANID_MSG_BMS_CELLV15R:
+		case CANID_MSG_BMS_CELLV16R:
+		case CANID_MSG_BMS_CELLV17R:
+		case CANID_MSG_BMS_CELLV18R:
+		case CANID_MSG_BMS_CELLV21R:
+		case CANID_MSG_BMS_CELLV22R:
+		case CANID_MSG_BMS_CELLV23R:
+		case CANID_MSG_BMS_CELLV24R:
+		case CANID_MSG_BMS_CELLV25R:
+		case CANID_MSG_BMS_CELLV26R:
+		case CANID_MSG_BMS_CELLV27R:
+		case CANID_MSG_BMS_CELLV28R:
+	break;
+
+	default: // Here, CAN ID is not a BMS node
+		return; // Msg is no for us.
 	}
-//printf("\n%08X %X", p->cd.uc[1]);
+//printf("\n%08X %X", p->cd.uc[1]); // debug
 
-	/* Here, CAN msg is for us. */
+	/* Here, CAN msg is from a BMS node. */
 
-	// Is it cell readings or "misc"?
+	/* Ignore msgs that are not the type requested. */
+	// TYPE1
+	// TYPE2 not requested TYPE
 	if ( (p->cd.uc[0] != CMD_CMD_TYPE2) ||
-		((p->cd.uc[0] == CMD_CMD_TYPE2) && (p->cd.uc[1] == MISCQ_STATUS))) 
+		 (p->cd.uc[1] != cantx.cd.uc[1]) )  
 	{ // Here, not what we are looking for.
 		return;
 	}
 
-	// Extract string and module numbers and check for out-of-range
+	// Extract string and module numbers and 
+	// check for out-of-range string and module.
 	storeandcheckstringandmodule(p);
 
 /* debug
@@ -362,7 +414,7 @@ float ftmp = extractfloat(&p->cd.uc[4]);
 printf("%2d %f\n",jdx,ftmp);
 */
 
-	// Handle payload based on request code
+	// Store payload based on request code
 	switch (p->cd.uc[1])
 	{
 	case MISCQ_CELLV_CAL: // 'a' Cell voltage: calibrated
@@ -388,6 +440,18 @@ printf("%2d %f\n",jdx,ftmp);
 	case MISCQ_DCDC_V: // 'd' DC-DC converter voltage
 		miscq_miscq_dcdc_v(p);
 		break;
+
+	case MISCQ_FETBALBITS: // 'f' discharge FET status bits
+		miscq_fetbalbits(p);
+		break;
+
+	case MISCQ_PROC_CAL: // 'w' Processor ADC calibrated readings
+		miscq_proc_cal(p);
+		break;
+
+	case MISCQ_PROC_ADC: // 'W' Processor ADC raw adc counts for making calibrations
+		miscq_proc_adc(p);	
+			break;		
 
 	default:
 		printcanmsg(p); // CAN msg
@@ -424,7 +488,7 @@ static void cmd_e_timerthread(void)
 	timerctr += 1; // 10 ms tick counter
 	if ((int)(timerctr - timernext) > 0)
 	{ // Time to output accumulated readings
-		timernext += TIMERNEXTCOUNT*2;
+		timernext += TIMERNEXTCOUNT;
 		timer_printresults();
 		sendcanmsg(&cantx);	// Send next request
 	}
@@ -460,14 +524,27 @@ static float extractfloat(uint8_t* puc)
 	uf.uc[3] = *(puc+3);
 	return uf.f;
 }
-
+/* *************************************************************************
+ * static uint32_t extractu32(uint8_t* puc);
+ *	@brief	: Extract payload bytes into a uint32_t
+ *  @param  : puc = pointer to CAN msg payload
+ *  @return : float
+ * *************************************************************************/
+static uint32_t extractu32(uint8_t* puc)
+{
+	return ((*(puc+0) <<  0) |
+		    (*(puc+1) <<  8) |
+		    (*(puc+2) << 16) |
+		    (*(puc+3) << 24) );
+}
 /******************************************************************************
  * static void miscq_cellv_adc(struct CANRCVBUF* p);
  * @brief 	: Request: Cell ADC readings
  * @param	: p = pointer to CANRCVBUF with CAN msg
 *******************************************************************************/
 /* 
-The response CAN msgs are one cell per CAN msg (i.e. 16 msgs per module). ADC count is a float.
+The response CAN msgs are one cell per CAN msg (i.e. 16 msgs per module). 
+The ADC count is sent as a float.
 */
 static void miscq_cellv_adc(struct CANRCVBUF* p)
 {
@@ -489,9 +566,6 @@ static void miscq_cellv_adc(struct CANRCVBUF* p)
  * @brief 	: Request: Cell calibrated voltages
  * @param	: pcan = pointer to CANRCVBUF with mesg
 *******************************************************************************/
-/*
-Calibrated voltages are sent as 
-*/
 static void miscq_cellv_cal(struct CANRCVBUF* p)
 {
 		int idx = p->cd.uc[3];
@@ -514,9 +588,6 @@ static void miscq_cellv_cal(struct CANRCVBUF* p)
  * @brief 	: Request: Thermistor temperatures, calibrated
  * @param	: pcan = pointer to CANRCVBUF with mesg
 *******************************************************************************/
-/*
-Calibrated voltages are sent as 
-*/
 static void miscq_temp_cal(struct CANRCVBUF* p)
 {
 	int idx = (p->cd.uc[3]);
@@ -578,12 +649,78 @@ static void miscq_topofstack(struct CANRCVBUF* p)
 *******************************************************************************/
 static void miscq_miscq_dcdc_v(struct CANRCVBUF* p)
 {
-	// Convert payload to float and scale to deg F
+	// Convert payload to float  and scale to deg F
 	cellmsg[nstring][nmodule][0].d = (extractfloat(&p->cd.uc[4]));
-	cellmsg[nstring][nmodule][0].flag = 1; // Reset new readings flag
+	cellmsg[nstring][nmodule][0].flag = 1; // Show new reading is present
 	return;
 }
-
+/******************************************************************************
+ * static void miscq_fetbalbits(struct CANRCVBUF* p);
+ * @brief 	: Request: Discharge FET status
+ * @param	: p = pointer to CANRCVBUF with mesg
+*******************************************************************************/
+static void miscq_fetbalbits (struct CANRCVBUF* p)
+{
+	uint32_t tmp = extractu32(&p->cd.uc[4]);
+	int i;
+	for (i = 0; i < NCELL; i++)
+	{
+		if ((tmp & 0x1) == 0)
+		{
+			cellmsg[nstring][nmodule][i].flag = 0;
+		}
+		else
+		{
+			cellmsg[nstring][nmodule][i].flag = 2;
+		}
+		tmp = (tmp >> 1);
+	}
+	return;
+}
+	/******************************************************************************
+ * static void miscq_proc_cal(struct CANRCVBUF* p);
+ * @brief 	: Request: Processor ADC readings, calibrated
+ * @param	: p = pointer to CANRCVBUF with mesg
+*******************************************************************************/
+static void miscq_proc_cal(struct CANRCVBUF* p)
+{
+	int idx = (p->cd.uc[3]);
+		if (idx > 9)
+		{ // Here,  is not 0-9
+			printcanmsg(p);
+			printf("Processor ADC array index should be [0-9] but was too high: %d\n",idx);
+			return;
+		}
+		else
+		{  
+			// Convert payload to double
+			cellmsg[nstring][nmodule][idx].d = (extractfloat(&p->cd.uc[4]));
+			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag
+		}
+		return;
+}
+/******************************************************************************
+ * static void miscq_proc_adc(struct CANRCVBUF* p);
+ * @brief 	: Request: Processor ADC readings: raw adc counts
+ * @param	: p = pointer to CANRCVBUF with mesg
+*******************************************************************************/
+static void miscq_proc_adc(struct CANRCVBUF* p)
+{
+	int idx = (p->cd.uc[3]);
+		if (idx > 9)
+		{ // Here,  is not 0-9
+			printcanmsg(p);
+			printf("Processor ADC array index should be [0-9] but was too high: %d\n",idx);
+			return;
+		}
+		else
+		{  
+			// Convert payload to double
+			cellmsg[nstring][nmodule][idx].d = (extractfloat(&p->cd.uc[4]));
+			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag
+		}
+		return;
+}
 /******************************************************************************
  * static void timer_printresults(void);
  * @brief 	: Timer triggers output accumulated readings
@@ -614,7 +751,22 @@ static void timer_printresults(void)
 
 		case 'd': // Isolated dc-dc converter voltage
 			print_cal_adc("%8.2f",1);
- 			break;		
+ 			break;	
+
+		case 'f': // discharge FET status bits
+			print_cal_adc("%8.0f",NCELL);
+			break;
+
+ 		case 'w': // Processor ADC calibrated readings
+ 			print_processor_adc_header();
+			print_cal_adc("%8.3f",ADCDIRECTMAX);
+			break;
+
+		case 'W': // Processor ADC raw adc counts for making calibrations
+ 			print_processor_adc_header();
+			print_cal_adc("%8.0f",ADCDIRECTMAX);
+			break;
+
 
 		default:
 			printf("Timer oops: not coded: %c\n",reqtype);
@@ -639,7 +791,7 @@ static void print_cal_adc(char* pfmt, uint8_t ncol)
 
 		/* Column header. */
 		headerctr += 1;
-		if (headerctr > 16)
+		if (headerctr > HEADERMAX)
 		{
 			headerctr = 0;
 			printf("    ");
@@ -661,13 +813,54 @@ static void print_cal_adc(char* pfmt, uint8_t ncol)
 					printf(" .......");
 				}
 				else
-				{   
-					printf(pfmt, cellmsg[i][j][k].d);
+				{   if (cellmsg[i][j][k].flag == 1)
+					{
+						printf(pfmt, cellmsg[i][j][k].d);
+ 					}
+ 					else
+ 					{
+ 						printf(" ...####");
+ 					}
  					cellmsg[i][j][k].flag = 0; // Reset new readings flag
 				}
 			}
 			printf("\n");	
 		}
+	}
+	return;
+}
+/******************************************************************************
+ * static void print_processor_adc_header(void);
+ * @brief 	: Insert descriptive header for processor ADC
+*******************************************************************************/
+/*
+#define ADC1IDX_INTERNALVREF  0	// IN0   247.5  1   Internal voltage reference
+#define ADC1IDX_INTERNALTEMP  1	// IN17  247.5  2   Internal temperature sensor
+#define ADC1IDX_PA4_DC_DC     2 // IN9   247.5  3   Isolated DC-DC 15v supply
+#define ADC1IDX_PA7_HV_DIV    3	// IN12  640.5  4   HV divider (FET side of diode)
+#define ADC1IDX_PC1_BAT_CUR   4	// IN2    47.5  5   Battery current sense op-amp
+#define ADC1IDX_PC4_THERMSP1  5	// IN13  247.5  6   Spare thermistor 1: 10K pullup
+#define ADC1IDX_PC5_THERMSP2  6	// IN14  247.5  7   Spare thermistor 2: 10K pullup
+#define ADC1IDX_PC3_OPA_OUT   7	// IN4     2.5  8   FET current sense 0.1 ohm:COMP2_INP
+#define ADC1IDX_PA0_OPA_INP	  8 // IN5    24.5  9   FET current sense RC 1.8K|0.1u
+#define ADC1IDX_PA3_FET_CUR1  9 // IN8    12.5  10  OPA_OUT (PA0 amplified) 
+*/
+static void print_processor_adc_header(void)
+{		
+	if (headerctr >= HEADERMAX)
+	{
+		printf ("    "
+			    "    VREF"
+				" INTTEMP"
+				"   DC-DC"
+				"  HV DIV"
+				"  CUR OP"
+				"  SPARE1"
+				"  SPARE2"
+				" FET CUR"
+				"  FET RC"
+				" OPA_OUT\n"
+			);
 	}
 	return;
 }

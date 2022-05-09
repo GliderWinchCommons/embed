@@ -13,7 +13,12 @@
 static int compare_v(const void *a, const void *b);
 
 #define CANID_HB1   0xB0201124
-#define NCELL 16 // Max number of cells 
+#define NCELL 18 // Max number of cells 
+
+/* 16b codes for impossible voltage readings. */
+#define CELLVBAD   65535 // Yet to be defined
+#define CELLVNONE  65534 // Cell position not installed
+#define CELLVOPEN  65533 // Installed, but wire appears open
 
  #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
  #define MISCQ_STATUS      1 // status
@@ -208,14 +213,28 @@ void cmd_d_do_msg(struct CANRCVBUF* p)
 
 			}
 
-
 			for (i = 0; i < NCELL; i++)
 			{
 				if (cellmsg[i].flag != 0)
 				{
-					dtmp = cellmsg[i].u16; // Convert to float
-					printf("%8.1f",dtmp*0.1); 
-					cellmsg[i].flag = 0; // Clear was-read flag
+					if (cellmsg[i].u16 == CELLVNONE)
+					{
+						printf("  .omit.");
+					}
+					else
+					{
+						if (cellmsg[i].u16 == CELLVOPEN)
+						{
+							printf("  .open.");
+						}
+						else
+						{
+							dtmp = cellmsg[i].u16; // Convert to float
+//printf("%8d",cellmsg[i].u16);							
+							printf("%8.1f",dtmp*0.1); 
+							cellmsg[i].flag = 0; // Clear was-read flag
+						}
+					}
 				}
 				else
 				{ // No readings for this cell
@@ -231,13 +250,13 @@ void cmd_d_do_msg(struct CANRCVBUF* p)
 		// Check payload size 
 		switch(dlc)
 		{
-			case 4: n = 1; break; 
-			case 6: n = 2; break; 
+//			case 4: n = 1; break; 
+//			case 6: n = 2; break; 
 			case 8: n = 3; break; 
 
 			default:
 				{
-					printf("\nDLC not 4,6,or8 %d",dlc);
+					printf("\nDLC not 8 %d",dlc);
 					return;
 				}
 		}

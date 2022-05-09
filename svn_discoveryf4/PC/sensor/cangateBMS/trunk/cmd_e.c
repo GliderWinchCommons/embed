@@ -366,32 +366,14 @@ void cmd_e_do_msg(struct CANRCVBUF* p)
 	     ~/GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
 	   which generates the file
 	     ../../../../../svn_common/trunk/db/gen_db.h */
-	switch(p->id & 0xfffffffc)
-	{
-		case CANID_MSG_BMS_CELLV11R:
-		case CANID_MSG_BMS_CELLV12R:
-		case CANID_MSG_BMS_CELLV13R:
-		case CANID_MSG_BMS_CELLV14R:
-		case CANID_MSG_BMS_CELLV15R:
-		case CANID_MSG_BMS_CELLV16R:
-		case CANID_MSG_BMS_CELLV17R:
-		case CANID_MSG_BMS_CELLV18R:
-		case CANID_MSG_BMS_CELLV21R:
-		case CANID_MSG_BMS_CELLV22R:
-		case CANID_MSG_BMS_CELLV23R:
-		case CANID_MSG_BMS_CELLV24R:
-		case CANID_MSG_BMS_CELLV25R:
-		case CANID_MSG_BMS_CELLV26R:
-		case CANID_MSG_BMS_CELLV27R:
-		case CANID_MSG_BMS_CELLV28R:
-	break;
 
-	default: // Here, CAN ID is not a BMS node
-		return; // Msg is no for us.
-	}
+	uint32_t utmp = (p->id & 0xfffffffc);
+	if ((utmp < CANID_MSG_BMS_CELLV11R) || (utmp > CANID_MSG_BMS_CELLV28R))
+		return; // CAN ID is not a BMS module function.
+
 //printf("\n%08X %X", p->cd.uc[1]); // debug
 
-	/* Here, CAN msg is from a BMS node. */
+	/* Here, CAN msg is from a BMS module. */
 
 	/* Ignore msgs that are not the type requested. */
 	// TYPE1

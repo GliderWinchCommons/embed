@@ -38,16 +38,16 @@ static int starttimer(void);
 #define CANID_RX_DEFAULT CANID_MSG_BMS_CELLV12R // 0xB0201124 // Default BMS
 #define CANID_TX_DEFAULT CANID_UNI_BMS_I        // 0XB0000000 // Default pollster
 
- #define MISCQ_HEARTBEAT   0 // reserved for heartbeat
+ #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
  #define MISCQ_STATUS      1 // status
  #define MISCQ_CELLV_CAL   2 // cell voltage: calibrated
  #define MISCQ_CELLV_ADC   3 // cell voltage: adc counts
  #define MISCQ_TEMP_CAL    4 // temperature sensor: calibrated
- #define MISCQ_TEMP_ADC    5 // temperature sensor: adc counts
+ #define MISCQ_TEMP_ADC    5 // temperature sensor: adc counts for making calibration
  #define MISCQ_DCDC_V      6 // isolated dc-dc converter output voltage
  #define MISCQ_CHGR_V      7 // charger hv voltage
  #define MISCQ_HALL_CAL    8 // Hall sensor: calibrated
- #define MISCQ_HALL_ADC    9 // Hall sensor: adc counts
+ #define MISCQ_HALL_ADC    9 // Hall sensor: adc counts for making calibration
  #define MISCQ_CELLV_HI   10 // Highest cell voltage
  #define MISCQ_CELLV_LO   11 // Lowest cell voltage
  #define MISCQ_FETBALBITS 12 // FET on/off discharge bits
@@ -59,6 +59,11 @@ static int starttimer(void);
  #define MISCQ_TOPOFSTACK 18 // BMS top-of-stack voltage
  #define MISCQ_PROC_CAL   19 // Processor ADC calibrated readings
  #define MISCQ_PROC_ADC   20 // Processor ADC raw adc counts for making calibrations
+ #define MISCQ_R_BITS_FET     21 // Dump, dump2, heater, discharge bits
+ #define MISCQ_R_BITS_OPEN    22 // Cells unexpectedly appear open
+ #define MISCQ_R_BITS_INSTALL 23 // Cells installed
+ #define MISCQ_CURRENT_CAL    24 // Below cell #1 minus, current resistor: calibrated
+ #define MISCQ_CURRENT_ADC    25 // Below cell #1 minus, current resistor: adc counts
 
 #define NSTRING  2 // Max number of strings in a winch
 #define NMODULE  8 // Max number of modules in a string

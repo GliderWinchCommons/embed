@@ -28,9 +28,11 @@ static void miscq_miscq_dcdc_v(struct CANRCVBUF* p);
 static void miscq_fetbalbits (struct CANRCVBUF* p);
 static void miscq_proc_cal(struct CANRCVBUF* p);
 static void miscq_proc_adc(struct CANRCVBUF* p);
+static void miscq_bits_r(struct CANRCVBUF* p);
 static void timer_printresults(void);
 static void print_cal_adc(char* pfmt, uint8_t ncol);
 static void print_processor_adc_header(void);
+static void print_bits_r(void);
 
 static void cmd_e_timerthread(void);
 static int starttimer(void);
@@ -59,11 +61,9 @@ static int starttimer(void);
  #define MISCQ_TOPOFSTACK 18 // BMS top-of-stack voltage
  #define MISCQ_PROC_CAL   19 // Processor ADC calibrated readings
  #define MISCQ_PROC_ADC   20 // Processor ADC raw adc counts for making calibrations
- #define MISCQ_R_BITS_FET     21 // Dump, dump2, heater, discharge bits
- #define MISCQ_R_BITS_OPEN    22 // Cells unexpectedly appear open
- #define MISCQ_R_BITS_INSTALL 23 // Cells installed
- #define MISCQ_CURRENT_CAL    24 // Below cell #1 minus, current resistor: calibrated
- #define MISCQ_CURRENT_ADC    25 // Below cell #1 minus, current resistor: adc counts
+ #define MISCQ_R_BITS     21 // Dump, dump2, heater, discharge bits
+ #define MISCQ_CURRENT_CAL 24 // Below cell #1 minus, current resistor: calibrated
+ #define MISCQ_CURRENT_ADC 25 // Below cell #1 minus, current resistor: adc counts
 
 #define NSTRING  2 // Max number of strings in a winch
 #define NMODULE  8 // Max number of modules in a string
@@ -334,7 +334,12 @@ int cmd_e_init(char* p)
 		case 'W': // Processor ADC raw adc counts for making calibrations
 			printf("Poll: Processor ADC raw counts for making calibrations\n");
 			cantx.cd.uc[1] = MISCQ_PROC_ADC;  //  TYPE2 code
-			break;			
+			break;	
+
+		case 'r': // Bits: fets, open cell wires, installed cells
+			printf("Poll: Bits: fets, open cell wires, installed cells\n");
+			cantx.cd.uc[1] = MISCQ_R_BITS;  //  TYPE2 code
+			break;
 
 		default:
 			printf("3rd char not recognized: %c\n", *(p+2));
@@ -438,7 +443,11 @@ printf("%2d %f\n",jdx,ftmp);
 
 	case MISCQ_PROC_ADC: // 'W' Processor ADC raw adc counts for making calibrations
 		miscq_proc_adc(p);	
-			break;		
+		break;
+
+	case MISCQ_R_BITS: // 'r' Bits: fets, cells open wire, cells installed	
+		miscq_bits_r(p);	
+		break;		
 
 	default:
 		printcanmsg(p); // CAN msg
@@ -709,6 +718,27 @@ static void miscq_proc_adc(struct CANRCVBUF* p)
 		return;
 }
 /******************************************************************************
+ * static void miscq_bits_r(struct CANRCVBUF* p);
+ * @brief 	: Request: bits for fets, open wire, installed cells
+ * @param	: p = pointer to CANRCVBUF with mesg
+*******************************************************************************/
+static void miscq_bits_r(struct CANRCVBUF* p)
+{
+	int idx = (p->cd.uc[3]);
+		if (idx > 2)
+		{ // Here,  is not 0-9
+			printcanmsg(p);
+			printf("Index too high. Should be 0-2, was %d\n",idx);
+			return;
+		}
+		else
+		{  
+			cellmsg[nstring][nmodule][idx].u32 = (extractu32(&p->cd.uc[4]));
+			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag
+		}
+		return;
+}
+/******************************************************************************
  * static void timer_printresults(void);
  * @brief 	: Timer triggers output accumulated readings
 *******************************************************************************/
@@ -754,6 +784,10 @@ static void timer_printresults(void)
 			print_cal_adc("%8.0f",ADCDIRECTMAX);
 			break;
 
+		case 'r': // Processor ADC raw adc counts for making calibrations
+			print_bits_r();
+			break;			
+
 
 		default:
 			printf("Timer oops: not coded: %c\n",reqtype);
@@ -773,7 +807,7 @@ static void print_cal_adc(char* pfmt, uint8_t ncol)
 
 	for (i = 0; i < NSTRING; i++)
 	{
-		// Skip if this string not encountered
+		// Skip if this (battery) string not encountered
 		if (yesstring[i] == 0 ) continue;
 
 		/* Column header. */
@@ -848,6 +882,88 @@ static void print_processor_adc_header(void)
 				"  FET RC"
 				" OPA_OUT\n"
 			);
+	}
+	return;
+}
+/******************************************************************************
+ * static void print_cal_adc(char* pfmt, uint8_t ncol);
+ * @brief 	: Output accumulated readings
+ * @param   : pfmt = pointer to format string
+ * @param   : ncol = number of columns (readings) on a line
+*******************************************************************************/
+static void print_bits_r(void)
+{
+	int i,j,k,m; // FORTRAN reminder
+	uint32_t u32tmp;
+	char* ph = "         ";
+
+	for (i = 0; i < NSTRING; i++)
+	{
+		// Skip if this (battery) string not encountered
+		if (yesstring[i] == 0 ) continue;
+
+		/* Column header. */
+		headerctr += 1;
+		if (headerctr > HEADERMAX)
+		{
+			headerctr = 0;
+
+			printf("     "
+				" FETa  "
+				" open wires"
+				" installed"
+				"\n");
+			for (k = 0; k < 3; k++)
+			{
+				printf("%s",ph);
+				for (m = 1; m < NCELL+1; m++)
+				{
+					if (m < 10)
+						printf(" ");
+					else
+						printf("%1d",(m/10));
+				}
+			}
+			printf("\n");
+			for (k = 0; k < 3; k++)
+			{
+				printf("%s",ph);
+				for (m = 1; m < NCELL+1; m++)
+					printf("%1d",(m%10));
+			}
+			printf("\n");
+		}
+
+		/* Print bit order 1->18. */
+		for (j = 0; j < NMODULE; j++)
+		{
+			if (yesmodule[i][j] == 0) continue;
+
+			// Start line with string and module number
+			printf("%1d:%1d:",i,j);
+			for (k = 0; k < 3; k++)
+			{
+				if (cellmsg[i][j][k].flag == 1)
+				{
+					printf("      ");
+					u32tmp = cellmsg[i][j][k].u32;
+					for (m = 0; m < NCELL; m++)
+					{
+						if ((u32tmp & 1) == 0)
+						{
+							printf(".");
+						}	
+						else	
+						{	
+							printf("#");
+						}	
+						u32tmp >>= 1;
+					}
+					cellmsg[i][j][k].flag = 0; // Reset new readings flag
+				}
+			}
+			printf("\n");	
+		}
 	}
 	return;
 }

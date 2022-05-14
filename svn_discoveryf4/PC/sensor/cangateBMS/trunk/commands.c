@@ -315,6 +315,7 @@ void do_printmenu(void)
 				"  x = f: FET discharge status bits\n\t"
 				"  x = w: Processor ADC calibrated readings\n\t"
 				"  x = W: Processor ADC raw counts making calibration\n"
+				"  x = r: Bits: fet status, opencell wires, installed cells"
 				);
 
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");

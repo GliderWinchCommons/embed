@@ -65,6 +65,12 @@ static int starttimer(void);
  #define MISCQ_CURRENT_CAL 24 // Below cell #1 minus, current resistor: calibrated
  #define MISCQ_CURRENT_ADC 25 // Below cell #1 minus, current resistor: adc counts
 
+#define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
+#define FET_HEATER   (1 << 1) // 1 = HEATER FET ON
+#define FET_DUMP2    (1 << 2) // 1 = DUMP2 FET ON (external charger)
+#define FET_CHGR     (1 << 3) // 1 = Charger FET enabled: Normal charge rate
+#define FET_CHGR_VLC (1 << 4) // 1 = Charger FET enabled: Very Low Charge rate
+
 #define NSTRING  2 // Max number of strings in a winch
 #define NMODULE  8 // Max number of modules in a string
 #define NCELL   18 // Max number of cells   in a module
@@ -287,6 +293,9 @@ int cmd_e_init(char* p)
 			canid_rx = 0;
 			return -1;
 		}
+		printf("whom polled: %c",whom);
+		printf ("\tCANID: BMS %08X  POLLER %08X\n",canid_rx,cantx.id);
+
 		/* Type of response. */
 		reqtype = *(p+2);
 		switch (reqtype)
@@ -337,7 +346,14 @@ int cmd_e_init(char* p)
 			break;	
 
 		case 'r': // Bits: fets, open cell wires, installed cells
-			printf("Poll: Bits: fets, open cell wires, installed cells\n");
+			printf("Poll: Bits: fet status, disicharge fets, open cell wires, installed cells\n");
+			printf( "\t  DUMP\n"
+					"\t  |HEATER\n"
+					"\t  ||DUMP2\n"
+					"\t  |||Trickle Chgr\n"
+					"\t  ||||Trickle Chgr Low rate\n"
+					"\t  ||||||||\n"
+				);
 			cantx.cd.uc[1] = MISCQ_R_BITS;  //  TYPE2 code
 			break;
 
@@ -346,10 +362,6 @@ int cmd_e_init(char* p)
 			return -1;
 		}
 	}
-
-	printf("whom polled: %c",whom);
-	
-	printf ("\tCANID: BMS %08X  POLLER %08X\n",canid_rx,cantx.id);
 
 	ncell_prev =   0;
 	headerctr  = HEADERMAX;
@@ -895,7 +907,6 @@ static void print_bits_r(void)
 {
 	int i,j,k,m; // FORTRAN reminder
 	uint32_t u32tmp;
-	char* ph = "         ";
 
 	for (i = 0; i < NSTRING; i++)
 	{
@@ -908,14 +919,14 @@ static void print_bits_r(void)
 		{
 			headerctr = 0;
 
-			printf("     "
-				" FETa  "
-				" open wires"
-				" installed"
-				"\n");
+			printf("\t\t "
+				"\t   Discharge FET "
+				"\t      open wires"
+				"\t       installed"
+				"\n                ");
 			for (k = 0; k < 3; k++)
 			{
-				printf("%s",ph);
+				printf("      ");
 				for (m = 1; m < NCELL+1; m++)
 				{
 					if (m < 10)
@@ -924,17 +935,17 @@ static void print_bits_r(void)
 						printf("%1d",(m/10));
 				}
 			}
-			printf("\n");
+			printf("\n                ");
 			for (k = 0; k < 3; k++)
 			{
-				printf("%s",ph);
+				printf("      ");
 				for (m = 1; m < NCELL+1; m++)
 					printf("%1d",(m%10));
 			}
 			printf("\n");
 		}
 
-		/* Print bit order 1->18. */
+		/* Print bit order: (0->7) or (0->17) */
 		for (j = 0; j < NMODULE; j++)
 		{
 			if (yesmodule[i][j] == 0) continue;
@@ -943,9 +954,27 @@ static void print_bits_r(void)
 			printf("%1d:%1d:",i,j);
 			for (k = 0; k < 3; k++)
 			{
+				printf("      ");
 				if (cellmsg[i][j][k].flag == 1)
 				{
-					printf("      ");
+					/* fet status: Dump, Dump2, Heater, etc. */
+					if (k == 0)
+					{ // High byte has special fets
+						u32tmp = (cellmsg[i][j][k].u32 >> 24);
+						for (m = 0; m < 8; m++)
+						{
+							if ((u32tmp & 1) == 0)
+							{
+								printf(".");
+							}	
+							else	
+							{	
+								printf("#");
+							}	
+							u32tmp >>= 1;
+						}
+						printf("    ");
+					}
 					u32tmp = cellmsg[i][j][k].u32;
 					for (m = 0; m < NCELL; m++)
 					{
@@ -960,6 +989,10 @@ static void print_bits_r(void)
 						u32tmp >>= 1;
 					}
 					cellmsg[i][j][k].flag = 0; // Reset new readings flag
+				}
+				else
+				{ // CAN msg missing, so fill in the space
+					printf("missing     ---missing--------");
 				}
 			}
 			printf("\n");	

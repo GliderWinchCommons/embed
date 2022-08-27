@@ -111,7 +111,7 @@ LOAD /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/
                 0x00000400                _MYHEAP_SIZE = 0x400
                 0x2000fc00                __MSP = 0x2000fc00
 
-.flash          0x08000000     0x3f20
+.flash          0x08000000     0x4188
  *(.vectors)
  .vectors       0x08000000      0x130 vector.o
                 0x08000000                vector_table
@@ -341,116 +341,116 @@ LOAD /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/
                 0x080026d8                PA0_reconfig
                 0x080026f8                configure_pin_pod
                 0x0800271c                configure_pin_in_pd
- .text          0x0800275c      0x78c ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
-                0x0800289c                can_driver_init
-                0x08002b40                can_driver_enable_interrupts
-                0x08002b70                can_driver_toss0
-                0x08002b74                can_driver_toss1
-                0x08002b78                can_driver_peek0
-                0x08002b86                can_driver_peek1
-                0x08002ba0                can_driver_put
-                0x08002cc4                can_driver_getcount
-                0x08002d04                CAN_TX_IRQHandler
-                0x08002d9c                CAN_RX_IRQHandler
-                0x08002e80                CAN1_TX_IRQHandler
-                0x08002e8c                CAN2_TX_IRQHandler
-                0x08002e98                CAN1_RX0_IRQHandler
-                0x08002eac                CAN1_RX1_IRQHandler
-                0x08002ec0                CAN2_RX0_IRQHandler
-                0x08002ed4                CAN2_RX1_IRQHandler
- .text          0x08002ee8       0xd8 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
-                0x08002ee8                can_driver_port
- .text          0x08002fc0      0x3b0 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
-                0x08002fc0                can_driver_filter_deactivate_one
-                0x08003010                can_driver_filter_deactivate_all
-                0x08003044                can_driver_filter_setCAN2boundary
-                0x08003098                can_driver_filter_insert
-                0x080031c0                can_driver_filter_add_one_32b_id
-                0x08003280                can_driver_filter_add_two_32b_id
-                0x080032c0                can_driver_filter_add_param_tbl
-                0x080032f0                can_driver_filter_setbanknum
-                0x08003310                can_driver_filter_getbanknum
-                0x08003334                can_driver_hw_filter_list
- .text          0x08003370       0x50 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
-                0x080033ac                can_msg_reset_init
- .text          0x080033c0        0x0 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-calloc.o)
- .text.calloc   0x080033c0       0x10 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-calloc.o)
-                0x080033c0                calloc
- .text          0x080033d0        0x0 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-callocr.o)
+ .text          0x0800275c      0x9f4 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
+                0x08002970                can_driver_init
+                0x08002c14                can_driver_enable_interrupts
+                0x08002c44                can_driver_toss0
+                0x08002c48                can_driver_toss1
+                0x08002c4c                can_driver_peek0
+                0x08002c5c                can_driver_peek1
+                0x08002c7c                can_driver_put
+                0x08002e20                can_driver_getcount
+                0x08002e60                CAN_TX_IRQHandler
+                0x08003000                CAN_RX_IRQHandler
+                0x080030e8                CAN1_TX_IRQHandler
+                0x080030f4                CAN2_TX_IRQHandler
+                0x08003100                CAN1_RX0_IRQHandler
+                0x08003114                CAN1_RX1_IRQHandler
+                0x08003128                CAN2_RX0_IRQHandler
+                0x0800313c                CAN2_RX1_IRQHandler
+ .text          0x08003150       0xd8 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
+                0x08003150                can_driver_port
+ .text          0x08003228      0x3b0 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
+                0x08003228                can_driver_filter_deactivate_one
+                0x08003278                can_driver_filter_deactivate_all
+                0x080032ac                can_driver_filter_setCAN2boundary
+                0x08003300                can_driver_filter_insert
+                0x08003428                can_driver_filter_add_one_32b_id
+                0x080034e8                can_driver_filter_add_two_32b_id
+                0x08003528                can_driver_filter_add_param_tbl
+                0x08003558                can_driver_filter_setbanknum
+                0x08003578                can_driver_filter_getbanknum
+                0x0800359c                can_driver_hw_filter_list
+ .text          0x080035d8       0x50 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
+                0x08003614                can_msg_reset_init
+ .text          0x08003628        0x0 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-calloc.o)
+ .text.calloc   0x08003628       0x10 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-calloc.o)
+                0x08003628                calloc
+ .text          0x08003638        0x0 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-callocr.o)
  .text._calloc_r
-                0x080033d0       0x60 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-callocr.o)
-                0x080033d0                _calloc_r
- .text          0x08003430        0x0 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-memset.o)
- .text.memset   0x08003430       0x9c /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-memset.o)
-                0x08003430                memset
+                0x08003638       0x60 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-callocr.o)
+                0x08003638                _calloc_r
+ .text          0x08003698        0x0 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-memset.o)
+ .text.memset   0x08003698       0x9c /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-memset.o)
+                0x08003698                memset
  *(.plt)
  *(.gnu.warning)
  *(.glue_7t)
- .glue_7t       0x080034cc        0x0 linker stubs
+ .glue_7t       0x08003734        0x0 linker stubs
  *(.glue_7)
- .glue_7        0x080034cc        0x0 linker stubs
+ .glue_7        0x08003734        0x0 linker stubs
  *(.vfp11_veneer)
- .vfp11_veneer  0x080034cc        0x0 linker stubs
+ .vfp11_veneer  0x08003734        0x0 linker stubs
  *(.ARM.extab* .gnu.linkonce.armextab.*)
  *(.gcc_except_table)
  *(.v4_bx)
- .v4_bx         0x080034cc        0x0 linker stubs
+ .v4_bx         0x08003734        0x0 linker stubs
  *(.rodata.str1.*)
  .rodata.str1.1
-                0x080034cc      0x1fc ldr.o
+                0x08003734      0x1fc ldr.o
  .rodata.str1.1
-                0x080036c8        0x6 newlib_support.o
+                0x08003930        0x6 newlib_support.o
  .rodata.str1.1
-                0x080036ce      0x31b canwinch_ldrproto.o
+                0x08003936      0x31b canwinch_ldrproto.o
                                 0x31e (size before relaxing)
  *(.rodata)
- *fill*         0x080039e9        0x7 
- .rodata        0x080039f0       0x20 ldr.o
-                0x080039f0                msginit
-                0x08003a00                can_ldr_ready
- .rodata        0x08003a10       0x10 canwinch_ldrproto.o
-                0x08003a10                table
- .rodata        0x08003a20       0x30 ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(clockspecifysetup.o)
-                0x08003a20                pllmulxtbl
-                0x08003a30                ahbtbl
- .rodata        0x08003a50      0x400 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(crc-32.o)
-                0x08003a50                crctable
- .rodata        0x08003e50       0x4c ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(canwinch_setup_F103_pod.o)
-                0x08003e50                clocks
- .rodata        0x08003e9c       0x18 ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(SENSORpinconfig.o)
-                0x08003e9c                led21green
-                0x08003ea4                led20red
-                0x08003eac                led19red
- .rodata        0x08003eb4       0x30 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
- .rodata        0x08003ee4       0x30 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
- .rodata        0x08003f14        0xc ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
-                0x08003f20                . = ALIGN (0x4)
+ *fill*         0x08003c51        0x7 
+ .rodata        0x08003c58       0x20 ldr.o
+                0x08003c58                msginit
+                0x08003c68                can_ldr_ready
+ .rodata        0x08003c78       0x10 canwinch_ldrproto.o
+                0x08003c78                table
+ .rodata        0x08003c88       0x30 ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(clockspecifysetup.o)
+                0x08003c88                pllmulxtbl
+                0x08003c98                ahbtbl
+ .rodata        0x08003cb8      0x400 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(crc-32.o)
+                0x08003cb8                crctable
+ .rodata        0x080040b8       0x4c ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(canwinch_setup_F103_pod.o)
+                0x080040b8                clocks
+ .rodata        0x08004104       0x18 ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(SENSORpinconfig.o)
+                0x08004104                led21green
+                0x0800410c                led20red
+                0x08004114                led19red
+ .rodata        0x0800411c       0x30 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
+ .rodata        0x0800414c       0x30 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
+ .rodata        0x0800417c        0xc ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
+                0x08004188                . = ALIGN (0x4)
 
 .rodata._global_impure_ptr
-                0x08003f20        0x4
+                0x08004188        0x4
  .rodata._global_impure_ptr
-                0x08003f20        0x4 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-impure.o)
-                0x08003f20                _global_impure_ptr
+                0x08004188        0x4 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-impure.o)
+                0x08004188                _global_impure_ptr
 
-.iplt           0x08003f24        0x0
- .iplt          0x08003f24        0x0 vector.o
+.iplt           0x0800418c        0x0
+ .iplt          0x0800418c        0x0 vector.o
 
-.rel.dyn        0x08003f24        0x0
- .rel.iplt      0x08003f24        0x0 vector.o
+.rel.dyn        0x0800418c        0x0
+ .rel.iplt      0x0800418c        0x0 vector.o
 
 .flashh         0x0807f800        0x0
                 0x0807f800                __highflashlayout = .
  *(.appparam)
                 0x0807f800                . = ALIGN (0x4)
 
-.ARM.exidx      0x08003f24        0x0
-                0x08003f24                __exidx_start = .
+.ARM.exidx      0x0800418c        0x0
+                0x0800418c                __exidx_start = .
  *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-                0x08003f24                __exidx_end = .
-                0x08003f24                __data_image = .
+                0x0800418c                __exidx_end = .
+                0x0800418c                __data_image = .
                 [!provide]                PROVIDE (__data_image, .)
 
-.data           0x20000000      0x84c load address 0x08003f24
+.data           0x20000000      0x84c load address 0x0800418c
                 0x20000000                __data_section_start = .
                 0x20000000                _sdata = .
                 [!provide]                PROVIDE (__data_section_start, .)
@@ -530,10 +530,10 @@ LOAD /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/
                 0x2000084c                _end_data = .
                 0x2000084c                . = ALIGN (0x4)
 
-.igot.plt       0x2000084c        0x0 load address 0x08004770
+.igot.plt       0x2000084c        0x0 load address 0x080049d8
  .igot.plt      0x2000084c        0x0 vector.o
 
-.ram            0x20000850     0x1144 load address 0x08004770
+.ram            0x20000850     0x19dc load address 0x080049d8
                 0x20000850                PROVIDE (_start_of_bss, .)
                 0x20000850                _sbss = .
  *(.bss)
@@ -601,50 +601,56 @@ LOAD /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/
  .bss           0x20001900        0x0 ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(SENSORpinconfig.o)
  .bss           0x20001900        0x0 ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(pinconfig_all.o)
  .bss           0x20001900        0x0 ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(PODpinconfig.o)
- .bss           0x20001900       0x4c ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
+ .bss           0x20001900      0x8e4 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
                 0x20001908                friict
                 0x2000190c                debugB
                 0x20001910                debugC
                 0x20001918                frii
-                0x20001930                buffct
-                0x20001934                pcan_errors
-                0x20001938                debugA
-                0x2000193c                debugT1
-                0x20001940                debugD
-                0x20001944                debugT2
-                0x20001948                debugT3
- .bss           0x2000194c        0x0 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
- .bss           0x2000194c        0x8 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
- .bss           0x20001954        0x8 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
-                0x20001958                can_msg_reset_ptr
- .bss           0x2000195c        0x0 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-calloc.o)
- .bss           0x2000195c        0x0 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-callocr.o)
- .bss           0x2000195c        0x0 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-memset.o)
+                0x20001938                dbugxidx
+                0x2000193c                dbugx
+                0x2000213c                dbugabort
+                0x200021bc                arbqctr
+                0x200021c0                updn
+                0x200021c4                buffct
+                0x200021c8                pcan_errors
+                0x200021cc                debugA
+                0x200021d0                debugT1
+                0x200021d4                debugD
+                0x200021d8                debugT2
+                0x200021dc                debugT3
+                0x200021e0                abortflag
+ .bss           0x200021e4        0x0 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
+ .bss           0x200021e4        0x8 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
+ .bss           0x200021ec        0x8 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
+                0x200021f0                can_msg_reset_ptr
+ .bss           0x200021f4        0x0 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-calloc.o)
+ .bss           0x200021f4        0x0 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-callocr.o)
+ .bss           0x200021f4        0x0 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-memset.o)
  *(.bss*)
  .bss.__malloc_max_total_mem
-                0x2000195c        0x4 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-mallocr.o)
-                0x2000195c                __malloc_max_total_mem
+                0x200021f4        0x4 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-mallocr.o)
+                0x200021f4                __malloc_max_total_mem
  .bss.__malloc_max_sbrked_mem
-                0x20001960        0x4 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-mallocr.o)
-                0x20001960                __malloc_max_sbrked_mem
+                0x200021f8        0x4 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-mallocr.o)
+                0x200021f8                __malloc_max_sbrked_mem
  .bss.__malloc_top_pad
-                0x20001964        0x4 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-mallocr.o)
-                0x20001964                __malloc_top_pad
+                0x200021fc        0x4 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-mallocr.o)
+                0x200021fc                __malloc_top_pad
  .bss.__malloc_current_mallinfo
-                0x20001968       0x28 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-mallocr.o)
-                0x20001968                __malloc_current_mallinfo
+                0x20002200       0x28 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-mallocr.o)
+                0x20002200                __malloc_current_mallinfo
  *(.shbss)
  *(.bss .bss.* .gnu.linkonce.b.*)
  *(COMMON)
- COMMON         0x20001990        0x4 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-reent.o)
-                0x20001990                errno
-                0x20001994                . = ALIGN (0x4)
+ COMMON         0x20002228        0x4 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-reent.o)
+                0x20002228                errno
+                0x2000222c                . = ALIGN (0x4)
  *(.ram.b .bss.ram)
-                0x20001994                . = ALIGN (0x4)
-                0x20001994                _ebss = .
-                0x20001994                _end_of_bss = .
-                0x20001994                _end = .
-                0x20001994                __end = .
+                0x2000222c                . = ALIGN (0x4)
+                0x2000222c                _ebss = .
+                0x2000222c                _end_of_bss = .
+                0x2000222c                _end = .
+                0x2000222c                __end = .
                 [!provide]                PROVIDE (_end_of_bss, .)
 LOAD vector.o
 LOAD ldr.o
@@ -671,46 +677,46 @@ LOAD ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a
 LOAD ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a
 OUTPUT(ldr elf32-littlearm)
 
-.debug_info     0x00000000     0x8011
+.debug_info     0x00000000     0x817a
  .debug_info    0x00000000      0x1b0 vector.o
- .debug_info    0x000001b0      0xa90 ldr.o
- .debug_info    0x00000c40      0x74d newlib_support.o
- .debug_info    0x0000138d     0x1418 canwinch_ldrproto.o
- .debug_info    0x000027a5       0x69 ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(busfreq.o)
- .debug_info    0x0000280e      0x359 ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(clockspecifysetup.o)
- .debug_info    0x00002b67       0x7d ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(DTW_counter.o)
- .debug_info    0x00002be4      0x67c ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(printf.o)
- .debug_info    0x00003260       0xb9 ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(startup_deh.o)
- .debug_info    0x00003319      0x332 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_rxinttxint.o)
- .debug_info    0x0000364b      0x193 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_putc.o)
- .debug_info    0x000037de      0x199 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_puts.o)
- .debug_info    0x00003977      0x16c ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_send.o)
- .debug_info    0x00003ae3      0x157 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_busy.o)
- .debug_info    0x00003c3a      0x1b3 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txmin.o)
- .debug_info    0x00003ded      0x271 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txdma_init.o)
- .debug_info    0x0000405e      0x179 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_tx_advlnptr.o)
- .debug_info    0x000041d7      0x1fc ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_rxdma.o)
- .debug_info    0x000043d3      0x2df ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_rxint_init.o)
- .debug_info    0x000046b2      0x18b ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txint_send.o)
- .debug_info    0x0000483d      0x264 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txint_init.o)
- .debug_info    0x00004aa1      0x12a ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(mymalloc.o)
- .debug_info    0x00004bcb      0x159 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_setbaud.o)
- .debug_info    0x00004d24      0x10b ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txmin_init.o)
- .debug_info    0x00004e2f      0x256 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_rxdma_init.o)
- .debug_info    0x00005085      0x15a ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(crc-32.o)
- .debug_info    0x000051df      0x120 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(can_nxp_setRS.o)
- .debug_info    0x000052ff      0x966 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(canwinch_setup_F103_pod.o)
- .debug_info    0x00005c65      0x1ab ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(panic_leds_pod.o)
- .debug_info    0x00005e10      0x1d7 ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(flash_write.o)
- .debug_info    0x00005fe7      0x22d ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(SENSORpinconfig.o)
- .debug_info    0x00006214      0x1bb ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(pinconfig_all.o)
- .debug_info    0x000063cf      0x16d ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(PODpinconfig.o)
- .debug_info    0x0000653c      0xeb6 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
- .debug_info    0x000073f2      0x286 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
- .debug_info    0x00007678      0x454 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
- .debug_info    0x00007acc      0x545 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
+ .debug_info    0x000001b0      0xa9c ldr.o
+ .debug_info    0x00000c4c      0x74d newlib_support.o
+ .debug_info    0x00001399     0x1424 canwinch_ldrproto.o
+ .debug_info    0x000027bd       0x69 ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(busfreq.o)
+ .debug_info    0x00002826      0x359 ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(clockspecifysetup.o)
+ .debug_info    0x00002b7f       0x7d ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(DTW_counter.o)
+ .debug_info    0x00002bfc      0x67c ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(printf.o)
+ .debug_info    0x00003278       0xb9 ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(startup_deh.o)
+ .debug_info    0x00003331      0x332 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_rxinttxint.o)
+ .debug_info    0x00003663      0x193 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_putc.o)
+ .debug_info    0x000037f6      0x199 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_puts.o)
+ .debug_info    0x0000398f      0x16c ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_send.o)
+ .debug_info    0x00003afb      0x157 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_busy.o)
+ .debug_info    0x00003c52      0x1b3 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txmin.o)
+ .debug_info    0x00003e05      0x271 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txdma_init.o)
+ .debug_info    0x00004076      0x179 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_tx_advlnptr.o)
+ .debug_info    0x000041ef      0x1fc ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_rxdma.o)
+ .debug_info    0x000043eb      0x2df ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_rxint_init.o)
+ .debug_info    0x000046ca      0x18b ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txint_send.o)
+ .debug_info    0x00004855      0x264 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txint_init.o)
+ .debug_info    0x00004ab9      0x12a ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(mymalloc.o)
+ .debug_info    0x00004be3      0x159 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_setbaud.o)
+ .debug_info    0x00004d3c      0x10b ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txmin_init.o)
+ .debug_info    0x00004e47      0x256 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_rxdma_init.o)
+ .debug_info    0x0000509d      0x15a ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(crc-32.o)
+ .debug_info    0x000051f7      0x120 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(can_nxp_setRS.o)
+ .debug_info    0x00005317      0x972 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(canwinch_setup_F103_pod.o)
+ .debug_info    0x00005c89      0x1ab ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(panic_leds_pod.o)
+ .debug_info    0x00005e34      0x1d7 ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(flash_write.o)
+ .debug_info    0x0000600b      0x22d ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(SENSORpinconfig.o)
+ .debug_info    0x00006238      0x1bb ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(pinconfig_all.o)
+ .debug_info    0x000063f3      0x16d ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(PODpinconfig.o)
+ .debug_info    0x00006560      0xfef ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
+ .debug_info    0x0000754f      0x286 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
+ .debug_info    0x000077d5      0x454 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
+ .debug_info    0x00007c29      0x551 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
 
-.debug_abbrev   0x00000000     0x2c44
+.debug_abbrev   0x00000000     0x2c19
  .debug_abbrev  0x00000000       0xdb vector.o
  .debug_abbrev  0x000000db      0x274 ldr.o
  .debug_abbrev  0x0000034f      0x210 newlib_support.o
@@ -744,10 +750,10 @@ OUTPUT(ldr elf32-littlearm)
  .debug_abbrev  0x0000218b      0x13c ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(SENSORpinconfig.o)
  .debug_abbrev  0x000022c7       0xf3 ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(pinconfig_all.o)
  .debug_abbrev  0x000023ba       0xbc ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(PODpinconfig.o)
- .debug_abbrev  0x00002476      0x356 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
- .debug_abbrev  0x000027cc      0x120 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
- .debug_abbrev  0x000028ec      0x1cb ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
- .debug_abbrev  0x00002ab7      0x18d ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
+ .debug_abbrev  0x00002476      0x32b ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
+ .debug_abbrev  0x000027a1      0x120 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
+ .debug_abbrev  0x000028c1      0x1cb ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
+ .debug_abbrev  0x00002a8c      0x18d ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
 
 .debug_aranges  0x00000000      0x4a8
  .debug_aranges
@@ -825,7 +831,7 @@ OUTPUT(ldr elf32-littlearm)
  .debug_aranges
                 0x00000488       0x20 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
 
-.debug_line     0x00000000     0x4762
+.debug_line     0x00000000     0x47e7
  .debug_line    0x00000000      0x1aa vector.o
  .debug_line    0x000001aa      0x416 ldr.o
  .debug_line    0x000005c0      0x1df newlib_support.o
@@ -859,86 +865,86 @@ OUTPUT(ldr elf32-littlearm)
  .debug_line    0x00003791      0x1d7 ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(SENSORpinconfig.o)
  .debug_line    0x00003968      0x196 ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(pinconfig_all.o)
  .debug_line    0x00003afe      0x1ba ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(PODpinconfig.o)
- .debug_line    0x00003cb8      0x499 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
- .debug_line    0x00004151      0x1ce ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
- .debug_line    0x0000431f      0x2bf ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
- .debug_line    0x000045de      0x184 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
+ .debug_line    0x00003cb8      0x51e ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
+ .debug_line    0x000041d6      0x1ce ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
+ .debug_line    0x000043a4      0x2bf ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
+ .debug_line    0x00004663      0x184 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
 
-.debug_str      0x00000000     0x1d9d
+.debug_str      0x00000000     0x1dd8
  .debug_str     0x00000000      0x1c5 vector.o
                                 0x20e (size before relaxing)
- .debug_str     0x000001c5      0x475 ldr.o
-                                0x62d (size before relaxing)
- .debug_str     0x0000063a      0x1f1 newlib_support.o
+ .debug_str     0x000001c5      0x47f ldr.o
+                                0x637 (size before relaxing)
+ .debug_str     0x00000644      0x1f1 newlib_support.o
                                 0x3e7 (size before relaxing)
- .debug_str     0x0000082b      0x271 canwinch_ldrproto.o
-                                0x6d8 (size before relaxing)
- .debug_str     0x00000a9c       0xc9 ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(busfreq.o)
+ .debug_str     0x00000835      0x271 canwinch_ldrproto.o
+                                0x6e2 (size before relaxing)
+ .debug_str     0x00000aa6       0xc9 ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(busfreq.o)
                                 0x102 (size before relaxing)
- .debug_str     0x00000b65      0x204 ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(clockspecifysetup.o)
+ .debug_str     0x00000b6f      0x204 ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(clockspecifysetup.o)
                                 0x3ae (size before relaxing)
- .debug_str     0x00000d69        0xe ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(DTW_counter.o)
+ .debug_str     0x00000d73        0xe ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(DTW_counter.o)
                                 0x162 (size before relaxing)
- .debug_str     0x00000d77       0x85 ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(printf.o)
+ .debug_str     0x00000d81       0x7f ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(printf.o)
                                 0x1ad (size before relaxing)
- .debug_str     0x00000dfc       0x5b ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(startup_deh.o)
+ .debug_str     0x00000e00       0x5b ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(startup_deh.o)
                                 0x13b (size before relaxing)
- .debug_str     0x00000e57      0x264 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_rxinttxint.o)
+ .debug_str     0x00000e5b      0x264 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_rxinttxint.o)
                                 0x3a9 (size before relaxing)
- .debug_str     0x000010bb       0x26 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_putc.o)
+ .debug_str     0x000010bf       0x26 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_putc.o)
                                 0x23b (size before relaxing)
- .debug_str     0x000010e1       0x21 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_puts.o)
+ .debug_str     0x000010e5       0x21 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_puts.o)
                                 0x236 (size before relaxing)
- .debug_str     0x00001102       0x26 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_send.o)
+ .debug_str     0x00001106       0x26 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_send.o)
                                 0x229 (size before relaxing)
- .debug_str     0x00001128       0x14 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_busy.o)
+ .debug_str     0x0000112c       0x14 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txint_busy.o)
                                 0x217 (size before relaxing)
- .debug_str     0x0000113c       0x33 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txmin.o)
+ .debug_str     0x00001140       0x33 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_txmin.o)
                                 0x241 (size before relaxing)
- .debug_str     0x0000116f       0x7c ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txdma_init.o)
+ .debug_str     0x00001173       0x7c ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txdma_init.o)
                                 0x29c (size before relaxing)
- .debug_str     0x000011eb       0x2c ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_tx_advlnptr.o)
+ .debug_str     0x000011ef       0x2c ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_tx_advlnptr.o)
                                 0x233 (size before relaxing)
- .debug_str     0x00001217       0x72 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_rxdma.o)
+ .debug_str     0x0000121b       0x72 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(USART1_rxdma.o)
                                 0x27b (size before relaxing)
- .debug_str     0x00001289       0x79 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_rxint_init.o)
+ .debug_str     0x0000128d       0x79 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_rxint_init.o)
                                 0x2df (size before relaxing)
- .debug_str     0x00001302       0x14 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txint_send.o)
+ .debug_str     0x00001306       0x14 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txint_send.o)
                                 0x233 (size before relaxing)
- .debug_str     0x00001316       0x31 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txint_init.o)
+ .debug_str     0x0000131a       0x31 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txint_init.o)
                                 0x29c (size before relaxing)
- .debug_str     0x00001347       0x28 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(mymalloc.o)
+ .debug_str     0x0000134b       0x28 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(mymalloc.o)
                                 0x1ab (size before relaxing)
- .debug_str     0x0000136f       0x55 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_setbaud.o)
+ .debug_str     0x00001373       0x55 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_setbaud.o)
                                 0x1fd (size before relaxing)
- .debug_str     0x000013c4       0x14 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txmin_init.o)
+ .debug_str     0x000013c8       0x14 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_txmin_init.o)
                                 0x1b6 (size before relaxing)
- .debug_str     0x000013d8       0x30 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_rxdma_init.o)
+ .debug_str     0x000013dc       0x30 ./../../../../svn_pod/sw_stm32/trunk/lib/libusartstm32/libusartstm32.a(usartx_rxdma_init.o)
                                 0x293 (size before relaxing)
- .debug_str     0x00001408       0x66 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(crc-32.o)
+ .debug_str     0x0000140c       0x66 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(crc-32.o)
                                 0x1a8 (size before relaxing)
- .debug_str     0x0000146e       0x24 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(can_nxp_setRS.o)
+ .debug_str     0x00001472       0x24 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(can_nxp_setRS.o)
                                 0x1b2 (size before relaxing)
- .debug_str     0x00001492      0x141 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(canwinch_setup_F103_pod.o)
-                                0x6e0 (size before relaxing)
- .debug_str     0x000015d3       0x28 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(panic_leds_pod.o)
+ .debug_str     0x00001496      0x141 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(canwinch_setup_F103_pod.o)
+                                0x6ea (size before relaxing)
+ .debug_str     0x000015d7       0x28 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(panic_leds_pod.o)
                                 0x1f0 (size before relaxing)
- .debug_str     0x000015fb      0x17d ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(flash_write.o)
+ .debug_str     0x000015ff      0x17d ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(flash_write.o)
                                 0x247 (size before relaxing)
- .debug_str     0x00001778       0xd6 ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(SENSORpinconfig.o)
+ .debug_str     0x0000177c       0xd6 ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(SENSORpinconfig.o)
                                 0x2c6 (size before relaxing)
- .debug_str     0x0000184e       0x52 ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(pinconfig_all.o)
+ .debug_str     0x00001852       0x52 ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(pinconfig_all.o)
                                 0x203 (size before relaxing)
- .debug_str     0x000018a0       0x42 ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(PODpinconfig.o)
+ .debug_str     0x000018a4       0x42 ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(PODpinconfig.o)
                                 0x1d0 (size before relaxing)
- .debug_str     0x000018e2      0x318 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
-                                0x6f9 (size before relaxing)
- .debug_str     0x00001bfa       0x1c ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
+ .debug_str     0x000018e6      0x34f ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
+                                0x73f (size before relaxing)
+ .debug_str     0x00001c35       0x1c ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
                                 0x26f (size before relaxing)
- .debug_str     0x00001c16      0x13c ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
+ .debug_str     0x00001c51      0x13c ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
                                 0x385 (size before relaxing)
- .debug_str     0x00001d52       0x4b ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
-                                0x3e9 (size before relaxing)
+ .debug_str     0x00001d8d       0x4b ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
+                                0x3f3 (size before relaxing)
 
 .comment        0x00000000       0x6e
  .comment       0x00000000       0x6e vector.o
@@ -1077,7 +1083,7 @@ OUTPUT(ldr elf32-littlearm)
  .ARM.attributes
                 0x000008df       0x2d /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-memset.o)
 
-.debug_frame    0x00000000     0x11a8
+.debug_frame    0x00000000     0x11bc
  .debug_frame   0x00000000       0x70 vector.o
  .debug_frame   0x00000070       0x80 ldr.o
  .debug_frame   0x000000f0      0x134 newlib_support.o
@@ -1115,15 +1121,15 @@ OUTPUT(ldr elf32-littlearm)
  .debug_frame   0x00000d08       0x3c ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(SENSORpinconfig.o)
  .debug_frame   0x00000d44       0x28 ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(pinconfig_all.o)
  .debug_frame   0x00000d6c       0x78 ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(PODpinconfig.o)
- .debug_frame   0x00000de4      0x1dc ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
- .debug_frame   0x00000fc0       0x34 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
- .debug_frame   0x00000ff4       0xf8 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
- .debug_frame   0x000010ec       0x40 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
- .debug_frame   0x0000112c       0x20 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-calloc.o)
- .debug_frame   0x0000114c       0x28 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-callocr.o)
- .debug_frame   0x00001174       0x34 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-memset.o)
+ .debug_frame   0x00000de4      0x1f0 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
+ .debug_frame   0x00000fd4       0x34 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
+ .debug_frame   0x00001008       0xf8 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
+ .debug_frame   0x00001100       0x40 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
+ .debug_frame   0x00001140       0x20 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-calloc.o)
+ .debug_frame   0x00001160       0x28 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-callocr.o)
+ .debug_frame   0x00001188       0x34 /home/deh/launchpad/gcc-arm-none-eabi-5_4-2016q3/arm-none-eabi/lib/armv7-m/libc.a(lib_a-memset.o)
 
-.debug_loc      0x00000000     0x3392
+.debug_loc      0x00000000     0x33e9
  .debug_loc     0x00000000       0xf3 ldr.o
  .debug_loc     0x000000f3      0x396 newlib_support.o
  .debug_loc     0x00000489      0xb33 canwinch_ldrproto.o
@@ -1151,14 +1157,13 @@ OUTPUT(ldr elf32-littlearm)
  .debug_loc     0x0000260b       0x75 ./../../../sw_f103/trunk/lib/libdevicestm32/libdevicestm32.a(SENSORpinconfig.o)
  .debug_loc     0x00002680       0xed ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(pinconfig_all.o)
  .debug_loc     0x0000276d       0xb4 ./../../../../svn_pod/sw_stm32/trunk/devices/libdevicesstm32.a(PODpinconfig.o)
- .debug_loc     0x00002821      0x5dc ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
- .debug_loc     0x00002dfd       0x74 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
- .debug_loc     0x00002e71      0x47c ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
- .debug_loc     0x000032ed       0xa5 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
+ .debug_loc     0x00002821      0x633 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)
+ .debug_loc     0x00002e54       0x74 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_port.o)
+ .debug_loc     0x00002ec8      0x47c ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver_filter.o)
+ .debug_loc     0x00003344       0xa5 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_msg_reset.o)
 
-.debug_ranges   0x00000000      0x178
+.debug_ranges   0x00000000      0x160
  .debug_ranges  0x00000000       0x20 ldr.o
  .debug_ranges  0x00000020       0xc0 canwinch_ldrproto.o
  .debug_ranges  0x000000e0       0x48 ./../../../../svn_pod/sw_stm32/trunk/lib/libmiscstm32/libmiscstm32.a(printf.o)
  .debug_ranges  0x00000128       0x38 ./../../../sw_f103/trunk/lib/libsensormisc/libsensormisc.a(panic_leds_pod.o)
- .debug_ranges  0x00000160       0x18 ./../../../../svn_common/trunk/f103/libcommon_allf103.a(can_driver.o)

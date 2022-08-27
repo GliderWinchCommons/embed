@@ -69,7 +69,7 @@ void WEAK CAN2_RX1_IRQHandler(void);
 #endif
 
 #include "can_driver.h"
-#include "../../../../svn_common/trunk/can_driver_port.h"
+#include "can_driver_port.h"
 #include "DTW_counter.h"
 
 

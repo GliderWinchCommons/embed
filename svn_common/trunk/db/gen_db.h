@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2022-08-20 20:56:00.57
+// 2022-08-27 12:51:09.742
 
-#define CANID_COUNT 335
+#define CANID_COUNT 337
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -334,6 +334,8 @@
 #define  CANID_UNIT_20            0x04E00000  // UNIT_20        : Gateway4: 1 CAN
 #define  CANID_UNIT_21            0x05000000  // UNIT_21        : Contactor1: Blue Pill Mboard
 #define  CANID_UNIT_22            0x05200000  // UNIT_22        : GEVCUr: gevcu replasement: DiscoveyF4 Control Panel
+#define  CANID_ALL_PC             0x05400000  // UNIT_X1        : PC sends to all CAN loaders
+#define  CANID_ALL_OTH            0x05600000  // UNIT_X2        : Someone else sends to all CAN loaders
 #define  CANID_UNIT_99            0xFFFFFF14  // UNIT_99        : Dummy for missing CAN IDs
 #define  CANID_DUMMY              0xFFFFFFFC  // UNIT_NU        : Dummy ID: Lowest priority possible (Not Used)
 #define  CANID_MSG_DUMMY          0xFFFFFF16  // ANY            : Dummy ID: Polled Msg dummy
@@ -951,6 +953,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 886  */
+/* TOTAL COUNT OF #defines = 888  */
 /* Test 2016/06/12 */
 

@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2022-08-27 12:51:09.742
+// 2022-09-09 12:46:26.239
 
 #define CANID_COUNT 337
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -359,7 +359,7 @@
 #define  TYP_ASC                 16        // 4           ascii chars
 #define  TYP_CANID               17        // 1           CANID (handled differently than a U32)
 
-#define CMD_CODES_COUNT 41
+#define CMD_CODES_COUNT 47
 #define  LDR_SET_ADDR            1         // 5 Set address pointer (not FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_SET_ADDR_FL         2         // 5 Set address pointer (FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_CRC                 3         // 8 Get CRC: 2-4 = count; 5-8 = start address; Reply CRC 2-4 na, 5-8 computed CRC 
@@ -384,6 +384,9 @@
 #define  LDR_WRVAL_PTR_SIZE      22        // Write data payload size
 #define  LDR_WRVAL_AI            23        // 8 Write: 2=memory area; 3-4=index; 5-8=one 4 byte value
 #define  LDR_SQUELCH             24        // 8 Send squelch sending tick ct: 2-8 count
+#define  LDR_GET_RTC             25        // 8 Send RTC register: 2 = reg number; 5-8 value
+#define  LDR_EOB                 26        // 8 End of Block: 2-5 CRC or some value
+#define  LDR_EOF                 27        // 8 End of Flash: 2-5 CRC or some value
 #define  CMD_GET_IDENT           30        // Get parameter using indentification name/number in byte [1]
 #define  CMD_PUT_IDENT           31        // Put parameter using indentification name/number in byte [1]
 #define  CMD_GET_INDEX           32        // Get parameter using index name/number in byte [1]
@@ -401,6 +404,9 @@
 #define  CMD_CMD_TYPE3           44        // [1]-[7] format 3
 #define  CMD_CMD_HEARTBEAT       45        // [1]-[7] Heartbeat format specific to unit
 #define  CMD_CMD_TYPE4           46        // [1]-[7] format 4
+#define  CMD_CMD_SYS_RESET_ALL   166       // 0xA6: [0] Cause System Reset for all
+#define  CMD_CMD_SYS_RESET_CID   167       // 0xA7: [0] Cause System Reset for CAN ID sent in payload
+#define  CMD_CMD_SYS_RESET_EXT   168       // 0xA8: [0] Extend current loader wait duration for all, [1] = wait in 0.1 sec steps
 
 #define PAYLOAD_TYPE_COUNT 51
 #define  NONE                    0         // No payload bytes                                
@@ -953,6 +959,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 888  */
+/* TOTAL COUNT OF #defines = 894  */
 /* Test 2016/06/12 */
 

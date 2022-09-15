@@ -27,10 +27,18 @@
 #include "common_can.h"	// Definitions common to CAN and this project.
 
 /******************************************************************************/
+ void download_init(void);
+/* @brief 	: Init stuff
+ ******************************************************************************/
 void download_canbus_msg(struct CANRCVBUF* p);
 /* @brief 	: Incoming CAN msgs
  * param    : p = pointer to CAN msg struct
 *******************************************************************************/
+void download_time_chk(void);
+/* @brief 	: Poll wait-for-response timeout
+ * param    : p = pointer to CAN msg struct
+*******************************************************************************/
+
 
 #endif
 

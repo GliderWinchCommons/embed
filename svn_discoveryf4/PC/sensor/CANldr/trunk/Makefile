@@ -17,7 +17,7 @@ CFLAGS		= -Wall -Wstrict-prototypes \
 
 
 # Libraries (.a)
-LDFLAGS         = -L../../../../common_all/trunk/PC -lcommon_all -lz -lpthread
+LDFLAGS         = -L../../../../common_all/trunk/PC -lcommon_all -lz -lpthread -lrt
 
 # List of files to be compiled
 OBJS = $(NAME).o \
@@ -26,6 +26,7 @@ cmd_c.o \
 download.o\
 sockclient.o \
 timer_thread.o \
+crc-32_nib.o \
 
 
 

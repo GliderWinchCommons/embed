@@ -405,6 +405,8 @@ printf("%d %s\n",i, argv[i]);
 	pctogateway.mode_link = MODE_LINK;	// Set modes for routines that receive and send CAN msgs
 	do_printmenu();				// Print an initial keyboard command menu
 
+	download_init();
+
 	tmdetect = TMDETECT;		/* Refresh timeout timer */
 /* ************************************************************************************************** */
 	/* The following is endless until broken by ctl C */
@@ -425,7 +427,7 @@ printf("%d %s\n",i, argv[i]);
 		{ // When no file descriptors are responsible, then it must have been the timeout expiring
 		/* Sending test msgs to CAN if we opened a file with the list. */
 			tmdetect = TMDETECT;		/* Refresh timeout timer */
-			cmd_c_do_msg(NULL);	// Poll cmd_c: launch parameter timeout detection
+			download_time_chk();	// Poll wait-for-response timeout
 		}
 
 		/* Incoming bytes from CAN gateway, arriving via serial port (file descriptor: 'fdp'). */

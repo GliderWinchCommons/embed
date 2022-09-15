@@ -61,6 +61,7 @@ e.g. Download CAN node with CAN ID 0xB0A00000 and extended .bin file--
 #include "USB_PC_gateway.h"
 #include "commands.h"
 #include "cmd_c.h"
+#include "download.h"
 
 #include "sockclient.h"
 
@@ -71,23 +72,25 @@ int CANsendmsg(struct CANRCVBUF* pin);
 #define PCMSGBUFSIZE	256
 u8 PCmsg[PCMSGBUFSIZE];
 
-/* Initial test msg */
-char *ptestfox = "THE FOX JUMPED OVER A LAZY DOG'S BACK 0123456789\n";
-#define TESTBINSIZE	11
-unsigned char testbin[TESTBINSIZE] = {CAN_PC_ESCAPE,CAN_PC_ESCAPE,0x01,0x02,0x03,0x04,0xAA,0x55,CAN_PC_FRAMEBOUNDARY,CAN_PC_ESCAPE,CAN_PC_FRAMEBOUNDARY};
-unsigned char *ptestbin = &testbin[0];
+uint32_t xbin_addr;
+uint32_t xbin_size;
+uint32_t xbin_crc;
+uint32_t xbin_checksum;
+int xbin_in_ct;
 
+#define MAXXBIN (1024*1024)
+uint8_t bin[MAXXBIN];
 
 static struct PCTOGATEWAY pctogateway; // Receives de-stuffed incoming msgs from PC.
 static struct CANRCVBUF canrcvbuf;
 //static struct PCTOGATECOMPRESSED pctogatecompressed;
 
+/* Program ends when (exit_flag != 0). */
+uint8_t exit_flag; 
+int8_t exit_code; // Code to be passed out
+
 /* CAN node loader CAN ID passed in from command line */
 uint32_t CANnodeid;
-
-/* For input file */
-#define LINESIZE	256
-char listbuf[LINESIZE];
 
 /* Keyboard key to break loop and exit */
 #define CONTROLC 0x03	/* Control C input char */
@@ -126,25 +129,7 @@ struct LINEIN
 #define BUFSIZE	4096
 char buf[BUFSIZE];
 
-/* For start stop */
-struct SS
-{
-	time_t t;	// Linux time
-	struct tm tm;	// Year, month, etc.
-	char c[14];	// ascii yymmddhhmmss (e.g. 111229235900'\0' for Dec 12, 2011 23:59:00)
-}s_start,s_stop;
-char * pc;
-
-/* Start|stop linux times */
-//time_t t_start_pod;
-//time_t t_stop_pod;
-//unsigned long long ll_start,ll_stop;
-
 struct timeval tv;	/* time value for select() */
-
-//fd_set fdsetRd,fdsetRdx;	/* fd_set struc */
-//fd_set fdsetWr,fdsetWrx;
-//int iSelRet;	/* select() return value */
 
 /* The following needs to have file scope so that we can use them in signal handlers */
 struct termios pts;	/* termios settings on port */
@@ -368,6 +353,34 @@ printf("%d %s\n",i, argv[i]);
 	}
 	printf("Xbin opened: %s\n",argv[socketsw]);
 
+	fread(&xbin_addr,    4,1,fpXbin);
+	fread(&xbin_size,    4,1,fpXbin);
+	fread(&xbin_crc,     4,1,fpXbin);
+	fread(&xbin_checksum,4,1,fpXbin);
+
+	printf("xbin_addr:     0x%08X\n",xbin_addr);
+	printf("xbin_size:     0x%08X\n",xbin_size);
+	printf("xbin_crc:      0x%08X\n",xbin_crc);
+	printf("xbin_checksum: 0x%08X\n",xbin_checksum);
+
+	xbin_in_ct = 0;
+	do
+	{
+		xret =fread(&bin[xbin_in_ct],1,1,fpXbin);
+		xbin_in_ct += 1;
+		if (xbin_in_ct >= MAXXBIN)
+		{
+			printf("XBIN readin too large!!!: %d\b",xbin_in_ct);
+			exit(-3);
+		}
+	} while (xret != 0);
+
+	printf("xbin_in_ct   : 0x%08X\n",xbin_in_ct);
+	rewind(fpXbin);
+	fseek(fpXbin,0L, SEEK_END);
+	printf("fseek size   : 0x%08X\n",(unsigned int)ftell(fpXbin));
+	
+
 	lineinK.idx = 0;lineinS.idx=0;	/* jic */
 
 	/* Timer for detecting response failure from gateway/CAN BUS */
@@ -378,6 +391,8 @@ printf("%d %s\n",i, argv[i]);
 	PC_msg_initg(&pctogateway);		// Initialize struct for a msg from gateway to PC
 	pctogateway.mode_link = MODE_LINK;	// Set modes for routines that receive and send CAN msgs
 //	do_printmenu();				// Print an initial keyboard command menu
+
+	download_init();
 
 	tmdetect = TMDETECT;		/* Refresh timeout timer */
 /* ************************************************************************************************** */
@@ -399,7 +414,8 @@ printf("%d %s\n",i, argv[i]);
 		{ // When no file descriptors are responsible, then it must have been the timeout expiring
 		/* Sending test msgs to CAN if we opened a file with the list. */
 			tmdetect = TMDETECT;		/* Refresh timeout timer */
-			cmd_c_do_msg(NULL);	// Poll cmd_c: launch parameter timeout detection
+//			cmd_c_do_msg(NULL);	// Poll cmd_c: launch parameter timeout detection
+			download_time_chk();
 		}
 
 		/* Incoming bytes from CAN gateway, arriving via serial port (file descriptor: 'fdp'). */
@@ -467,22 +483,15 @@ printf("\n%s\n",&pctogateway.asc[0]);
 		}
 
 
-	} while (done == 0); // End "do" when someone sets the 'done' switch to non-zero
+	} while ((done == 0) || (exit_flag == 0)); // End "do" when someone sets the 'done' switch to non-zero
 
 	/* Restore original terminal settings and exit */
 	tcsetattr(fdp, TCSANOW, &pots);
 	tcsetattr(STDIN_FILENO, TCSANOW, &sots);
-	printf ("\ncangate Done\n");
+	printf ("\nCANldr killed from keyboard\n");
 
-	if (goodfilesw == 0)
-	{ // Here a file was not opened (and written)
-		
-		exit(-1);	// Let a script calling this know to exit
-	}
-	else
-	{ // What looks like a valid file was opened and then closed
-		exit(0);	// Let a script calling this know to proceed
-	}
+	// exit_code lets a script calling this know to proceed
+	exit(exit_code);	
 }
 /* **************************************************************************************
  * int CANsendmsg(struct CANRCVBUF* pin);

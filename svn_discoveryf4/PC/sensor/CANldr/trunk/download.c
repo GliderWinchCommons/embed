@@ -4,23 +4,98 @@
 * Board              : PC
 * Description        : CAN download 
 *******************************************************************************/
-
+#include <signal.h>
+#include <time.h>
 #include "gatecomm.h"
 #include "PC_gateway_comm.h"	// Common to PC and STM32
 #include "USB_PC_gateway.h"
 #include "../../../../../svn_common/trunk/db/gen_db.h"
+#include "crc-32_nib.h"
+#include "download.h"
+
+#define MSEC (1000*1000) // 1 msec (nanosec ticks) PC timer
+#define CANSEC (1000) // 1 sec (1 ms ticks) CAN node timing
+
+#define MAXXBIN (1024*1024)
+extern uint8_t bin[MAXXBIN];
 
 /* CAN node loader CAN ID passed in from command line */
 extern uint32_t CANnodeid;
+extern uint32_t xbin_addr;
+extern uint32_t xbin_size;
+extern uint32_t xbin_crc;
+extern uint32_t xbin_checksum;
+extern int xbin_in_ct;
+
+/* Program ends when (exit_flag != 0). */
+extern uint8_t exit_flag; 
+extern uint8_t exit_code; 
+
+int state_timer_retry_ct;
+int state_msg_retry_ct;
+
+uint32_t req_size; // Number byte the node requests
+uint32_t bin_ct;
+uint32_t bin_ct_prev;
+uint32_t crc;
+uint32_t crc_prev;
+uint8_t data_retry_ct;
+
+/* Flags for termination of sending. */
+#define TOTAL_FLAG (1 << 0)
+#define BURST_FLAG (1 << 1)
+uint8_t bt_flag;
 
 /* File pointer with extended binary to be sent. */
 extern FILE *fpXbin;
 extern int fdp;	/* port file descriptor */
 
+static void download_settimeout(uint32_t sec, uint32_t nsec);
+
+enum STATES_MSG
+{
+	STATE_MSG_RESET,
+	STATE_MSG_SQUELCH,
+	STATE_MSG_REQ_CRC,	
+	STATE_MSG_ADDR_RESPONSE,
+	STATE_MSG_DATA_END_OF,	
+};
+
+enum STATES_TIMER
+{
+	STATE_TIM_IDLE,
+	STATE_TIM_RESET,
+	STATE_TIM_SQUELCH,
+	STATE_TIM_REQ_CRC,
+	STATE_TIM_REQ_CRC_TO, /* suffix TO = Time Out */
+	STATE_TIM_SET_ADDR_TO,
+	STATE_TIM_DATA_END_OF_TO,
+};
 
 static struct CANRCVBUF cantx;
 static u8 canseqnumber = 0;
 
+static timer_t timerid;
+static struct sigevent sigevent;
+static struct itimerspec new_value;
+static struct itimerspec current_value;
+
+static uint8_t state_timer; // State machine for timer timeouts
+static uint8_t state_msg;   // State machine for CAN msgs
+
+/******************************************************************************
+ * static void printCANmsg(struct CANRCVBUF* pcan);
+ * @brief 	: CAN msg printout for diagnostic purposes
+ * @param   : pcan = pointer to CANRCVBUF with mesg
+ ******************************************************************************/
+static void printCANmsg(struct CANRCVBUF* pcan)
+{
+	printf("\t0x%08X %d: %2d, ",pcan->id,pcan->dlc,pcan->cd.uc[0]);
+	for (int i= 0; i < pcan->dlc; i++)
+		printf(" %02X",pcan->cd.uc[i]);
+	printf("\n");
+	return;
+}
 /******************************************************************************
  * static void loadpay(uint8_t* po, uint32_t data);
  * @brief 	: Load payload bytes
@@ -46,6 +121,7 @@ static void sendcanmsg(struct CANRCVBUF* pcan)
 	pctogateway.mode_link = MODE_LINK;	// Set mode for routines that receive and send CAN msgs
 	pctogateway.cmprs.seq = canseqnumber;	// Add sequence number (for PC checking for missing msgs)
 	USB_toPC_msg_mode(fdp, &pctogateway, pcan); 	// Send to file descriptor (e.g. serial port)
+printf("state_msg %d state_timer %d: ",state_msg,state_timer);
 printf("TX:%3d %08X %d: ",canseqnumber,pcan->id, pcan->dlc);
 for (int i = 0; i < pcan->dlc; i++)printf(" %02X", pcan->cd.u8[i]);
 printf("\n");
@@ -53,25 +129,150 @@ printf("\n");
 	return;
 }
 /******************************************************************************
- * static void send_squelch(void);
- * @brief 	: 
+ * static void send_U8nnnX4(uint32_t canid, uint8_t code);
+ * @brief 	: Send msg: id = CANID_UNI_BMS_PC_I; one byte payload
+ * @param   : code = payload of can.cd.uc[0]
 *******************************************************************************/
-static void send_squelch(void)
+/* 
+In this CAN msg pay[1]-pay[3] are not used.
+See format: 'U8_U8_U8_X4' in PAYLOAD_TYPE_INSERT.sql
+*/
+static void send_U8nnnX4(uint32_t canid, uint8_t cmd, uint32_t value)
 {
-	cantx.id       = CANID_UNI_BMS_PC_I;
+	cantx.id       = canid;
 	cantx.dlc      = 8;
-	cantx.cd.uc[0] = LDR_SQUELCH;
-	loadpay(&cantx.cd.uc[4], 10000); // Send ms of time delay
+	cantx.cd.ui[0] = 0; // Zero pay[0]-pay[3]
+	cantx.cd.uc[0] = cmd; // Set pay[0]
+	loadpay(&cantx.cd.uc[4], value); // Set pay[4]-pay[7]
+	sendcanmsg(&cantx);
+	return;	
+}
+/******************************************************************************
+ * static void send_CANnodeid_1(uint8_t code);
+ * @brief 	: Send msg: id = CANID_UNI_BMS_PC_I; one byte payload
+ * @param   : code = payload of can.cd.uc[0]
+*******************************************************************************/
+static void send_CANnodeid_1(uint8_t code)
+{
+	cantx.id       = CANnodeid;
+	cantx.dlc      = 1;
+	cantx.cd.ui[0] = code; // Zero pay[0]-pay[3]
 	sendcanmsg(&cantx);
 	return;
 }
 /******************************************************************************
+ * static void send_nodeid_data(void);
+ * @brief 	: Send CAN msgs until either the CAN node's byte count or at the
+ *          : end of the binary array is reached.
+*******************************************************************************/
+static void send_CANnodeid_data(void)
+{
+	int i;
+
+	/* Save in case we have to retransmit. */
+	bin_ct_prev = bin_ct;
+	crc_prev = crc;
+
+	cantx.id       = CANnodeid;
+	cantx.cd.uc[0] = LDR_DATA; // CAN msg code
+
+	/* Reset flags: total and burst */
+	bt_flag = 0;
+
+	uint32_t burst_ct = 0;
+
+	/* Send CAN msgs until either request fulfilled or end of data. */		
+	while(bt_flag == 0)
+	{
+		i = 1; // Load payload: start with payload uc[1];
+
+		/* End when request fulfilled or end of load. */
+		while ((i < 8) && (bt_flag == 0)) // Max 7 bytes per CAN msg
+		{
+			// Load payload with bin data
+			cantx.cd.uc[i] = bin[bin_ct];
+
+			// Accumulate CRC for bytes sent 
+			crc = crc_32_nib_acc(crc,cantx.cd.uc[i]);
+
+			// End of program limit
+			bin_ct += 1; // Number sent in total program
+			if (bin_ct > xbin_in_ct )
+			{ // That was the last one! End of bin array.
+				bt_flag |= TOTAL_FLAG;
+			}
+			
+			// CAN node's request limit
+			burst_ct += 1; // Number in request fulfilled
+			if (burst_ct > req_size)
+			{ // Number fulfilled matches number requested				
+				bt_flag |= BURST_FLAG;
+			}
+
+			/* Break loading when request or end reached. */
+			if (bt_flag != 0)
+				break;
+
+			i += 1;
+		}
+		cantx.dlc = (i+1); // DLC will vary: 2-8
+		sendcanmsg(&cantx); 
+	} 
+
+	/* Last CAN msg of program data was sent. 
+	   Send end of request, or end of bin array msg. */
+	// Select msg code
+	if ((bt_flag & TOTAL_FLAG) != 0)
+	{
+		cantx.cd.uc[0] = LDR_EOF; // End of flashing code
+	}
+	else
+	{ // More program remains, burst request complete
+		cantx.cd.uc[0] = LDR_EOB; // End of block (request) code
+	}
+
+	/* Send CAN msg with "END OF <code>" plus current CRC. */
+	cantx.dlc = 8;
+	loadpay(&cantx.cd.uc[4], crc); // Set CRC as last word in payload
+	sendcanmsg(&cantx); // Tell CAN node we are done and wait your reply.
+
+	return;
+}
+/******************************************************************************
  * void download_init(void);
- * @brief 	: Reset 
+ * @brief 	: Init stuff
 *******************************************************************************/
 void download_init(void)
 {
+	sigevent.sigev_notify = SIGEV_NONE;
+	int ret = timer_create(CLOCK_REALTIME, &sigevent, &timerid);
+	if (ret != 0)
+	{
+		printf("FAIL download_int:timer_create %d\n",ret);
+		exit_flag = 1; exit_code = (-17); 
+		return;
+	}
 
+	/* Initial timeout from "now" setting. */
+	new_value.it_interval.tv_sec =  0;
+	new_value.it_interval.tv_nsec = 0;
+
+	/* Zero defines it as a one-shot timer. */
+	new_value.it_value.tv_sec =  0;
+	new_value.it_value.tv_nsec = (100*MSEC); // 100 ms timeout
+
+    ret = timer_settime(timerid, 0, &new_value, NULL);//&old_value);
+    if (ret != 0)
+    {
+		printf("FAIL download_int:timer_settime %d\n",ret);
+		exit_flag = 1; exit_code = (-16); 
+		return;
+    }
+
+	state_msg   = STATE_TIM_RESET;
+	state_timer = STATE_TIM_RESET;
+
+    return;
 }
 /******************************************************************************
  * void download_canbus_msg(struct CANRCVBUF* p);
@@ -80,17 +281,260 @@ void download_init(void)
 *******************************************************************************/
 void download_canbus_msg(struct CANRCVBUF* p)
 {
-	union UIF
-	{
-		uint32_t ui;
-		float f;
-	};
-
 	if ((p->id & 0xfffffffc) != CANnodeid) return;
 
-printf("0x%08X %d\n",p->id,p->dlc);
-	send_squelch();
+	/* Here, CAN msg from target CAN node. */
+	download_settimeout(0, (50*MSEC)); // 50 ms timeout reset one-shot timer
 
+printf("state_msg %d state_timer %d: ",state_msg,state_timer);
+printf("TX:%3d %08X %d: ",canseqnumber,p->id, p->dlc);
+for (int i = 0; i < p->dlc; i++)printf(" %02X", p->cd.u8[i]);
+printf("\n");	
+
+	/* Ignore a heartbeat msg which may have come in */
+	if (p->id == CMD_CMD_HEARTBEAT) 
+	{
+		state_timer = STATE_TIM_SQUELCH;
+		printf("HB msg: state_msg %d state_timer %d\n",state_msg,state_timer);
+		printCANmsg(p);
+		download_time_chk(); // Send squelch again(?)
+		return;
+	}
+
+	switch(state_msg)
+	{
+	case STATE_MSG_REQ_CRC:
+		if (p->cd.uc[0] != LDR_CRC)
+		{
+			printf("Node response unexpected: STATE_MSG_REQ_CRC: expected cmd %d got %d\n\t",LDR_CRC, p->cd.uc[0]);
+			printCANmsg(p); // Print CAN msg
+			exit_flag = 1; exit_code = (-14); 
+			return;
+		}
+		else
+		{ // Node returned expected command code: LDR_CRC
+			if (p->dlc != 8)
+			{
+				printf("Node response: STATE_MSG_REQ_CRC: dlc not 8 got %d\n\t",p->dlc);
+				printCANmsg(p); // Print CAN msg
+				exit (-15);	
+			}
+			/* Payload has node's CRC. */
+			if (p->cd.ui[1] != xbin_crc) // Note: word compare
+			{
+	printf("Node CRC does not match our CRC: 0x%08X 0x%08X retry ct: %d\n",p->cd.ui[1],xbin_crc,state_msg_retry_ct);		
+				state_msg_retry_ct += 1;
+				if (state_msg_retry_ct > 2)
+				{ // Here CRCs do not match so we assume a program load is needed
+					// Send load addr to node
+					send_U8nnnX4(CANnodeid,LDR_SET_ADDR_FL, xbin_addr);
+					state_timer = STATE_TIM_SET_ADDR_TO; // Timeout takes action here
+					download_settimeout(0, (50*MSEC)); // 50 ms Timeout duration
+					state_msg = STATE_MSG_ADDR_RESPONSE;
+					bin_ct = 0;
+					/* Here either expect a response to LDR_SET_ADDR_FL cmd or a timeout */
+					break;
+				}
+			}
+			// CRC are the same, so download not needed(?) Hence exit with return of +1.
+			exit_flag = 1; exit_code = (1); 
+			return;
+		}
+		break;
+
+	case STATE_MSG_ADDR_RESPONSE: // Node responded to our LDR_SET_ADDR_FL msg
+		if (p->cd.uc[0] == LDR_ACK)
+		{ // Here, node did not have a problem with the address sent
+			req_size = p->cd.ui[1]; // Node requests bytes
+			if ((req_size > (512*1024) || (req_size == 0)))
+			{
+				printf("STATE_MSG_ADDR_RESPONSE: BOGUS req_size: %d\n",req_size);
+				printCANmsg(p); // Print CAN msg
+				exit_flag = 1; exit_code = (-16); 
+				return;
+			}
+
+			/* Beginning of load inits. */
+			crc = ~0L;  // Build CRC as download progresses
+			bin_ct = 0; // Binary data array, bin[], index
+
+			// Set timeout for sending. 
+			download_settimeout((req_size/1500 + 1), 0); // 
+			send_CANnodeid_data();
+			state_timer = STATE_TIM_DATA_END_OF_TO;
+			state_msg = STATE_MSG_DATA_END_OF;
+			break;
+		}
+
+		if (p->cd.uc[0] == LDR_NACK)
+		{
+			printf("Node says load address out of range: 0x%08X\n",xbin_addr);
+			printCANmsg(p); // Print CAN msg
+			exit_flag = 1; exit_code = (-8); 
+			return;
+		}
+		printf("Node response unexpected code: STATE_MSG_ADDR_RESPONSE cmd: %d subcmd: %d\n",p->cd.uc[0],p->cd.uc[1]);
+		break;
+
+	case STATE_MSG_DATA_END_OF:	// CAN msg should have sent LDR_EOB or LDR_EOF cmd codes
+
+		/* Renew squelch timeout. */
+		send_U8nnnX4(CANID_UNI_BMS_PC_I,LDR_SQUELCH, (10*CANSEC)); // 10 sec squelch
+
+		if (p->dlc != 8)
+		{ // Here, dlc is wrong for expected response msg.
+			printf("STATE_MSG_DATA_END_OF: dlc not 8: %d\n",p->dlc);
+			printCANmsg(p); // Print CAN msg
+			exit_flag = 1; exit_code = (-9); 
+			return;
+		}
+
+		/* Node request size (bytes) */
+		req_size = p->cd.ui[1];
+		if ((req_size > (1024*1024) || (req_size == 0)))
+		{
+			printf("STATE_MSG_DATA_END_OF: BOGUS req_size: %d\n",req_size);
+			printCANmsg(p); // Print CAN msg
+			exit_flag = 1; exit_code = (-13); 
+			return;
+		}
+
+		if (p->cd.uc[0] == LDR_ACK)
+		{ // Node was happy and asks for more data
+			if ((bt_flag & TOTAL_FLAG) != 0)
+			{ // Here, we sent EOF (end of bin array)
+				exit_flag = 1; exit_code = (0); 
+				return; // Success (is likely!)
+			}
+			// Here, we sent EOB, so there is more to send
+			req_size = p->cd.ui[1]; // Size (bytes) of request
+			state_timer = STATE_TIM_DATA_END_OF_TO; // Reset timer
+			download_settimeout((req_size/1500 + 1), 0); // 
+			send_CANnodeid_data(); // Send a burst
+			break;
+		}
+
+		if (p->cd.uc[0] == LDR_NACK)
+		{ // Node rejects and is sorrowful
+			data_retry_ct += 1;
+			if (data_retry_ct < 3)
+			{ // Execute a retransmission
+				bin_ct_prev = bin_ct;
+				crc_prev = crc;
+				download_settimeout((req_size/1500 + 1), 0); // 
+				send_CANnodeid_data();
+				break;
+			}
+			else
+			{
+				printf("STATE_MSG_DATA_END_OF: NACK: retry fail: bin_ct %d bt_flag %1X\n",bin_ct,bt_flag);
+				printCANmsg(p); // Print CAN msg
+				exit_flag = 1; exit_code = (-10); 
+				return;
+			}
+		}
+		printf("STATE_MSG_DATA_END_OF: Node response unexpected code: cmd: %d subcmd: %d\n",p->cd.uc[0],p->cd.uc[1]);
+		printCANmsg(p); // Print CAN msg
+		exit_flag = 1; exit_code = (-6); 
+		break;	
+
+	default:
+	  printf("UNEXPECTED MSG CODE: state_msg: %d state_timer %d\n\r",state_msg,state_timer);
+	  printCANmsg(p); // Print CAN msg
+	  exit_flag = 1; exit_code = (-11); 
+	  break;
+	}
+	return;
+}
+/******************************************************************************
+ * void download_time_chk(void);
+ * @brief 	: Poll wait-for-response timeout
+ * param    : p = pointer to CAN msg struct
+*******************************************************************************/
+void download_time_chk(void)
+{
+	int ret = 0;
+	ret = timer_gettime(timerid, &current_value);
+	if (ret != 0)
+		printf("FAIL:download_time_chk1:timer_gettime: %d\n",ret);
+
+	if ((current_value.it_value.tv_nsec == 0) && (current_value.it_value.tv_sec == 0))
+	{
+		switch (state_timer)
+		{
+		case STATE_TIM_IDLE:
+			return;
+
+		case STATE_TIM_RESET: // Send CAN msg to reset
+			send_U8nnnX4(CANID_UNI_BMS_PC_I,LDR_RESET,0); // Send reset to "everybody" (i.e. 0 payload word)
+			state_timer = STATE_TIM_SQUELCH;
+			download_settimeout(0, (100*MSEC)); // 100 ms timeout
+			break;
+
+		case STATE_TIM_SQUELCH: // Send squelch to loader HB's for everybody
+			send_U8nnnX4(CANID_UNI_BMS_PC_I,LDR_SQUELCH, (10*CANSEC)); // 10 sec squelch
+			download_settimeout(0, (50*MSEC)); // 50 ms timeout
+			state_timer_retry_ct = 0; // Number timeout retries
+			state_msg_retry_ct = 0;  // Number of results mismatch retries
+			state_timer = STATE_TIM_REQ_CRC;
+			break;	
+
+		case STATE_TIM_REQ_CRC: // Request CRC from target node
+			send_CANnodeid_1(LDR_CRC); // NOTE: CAN node CAN id
+			state_msg = STATE_MSG_REQ_CRC; // Expect CRC ACK or NACK
+			download_settimeout(0, (50*MSEC)); // 50 ms timeout	
+			break;
+	// Suffix TO stands for timeout, i.e. failure to get a timely response
+		case STATE_TIM_REQ_CRC_TO: // Timeout waiting for CRC response
+			printf("### FAILED WAITING FOR SET_ADDR RESPONSE: retry ctr %d\n",state_timer_retry_ct);
+			download_settimeout(0, (50*MSEC)); // 50 ms timeout
+			exit_flag = 1; exit_code = (-7);
+			break;
+			
+
+		case STATE_TIM_SET_ADDR_TO: // Timeout waiting load address response
+			send_U8nnnX4(CANnodeid,LDR_SET_ADDR_FL, xbin_addr);
+			download_settimeout(0, (50*MSEC)); // 50 ms timeout
+			state_msg = STATE_MSG_ADDR_RESPONSE;
+			break;
+
+		case STATE_TIM_DATA_END_OF_TO: // Timeout waiting for response to CAN msg data burst
+			printf("## FAIL: STATE_TIM_DATA_END_OF_TO: bin_ct %d bt_flag %1X\n",bin_ct,bt_flag);
+			exit_flag = 1; exit_code = (-12);
+			break;					
+
+		default:
+			printf("default:state_timer: %d\n",state_timer);
+			break;
+		}
+
+
+		ret = timer_settime(timerid, 0, &new_value, NULL);//&old_value);
+    	if (ret != 0)
+    	{
+			printf("FAIL download_time_chk1:timer_settime %d\n",ret);
+			exit_flag = 1; exit_code = (-5);
+    	}
+	}
+	return;
+}
+/******************************************************************************
+ * static void download_settimeout(uint32_t sec, uint32_t nsec);
+ * @brief 	: Set timer timeout (nsec) (secs = 0)
+ * param    : sec  = secs to wait
+ * param    : nsec = nanosecs to wait (max = 999999999,i.e. 0.999... secs)
+*******************************************************************************/
+static void download_settimeout(uint32_t sec, uint32_t nsec)
+{
+	new_value.it_value.tv_sec =  sec;
+	new_value.it_value.tv_nsec = nsec;
+
+	int ret = timer_settime(timerid, 0, &new_value, NULL);//&old_value);
+   	if (ret != 0)
+   	{
+		printf("## FAIL download_time_chk2:timer_settime %d\n",ret);
+		exit_flag = 1; exit_code = (-4);
+   	}
 
 	return;
 }

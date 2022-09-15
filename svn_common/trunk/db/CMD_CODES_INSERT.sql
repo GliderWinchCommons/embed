@@ -42,6 +42,7 @@ INSERT INTO CMD_CODES  VALUES ('LDR_SQUELCH',		24,	'8 Send squelch sending tick 
 INSERT INTO CMD_CODES  VALUES ('LDR_GET_RTC',		25,	'8 Send RTC register: 2 = reg number; 5-8 value');
 INSERT INTO CMD_CODES  VALUES ('LDR_EOB',    		26,	'8 End of Block: 2-5 CRC or some value');
 INSERT INTO CMD_CODES  VALUES ('LDR_EOF',    		27,	'8 End of Flash: 2-5 CRC or some value');
+INSERT INTO CMD_CODES  VALUES ('LDR_DATA',    		28,	'8 1-7 bytes of data in payload');
 
 INSERT INTO CMD_CODES  VALUES ('CMD_GET_IDENT',		30,	'Get parameter using indentification name/number in byte [1]');
 INSERT INTO CMD_CODES  VALUES ('CMD_PUT_IDENT',		31,	'Put parameter using indentification name/number in byte [1]');

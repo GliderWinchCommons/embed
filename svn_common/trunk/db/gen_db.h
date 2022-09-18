@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2022-09-13 19:44:00.707
+// 2022-09-15 21:35:54.1
 
 #define CANID_COUNT 337
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -359,10 +359,10 @@
 #define  TYP_ASC                 16        // 4           ascii chars
 #define  TYP_CANID               17        // 1           CANID (handled differently than a U32)
 
-#define CMD_CODES_COUNT 48
+#define CMD_CODES_COUNT 49
 #define  LDR_SET_ADDR            1         // 5 Set address pointer (not FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_SET_ADDR_FL         2         // 5 Set address pointer (FLASH) (bytes 2-5):  Respond with last written address.
-#define  LDR_CRC                 3         // 8 Get CRC: 2-4 = count; 5-8 = start address; Reply CRC 2-4 na, 5-8 computed CRC 
+#define  LDR_CRC                 3         // 8 Get CRC: 4-7
 #define  LDR_ACK                 4         // 1 ACK: Positive acknowledge (Get next something)
 #define  LDR_NACK                5         // 1 NACK: Negative acknowledge (So? How do we know it is wrong?)
 #define  LDR_JMP                 6         // 5 Jump: to address supplied (bytes 2-5)
@@ -388,6 +388,7 @@
 #define  LDR_EOB                 26        // 8 End of Block: 2-5 CRC or some value
 #define  LDR_EOF                 27        // 8 End of Flash: 2-5 CRC or some value
 #define  LDR_DATA                28        // 8 1-7 bytes of data in payload
+#define  LDR_CHKSUM              29        // 8 Get checksum 4-7
 #define  CMD_GET_IDENT           30        // Get parameter using indentification name/number in byte [1]
 #define  CMD_PUT_IDENT           31        // Put parameter using indentification name/number in byte [1]
 #define  CMD_GET_INDEX           32        // Get parameter using index name/number in byte [1]
@@ -960,6 +961,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 895  */
+/* TOTAL COUNT OF #defines = 896  */
 /* Test 2016/06/12 */
 

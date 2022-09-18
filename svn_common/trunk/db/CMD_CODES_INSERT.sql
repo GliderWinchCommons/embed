@@ -17,7 +17,7 @@ DELETE from CMD_CODES;
 --                              CMD_CODE_NAME    CMD_CODE_NUMBER  DESCRIPTION4  (CODE in byte [0];   bytes 1-7 hold something else of dear value)
 INSERT INTO CMD_CODES  VALUES ('LDR_SET_ADDR',      1,	'5 Set address pointer (not FLASH) (bytes 2-5):  Respond with last written address.');
 INSERT INTO CMD_CODES  VALUES ('LDR_SET_ADDR_FL',   2,	'5 Set address pointer (FLASH) (bytes 2-5):  Respond with last written address.');
-INSERT INTO CMD_CODES  VALUES ('LDR_CRC',           3,	'8 Get CRC: 2-4 = count; 5-8 = start address; Reply CRC 2-4 na, 5-8 computed CRC ');
+INSERT INTO CMD_CODES  VALUES ('LDR_CRC',           3,	'8 Get CRC: 4-7');
 INSERT INTO CMD_CODES  VALUES ('LDR_ACK',           4,	'1 ACK: Positive acknowledge (Get next something)');
 INSERT INTO CMD_CODES  VALUES ('LDR_NACK',          5,	'1 NACK: Negative acknowledge (So? How do we know it is wrong?)');
 INSERT INTO CMD_CODES  VALUES ('LDR_JMP',           6,	'5 Jump: to address supplied (bytes 2-5)');
@@ -43,6 +43,7 @@ INSERT INTO CMD_CODES  VALUES ('LDR_GET_RTC',		25,	'8 Send RTC register: 2 = reg
 INSERT INTO CMD_CODES  VALUES ('LDR_EOB',    		26,	'8 End of Block: 2-5 CRC or some value');
 INSERT INTO CMD_CODES  VALUES ('LDR_EOF',    		27,	'8 End of Flash: 2-5 CRC or some value');
 INSERT INTO CMD_CODES  VALUES ('LDR_DATA',    		28,	'8 1-7 bytes of data in payload');
+INSERT INTO CMD_CODES  VALUES ('LDR_CHKSUM',  		29,	'8 Get checksum 4-7');
 
 INSERT INTO CMD_CODES  VALUES ('CMD_GET_IDENT',		30,	'Get parameter using indentification name/number in byte [1]');
 INSERT INTO CMD_CODES  VALUES ('CMD_PUT_IDENT',		31,	'Put parameter using indentification name/number in byte [1]');

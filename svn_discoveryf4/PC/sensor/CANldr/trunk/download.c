@@ -42,6 +42,8 @@ extern uint8_t exit_code;
 int state_timer_retry_ct;
 int state_msg_retry_ct;
 
+uint64_t binchksum;
+uint64_t binchksum_prev;
 uint32_t req_size; // Number byte the node requests
 uint32_t bin_ct;
 uint32_t bin_ct_prev;
@@ -93,6 +95,28 @@ static struct itimerspec current_value;
 static uint8_t state_timer; // State machine for timer timeouts
 static uint8_t state_msg;   // State machine for CAN msgs
 
+static uint32_t buildword;
+static uint8_t buildword_ct;
+static uint32_t bldct;
+/******************************************************************************
+ * static void build_chks(uint8_t n);
+ * @brief	: Build CRC-32 and checksum from four byte words
+ * @param	: n = input byte
+ ******************************************************************************/
+static void build_chks(uint8_t n)
+{
+	buildword |= (n << buildword_ct);
+	buildword_ct += 8;
+	if (buildword_ct > (3*8))
+	{ // Here, buildword is loaded with 4 bytes
+		crc = crc_32_nib_acc(crc,buildword); // CRC-32
+      	binchksum   += buildword; // Checksum
+      	buildword    = 0;
+ 		buildword_ct = 0;
+bldct += 1; 		
+	}
+	return;
+}
 /******************************************************************************
  * static void printCANmsg(struct CANRCVBUF* pcan);
  * @brief 	: CAN msg printout for diagnostic purposes
@@ -213,8 +237,8 @@ unsigned int tct = 0;
 			// Load payload with bin data
 			cantx.cd.uc[i] = bin[bin_ct];
 
-			// Accumulate CRC for bytes sent 
-			crc = crc_32_nib_acc(crc,cantx.cd.uc[i]);
+			// Build crc & checksum with 4 byte words
+			build_chks(cantx.cd.uc[i]);
 
 			i += 1;
 
@@ -243,7 +267,7 @@ if ((cantx.dlc < 2) || (cantx.dlc > 8))
 	cantx.dlc = 8;
 }
 
-usleep(1000*5);
+usleep(500);
 		sendcanmsg(&cantx); 
 	} 
 
@@ -431,13 +455,17 @@ printf("#A# STATE_MSG_ADDR_RESPONSE: check msg\n");
 			/* Here request size is suficiently reasonable. */
 			printf("STATE_MSG_ADDR_RESPONSE: OK. begin loading. req_size: %d\n",req_size);
 			/* Beginning of load inits. */
-			crc = ~0L;  // Build CRC as download progresses
-			bin_ct = 0; // Binary data array, bin[], index
+			crc = ~0L;  // CRC initialized.
+			bin_ct         = 0; // Binary data array, bin[], index
+			buildword      = 0; // CRC & checksum byte->word
+			buildword_ct   = 0;
+			binchksum      = 0;
+			binchksum_prev = 0;
+			state_timer_retry_ct = 0; // Reset timeout retry counter
 
 			// Set timeout for sending. 
 			download_settimeout((req_size/1500 + 1), 0); // 
 			send_CANnodeid_data();
-			state_timer_retry_ct = 0; // Reset timeout retry counter
 			state_timer = STATE_TIM_DATA_END_OF_TO;
 			state_msg = STATE_MSG_DATA_END_OF;
 			break;
@@ -469,9 +497,10 @@ printf("#A# STATE_MSG_ADDR_RESPONSE: check msg\n");
 
 		/* Node request size (bytes) */
 		req_size = p->cd.ui[1];
-		if ((req_size > (1024*1024) || (req_size == 0)))
+		// Node sends 0xFEEDBACC when CRC sent in EOF payload matches
+		if ( (req_size > (1024*1024) || (req_size == 0)) && !(req_size == 0xFEEDBACC) ) 
 		{
-			printf("STATE_MSG_DATA_END_OF: BOGUS req_size: %d\n",req_size);
+			printf("STATE_MSG_DATA_END_OF: BOGUS req_size: %08X %d\n",req_size,req_size);
 			printCANmsg(p); // Print CAN msg
 			exit_flag = 1; exit_code = (-13); exit(-13);
 			return;
@@ -600,7 +629,8 @@ void download_time_chk(void)
 			break;
 
 		case STATE_TIM_DATA_END_OF_TO: // Timeout waiting for response to CAN msg data burst
-			printf("## TIMEOUT: STATE_TIM_DATA_END_OF_TO: bin_ct %d bt_flag %1X\n",bin_ct,bt_flag);
+			printf("## TIMEOUT: STATE_TIM_DATA_END_OF_TO: bin_ct %d bt_flag %1X 0x%08X\n",bin_ct,bt_flag);
+			printf("## CRC: 0x%08X CHK: 0x%08X bldct: %d\n",crc,(unsigned int)binchksum,bldct);
 			exit_flag = 1; exit_code = (-12);
 			break;					
 

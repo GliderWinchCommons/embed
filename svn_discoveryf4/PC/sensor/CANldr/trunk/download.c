@@ -506,6 +506,12 @@ printf("#A# STATE_MSG_ADDR_RESPONSE: check msg\n");
 			return;
 		}
 
+if (req_size == 0xFEEDBACC)		
+{
+	printf("### EOF sent. Node returned: %d req_size: %08X\n",p->cd.uc[0],req_size);
+	exit(0);
+}
+
 		if (p->cd.uc[0] == LDR_ACK)
 		{ // Node was happy and asks for more data
 			if ((bt_flag & TOTAL_FLAG) != 0)

@@ -189,21 +189,6 @@ cantx.cd.uc[2] = dbgseq++;
 	return;	
 }
 /******************************************************************************
- * static void send_CANnodeid_1(uint8_t code);
- * @brief 	: Send msg: id = CANID_UNI_BMS_PC_I; one byte payload
- * @param   : code = payload of can.cd.uc[0]
-*******************************************************************************/
-#if 0
-static void send_CANnodeid_1(uint8_t code)
-{
-	cantx.id       = CANnodeid;
-	cantx.dlc      = 1;
-	cantx.cd.ui[0] = code; // Zero pay[0]-pay[3]
-	sendcanmsg(&cantx);
-	return;
-}
-#endif
-/******************************************************************************
  * static void send_nodeid_data(void);
  * @brief 	: Send CAN msgs until either the CAN node's byte count or at the
  *          : end of the binary array is reached.
@@ -256,7 +241,7 @@ unsigned int tct = 0;
 				bt_flag |= BURST_FLAG;
 			}
 		}
-		cantx.dlc = (i+0); // DLC will vary: 2-8
+		cantx.dlc = i; // DLC will vary: 2-8
 
 tct += 1;		
 printf(" %4u %03X %4u ",burst_ct,burst_ct, tct);
@@ -266,8 +251,8 @@ if ((cantx.dlc < 2) || (cantx.dlc > 8))
 	printf("dlc? %d\n",cantx.dlc);
 	cantx.dlc = 8;
 }
-
-usleep(500);
+#define USLEEP 500 // usec pacing of sending
+usleep(USLEEP);
 		sendcanmsg(&cantx); 
 	} 
 
@@ -276,10 +261,11 @@ usleep(500);
 	// Select msg code
 	if ((bt_flag & TOTAL_FLAG) != 0)
 	{
+		// Signal CAN node that all data has been sent.
 		cantx.cd.uc[0] = LDR_EOF; // End of flashing code
 	}
 	else
-	{ // More program remains, burst request complete
+	{ // SignalCAN node more program remains, but burst request complete
 		cantx.cd.uc[0] = LDR_EOB; // End of block (request) code
 	}
 
@@ -508,7 +494,9 @@ printf("#A# STATE_MSG_ADDR_RESPONSE: check msg\n");
 
 if (req_size == 0xFEEDBACC)		
 {
-	printf("### EOF sent. Node returned: %d req_size: %08X\n",p->cd.uc[0],req_size);
+	printf("### EOF sent. Node returned: %d req_size: %08X bt_flag: 0x%20X\n",p->cd.uc[0],req_size,bt_flag);
+	printf("xbin_in_ct: 0x%08X %d\n",xbin_in_ct,xbin_in_ct);
+	send_U8nnnX4(CANID_UNI_BMS_PC_I,LDR_RESET,0); // Send reset to "everybody" (i.e. 0 payload word)
 	exit(0);
 }
 
@@ -516,7 +504,8 @@ if (req_size == 0xFEEDBACC)
 		{ // Node was happy and asks for more data
 			if ((bt_flag & TOTAL_FLAG) != 0)
 			{ // Here, we sent EOF (end of bin array)
-				exit_flag = 1; exit_code = (0); 
+				send_U8nnnX4(CANID_UNI_BMS_PC_I,LDR_RESET,0); // Send reset to "everybody" (i.e. 0 payload word)
+				exit_flag = 1; exit_code = (0); exit(0);
 				return; // Success (is likely!)
 			}
 			// Here, we sent EOB, so there is more to send

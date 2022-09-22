@@ -353,6 +353,7 @@ printf("%d %s\n",i, argv[i]);
 	}
 	printf("Xbin opened: %s\n",argv[socketsw]);
 
+	/* Get header that was prepended by crc-srec.c. */
 	fread(&xbin_addr,    4,1,fpXbin);
 	fread(&xbin_size,    4,1,fpXbin);
 	fread(&xbin_crc,     4,1,fpXbin);
@@ -363,6 +364,7 @@ printf("%d %s\n",i, argv[i]);
 	printf("xbin_crc:      0x%08X\n",xbin_crc);
 	printf("xbin_checksum: 0x%08X\n",xbin_checksum);
 
+	/* Readin binary data to be sent to CAN node. */
 	xbin_in_ct = 0;
 	do
 	{
@@ -375,12 +377,18 @@ printf("%d %s\n",i, argv[i]);
 		}
 	} while (xret != 0);
 
-	printf("xbin_in_ct   : 0x%08X\n",xbin_in_ct);
+	xbin_in_ct -= 1;
+	if (xbin_in_ct != xbin_size)
+	{
+		printf("##ERR: xbin file size not matching size in header: xbin_in_ct %d xbin_size %d\n",xbin_in_ct,xbin_size);
+	}
+	printf("xbin_in_ct   : 0x%08X %d\n",xbin_in_ct,xbin_in_ct);
+
+	/* Size check. (Mostly for debugging) */
 	rewind(fpXbin);
 	fseek(fpXbin,0L, SEEK_END);
 	printf("fseek size   : 0x%08X\n",(unsigned int)ftell(fpXbin));
 	
-
 	lineinK.idx = 0;lineinS.idx=0;	/* jic */
 
 	/* Timer for detecting response failure from gateway/CAN BUS */
@@ -390,7 +398,6 @@ printf("%d %s\n",i, argv[i]);
 
 	PC_msg_initg(&pctogateway);		// Initialize struct for a msg from gateway to PC
 	pctogateway.mode_link = MODE_LINK;	// Set modes for routines that receive and send CAN msgs
-//	do_printmenu();				// Print an initial keyboard command menu
 
 	download_init();
 

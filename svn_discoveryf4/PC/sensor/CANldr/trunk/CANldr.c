@@ -2,7 +2,7 @@
 * File Name          : CANldr.c
 * Date First Issued  : 09/08/2022
 * Board              : PC
-* Description        : CAN dowloader
+* Description        : CAN downloader
 *******************************************************************************/
 /*
  Hack of winchPC.c which is--

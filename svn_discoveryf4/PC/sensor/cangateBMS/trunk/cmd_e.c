@@ -38,7 +38,7 @@ static void cmd_e_timerthread(void);
 static int starttimer(void);
 
 #define CANID_RX_DEFAULT CANID_MSG_BMS_CELLV12R // 0xB0201124 // Default BMS
-#define CANID_TX_DEFAULT CANID_UNI_BMS_I        // 0XB0000000 // Default pollster
+#define CANID_TX_DEFAULT CANID_UNI_BMS_PC_I        // B0200000 //BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID // Default pollster
 
  #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
  #define MISCQ_STATUS      1 // status

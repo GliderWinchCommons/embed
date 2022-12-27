@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2022-09-15 21:35:54.1
+// 2022-12-27 17:04:48.642
 
 #define CANID_COUNT 337
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -257,16 +257,16 @@
 #define  CANID_CMD_BMS_CELLVQ_PC  0xB0400004  // BMSV1          : BMSV1 U8: PC  requests to BMS to send cellv, cmd code
 #define  CANID_MSG_BMS_CELLV11R   0xB0201114  // BMSV1          : 01 BQ76952   #BQ01 U16:id,U16:cellv n+1,U16:cellv n+2
 #define  CANID_MSG_BMS_CELLV12R   0xB0201124  // BMSV1          : 02 MAX14921  #MX01 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV13R   0xB0201134  // BMSV1          : 03 ADBMS1818 #AD01 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV14R   0xB0201144  // BMSV1          : 04 ADBMS1818 #AD01 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV15R   0xB0201154  // BMSV1          : 05 ADBMS1818 #AD01 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV16R   0xB0201164  // BMSV1          : 06 ADBMS1818 #AD01 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV17R   0xB0201174  // BMSV1          : 07 ADBMS1818 #AD01 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV18R   0xB0201184  // BMSV1          : 08 ADBMS1818 #AD01 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV21R   0xB0201214  // BMSV1          : 09 ADBMS1818 #AD01 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV22R   0xB0201224  // BMSV1          : 10 ADBMS1818 #AD01 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV23R   0xB0201234  // BMSV1          : 11 ADBMS1818 #AD01 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV24R   0xB0201244  // BMSV1          : 12 ADBMS1818 #AD01 U16:id,U16:cellv n+1,U16:cellv n+2
+#define  CANID_MSG_BMS_CELLV13R   0xB0201134  // BMSV1          : 03 ADBMS1818 #AD02 U16:id,U16:cellv n+1,U16:cellv n+2
+#define  CANID_MSG_BMS_CELLV14R   0xB0201144  // BMSV1          : 04 ADBMS1818 #AD03 U16:id,U16:cellv n+1,U16:cellv n+2
+#define  CANID_MSG_BMS_CELLV15R   0xB0201154  // BMSV1          : 05 ADBMS1818 #AD04 U16:id,U16:cellv n+1,U16:cellv n+2
+#define  CANID_MSG_BMS_CELLV16R   0xB0201164  // BMSV1          : 06 ADBMS1818 #AD05 U16:id,U16:cellv n+1,U16:cellv n+2
+#define  CANID_MSG_BMS_CELLV17R   0xB0201174  // BMSV1          : 07 ADBMS1818 #AD06 U16:id,U16:cellv n+1,U16:cellv n+2
+#define  CANID_MSG_BMS_CELLV18R   0xB0201184  // BMSV1          : 08 ADBMS1818 #AD07 U16:id,U16:cellv n+1,U16:cellv n+2
+#define  CANID_MSG_BMS_CELLV21R   0xB0201214  // BMSV1          : 09 ADBMS1818 #AD08 U16:id,U16:cellv n+1,U16:cellv n+2
+#define  CANID_MSG_BMS_CELLV22R   0xB0201224  // BMSV1          : 10 ADBMS1818 #AD09 U16:id,U16:cellv n+1,U16:cellv n+2
+#define  CANID_MSG_BMS_CELLV23R   0xB0201234  // BMSV1          : 11 ADBMS1818 #AD10 U16:id,U16:cellv n+1,U16:cellv n+2
+#define  CANID_MSG_BMS_CELLV24R   0xB0201244  // BMSV1          : 12 ADBMS1818 #AD11 U16:id,U16:cellv n+1,U16:cellv n+2
 #define  CANID_MSG_BMS_CELLV25R   0xB0201254  // BMSV1          : 25 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
 #define  CANID_MSG_BMS_CELLV26R   0xB0201264  // BMSV1          : 26 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
 #define  CANID_MSG_BMS_CELLV27R   0xB0201274  // BMSV1          : 27 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2

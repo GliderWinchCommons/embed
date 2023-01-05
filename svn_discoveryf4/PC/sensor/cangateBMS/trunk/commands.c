@@ -292,15 +292,15 @@ void do_printmenu(void)
 	printf("b - CONTACTOR: display polled msgs\n");
 	printf("c - request & display launch parameters\n");
 	printf("d - BMS heartbeat\n\t"
-				"d  - default (cell readings by cell number: CANID: B0201124)\n\t"
+				"d  - default (cell readings by cell number: CANID: B0201134)\n\t"
 				"dc aaaaaaaa  (cell readings by cell number: CANID: aaaaaaaa\n\t"
-				"dz - default (cell readings voltage sorted: CANID: B0201124)\n\t"
+				"dz - default (cell readings voltage sorted: CANID: B0201134)\n\t"
 				"dz aaaaaaaa  (cell readings voltage sorted: CANID: aaaaaaaa\n\t"
-				"ds -         (bms status: CANID: B0201124)\n\t"
+				"ds -         (bms status: CANID: B0201134)\n\t"
 				"ds aaaaaaaa  (bms status: CANID: aaaaaaaa)\n");
 
 	printf("e - BMS polling misc TYPE2 msgs\n\t"
-				"e x  default  (CANID: BMS B0201124 POLL B0000000)\n\t"
+				"e x  default  (CANID: BMS B0201124 POLL B0200000)\n\t"
 				"emx  aaaaaaaa <pppppppp>(CANID: BMS aaaaaaaa POLL pppppppp) \n\t"
 				"eax  <pppppppp> a (all BMS nodes respond)\n\t"
 				"esx  <pppppppp> s (String number: 1-n)\n\t"

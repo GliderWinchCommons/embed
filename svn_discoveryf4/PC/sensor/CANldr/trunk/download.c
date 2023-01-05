@@ -185,7 +185,7 @@ static void send_U8nnnX4(uint32_t canid, uint8_t cmd, uint32_t value)
 	cantx.dlc      = 8;
 	cantx.cd.ui[0] = 0;   // Zero pay[0]-pay[3]
 	cantx.cd.uc[0] = cmd; // Set pay[0]
-	cantx.cd.uc[1] = 1;   // Set pay[1] Tag msg as sent by PC
+	cantx.cd.uc[1] = 0xC0;// Reset "all"
 cantx.cd.uc[2] = dbgseq++;	
 	loadpay(&cantx.cd.uc[4], value); // Set pay[4]-pay[7]
 	sendcanmsg(&cantx);
@@ -630,7 +630,7 @@ void download_time_chk(void)
 			break;
 
 		case STATE_TIM_DATA_END_OF_TO: // Timeout waiting for response to CAN msg data burst
-			printf("## TIMEOUT: STATE_TIM_DATA_END_OF_TO: bin_ct %d bt_flag %1X 0x%08X\n",bin_ct,bt_flag);
+			printf("## TIMEOUT: STATE_TIM_DATA_END_OF_TO: bin_ct %d bt_flag %1X\n",(unsigned int)bin_ct,(unsigned int)bt_flag);
 			printf("## CRC: 0x%08X CHK: 0x%08X bldct: %d\n",crc,(unsigned int)binchksum,bldct);
 			exit_flag = 1; exit_code = (-12);
 			break;					

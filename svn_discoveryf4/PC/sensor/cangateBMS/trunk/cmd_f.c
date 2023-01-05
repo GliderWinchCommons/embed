@@ -80,7 +80,7 @@ pcan.uc[1]
 pcan.uc[2:5] = .lat or .lon
 pcan.uc[2:3] = .ht
 */
-*/
+
 #endif
 
 #define CANIDREF	 0XE1C00000	// Start with default

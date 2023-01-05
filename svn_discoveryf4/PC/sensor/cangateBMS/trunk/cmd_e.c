@@ -36,9 +36,13 @@ static void print_bits_r(void);
 
 static void cmd_e_timerthread(void);
 static int starttimer(void);
-
-#define CANID_RX_DEFAULT CANID_MSG_BMS_CELLV12R // 0xB0201124 // Default BMS
-#define CANID_TX_DEFAULT CANID_UNI_BMS_PC_I        // B0200000 //BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID // Default pollster
+/*  From: GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
+-- BMS module node
+-- Universal CAN msg: EMC_I = EMC sends; PC_I = PC sends; R = BMS responds;
+INSERT INTO CANID VALUES ('CANID_UNI_BMS_EMC_I','B0000000', 'BMSV1', 1,1,'U8_U8_U8_X4','BMSV1 UNIversal From EMC, Incoming msg to BMS: X4=target CANID');
+INSERT INTO CANID VALUES ('CANID_UNI_BMS_PC_I' ,'B0200000', 'BMSV1', 1,1,'U8_U8_U8_X4','BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID'); */
+#define CANID_RX_DEFAULT CANID_MSG_BMS_CELLV12R // 0xB0201134 // Default BMS '1818 board #1 B0A00000'
+#define CANID_TX_DEFAULT CANID_UNI_BMS_PC_I //CANID_UNI_BMS_PC_I        // B0200000 //BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID // Default pollster
 
  #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
  #define MISCQ_STATUS      1 // status
@@ -184,15 +188,33 @@ static void printmenu(char* p)
  * @return	: -1 = too few chars.  0 = OK.
 *******************************************************************************/
 /*
-				"e x  default  (CANID: B0201114)\n\t"
-				"emx  aaaaaaaa (CANID: aaaaaaaa) \n\t"
-				"eax  (all BMS nodes respond)\n\t"
-				"esx  ss  (String number: 1-n)\n\t"
-				"emx  aaaaaaaa CANID \n\t"
-				"  x = a: ADC cell calibration readings\n\t"
+	printf("d - BMS heartbeat\n\t"
+				"d  - default (cell readings by cell number: CANID: B0201134)\n\t"
+				"dc aaaaaaaa  (cell readings by cell number: CANID: aaaaaaaa\n\t"
+				"dz - default (cell readings voltage sorted: CANID: B0201134)\n\t"
+				"dz aaaaaaaa  (cell readings voltage sorted: CANID: aaaaaaaa\n\t"
+				"ds -         (bms status: CANID: B0201134)\n\t"
+				"ds aaaaaaaa  (bms status: CANID: aaaaaaaa)\n");
+
+	printf("e - BMS polling misc TYPE2 msgs\n\t"
+				"e x  default  (CANID: BMS B0201124 POLL B0200000)\n\t"
+				"emx  aaaaaaaa <pppppppp>(CANID: BMS aaaaaaaa POLL pppppppp) \n\t"
+				"eax  <pppppppp> a (all BMS nodes respond)\n\t"
+				"esx  <pppppppp> s (String number: 1-n)\n\t"
+				" where--\n\t"
+				"  x = a: Cell calibrated readings\n\t"
+				"  x = A: Cell ADC raw counts for making calibration\n\t"
 				"  x = h: Trickle charger high voltage\n\t"
-				"  x = t; temperatures\n");
-				*/
+				"  x = t: Temperature calibrated readings (T1, T2, T3)\n\t"
+				"  x = T: Temperature ADC raw counts for making calibration (T1, T2, T3)\n\t"
+				"  x = s: BMS measured top-of-stack voltage\n\t"
+				"  x = d: DC-DC converter voltage\n\t"
+				"  x = f: FET discharge status bits\n\t"
+				"  x = w: Processor ADC calibrated readings\n\t"
+				"  x = W: Processor ADC raw counts making calibration\n"
+				"  x = r: Bits: fet status, opencell wires, installed cells"
+				);
+*/
 /*	POLLER msg
           payload[2] U8: Module identification
     	[7:6] 
@@ -216,7 +238,7 @@ int cmd_e_init(char* p)
 
 	/* This 'e' command only polls TYPE2 BMS msgs. */
 	cantx.cd.ull   = 0; // Clear all payload bytes
-	cantx.id       = CANID_TX_DEFAULT; // CANID_UNI_BMS_I        0XB0000000 // Default pollster
+	cantx.id       = CANID_TX_DEFAULT; // Default pollster
 	cantx.dlc      = 8;
 	cantx.cd.uc[0] = CMD_CMD_TYPE2; // (43) Request BMS responses
 	cantx.cd.uc[2] = (1 << 6); // Default: only specified unit responds, module #1
@@ -265,7 +287,7 @@ int cmd_e_init(char* p)
 			whom = 'm';
 			break;
 
-		case 's': // String whom
+		case 's': // Module String whom
 			if (len > 13)
 			{
 				sscanf( (p+3), "%d %x",&tmp,&canid_tx);
@@ -382,6 +404,7 @@ turned on by the hapless Op typing 'm' as the first char and hitting return.
 */
 void cmd_e_do_msg(struct CANRCVBUF* p)
 {
+		uint8_t err;
 	/* Expect the BMS node CAN msg format TYPE1, TYPE2, etc
 	     and skip other CAN IDs.
 	   These #defines originate from the processing of the .sql file
@@ -390,7 +413,7 @@ void cmd_e_do_msg(struct CANRCVBUF* p)
 	     ../../../../../svn_common/trunk/db/gen_db.h */
 
 	uint32_t utmp = (p->id & 0xfffffffc);
-	if ((utmp < CANID_MSG_BMS_CELLV11R) || (utmp > CANID_MSG_BMS_CELLV28R))
+	if ((utmp < (uint32_t)CANID_MSG_BMS_CELLV11R) || (utmp > (uint32_t)CANID_CMD_BMS_MISC28R))
 		return; // CAN ID is not a BMS module function.
 
 //printf("\n%08X %X", p->cd.uc[1]); // debug
@@ -408,15 +431,21 @@ void cmd_e_do_msg(struct CANRCVBUF* p)
 
 	// Extract string and module numbers and 
 	// check for out-of-range string and module.
-	storeandcheckstringandmodule(p);
+	err = storeandcheckstringandmodule(p);
+	if (err != 0)
+	{
+		printf("\nerr return: storeandcheckstringandmodule %02X",err);
+		printcanmsg(p);
+		return;
+	}
 
-/* debug
+//* debug
 printcanmsg(p);
 printf(" :%1d:%1d:",nstring,nmodule);
 int jdx = p->cd.uc[3];
 float ftmp = extractfloat(&p->cd.uc[4]);	
 printf("%2d %f\n",jdx,ftmp);
-*/
+//*/
 
 	// Store payload based on request code
 	switch (p->cd.uc[1])

@@ -219,7 +219,8 @@ void cmd_d_do_msg(struct CANRCVBUF* p)
 				{
 					if (cellmsg[i].u16 == CELLVNONE)
 					{
-						printf("  .omit.");
+						printf("  000.00");
+//						printf("  .omit.");
 					}
 					else
 					{

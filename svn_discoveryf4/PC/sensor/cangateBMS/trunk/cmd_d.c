@@ -208,7 +208,7 @@ void cmd_d_do_msg(struct CANRCVBUF* p)
 				for (i = 0; i < NCELL; i++)
 				{
 					printf("%6i  ",cellmsg[i].num);
-					cellmsg[i].num = i;
+					cellmsg[i].num = i+1;
 				}
 				printf("\n");				
 

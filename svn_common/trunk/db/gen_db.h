@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2022-12-27 17:04:48.642
+// 2023-01-15 21:14:39.224
 
 #define CANID_COUNT 337
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -359,7 +359,7 @@
 #define  TYP_ASC                 16        // 4           ascii chars
 #define  TYP_CANID               17        // 1           CANID (handled differently than a U32)
 
-#define CMD_CODES_COUNT 49
+#define CMD_CODES_COUNT 52
 #define  LDR_SET_ADDR            1         // 5 Set address pointer (not FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_SET_ADDR_FL         2         // 5 Set address pointer (FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_CRC                 3         // 8 Get CRC: 4-7
@@ -401,11 +401,14 @@
 #define  CMD_SEND_LAUNCH_PARM    39        // Send msg to send burst of parameters
 #define  CMD_REQ_HISTOGRAM       40        // Request histogram: [1] ADC #: [2] # consecutive:[3]-[6] # DMA buffers accumuleted in bins
 #define  CMD_THISIS_HISTODATA    41        // Histogram data item: [1] ADC #:[2] bin # (0 - n), [3]-[6] bin count
-#define  CMD_CMD_TYPE1           42        // [1]-[7] format 1
-#define  CMD_CMD_TYPE2           43        // [1]-[7] format 2
-#define  CMD_CMD_TYPE3           44        // [1]-[7] format 3
-#define  CMD_CMD_HEARTBEAT       45        // [1]-[7] Heartbeat format specific to unit
-#define  CMD_CMD_TYPE4           46        // [1]-[7] format 4
+#define  CMD_CMD_CELLPOLL        42        // [1]-[7] cell readings request: emc or pc
+#define  CMD_CMD_TYPE2           43        // [1]-[7] format 2: misc responses to poll
+#define  CMD_CMD_CELLHB          44        // [1]-[7] cell readings: respojnse to timeout heartbeat
+#define  CMD_CMD_MISCHB          45        // [1]-[7] misc data: timeout heartbeat
+#define  CMD_CMD_CELLEMC         46        // [1]-[7] cell readings: response to emc sent CELLPOLL
+#define  CMD_CMD_CELLPC          47        // [1]-[7] cell readings: response to pc sent CELLPOLL
+#define  CMD_CMD_MISCEMC         48        // [1]-[7] misc data: response to emc sent CELLPOLL
+#define  CMD_CMD_MISCPC          49        // [1]-[7] misc data: response to pc sent CELLPOLL
 #define  CMD_CMD_SYS_RESET_ALL   166       // 0xA6: [0] Cause System Reset for all
 #define  CMD_CMD_SYS_RESET_CID   167       // 0xA7: [0] Cause System Reset for CAN ID sent in payload
 #define  CMD_CMD_SYS_RESET_EXT   168       // 0xA8: [0] Extend current loader wait duration for all, [1] = wait in 0.1 sec steps
@@ -961,6 +964,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 896  */
+/* TOTAL COUNT OF #defines = 899  */
 /* Test 2016/06/12 */
 

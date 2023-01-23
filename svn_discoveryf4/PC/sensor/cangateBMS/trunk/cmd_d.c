@@ -185,11 +185,20 @@ void cmd_d_do_msg(struct CANRCVBUF* p)
 	{
 		return; // Msg is not for us.
 	}
-//printf("\n%08X %X", p->cd.uc[1]);
-
-	/* Here, CAN msg is for us. */
-	// Is it cell readings or "misc"?
-	if ( (p->cd.uc[0] == CMD_CMD_TYPE1)  && ((request == 'c') || (request == 'z')) )
+//printf("\n%08X %d: ", p->id,p->dlc);for (i=0; i<p->dlc; i++) printf(" %02X",p->cd.uc[i]);
+/*	
+INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLPOLL',	42,	'[1]-[7] cell readings request: emc or pc');
+INSERT INTO CMD_CODES  VALUES ('CMD_CMD_TYPE2',		43,	'[1]-[7] format 2: misc responses to poll');
+INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLHB',	44,	'[1]-[7] cell readings: respojnse to timeout heartbeat');
+INSERT INTO CMD_CODES  VALUES ('CMD_CMD_MISCHB',    45,	'[1]-[7] misc data: timeout heartbeat');
+INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLEMC',   46,	'[1]-[7] cell readings: response to emc sent CELLPOLL');
+INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLPC',    47,	'[1]-[7] cell readings: response to pc sent CELLPOLL');
+*/	/* Here, CAN msg is for us. */
+	// Is it cell readings 
+	if ( ((p->cd.uc[0] == CMD_CMD_CELLHB )  ||
+		  (p->cd.uc[0] == CMD_CMD_CELLEMC)  ||
+		  (p->cd.uc[0] == CMD_CMD_CELLPC )) && 
+		 ((request == 'c') || (request == 'z')) )
 	{
 		// Check msg is for the same reading group
 		if ((p->cd.uc[1] & 0xf) != (hbseq & 0xf))

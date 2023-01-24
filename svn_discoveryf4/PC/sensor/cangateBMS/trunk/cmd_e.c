@@ -38,10 +38,8 @@ static void cmd_e_timerthread(void);
 static int starttimer(void);
 /*  From: GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
 -- BMS module node
--- Universal CAN msg: EMC_I = EMC sends; PC_I = PC sends; R = BMS responds;
-INSERT INTO CANID VALUES ('CANID_UNI_BMS_EMC_I','B0000000', 'BMSV1', 1,1,'U8_U8_U8_X4','BMSV1 UNIversal From EMC, Incoming msg to BMS: X4=target CANID');
-INSERT INTO CANID VALUES ('CANID_UNI_BMS_PC_I' ,'B0200000', 'BMSV1', 1,1,'U8_U8_U8_X4','BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID'); */
-#define CANID_RX_DEFAULT CANID_MSG_BMS_CELLV12R // 0xB0201134 // Default BMS '1818 board #1 B0A00000'
+-- Universal CAN msg: EMC_I = EMC sends; PC_I = PC sends; R = BMS responds; */
+#define CANID_RX_DEFAULT CANID_UNIT_BMS03 // B0A00000','UNIT_BMS03', 1,1,'U8_U8_U8_X4','BMS ADBMS1818 #01
 #define CANID_TX_DEFAULT CANID_UNI_BMS_PC_I //CANID_UNI_BMS_PC_I        // B0200000 //BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID // Default pollster
 
  #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
@@ -79,7 +77,7 @@ INSERT INTO CANID VALUES ('CANID_UNI_BMS_PC_I' ,'B0200000', 'BMSV1', 1,1,'U8_U8_
 #define NMODULE  8 // Max number of modules in a string
 #define NCELL   18 // Max number of cells   in a module
 #define NTHERM   3 // Max number of thermistors in a module
-#define TIMERNEXTCOUNT 80 // 10 ms tick count between outputs
+#define TIMERNEXTCOUNT 101 // 10 ms tick count between outputs
 #define ADCDIRECTMAX 10   // Number of ADCs read in one scan with DMA
 
 #define HEADERMAX 16 // Number of print groups between placing a header
@@ -120,6 +118,11 @@ static uint32_t timernext; // Next timer count
 
 static uint8_t ncell_prev;
 static uint8_t headerctr;
+
+#define DEFAULT_POLLDUR 1000 // Duration in ms
+static uint32_t polldur = DEFAULT_POLLDUR; // Number of polls per sec
+
+static uint8_t groupctr; // The six cell readings are sent in a group.
 
 /******************************************************************************
  * static uint8_t storeandcheckstringandmodule(struct CANRCVBUF* p);
@@ -188,19 +191,11 @@ static void printmenu(char* p)
  * @return	: -1 = too few chars.  0 = OK.
 *******************************************************************************/
 /*
-	printf("d - BMS heartbeat\n\t"
-				"d  - default (cell readings by cell number: CANID: B0201134)\n\t"
-				"dc aaaaaaaa  (cell readings by cell number: CANID: aaaaaaaa\n\t"
-				"dz - default (cell readings voltage sorted: CANID: B0201134)\n\t"
-				"dz aaaaaaaa  (cell readings voltage sorted: CANID: aaaaaaaa\n\t"
-				"ds -         (bms status: CANID: B0201134)\n\t"
-				"ds aaaaaaaa  (bms status: CANID: aaaaaaaa)\n");
-
-	printf("e - BMS polling misc TYPE2 msgs\n\t"
-				"e x  default  (CANID: BMS B0201124 POLL B0200000)\n\t"
+	printf("e - BMS polling msgs\n\t"
+				"e x  default  (CANID: BMS B0A00000 POLL B0200000)\n\t"
 				"emx  aaaaaaaa <pppppppp>(CANID: BMS aaaaaaaa POLL pppppppp) \n\t"
-				"eax  <pppppppp> a (all BMS nodes respond)\n\t"
-				"esx  <pppppppp> s (String number: 1-n)\n\t"
+				"eax  <pppppppp> All BMS nodes respond (poll default: B0200000) a \n\t"
+				"esx  <s> (String number: 1-n, default 1)\n\t"
 				" where--\n\t"
 				"  x = a: Cell calibrated readings\n\t"
 				"  x = A: Cell ADC raw counts for making calibration\n\t"
@@ -212,7 +207,8 @@ static void printmenu(char* p)
 				"  x = f: FET discharge status bits\n\t"
 				"  x = w: Processor ADC calibrated readings\n\t"
 				"  x = W: Processor ADC raw counts making calibration\n"
-				"  x = r: Bits: fet status, opencell wires, installed cells"
+				"  x = b: Bits: fet status, opencell wires, installed cells"
+				"ed  <duration (ms)> Set duration between polls (Default: 1000 ms)\n"
 				);
 */
 /*	POLLER msg
@@ -234,13 +230,13 @@ int cmd_e_init(char* p)
 	printf("%c%c %i\n",*p,*(p+1),len);
 
 	whom = 'c'; // To whom the request is issued.
-	canid_rx = CANID_RX_DEFAULT; // CANID_MSG_BMS_CELLV11R 0xB0201124 // Default BMS
+	canid_rx = CANID_RX_DEFAULT; // Default BMS
 
-	/* This 'e' command only polls TYPE2 BMS msgs. */
+	/* This 'e' command */
 	cantx.cd.ull   = 0; // Clear all payload bytes
 	cantx.id       = CANID_TX_DEFAULT; // Default pollster
 	cantx.dlc      = 8;
-	cantx.cd.uc[0] = CMD_CMD_TYPE2; // (43) Request BMS responses
+	cantx.cd.uc[0] = CMD_CMD_CELLPOLL; // (43) Request BMS responses
 	cantx.cd.uc[2] = (1 << 6); // Default: only specified unit responds, module #1
 	cantx.cd.ui[1] = CANID_RX_DEFAULT; // BMS node CANID
 
@@ -273,6 +269,26 @@ int cmd_e_init(char* p)
 			whom = ' ';
 			break;
 
+		case 'd': // Set duration between poll msgs (ms)
+			if (len < 5)			
+			{
+				printf("\nNot enough input chars to set poll duration\n");
+				return -1;
+			}
+			sscanf( (p+3), "%d",&polldur);
+			printf("\nPoll duration: %d", polldur);
+			if (polldur < 20)
+			{
+				printf("Less than 20 (ms) is too short. ");
+			}
+			if (polldur > 4000)
+			{
+				printf("Over 4000 (ms) may be longer than BMS heartbeats. ");
+			}
+			printf("Value set is: %d (ms)",polldur);
+			whom = 'd';
+			break;
+
 		case 'm': // Use specified CANID
 			if ((len > 13) && (len < 22))
 			{ // Command has BMS CANID specified, POLLER is default
@@ -301,12 +317,13 @@ int cmd_e_init(char* p)
 
 		case 'a': // All BMS nodes
 			if (len > 13)
-			{ // Here it looke like POLLER CANID was specified
+			{ // Here it looks like POLLER CANID was specified
 				sscanf( (p+3), "%x",&canid_tx);
 				cantx.id = canid_tx;
 			}
-			cantx.cd.uc[2] = (3 << 6); // All BMSs respond
 			cantx.cd.ui[1] = 0; // NULL target CANID
+			cantx.cd.uc[2] = (3 << 6); // All BMSs respond
+			cantx.cd.uc[0] = CMD_CMD_CELLPOLL; // (42) Request BMS responses
 			whom = 'a';
 			break;
 
@@ -380,16 +397,18 @@ int cmd_e_init(char* p)
 			break;
 
 		default:
+			if (whom == 'd') 
+				break;
 			printf("3rd char not recognized: %c\n", *(p+2));
 			return -1;
 		}
 	}
-
+	printf("\nPoll duration (ms) is: %d",polldur);
 	ncell_prev =   0;
 	headerctr  = HEADERMAX;
 	kaON       =   1;
 	timerctr   = 0;
-	timernext  = TIMERNEXTCOUNT;
+	timernext  = polldur/10;
 	starttimer();
 	return 0;
 }
@@ -405,26 +424,21 @@ turned on by the hapless Op typing 'm' as the first char and hitting return.
 void cmd_e_do_msg(struct CANRCVBUF* p)
 {
 		uint8_t err;
-	/* Expect the BMS node CAN msg format TYPE1, TYPE2, etc
+	/* Expect the BMS node CAN msg format TYPE2, etc
 	     and skip other CAN IDs.
 	   These #defines originate from the processing of the .sql file
 	     ~/GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
+	     ~/GliderWinchCommons/embed/svn_common/trunk/db/CMD_CODES_INSERT.sql
 	   which generates the file
 	     ../../../../../svn_common/trunk/db/gen_db.h */
 
 	uint32_t utmp = (p->id & 0xfffffffc);
-	if ((utmp < (uint32_t)CANID_MSG_BMS_CELLV11R) || (utmp > (uint32_t)CANID_CMD_BMS_MISC28R))
+	if ((utmp < (uint32_t)CANID_UNIT_BMS01) || (utmp > (uint32_t)CANID_UNIT_BMS18))
 		return; // CAN ID is not a BMS module function.
 
-//printf("\n%08X %X", p->cd.uc[1]); // debug
-
 	/* Here, CAN msg is from a BMS module. */
-
-	/* Ignore msgs that are not the type requested. */
-	// TYPE1
-	// TYPE2 not requested TYPE
-	if ( (p->cd.uc[0] != CMD_CMD_TYPE2) ||
-		 (p->cd.uc[1] != cantx.cd.uc[1]) )  
+	/* Ignore msgs that are not the type requested. */	
+	if ( !((p->cd.uc[0] == CMD_CMD_TYPE2) || (p->cd.uc[0] == CMD_CMD_CELLPOLL)) )  
 	{ // Here, not what we are looking for.
 		return;
 	}
@@ -525,9 +539,11 @@ static void cmd_e_timerthread(void)
 	timerctr += 1; // 10 ms tick counter
 	if ((int)(timerctr - timernext) > 0)
 	{ // Time to output accumulated readings
-		timernext += TIMERNEXTCOUNT;
+		timernext += polldur/10;
 		timer_printresults();
+		cantx.cd.uc[2] = (groupctr & 0x0f);
 		sendcanmsg(&cantx);	// Send next request
+		groupctr += 1;
 	}
 	return;
 }

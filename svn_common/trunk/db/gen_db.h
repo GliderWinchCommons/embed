@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2023-01-15 21:14:39.224
+// 2023-01-23 12:36:42.982
 
-#define CANID_COUNT 337
+#define CANID_COUNT 341
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -271,7 +271,7 @@
 #define  CANID_MSG_BMS_CELLV26R   0xB0201264  // BMSV1          : 26 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
 #define  CANID_MSG_BMS_CELLV27R   0xB0201274  // BMSV1          : 27 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
 #define  CANID_MSG_BMS_CELLV28R   0xB0201284  // BMSV1          : 28 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
-#define  CANID_CMD_BMS_MISCQ_EMC  0xB2400000  // BMSV1          : BMSV1 U8: EMC requests for BMS to value for given cmd code
+#define  CANID_CMD_BMS_MISCQ_EMC  0xB0400024  // BMSV1          : BMSV1 U8: EMC requests for BMS to value for given cmd code
 #define  CANID_CMD_BMS_MISCQ_PC   0xB0400014  // BMSV1          : BMSV1 U8: PC  requests for BMS to value for given cmd code
 #define  CANID_CMD_BMS_MISC11R    0xB0401114  // BMSV1          : 11 BMSV1 U8:module_ID,U8:cmd code,U8:spare,X4:4 byte value 
 #define  CANID_CMD_BMS_MISC12R    0xB0401124  // BMSV1          : 12 BMSV1 U8:module_ID,U8:cmd code,U8:spare,X4:4 byte value 
@@ -303,6 +303,10 @@
 #define  CANID_UNIT_BMS12         0xB1E00000  // UNIT_BMS12     : BMS ADBMS1818 #10
 #define  CANID_UNIT_BMS13         0xB2000000  // UNIT_BMS13     : BMS ADBMS1818 #11
 #define  CANID_UNIT_BMS14         0xB2200000  // UNIT_BMS14     : BMS ADBMS1818 #12
+#define  CANID_UNIT_BMS15         0xB2400000  // UNIT_BMS15     : BMS ADBMS1818 #13
+#define  CANID_UNIT_BMS16         0xB2600000  // UNIT_BMS16     : BMS ADBMS1818 #14
+#define  CANID_UNIT_BMS17         0xB2800000  // UNIT_BMS17     : BMS ADBMS1818 #15
+#define  CANID_UNIT_BMS18         0xB2A00000  // UNIT_BMS18     : BMS ADBMS1818 #16
 #define  CANID_UNIT_2             0x04000000  // UNIT_2         : Sensor unit: Drive shaft encoder #1
 #define  CANID_UNIT_3             0x03800000  // UNIT_3         : Sensor unit: Engine
 #define  CANID_UNIT_4             0x03A00000  // UNIT_4         : Sensor unit: Lower sheave shaft encoder
@@ -964,6 +968,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 899  */
+/* TOTAL COUNT OF #defines = 903  */
 /* Test 2016/06/12 */
 

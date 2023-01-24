@@ -299,11 +299,11 @@ void do_printmenu(void)
 				"ds -         (bms status: CANID: B0201134)\n\t"
 				"ds aaaaaaaa  (bms status: CANID: aaaaaaaa)\n");
 
-	printf("e - BMS polling misc TYPE2 msgs\n\t"
-				"e x  default  (CANID: BMS B0201124 POLL B0200000)\n\t"
+	printf("e - BMS polling msgs\n\t"
+				"e x  default  (CANID: BMS B0A00000 POLL B0200000)\n\t"
 				"emx  aaaaaaaa <pppppppp>(CANID: BMS aaaaaaaa POLL pppppppp) \n\t"
-				"eax  <pppppppp> a (all BMS nodes respond)\n\t"
-				"esx  <pppppppp> s (String number: 1-n)\n\t"
+				"eax  <pppppppp> All BMS nodes respond (poll default: B0200000) a \n\t"
+				"esx  <s> (String number: 1-n, default 1)\n\t"
 				" where--\n\t"
 				"  x = a: Cell calibrated readings\n\t"
 				"  x = A: Cell ADC raw counts for making calibration\n\t"
@@ -315,7 +315,8 @@ void do_printmenu(void)
 				"  x = f: FET discharge status bits\n\t"
 				"  x = w: Processor ADC calibrated readings\n\t"
 				"  x = W: Processor ADC raw counts making calibration\n"
-				"  x = r: Bits: fet status, opencell wires, installed cells"
+				"  x = b: Bits: fet status, opencell wires, installed cells"
+				"ed  <duration (ms)> Set duration between polls (Default: 1000 ms)\n"
 				);
 
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");

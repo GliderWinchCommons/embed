@@ -259,7 +259,7 @@ int cmd_e_init(char* p)
 		printmenu("Too few chars\n");
 		return -1;
 	}
-	else if (len > 3)
+	if (len > 3)
 	{	
 		/* POLLER requests BMS node, string, or all. */
 		switch ( *(p+1) )
@@ -403,7 +403,7 @@ int cmd_e_init(char* p)
 			return -1;
 		}
 	}
-	printf("\nPoll duration (ms) is: %d",polldur);
+	printf("Poll duration (ms) is: %d\n",polldur);
 	ncell_prev =   0;
 	headerctr  = HEADERMAX;
 	kaON       =   1;
@@ -431,7 +431,7 @@ void cmd_e_do_msg(struct CANRCVBUF* p)
 	     ~/GliderWinchCommons/embed/svn_common/trunk/db/CMD_CODES_INSERT.sql
 	   which generates the file
 	     ../../../../../svn_common/trunk/db/gen_db.h */
-
+printf("\n%08X %d: ", p->id,p->dlc);for (i=0; i<p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 	uint32_t utmp = (p->id & 0xfffffffc);
 	if ((utmp < (uint32_t)CANID_UNIT_BMS01) || (utmp > (uint32_t)CANID_UNIT_BMS18))
 		return; // CAN ID is not a BMS module function.

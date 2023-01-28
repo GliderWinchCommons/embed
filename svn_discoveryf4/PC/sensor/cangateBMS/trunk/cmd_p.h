@@ -1,8 +1,8 @@
 /******************************************************************************
-* File Name          : cmd_p.h
-* Date First Issued  : 11/21/2019
+* File Name          : cmd_p.c
+* Date First Issued  : 01/27/2023
 * Board              : PC
-* Description        : GEVCUr - send keep-alive and commands
+* Description        : ELCON Charger 
 *******************************************************************************/
 
 #ifndef __CMD_P_PC

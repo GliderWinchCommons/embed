@@ -1,98 +1,224 @@
 /******************************************************************************
 * File Name          : cmd_p.c
-* Date First Issued  : 11/21/2019
+* Date First Issued  : 01/27/2023
 * Board              : PC
-* Description        : GEVCUr - send keep-alive and commands
+* Description        : ELCON Charger 
 *******************************************************************************/
-/*
-The following is from the perspective of the GEVCU node--
-
-RECEIVED msgs directed into GEVCU function:
- (1) GEVCUr command (also keep-alive) "cid_keepalive_i"
-     payload[0]
-       bit 7 - 
-       bit 6 - 
- (2) poll (time sync) "cid_gps_sync"
- (3) function command (diagnostic poll) "cid_cmd_i"
-    
-SENT by GEVCIr function:
- (1) GEVCUr command "cid_keepalive_r" (response to "cid_keepalive_i")
-     payload[0]
-       bit 7 - faulted (code in payload[2])
-       bit 6 -
-		 bit[0]-[3]: Current main state code
-
-     payload[1] = critical error state error code
-         0 = No fault
-         1 = 
-          ...
- 
-		payload[2]
-         bit[0]-[3] - current substate code
-         bit[4]-[7] - current substate (spare) code
-*/
-
 #include "cmd_p.h"
 #include "gatecomm.h"
 #include "PC_gateway_comm.h"	// Common to PC and STM32
 #include "USB_PC_gateway.h"
-
 #include "timer_thread.h" // Timer thread for sending keep-alive CAN msgs
-
-static void cmd_p_timerthread(void);
-
-/* Hard coded default addresses: see 
-   ../GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql */
-// GEVCUr sends response
-#define DEFAULTRX  0xE4200000 // CANID_CMD_GEVCURKAR: U8_U8 : GEVCUr: R KeepAlive response
-// PC sends command to GEVCUr
-#define DEFAULTTX  0xE3E00000 // CANID_CMD_GEVCURKAI: U8 : GEVCUr: I KeepAlive and connect command
-
-enum GEVCUR_STATE
-{
-	DISCONNECTED,   /*  0 */
-	CONNECTING,     /*  1 */
-	CONNECTED,      /*  2 */
-	FAULTING,       /*  3 */
-	FAULTED,        /*  4 */
-	RESETTING,      /*  5 */
-	DISCONNECTING,  /*  6 */
-	OTOSETTLING,    /*  7 */
-};
-
-enum GEVCUR_FAULTCODE
-{
-	NOFAULT,
-	BATTERYLOW,
-	CONTACTOR1_OFF_AUX1_ON,
-	CONTACTOR2_OFF_AUX2_ON,
-	CONTACTOR1_ON_AUX1_OFF,
-	CONTACTOR2_ON_AUX2_OFF,
-	CONTACTOR1_DOES_NOT_APPEAR_CLOSED,
-   PRECHGVOLT_NOTREACHED,
-	CONTACTOR1_CLOSED_VOLTSTOOBIG,
-	CONTACTOR2_CLOSED_VOLTSTOOBIG,
-	KEEP_ALIVE_TIMER_TIMEOUT,
-	NO_UART3_HV_READINGS,
-	HE_AUTO_ZERO_TOLERANCE_ERR,
-};
-
+#include "../../../../../svn_common/trunk/db/gen_db.h"
 
 extern int fdp;	/* port file descriptor */
 
-static u8 canseqnumber = 0;
+static void sendcanmsg(struct CANRCVBUF* pcan);
+static void printcanmsg(struct CANRCVBUF* p);
+
+static uint8_t canseqnumber;
+
+static void cmd_p_timerthread(void);
+static int starttimer(void);
+/*  From: GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
+INSERT INTO CANID VALUES ('CANID_ELCON_TX','C7FA872E','ELCON1',1,1,'I16_I16_U8_U8_U8_U8','ELCON Charger transmit: ');
+INSERT INTO CANID VALUES ('CANID_ELCON_RX','C0372FA4','ELCON1',1,1,'I16_I16_U8_U8_U8_U8','ELCON Charger receive: '); */
+#define CANID_RX_DEFAULT CANID_ELCON_TX  // C7FA872C' This cmd RECEIVES; ELCON transmits
+#define CANID_TX_DEFAULT CANID_ELCON_RX  // C0372FA4' This cmd SENDS; ELCON receives
+union UF
+{
+	uint8_t uc[4];
+	float f;
+};
+
+struct CELLMSG
+{
+	double     d; // u32 converted to double
+
+	uint32_t u32; // reading
+	uint16_t u16; // reading (100uv)
+	uint8_t flag; // 0 = no reading; 1 = new reading; 2 = new bit reading
+	uint8_t  max; // reading index: max encountered
+};
+
 static struct CANRCVBUF cantx;
+static uint32_t canid_rx;
 
-static u32 idrx; // CAN id that CAN node sends (to "us)
-static u32 idtx; // CAN id that "we" send (to CAN node)
+static float fvolts;
+static float famps;
+static uint32_t ivolts;
+static uint32_t iamps;
 
-static u32 state;
-static u32 kaON;  // 0 = keep-alive is off; 1 = keep-alive = on.
+static float fmsgvolts;
+static float fmsgamps;
 
-#define KEEPALIVETICKCT 70		// 10 ms count for timing keepalive
-static uint32_t tickctr;
-static int flagnow;
 
+uint32_t kaON;  // 0 = keep-alive is off; 1 = keep-alive = on.
+static uint32_t timerctr;
+static uint32_t timernext; // Next timer count
+
+
+#define DEFAULT_POLLDUR 1000 // Duration in ms
+static uint32_t polldur = DEFAULT_POLLDUR; // Number of polls per sec
+
+/******************************************************************************
+ * static printcanmsg(struct CANRCVBUF* p);
+ * @brief 	: CAN msg 
+ * @param	: p = pointer 
+*******************************************************************************/
+static void printcanmsg(struct CANRCVBUF* p)
+{
+	int i;
+	printf(" %08X %01d:",p->id,p->dlc);
+	for (i = 0; i < p->dlc; i++)
+		printf (" %02X",p->cd.uc[i]);
+	return;
+}
+
+/******************************************************************************
+ * int cmd_p_init(char* p);
+ * @brief 	: Reset 
+ * @param	: p = pointer to line entered on keyboard
+ * @return	: -1 = too few chars.  0 = OK.
+*******************************************************************************/
+int cmd_p_init(char* p)
+{
+	uint32_t len = strlen(p);
+
+	printf("%c%c %i\n",*p,*(p+1),len);
+/*
+
+"p - Set voltage and current to zero "
+"pd display ELCON msg: CANID: C7FA872E)\n\t"
+"ps <vvv.v> <iii.i> Set voltage and current (CANID: C0372FA4)\n\t"
+"px Set charger off bit to 1 \n\t"
+"po Set charger off bit to 0\n");	
+*/
+
+	canid_rx = CANID_RX_DEFAULT; // Default BMS
+
+	/* Set default command to ELCON */
+	cantx.id       = CANID_TX_DEFAULT; // 
+	cantx.dlc      = 8;
+	cantx.cd.ull   = 0; // Clear all payload bytes
+	cantx.cd.uc[4] = 1; // Battery protection, charger close output
+
+	if (len < 3)
+	{
+		timerctr   = 0;
+		timernext  = polldur/10;
+		starttimer();
+		sendcanmsg(&cantx);
+		return 0;
+
+	}	
+	/* POLLER requests BMS node, string, or all. */
+	switch ( *(p+1) )
+	{ 
+	case ' ': // 'This is a p' with a space following
+		sendcanmsg(&cantx);
+		break;
+
+	case 'd': // Display msg from ELCON, do not send to ELCON
+		{
+			printf("\nNot enough input chars to set poll duration\n");
+		}
+		break;
+
+	case 's': // Module String whom
+		if (len > 13)
+		{
+			sscanf( (p+3), "%f %f",&fvolts, &famps);
+			printf(" Volts %6.1f  Amps %6.1f\n",fvolts,famps);
+			ivolts = fvolts * 10;
+			iamps  = iamps * 10;
+			if (ivolts > 4000)
+			{
+				printf("Volts limit is 400.0\n");
+				return -1;
+			}
+			if (iamps > 100)
+			{
+				printf("Amps limit is 10.0\n");
+				return -1;
+			}
+			cantx.cd.uc[0] = (ivolts >> 8);
+			cantx.cd.uc[1] = (ivolts & 0x0F);
+			cantx.cd.uc[2] = (iamps >> 8);
+			cantx.cd.uc[3] = (iamps & 0x0F);
+			cantx.cd.uc[4] = 0; // Charging on
+			sendcanmsg(&cantx);
+		}
+		break;
+
+	case 'x': // Set charger off bit to 1
+		cantx.cd.uc[4] = 1;
+		sendcanmsg(&cantx);
+		break;
+
+	case 'o': // et charger off bit to 0	
+		cantx.cd.uc[4] = 0;
+		sendcanmsg(&cantx);
+		break;
+
+	default:
+		printf("2nd char not recognized: %c\n", *(p+1));
+		return -1;
+	}
+	timerctr   = 0;
+	timernext  = polldur/10;
+	starttimer();
+	return 0;
+}
+
+/******************************************************************************
+ * void cmd_p_do_msg(struct CANRCVBUF* p);
+ * @brief 	: Output msgs for the id that was entered with the 'm' command
+*******************************************************************************/
+/*
+This routine is entered each time a CAN msg is received, if command 'm' has been
+turned on by the hapless Op typing 'm' as the first char and hitting return.
+*/
+static char* tsw[5] = {
+	"HW FAIL: ",
+	"OVR TEMP ",
+	"INPUT ",
+	"BATT DISC ",
+	"COMM T.O. "};
+
+void cmd_p_do_msg(struct CANRCVBUF* p)
+{
+		int i;
+		int ts;
+	/* Expect the BMS node CAN msg format TYPE2, etc
+	     and skip other CAN IDs.
+	   These #defines originate from the processing of the .sql file
+	     ~/GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
+	     ~/GliderWinchCommons/embed/svn_common/trunk/db/CMD_CODES_INSERT.sql
+	   which generates the file
+	     ../../../../../svn_common/trunk/db/gen_db.h */
+
+
+	if ((p->id & 0xfffffffc) != canid_rx)
+		return; // CAN ID is not ELCON Charger
+
+	printcanmsg(p);
+
+	uint32_t itmpvolts = (p->cd.uc[0] << 8) | (p->cd.uc[1]);
+	uint32_t itmpamps = (p->cd.uc[2] << 8) | (p->cd.uc[3]);
+	fmsgvolts = itmpvolts;
+	fmsgamps  = itmpamps;	
+	printf ("%6.1f V %6.1f I ", fmsgvolts * 0.1, fmsgamps * 0.1);
+
+	for (i = 0; i < 5; i++)
+	{
+		ts = ((p->cd.uc[4] >> i) & 1);
+		printf(" :%s %d",tsw[i],ts);
+	}
+	printf("\n");
+
+	return;
+}
 /******************************************************************************
  * static void sendcanmsg(struct CANRCVBUF* pcan);
  * @brief 	: Send CAN msg
@@ -101,16 +227,27 @@ static int flagnow;
 static void sendcanmsg(struct CANRCVBUF* pcan)
 {
 	struct PCTOGATEWAY pctogateway; 
-	pcan->id = idtx;
-	pcan->dlc = 1;
 
 	pctogateway.mode_link = MODE_LINK;	// Set mode for routines that receive and send CAN msgs
 	pctogateway.cmprs.seq = canseqnumber++;	// Add sequence number (for PC checking for missing msgs)
 	USB_toPC_msg_mode(fdp, &pctogateway, pcan); 	// Send to file descriptor (e.g. serial port)
-printf("TX: %08x %d %02X\n",pcan->id, pcan->dlc, pcan->cd.u8[0]);
+//printf("TX: %08x %d %02X\n",pcan->id, pcan->dlc, pcan->cd.u8[0]);
 	return;
 }
-
+/******************************************************************************
+ * static void cmd_p_timerthread(void);
+ * @brief 	: Send keep-alive msg
+*******************************************************************************/	
+static void cmd_p_timerthread(void)
+{
+	timerctr += 1; // 10 ms tick counter
+	if ((int)(timerctr - timernext) > 0)
+	{ // Time to output accumulated readings
+		timernext += polldur/10;
+		sendcanmsg(&cantx);	// Send next request
+	}
+	return;
+}
 /******************************************************************************
  * static void starttimer(void);
  * @brief 	: Setup timing
@@ -118,226 +255,12 @@ printf("TX: %08x %d %02X\n",pcan->id, pcan->dlc, pcan->cd.u8[0]);
 static int starttimer(void)
 {
 	/* Start timer thread for sending CAN msgs. */
-	int ret = timer_thread_init(&cmd_p_timerthread, 10000);
+	int ret = timer_thread_init(&cmd_p_timerthread, 10000); // 10 ms
 	if (ret != 0)
 	{
-		printf("\ncommand K: timer thread startup unsucessful\n");
+		printf("\ncmd_p: timer thread startup unsucessful\n");
 		return -1;
 	}
+	printf("START TIMER\n");
 	return 0;
 }
-/******************************************************************************
- * int cmd_p_init(char* p);
- * @brief 	: Setup timing
- * @param	: p = pointer to keyboard input
-*******************************************************************************/
-int cmd_p_init(char* p)
-{
-	u32 len = strlen(p);
-
-	idrx = DEFAULTRX;
-	idtx = DEFAULTTX;
-
-	tickctr = 0;
-	flagnow = 0;
-
-	if (len == 2)
-	{ // Here, 'p<enter>' entered
-		printf("Using GEVCUR default CAN IDs: Send %08X  Rcv %08X\n",idtx,idrx);		
-		printf("\t to use different CAN IDs, enter exactly in the following format\n\t"
-			"k aaaaaaaa bbbbbbbb<enter>\n\t"
-			"where: a = ID PC sends, b = ID PC receives\n");
-		state = 0;
-		kaON = 0;
-		return starttimer();
-	}
-	if (len >= 20)
-	{ // Here, Op entered the two CAN IDs
-		sscanf((p+1),"%x %x",&idrx,&idrx);
-		printf("Using entered CAN IDs: Send %08X  Rcv %08X\n",idtx,idrx);
-		state = 0;
-		kaON = 0;
-		return starttimer();
-	}
-	if (len == 3)
-	{ // Here one of the following commands entered
-		switch(*(p+1))
-		{
-		case 'a':
-		case 'A': // 'ka' = Start keep-alive msgs (disconnect)
-//			gettimeofday(&te, NULL); // get current time
-//   		millisec_prev = te.tv_sec*1000LL + te.tv_usec/1000; // calculate milliseconds
-//			millisec_prev += KEEPALIVEDURATION; // Next time for a keep-alive msg
-			flagnow = 1;	 // Send msg upon next timer event
-			kaON = 1;  // Show we are in keep-alive mode
-			state = 1;			
-			break;
-
-		case 'x': // 'px' = Stop keep-alive msgs (disconnect)
-		case 'X':
-			flagnow = 1;	 // Send msg upon next timer event
-			kaON = 0;  // Show we are not in keep-alive mode
-			state = 2;			
-			break;
-
-		case '0': // 'p0' = Discoonect (de-energize contactors)
-			cantx.cd.uc[0]  = 0x00; //  Request: disconnect
-			flagnow = 1;	 // Send msg upon next timer event
-			state = 3;
-			break;
-
-		case '1': // 'p1' = Connect (energize contactors)
-			cantx.cd.uc[0] = 0x80; // Request: connect
-			flagnow = 1;	 // Send msg upon next timer event
-			state = 4;
-			break;
-
-		case '4':
-		case '2': // 'p2' = Send fault reset command
-			cantx.cd.uc[0] = 0x40; // Request: Reset
-			flagnow = 1;	 // Send msg upon next timer event
-			state = 5;
-			break;
-
-		default:
-			printf("%c is not in command list\n",*(p+1));
-			return -1;
-		}
-	}
-	return starttimer();
-}
-/******************************************************************************
- * void cmd_p_do_msg(struct CANRCVBUF* p);
- * @brief 	: Send CAN msgs
- * @param	: p = pointer to CAN msg
-*******************************************************************************/
-extern u32 msg_sw;	// Command in effect
-
-void cmd_p_do_msg(struct CANRCVBUF* p)
-{
-
-	if (msg_sw != 'p') return;	// Command in effect
-
-	if ((p->id & 0xfffffffc) != idrx) return;
-
-printf("PA response (status): %08X %i ",p->id,p->dlc);
-int i;
-for (i = 0; i < p->dlc; i++) printf(" %02X",p->cd.uc[i]);
-//printf("\n");
-
-	if (p->dlc != 3)
-	{
-		printf(" dlc is not 3.  It is %i\n",p->dlc);
-		return;
-	}
-
-	/* If rcv'd status is RESET, then revert to sending disconnect. */
-	if ((p->cd.uc[0] & 0x40) != 0) cantx.cd.uc[0] = 0x00; // Disconnect cmd
-
-	// Primary state code, Substate code
-	printf(" : %2i %2i ",(p->cd.uc[0] & 0xf),(p->cd.uc[2] & 0xf));
-
-	switch (p->cd.uc[0] & 0xf)
-	{
-	case	DISCONNECTED:   /*  0 */
-		printf("DISCONNECTED"); 
-		break;
-	case	CONNECTING:     /*  1 */
-		printf("CONNECTING");
-		break;	
-	case	CONNECTED:      /*  2 */
-		printf("CONNECTED ");
-		break;	
-	case	FAULTING:       /*  3 */
-		printf("FAULTING  ");
-		break;	
-	case	FAULTED:        /*  4 */
-		printf("FAULTED   ");
-		break;	
-	case	RESETTING:      /*  5 */
-		printf("RESETTING ");
-		break;	
-	case	DISCONNECTING:  /*  6 */
-		printf("DISCONNECTING");
-		break;	
-	case	OTOSETTLING:    /*  7 */
-		printf("OTOSETTLNG"); 
-		break;
-	default:
-		printf("ARGH: PRIMARY CODE IS NOT RECOGNIZED!");
-	}
-	printf(" : ");
-
-	switch (p->cd.uc[1])
-	{
-	case NOFAULT: 
-		printf("NO_FAULT");
-		break;
-	case BATTERYLOW: 
-		printf("BATTERYLOW");
-		break;
-	case CONTACTOR1_OFF_AUX1_ON: 
-		printf("CONTACTOR1_OFF_AUX1_ON");
-		break;
-	case CONTACTOR2_OFF_AUX2_ON: 
-		printf("CONTACTOR2_OFF_AUX2_ON");
-		break;
-	case CONTACTOR1_ON_AUX1_OFF: 
-		printf("CONTACTOR1_ON_AUX1_OFF");
-		break;
-	case CONTACTOR2_ON_AUX2_OFF: 
-		printf("CONTACTOR2_ON_AUX2_OFF");
-		break;
-	case CONTACTOR1_DOES_NOT_APPEAR_CLOSED: 
-		printf("CONTACTOR1_DOES_NOT_APPEAR_CLOSED");
-		break;
-	case PRECHGVOLT_NOTREACHED: 
-		printf("PRECHGVOLT_NOTREACHED");
-		break;
-	case CONTACTOR1_CLOSED_VOLTSTOOBIG: 
-		printf("CONTACTOR1_CLOSED_VOLTSTOOBIG");
-		break;
-	case CONTACTOR2_CLOSED_VOLTSTOOBIG: 
-		printf("CONTACTOR2_CLOSED_VOLTSTOOBIG");
-		break;
-	case KEEP_ALIVE_TIMER_TIMEOUT: 
-		printf("KEEP_ALIVE_TIMER_TIMEOUT");
-		break;
-	case NO_UART3_HV_READINGS:
-		printf("UART3_HV_READINGS: timer timed out");
-		break;
-	case 	HE_AUTO_ZERO_TOLERANCE_ERR:			flagnow = 1;	 // Send msg upon next timer event
-
-		printf("HE_AUTO_ZERO_TOLERANCE_ERR");
-		break;
-	default:
-		printf("ARGH: FAULT CODE IS NOT RECOGNIZED!");
-	}
-	printf("\n");
-
-	return;
-}
-
-/******************************************************************************
- * static void cmd_p_timerthread(void);
- * @brief 	: Send keep-alive msg
-*******************************************************************************/	
-static void cmd_p_timerthread(void)
-{
-	tickctr += 1;
-	if (tickctr >= KEEPALIVETICKCT)
-	{
-		tickctr = 0;
-		
-	/* Send keep-alive msg with the current command code in payload [0] */
-		sendcanmsg(&cantx);		
-	}
-	if (flagnow != 0)
-	{
-		flagnow = 0;
-		sendcanmsg(&cantx);		
-	}
-
-	return;
-}
-

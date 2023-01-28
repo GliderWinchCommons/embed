@@ -334,7 +334,13 @@ void do_printmenu(void)
 	printf("l - list unix time/date in heartbeat time msgs (l e1000000)\n");
 	printf("m - list msgs for id entered 'm xxxxxxxx (CAN ID as 8 hex digits)'\n");
 	printf("n - list msg id's and msg ct during 1 sec (coarse computer timing)\n");
-	printf("p - --\n");
+	printf("p - ELCON Charger: \n\t"
+				"p - Set voltage and current to zero "
+				"pd display ELCON msg: CANID: C7FA872E)\n\t"
+				"ps <vvv.v> <iii.i> Set voltage and current (CANID: C0372FA4)\n\t"
+				"px Set charger off bit to 1 \n\t"
+				"po Set charger off bit to 0\n");
+
 	printf("q - Identify received msgs from CANID.sql file\n");
 	printf("r - send high priority RESET\n");
 	printf("s - CONTACTOR: command request to retrieve all readings\n");

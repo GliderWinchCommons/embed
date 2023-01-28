@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2023-01-23 12:36:42.982
+// 2023-01-27 20:51:59.006
 
-#define CANID_COUNT 341
+#define CANID_COUNT 343
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -340,6 +340,8 @@
 #define  CANID_UNIT_22            0x05200000  // UNIT_22        : GEVCUr: gevcu replasement: DiscoveyF4 Control Panel
 #define  CANID_ALL_PC             0x05400000  // UNIT_X1        : PC sends to all CAN loaders
 #define  CANID_ALL_OTH            0x05600000  // UNIT_X2        : Someone else sends to all CAN loaders
+#define  CANID_ELCON_TX           0xC7FA872C  // ELCON1         : ELCON Charger transmit: 
+#define  CANID_ELCON_RX           0xC0372FA4  // ELCON1         : ELCON Charger receive: 
 #define  CANID_UNIT_99            0xFFFFFF14  // UNIT_99        : Dummy for missing CAN IDs
 #define  CANID_DUMMY              0xFFFFFFFC  // UNIT_NU        : Dummy ID: Lowest priority possible (Not Used)
 #define  CANID_MSG_DUMMY          0xFFFFFF16  // ANY            : Dummy ID: Polled Msg dummy
@@ -417,7 +419,7 @@
 #define  CMD_CMD_SYS_RESET_CID   167       // 0xA7: [0] Cause System Reset for CAN ID sent in payload
 #define  CMD_CMD_SYS_RESET_EXT   168       // 0xA8: [0] Extend current loader wait duration for all, [1] = wait in 0.1 sec steps
 
-#define PAYLOAD_TYPE_COUNT 51
+#define PAYLOAD_TYPE_COUNT 52
 #define  NONE                    0         // No payload bytes                                
 #define  FF                      1         // [0]-[3]: Full Float                             
 #define  FF_FF                   2         // [0]-[3]: Full Float[0]; [4]-[7]: Full Float[1]  
@@ -466,6 +468,7 @@
 #define  S8_U8                   45        // [0]:int8_t,unit8_t                              
 #define  U8_U8_U16_U16_U16       46        // [0]:uint8_t,[1]:uint8_t,[2:3],[4:5],[6:7]:uint16_t
 #define  U16_U16_U16_U16         47        // [0:1],[2:3],[4:5],[6:7]:uint16_t                
+#define  I16_I16_U8_U8_U8_U8     48        // [1]-[0]:[3]-[2]:Big E,[4-7]uint8_t              
 #define  LVL2B                   249       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
@@ -968,6 +971,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 903  */
+/* TOTAL COUNT OF #defines = 906  */
 /* Test 2016/06/12 */
 

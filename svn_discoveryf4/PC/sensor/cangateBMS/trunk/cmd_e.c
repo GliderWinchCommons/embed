@@ -423,6 +423,7 @@ turned on by the hapless Op typing 'm' as the first char and hitting return.
 */
 void cmd_e_do_msg(struct CANRCVBUF* p)
 {
+		int i;
 		uint8_t err;
 	/* Expect the BMS node CAN msg format TYPE2, etc
 	     and skip other CAN IDs.

@@ -338,7 +338,7 @@ void do_printmenu(void)
 				"p - Set voltage and current to zero "
 				"pd display ELCON msg: CANID: C7FA872E)\n\t"
 				"ps <vvv.v> <iii.i> Set voltage and current (CANID: C0372FA4)\n\t"
-				"px Set charger off bit to 1 \n\t"
+				"pj Set charger off bit to 1 \n\t"
 				"po Set charger off bit to 0\n");
 
 	printf("q - Identify received msgs from CANID.sql file\n");

@@ -105,9 +105,6 @@ int cmd_p_init(char* p)
 
 	if (len < 3)
 	{
-		timerctr   = 0;
-		timernext  = polldur/10;
-		starttimer();
 		sendcanmsg(&cantx);
 		return 0;
 
@@ -117,21 +114,21 @@ int cmd_p_init(char* p)
 	{ 
 	case ' ': // 'This is a p' with a space following
 		sendcanmsg(&cantx);
-		break;
+		return 0;
 
 	case 'd': // Display msg from ELCON, do not send to ELCON
 		{
 			printf("\nNot enough input chars to set poll duration\n");
 		}
-		break;
+		return 0;
 
 	case 's': // Module String whom
-		if (len > 13)
+		if (len > 10)
 		{
 			sscanf( (p+3), "%f %f",&fvolts, &famps);
 			printf(" Volts %6.1f  Amps %6.1f\n",fvolts,famps);
-			ivolts = fvolts * 10;
-			iamps  = iamps * 10;
+			ivolts = fvolts * 10.0f;
+			iamps  = famps * 10.0f;
 			if (ivolts > 4000)
 			{
 				printf("Volts limit is 400.0\n");
@@ -143,15 +140,18 @@ int cmd_p_init(char* p)
 				return -1;
 			}
 			cantx.cd.uc[0] = (ivolts >> 8);
-			cantx.cd.uc[1] = (ivolts & 0x0F);
+			cantx.cd.uc[1] = (ivolts & 0xFF);
 			cantx.cd.uc[2] = (iamps >> 8);
-			cantx.cd.uc[3] = (iamps & 0x0F);
+			cantx.cd.uc[3] = (iamps & 0xFF);
 			cantx.cd.uc[4] = 0; // Charging on
 			sendcanmsg(&cantx);
+			printcanmsg(&cantx);
+			break;
 		}
+			printf("Not enough chars for ps command: %d",len);
 		break;
 
-	case 'x': // Set charger off bit to 1
+	case 'j': // Set charger off bit to 1
 		cantx.cd.uc[4] = 1;
 		sendcanmsg(&cantx);
 		break;

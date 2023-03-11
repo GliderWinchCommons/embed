@@ -60,12 +60,14 @@ INSERT INTO CMD_CODES  VALUES ('CMD_THISIS_HISTODATA', 41, 'Histogram data item:
 
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLPOLL',	42,	'[1]-[7] cell readings request: emc or pc');
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_TYPE2',		43,	'[1]-[7] format 2: misc responses to poll');
-INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLHB',	44,	'[1]-[7] cell readings: respojnse to timeout heartbeat');
+INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLHB',	44,	'[1]-[7] cell readings: responses to timeout heartbeat');
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_MISCHB',    45,	'[1]-[7] misc data: timeout heartbeat');
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLEMC',   46,	'[1]-[7] cell readings: response to emc sent CELLPOLL');
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLPC',    47,	'[1]-[7] cell readings: response to pc sent CELLPOLL');
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_MISCEMC',   48,	'[1]-[7] misc data: response to emc sent CELLPOLL');
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_MISCPC',    49,	'[1]-[7] misc data: response to pc sent CELLPOLL');
+INSERT INTO CMD_CODES  VALUES ('CMD_CMD_HEARTBEAT', 50,	'[1]-[7] Send command code with status (see CANLoader1/canloader_proto.c)');
+
 
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_SYS_RESET_ALL',166,	'0xA6: [0] Cause System Reset for all');
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_SYS_RESET_CID',167,	'0xA7: [0] Cause System Reset for CAN ID sent in payload');

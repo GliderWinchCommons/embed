@@ -16,6 +16,7 @@
 
 extern int fdp;	/* port file descriptor */
 
+static void sendcanmsg(struct CANRCVBUF* pcan);
 static void printcanmsg(struct CANRCVBUF* p);
 static float extractfloat(uint8_t* puc);
 static uint32_t extractu32(uint8_t* puc);
@@ -54,7 +55,7 @@ static int starttimer(void);
  #define MISCQ_HALL_ADC    9 // Hall sensor: adc counts for making calibration
  #define MISCQ_CELLV_HI   10 // Highest cell voltage
  #define MISCQ_CELLV_LO   11 // Lowest cell voltage
- #define MISCQ_FETBALBITS 12 // FET on/off discharge bits
+ #define MISCQ_FETBALBITS 12 // Read FET on/off discharge bits
  #define MISCQ_DUMP_ON	  13 // Turn on Dump FET for no more than ‘payload [3]’ secs
  #define MISCQ_DUMP_OFF	  14 // Turn off Dump FET
  #define MISCQ_HEATER_ON  15 // Enable Heater mode to ‘payload [3] temperature
@@ -66,6 +67,10 @@ static int starttimer(void);
  #define MISCQ_R_BITS     21 // Dump, dump2, heater, discharge bits
  #define MISCQ_CURRENT_CAL 24 // Below cell #1 minus, current resistor: calibrated
  #define MISCQ_CURRENT_ADC 25 // Below cell #1 minus, current resistor: adc counts
+ #define MISCQ_UNIMPLIMENT 26 // Command requested is not implemented
+ #define MISCQ_SETFETBITS  27 // Set FET on/off discharge bits
+ #define MISCQ_SETDCHGTST  28 // Set discharge test with heater fet load
+
 
 #define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
 #define FET_HEATER   (1 << 1) // 1 = HEATER FET ON
@@ -81,6 +86,8 @@ static int starttimer(void);
 #define ADCDIRECTMAX 10   // Number of ADCs read in one scan with DMA
 
 #define HEADERMAX 16 // Number of print groups between placing a header
+
+
 
 union UF
 {
@@ -119,6 +126,7 @@ static uint32_t timernext; // Next timer count
 static uint8_t ncell_prev;
 static uint8_t headerctr;
 
+// zero duration = one-time only poll.
 #define DEFAULT_POLLDUR 1000 // Duration in ms
 static uint32_t polldur = DEFAULT_POLLDUR; // Number of polls per sec
 
@@ -195,7 +203,7 @@ static void printmenu(char* p)
 				"e x  default  (CANID: BMS B0A00000 POLL B0200000)\n\t"
 				"emx  aaaaaaaa <pppppppp>(CANID: BMS aaaaaaaa POLL pppppppp) \n\t"
 				"eax  <pppppppp> All BMS nodes respond (poll default: B0200000) a \n\t"
-				"esx  <s> (String number: 1-n, default 1)\n\t"
+				"esx  <s> (Battery string number: 1-n, default 1)\n\t"
 				" where--\n\t"
 				"  x = a: Cell calibrated readings\n\t"
 				"  x = A: Cell ADC raw counts for making calibration\n\t"
@@ -208,6 +216,7 @@ static void printmenu(char* p)
 				"  x = w: Processor ADC calibrated readings\n\t"
 				"  x = W: Processor ADC raw counts making calibration\n"
 				"  x = b: Bits: fet status, opencell wires, installed cells"
+				"  x = g: Set discharge test"
 				"ed  <duration (ms)> Set duration between polls (Default: 1000 ms)\n"
 				);
 */
@@ -265,7 +274,7 @@ int cmd_e_init(char* p)
 		switch ( *(p+1) )
 		{ 
 		case ' ': // Use default CANID for BMS and POLLER
-			cantx.cd.ui[2] = CANID_RX_DEFAULT;
+			cantx.cd.ui[1] = CANID_RX_DEFAULT;
 			whom = ' ';
 			break;
 
@@ -396,6 +405,13 @@ int cmd_e_init(char* p)
 			cantx.cd.uc[1] = MISCQ_R_BITS;  //  TYPE2 code
 			break;
 
+		case 'g': // x = g: Set discharge test
+			cantx.cd.uc[0] = CMD_CMD_TYPE2; //  TYPE2 code
+			cantx.cd.uc[1] = (0x1 << 6); // Only specified module responds
+			cantx.cd.uc[2] = MISCQ_SETDCHGTST; // Sub-code for BMS
+			polldur = 0; // One-Time-Only poll
+			break;			
+
 		default:
 			if (whom == 'd') 
 				break;
@@ -409,7 +425,10 @@ int cmd_e_init(char* p)
 	kaON       =   1;
 	timerctr   = 0;
 	timernext  = polldur/10;
-	starttimer();
+
+	sendcanmsg(&cantx);	// Send first request
+	if (polldur != 0)
+		starttimer(); // Start timer for repetitive requests
 	return 0;
 }
 
@@ -432,7 +451,7 @@ void cmd_e_do_msg(struct CANRCVBUF* p)
 	     ~/GliderWinchCommons/embed/svn_common/trunk/db/CMD_CODES_INSERT.sql
 	   which generates the file
 	     ../../../../../svn_common/trunk/db/gen_db.h */
-printf("\n%08X %d: ", p->id,p->dlc);for (i=0; i<p->dlc; i++) printf(" %02X",p->cd.uc[i]);
+//printf("\n%08X %d: ", p->id,p->dlc);for (i=0; i<p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 	uint32_t utmp = (p->id & 0xfffffffc);
 	if ((utmp < (uint32_t)CANID_UNIT_BMS01) || (utmp > (uint32_t)CANID_UNIT_BMS18))
 		return; // CAN ID is not a BMS module function.
@@ -535,7 +554,11 @@ static void sendcanmsg(struct CANRCVBUF* pcan)
 *******************************************************************************/	
 static void cmd_e_timerthread(void)
 {
+	if (polldur == 0)
+		return;
+
 	if (kaON == 0) return; // No timer generated msgs
+
 
 	timerctr += 1; // 10 ms tick counter
 	if ((int)(timerctr - timernext) > 0)

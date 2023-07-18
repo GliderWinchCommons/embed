@@ -301,13 +301,13 @@ void do_printmenu(void)
 
 	printf("e - BMS polling msgs\n\t"
 				"e x  default  (CANID: BMS B0A00000 POLL B0200000)\n\t"
-				"emx  aaaaaaaa <pppppppp>(CANID: BMS aaaaaaaa POLL pppppppp) \n\t"
+				"emx  aaaaaaaa <pppppppp> (CANIDs: BMS aaaaaaaa POLL pppppppp) \n\t"
 				"eax  <pppppppp> All BMS nodes respond (poll default: B0200000) a \n\t"
-				"esx  <s> (String number: 1-n, default 1)\n\t"
+				"esx  <s> Set battery string number: 1-n, (default 1)\n\t"
 				" where--\n\t"
 				"  x = a: Cell calibrated readings\n\t"
 				"  x = A: Cell ADC raw counts for making calibration\n\t"
-				"  x = h: Trickle charger high voltage\n\t"
+				"  x = h: PCB charger high voltage\n\t"
 				"  x = t: Temperature calibrated readings (T1, T2, T3)\n\t"
 				"  x = T: Temperature ADC raw counts for making calibration (T1, T2, T3)\n\t"
 				"  x = s: BMS measured top-of-stack voltage\n\t"
@@ -316,6 +316,7 @@ void do_printmenu(void)
 				"  x = w: Processor ADC calibrated readings\n\t"
 				"  x = W: Processor ADC raw counts making calibration\n"
 				"  x = b: Bits: fet status, opencell wires, installed cells"
+				"  x = g: Set discharge test"
 				"ed  <duration (ms)> Set duration between polls (Default: 1000 ms)\n"
 				);
 

@@ -299,7 +299,7 @@ int cmd_e_init(char* p)
 			break;
 
 		case 'm': // Use specified CANID
-			if ((len > 13) && (len < 22))
+			if ((len > 12) && (len < 22))
 			{ // Command has BMS CANID specified, POLLER is default
 				sscanf( (p+3), "%x",&canid_rx);
 			}

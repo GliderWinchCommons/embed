@@ -187,14 +187,14 @@ void do_msg(struct CANRCVBUF* p)
 				{
 					if (cellmsg[i].u16 == CELLVNONE)
 					{
-						printf("  000.00");
+						printf(" -9999.0");
 	//						printf("  .omit.");
 					}
 					else
 					{
 						if (cellmsg[i].u16 == CELLVOPEN)
 						{
-							printf("  .open.");
+							printf("  7000.0");
 						}
 						else
 						{
@@ -207,7 +207,7 @@ void do_msg(struct CANRCVBUF* p)
 				}
 				else
 				{ // No readings for this cell
-					printf("  ......");
+					printf("    -1.0");
 				}
 			}
 			printf("\n"); // print line

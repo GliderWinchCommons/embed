@@ -229,14 +229,14 @@ INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLPC',    47,	'[1]-[7] cell readings: 
 				{
 					if (cellmsg[i].u16 == CELLVNONE)
 					{
-						printf("  000.00");
+						printf(" -9999.0");
 //						printf("  .omit.");
 					}
 					else
 					{
 						if (cellmsg[i].u16 == CELLVOPEN)
 						{
-							printf("  .open.");
+							printf("  7000.0");
 						}
 						else
 						{
@@ -249,7 +249,7 @@ INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLPC',    47,	'[1]-[7] cell readings: 
 				}
 				else
 				{ // No readings for this cell
-					printf("  ......");
+					printf("    -1.0");
 				}
 			}
 			printf("\n"); // print line

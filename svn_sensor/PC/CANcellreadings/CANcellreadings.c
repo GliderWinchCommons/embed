@@ -7,18 +7,15 @@
 /*
 Directory: ~/GliderWinchCommons/embed/svn_sensor/PC/CANcellreadings
 
-Compile and execute example with two arguements to select lines from input--
+Compile and execute example with one argument with CAN ID to select lines from STD input--
 gcc CANcellreadings.c -o CANcellreadings -lm && ./CANcellreadings B0A00000 < ~/GliderWinchItems/BMS/PC/filterminicom/minicom-230718-201800.CAN
-
-                 1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16     17     18
-    4ADCVAX  39310  39317  39334  39325  39331  39327  39311  39318  39319  39338  39326  39345  39315  39312  39328  39327  39342  39331 3975
-                 1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16     17     18
-Jcellv[i]:   39310  39317  39333  39324  39330  39328  39312  39319  39318  39338  39327  39345  39315  39313  39330  39327  39343  39330 707859
+gcc CANcellreadings.c -o CANcellreadings -lm && ./CANcellreadings B1000000 < ~/G*ems/BMS/minicom-230724-152450.CAN
+gcc CANcellreadings.c -o CANcellreadings -lm && ./CANcellreadings B1000000 < ~/G*ems/BMS/minicom-230724-152450.CAN | tee x
 
 Procedure--
 - Log CAN msgs
 - Run CANcellreadings: ./CANcellreadings <CAN_ID> < <path/file>
-- Save output add: | tee <file name> or > <file name>
+- Save output add: | tee <file name> skip "| tee" and use "> <file name>"
 
 Log file input snippet--
 8E000040000112D3
@@ -89,6 +86,11 @@ struct CELLMSG cellmsg[NCELL];
 uint8_t hbseq;
 uint32_t ctr; // Input line counter
 uint32_t ctrreadings; // Number of reading groups
+uint32_t ctrout = 0;
+uint32_t ctrchkerr = 0;
+uint32_t ctrdlcerr = 0;
+uint32_t ctrlinect = 0;
+uint32_t ctrreadct = 0;
 
 FILE* fpIn;
 /* ************************************************************************************************************ */
@@ -103,7 +105,7 @@ int main(int argc, char **argv)
 	uint32_t id;
 	uint32_t id_arg;
 
-	uint32_t ctrout = 0;
+
 	uint32_t seq;
 
 	union UI
@@ -122,21 +124,29 @@ int main(int argc, char **argv)
 
 	while ( (fgets (&buf[0],LINESIZE,stdin)) != NULL)	// Get a line from stdin
 	{
-		if (strlen(buf) < 10) continue;
 		ctr += 1;
+		if (strlen(buf) < 10) 
+		{
+			ctrlinect += 1;
+			continue;
+		}
 
 		sscanf(&buf[ 0],"%2X",&seq);
 		sscanf(&buf[10],"%2X",&uitmp);
 		can.dlc = uitmp;
 		if (uitmp > 8) 
 		{
-			printf("dlc error %u\n",uitmp);
-			return -1;
+			ctrdlcerr += 1;
+			continue;
 		}
+	uint32_t chk = CHECKSUM_INITIAL; //	0xa5a5	// Initial value for computing checksum
+		chk += seq + can.dlc;
 		for (i = 0; i < 4; i++)
 		{
 			sscanf(&buf[2+2*i],"%2X",&uitmp);
 			ui.uc[i] = uitmp;
+			chk += ui.uc[i];
+
 		}
 		can.id  = ui.ui;
 
@@ -144,12 +154,29 @@ int main(int argc, char **argv)
 		{
 			sscanf(&buf[12+i*2],"%2X",&uitmp);
 			can.cd.uc[i] = uitmp;
+			chk += uitmp;			
 		}
+
+		chk += (chk >> 16);	// Add carries into high half word
+		chk += (chk >> 16);	// Add carry if previous add generated a carry
+		chk += (chk >> 8);  // Add high byte of low half word
+		chk += (chk >> 8);  // Add carry if previous add generated a carry
+
+		// Get checksum from line
+		sscanf(&buf[12+i*2],"%2X",&uitmp);
+//printf("chk: %08X, %s", chk, buf);
+
 		if (can.id == id_arg)
 		{
-			ctrout += 1;
-
-			do_msg(&can);
+			if ((chk & 0xff) == (uitmp & 0xff))
+			{
+				do_msg(&can);
+				ctrout += 1;
+			}
+			else
+			{ // Count msgs with checksum errors
+				ctrchkerr += 1;
+			}
 
 //			printf(buf,"%s");
 //			printf("%5d: %08X %d: ",ctr,ui.ui,can.dlc);
@@ -160,9 +187,13 @@ int main(int argc, char **argv)
 
 		}
 	}
-	printf("count  in: %d\n",ctr);
-	printf("count out: %d\n",ctrout);
-	printf("count reading groups: %d\n",ctrreadings);
+	printf("count of lines in:     %7d\n",ctr);
+	printf("line length too short: %7d\n",ctrlinect);
+	printf("count selected 0x%08X: %7d divided by 7: %d\n",id_arg,ctrout,ctrout/7 );
+	printf("ctrchkerr: %7d\n",ctrchkerr);
+	printf("ctrdlcerr: %7d\n",ctrdlcerr);
+	printf("ctrreadct: %7d\n",ctrreadct);
+	printf("count reading groups: %d times 6: %d\n",ctrreadings, 6*ctrreadings);
 
 		return 0;
 }
@@ -178,6 +209,7 @@ void do_msg(struct CANRCVBUF* p)
 		  (p->cd.uc[0] == CMD_CMD_CELLEMC)  ||
 		  (p->cd.uc[0] == CMD_CMD_CELLPC ))  )
 	{	
+		ctrreadct += 1;
 		// Check msg is for the same reading group
 		if ((p->cd.uc[1] & 0xf) != (hbseq & 0xf))
 		{ // Here sequence number changed. Assume all received

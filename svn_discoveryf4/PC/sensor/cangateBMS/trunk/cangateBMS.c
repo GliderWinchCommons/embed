@@ -438,7 +438,7 @@ printf("%d %s\n",i, argv[i]);
 			if ( xret != 0 ) // Did the above result in frame, or line, from the gateway?
 			{ // Here yes.  We have a msg, but it might not be valid.
 				if (xret == 1)
-				{ // Here the msg had not errors.
+				{ // Here the msg had no errors.
 					do_canbus_msg(&canrcvbuf);	// Do something appropriate to the command in effect (commands.c)
 
 					/* Poll for outputting test msgs, timed/throttled by counting incoming CAN msgs. */

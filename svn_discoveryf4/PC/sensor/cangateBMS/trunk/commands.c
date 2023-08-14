@@ -74,7 +74,7 @@ void do_command_keybrd(char* p)
 	{
 
 	case 'a': // 'a' command (enable unit sendin ascii in CAN msgs & display)
-		if (cmd_a_init(p) == 0)
+		if (cmd_a_init(p) >= 0)
 		msg_sw = 'a';
 		break;
 
@@ -165,7 +165,7 @@ void do_command_keybrd(char* p)
 		break;
 
 	case 'x': // 'x' cancels current command
-		cmd_a_do_stop();  // Disable ascii sending if enabled
+//		cmd_a_do_stop();  // Disable ascii sending if enabled
 		timer_thread_shutdown(); // Cancel timer thread if running
 		do_printmenu();	  // Nice display for the hapless Op.
 		msg_sw = 'x';
@@ -288,7 +288,7 @@ void do_pc_to_gateway(struct CANRCVBUF* p)
  * ************************************************************************************** */
 void do_printmenu(void)
 {
-	printf("a - ascii monitor of a CAN unit\n");
+	printf("a - Display selected BMS CAN  msgs\n");
 	printf("b - CONTACTOR: display polled msgs\n");
 	printf("c - request & display launch parameters\n");
 	printf("d - BMS heartbeat\n\t"
@@ -302,8 +302,7 @@ void do_printmenu(void)
 	printf("e - BMS polling msgs\n\t"
 				"e x  default  (CANID: BMS B0A00000 POLL B0200000)\n\t"
 				"emx  aaaaaaaa <pppppppp> (CANIDs: BMS aaaaaaaa POLL pppppppp) \n\t"
-				"eax  <pppppppp> All BMS nodes respond (poll default: B0200000) a \n\t"
-				"esx  <s> Set battery string number: 1-n, (default 1)\n\t"
+				"eax  All BMS nodes respond (using current POLLer) \n\t"
 				" where--\n\t"
 				"  x = a: Cell calibrated readings\n\t"
 				"  x = A: Cell ADC raw counts for making calibration\n\t"
@@ -314,10 +313,14 @@ void do_printmenu(void)
 				"  x = d: DC-DC converter voltage\n\t"
 				"  x = f: FET discharge status bits\n\t"
 				"  x = w: Processor ADC calibrated readings\n\t"
-				"  x = W: Processor ADC raw counts making calibration\n"
-				"  x = b: Bits: fet status, opencell wires, installed cells"
-				"  x = g: Set discharge test"
-				"ed  <duration (ms)> Set duration between polls (Default: 1000 ms)\n"
+				"  x = W: Processor ADC raw counts making calibration\n\t"
+				"  x = b: Bits: fet status, opencell wires, installed cells\n\t"
+				"  x = g: Set discharge test\n\t"
+				"ed  <set: Duration (decimal) (ms)> Set duration between polls (Default: 1000 ms)\n\t"
+				"ep  <set: pppppppp> Poller CAN ID (default: B0200000) \n\t"
+				"er  <set: r> Set ADC Rate code (0-7, default 0 = 422Hz, 8 = display rate list\n\t"
+				"es  <set: s> Set battery String number: 1-n, (default 1)\n\t"
+				"ew  <set: w> Set Who responds (BMS ID: aaaaaaaa, 0 = all)\n"
 				);
 
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");

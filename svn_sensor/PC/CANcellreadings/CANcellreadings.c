@@ -116,7 +116,8 @@ int main(int argc, char **argv)
 
 	if (argc != 2)
 	{
-		printf("\nNeed one and only one argument: I see %d\n",argc-1);
+		printf("\nNeed one and only one argument: I see %d\nExample\n",argc-1);
+		printf("./CANcellreadings B1000000 < ~/G*ems/BMS/minicom-230724-152450.CAN\n");
 		return -1;
 	}
 

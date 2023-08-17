@@ -27,10 +27,12 @@ static void miscq_miscq_dcdc_v(struct CANRCVBUF* p);
 static void miscq_fetbalbits (struct CANRCVBUF* p);
 static void miscq_proc_cal(struct CANRCVBUF* p);
 static void miscq_proc_adc(struct CANRCVBUF* p);
-static void miscq_bits_r(struct CANRCVBUF* p);
 static void print_cal_adc(char* pfmt, uint8_t ncol);
 static void print_processor_adc_header(void);
-static void print_bits_r(void);
+//static void print_bits_r(void);
+
+void printf_hdr_status(void);
+static void miscq_status(struct CANRCVBUF* p);
 
 /* 16b codes for impossible voltage readings. */
 #define CELLVBAD   65535 // Yet to be defined
@@ -100,6 +102,37 @@ static char* pADCrate[] =
 	"  2953 usec,  2KHz"
 };
 
+char *pmiscq[] = {
+ "MISCQ_HEARTBEAT   0", // reserved for heartbeat
+ "MISCQ_STATUS      1", // status
+ "MISCQ_CELLV_CAL   2", // cell voltage: calibrated
+ "MISCQ_CELLV_ADC   3", // cell voltage: adc counts
+ "MISCQ_TEMP_CAL    4", // temperature sensor: calibrated
+ "MISCQ_TEMP_ADC    5", // temperature sensor: adc counts for making calibration
+ "MISCQ_DCDC_V      6", // isolated dc-dc converter output voltage
+ "MISCQ_CHGR_V      7", // charger hv voltage
+ "MISCQ_HALL_CAL    8", // Hall sensor: calibrated
+ "MISCQ_HALL_ADC    9", // Hall sensor: adc counts for making calibration
+ "MISCQ_CELLV_HI   10", // Highest cell voltage
+ "MISCQ_CELLV_LO   11", // Lowest cell voltage
+ "MISCQ_FETBALBITS 12", // Read FET on/off discharge bits
+ "MISCQ_DUMP_ON	   13", // Turn on Dump FET for no more than ‘payload [3]’ secs
+ "MISCQ_DUMP_OFF   14", // Turn off Dump FET
+ "MISCQ_HEATER_ON  15", // Enable Heater mode to ‘payload [3] temperature
+ "MISCQ_HEATER_OFF 16", // Turn Heater mode off.
+ "MISCQ_TRICKL_OFF 17", // Turn trickle charger off for no more than ‘payload [3]’ secs
+ "MISCQ_TOPOFSTACK 18", // BMS top-of-stack voltage
+ "MISCQ_PROC_CAL   19", // Processor ADC calibrated readings
+ "MISCQ_PROC_ADC   20", // Processor ADC raw adc counts for making calibrations
+ "MISCQ_R_BITS     21", // Dump, dump2, heater, discharge bits
+ "MISCQ_CURRENT_CAL 24", // Below cell #1 minus, current resistor: calibrated
+ "MISCQ_CURRENT_ADC 25", // Below cell #1 minus, current resistor: adc counts
+ "MISCQ_UNIMPLIMENT 26", // Command requested is not implemented
+ "MISCQ_SETFETBITS  27", // Set FET on/off discharge bits
+ "MISCQ_SETDCHGTST  28", // Set discharge test with heater fet load
+};
+
+
 union UF
 {
 	uint8_t uc[4];
@@ -135,6 +168,8 @@ static uint8_t groupctr; // The six cell readings are sent in a group.
 static uint8_t cmdcode;
 static uint8_t responder;
 static uint8_t respondcell;
+static uint8_t reqcode;
+static uint8_t oto_sw;
 
 /******************************************************************************
  * static uint8_t storeandcheckstringandmodule(struct CANRCVBUF* p);
@@ -151,6 +186,7 @@ static uint8_t respondcell;
     	[5:4] Battery string number (0 – 3) (string #1 - #4)
     	[3:0] Module number (0 – 7) (module #1 - #16)
 */
+#if 0
 static uint8_t storeandcheckstringandmodule(struct CANRCVBUF* p)
 {
 	uint8_t err = 0;
@@ -172,6 +208,7 @@ static uint8_t storeandcheckstringandmodule(struct CANRCVBUF* p)
 	yesmodule[nstring][nmodule] = 1;
 	return err;
 }
+#endif
 /******************************************************************************
  * static printcanmsg(struct CANRCVBUF* p);
  * @brief 	: CAN msg 
@@ -209,18 +246,20 @@ static void printmenu(char* p)
 	printf("Display BMS CAN msgs: sub-options:\n\t"
 	"For ax <CAN ID> where x is--"
 		"  x = h: Help\n\t"
-		"  x = d: Cell readings\n\t"
+		"  x = a: Cell calibrated readings\n\t"
 		"  x = A: Cell ADC raw counts for making calibration\n\t"
-		"  x = v: Trickle charger high voltage\n\t"
+		"  x = b: Bits: fet status, opencell wires, installed cells\n\t"
+		"  x = h: Help menu\n\t"				
+		"  x = s: Status\n\t"
 		"  x = t: Temperature calibrated readings (T1, T2, T3)\n\t"
 		"  x = T: Temperature ADC raw counts for making calibration (T1, T2, T3)\n\t"
-		"  x = s: BMS measured top-of-stack voltage\n\t"
+		"  x = v: BMS measured top-of-stack voltage\n\t"
+		"  x = V: PCB charger high voltage\n\t"				
 		"  x = d: DC-DC converter voltage\n\t"
 		"  x = f: FET discharge status bits\n\t"
 		"  x = w: Processor ADC calibrated readings\n\t"
 		"  x = W: Processor ADC raw counts making calibration\n\t"
-		"  x = b: Bits: fet status, opencell wires, installed cells\n\t"
-		"  x = g: Set discharge test\n"
+		"  x = g: Set discharge test\n\t"
 		);
 	return;
 }
@@ -232,15 +271,11 @@ int cmd_a_init(char* p)
 
 	printmenu(p);
 
+	oto_sw = 0; // One time switch for printing headers
+
 //	printf("%c%c %i\n",*p,*(p+1),len);
 
 	whom = 'c'; // To whom the request is issued.
-
-	/* Show no strings|modules|cells have been reported. */
-	for (i = 0; i < NSTRING; i++)
-	{
-		cellmsg[i].flag = 0;
-	}
 
 	if (len < 12)
 	{
@@ -248,8 +283,8 @@ int cmd_a_init(char* p)
 		return -1;
 	}
 	sscanf( (p+2), "%x",&canid_rx);
-	printf ("\tSELECT MSGS CANID: %08X\n",canid_rx);
 
+		cmdcode = CMD_CMD_TYPE2;
 		reqtype = *(p+1);
 		switch (reqtype)
 		{
@@ -267,60 +302,49 @@ int cmd_a_init(char* p)
 
 		case 'A': // Cell ADC raw adc counts for making calibrations
 			printf("Poll: Cells: ADC Readings\n");
-			cmdcode = MISCQ_CELLV_ADC; //  TYPE2 code
+			reqcode = MISCQ_CELLV_ADC; //  TYPE2 code
 			break;
 
 		case 't': // Temperature calibrated readings
 			printf("Poll: calibrated temperatures\n");
-			cmdcode = MISCQ_TEMP_CAL; //  TYPE2 code			
+			reqcode = MISCQ_TEMP_CAL; //  TYPE2 code			
 			break;
 
 		case 'T': // Temperature raw adc counts for making calibrations
 			printf("Poll: thermistor ADC readings\n");
-			cmdcode = MISCQ_TEMP_ADC; //  TYPE2 code			
+			reqcode = MISCQ_TEMP_ADC; //  TYPE2 code			
 			break;
 
 		case 's': // BMS measured top-of-stack voltage MISCQ_TOPOFSTACK	
-			printf("Poll: BMS measured top-of-stack voltage\n");
-			cmdcode = MISCQ_TOPOFSTACK;  //  TYPE2 code
+			reqcode = MISCQ_STATUS; //  [1] TYPE2 sub-code			
+			printf("Display Status, %s\n",pmiscq[MISCQ_STATUS]);
 			break;
 
 		case 'd': // Isolated dc-dc converter output voltage
 			printf("Poll: Isolated dc-dc converter output voltage\n");
-			cmdcode = MISCQ_DCDC_V;  //  TYPE2 code
+			reqcode = MISCQ_DCDC_V;  //  TYPE2 code
 			break;
 
 		case 'f': // FET status for discharge
 			printf("Poll: discharge FET status bits\n");
-			cmdcode = MISCQ_FETBALBITS;  //  TYPE2 code
+			reqcode = MISCQ_FETBALBITS;  //  TYPE2 code
 			break;
 
 		case 'w': // Processor ADC calibrated readings
 			printf("Poll: Processor ADC calibrated readings\n");
-			cmdcode = MISCQ_PROC_CAL;  //  TYPE2 code
+			reqcode = MISCQ_PROC_CAL;  //  TYPE2 code
 			break;
 
 		case 'W': // Processor ADC raw adc counts for making calibrations
 			printf("Poll: Processor ADC raw counts for making calibrations\n");
-			cmdcode = MISCQ_PROC_ADC;  //  TYPE2 code
+			reqcode = MISCQ_PROC_ADC;  //  TYPE2 code
 			break;	
-
-		case 'r': // Bits: fets, open cell wires, installed cells
-			printf("Poll: Bits: fet status, disicharge fets, open cell wires, installed cells\n");
-			printf( "\t  DUMP\n"
-					"\t  |HEATER\n"
-					"\t  ||DUMP2\n"
-					"\t  |||Trickle Chgr\n"
-					"\t  ||||Trickle Chgr Low rate\n"
-					"\t  ||||||||\n"
-				);
-			cmdcode = MISCQ_R_BITS;  //  TYPE2 code
-			break;
 
 	default:
 			printf("%c is not option\n", *(p+1));
 			return -1;
 		}
+	printf ("SELECT MSGS for CANID: %08X request code: %d\n",canid_rx,reqcode);		
 
 	ncell_prev =   0;
 	headerctr  = HEADERMAX;
@@ -342,7 +366,7 @@ void cmd_a_do_msg(struct CANRCVBUF* p)
 	uint8_t dlc = p->dlc;
 	uint8_t celln;
 	double dtmp;
-	uint8_t err;
+//	uint8_t err;
 	/* Expect the BMS node CAN msg format TYPE2, etc
 	     and skip other CAN IDs.
 	   These #defines originate from the processing of the .sql file
@@ -397,7 +421,7 @@ printcanmsg(p);
 				respondcell = 3;
 #ifdef CHECKCODE				
 printf("TYPE2: %3d ",responder);
-printcanmsg(p);		
+printcanmsg(p);	
 #endif
 			}
 			else
@@ -411,7 +435,11 @@ printcanmsg(p);
 		}
 	}
 
-	if (respondcell == 1)
+#ifdef CHECKCODE
+printf("cmdcode: %d\n",cmdcode);	
+#endif
+
+	if ((respondcell == 1) && (cmdcode == CMD_CMD_CELLPOLL))
 	{ // Here cell readings
 		// Check msg is for the same reading group
 		if ((p->cd.uc[1] & 0xf) != (hbseq & 0xf))
@@ -473,18 +501,11 @@ printcanmsg(p);
 			}
 		return;
 	}
-	if (respondcell == 3)
+	if ((respondcell == 2) && (cmdcode == CMD_CMD_TYPE2))
 	{
 	/* Here, TYPE2 msg. */
-//* debug
-printcanmsg(p);
-printf(" :%1d:%1d:",nstring,nmodule);
-int jdx = p->cd.uc[3];
-float ftmp = extractfloat(&p->cd.uc[4]);	
-printf("%2d %f\n",jdx,ftmp);
-//*/
-
-		// Store payload based on request code
+		if (reqcode != p->cd.uc[1])
+			return;
 		switch (p->cd.uc[1])
 		{
 		case MISCQ_CELLV_CAL: // 'a' Cell voltage: calibrated
@@ -495,6 +516,18 @@ printf("%2d %f\n",jdx,ftmp);
 			miscq_cellv_adc(p);
 			break;
 
+		case MISCQ_DCDC_V: // 'd' DC-DC converter voltage
+			miscq_miscq_dcdc_v(p);
+			break;
+
+		case MISCQ_FETBALBITS: // 'f' discharge FET status bits
+			miscq_fetbalbits(p);
+			break;
+
+		case MISCQ_STATUS: // 's' status 
+			miscq_status(p);
+			break;
+
 		case MISCQ_TEMP_CAL: // 't' Temperature calibrated readings
 			miscq_temp_cal(p);
 			break;
@@ -503,16 +536,8 @@ printf("%2d %f\n",jdx,ftmp);
 			miscq_temp_adc(p);
 			break;
 
-		case MISCQ_TOPOFSTACK: // 's' BMS measured top-of-stack voltage 	
+		case MISCQ_TOPOFSTACK: // 'v' BMS measured top-of-stack voltage 	
 			miscq_topofstack(p);
-			break;
-
-		case MISCQ_DCDC_V: // 'd' DC-DC converter voltage
-			miscq_miscq_dcdc_v(p);
-			break;
-
-		case MISCQ_FETBALBITS: // 'f' discharge FET status bits
-			miscq_fetbalbits(p);
 			break;
 
 		case MISCQ_PROC_CAL: // 'w' Processor ADC calibrated readings
@@ -522,10 +547,6 @@ printf("%2d %f\n",jdx,ftmp);
 		case MISCQ_PROC_ADC: // 'W' Processor ADC raw adc counts for making calibrations
 			miscq_proc_adc(p);	
 			break;
-
-		case MISCQ_R_BITS: // 'r' Bits: fets, cells open wire, cells installed	
-			miscq_bits_r(p);	
-			break;		
 
 		default:
 			printcanmsg(p); // CAN msg
@@ -752,25 +773,78 @@ static void miscq_proc_adc(struct CANRCVBUF* p)
 		return;
 }
 /******************************************************************************
- * static void miscq_bits_r(struct CANRCVBUF* p);
- * @brief 	: Request: bits for fets, open wire, installed cells
+ * static void miscq_status(struct CANRCVBUF* p);
+ * @brief 	: Display status bits
  * @param	: p = pointer to CANRCVBUF with mesg
 *******************************************************************************/
-static void miscq_bits_r(struct CANRCVBUF* p)
+void printf_hdr_status(void)
+{ printf("\n"
+	"CAN ID: %08X\n"
+	"No reading\n"
+	"| Openwire (negative or over 4.3v)\n"
+	"| | Cell too high\n"
+	"| | | Cell too low\n"
+	"| | | | Balance in progress\n"
+	"| | | | | Charger low rate (VLC)\n"
+	"| | | | | | Discharge to target voltage in progress\n"
+	"| | | | | | | One or more cells very low\n"
+	"| | | | | | | |     DUMP FET ON\n"
+	"| | | | | | | |     | HEATER FET ON\n"
+	"| | | | | | | |     | | DUMP2 FET ON\n"
+	"| | | | | | | |     | | | Trickle Chgr normal rate\n"
+	"| | | | | | | |     | | | | Trickle Chgr Low rate\n"
+	"0 1 2 3 4 5 6 7     0 1 2 3 4\n",canid_rx);
+}
+static uint8_t hdrctr;
+static void miscq_status(struct CANRCVBUF* p)
 {
-	int idx = (p->cd.uc[3]);
-		if (idx > 2)
-		{ // Here,  is not 0-9
-			printcanmsg(p);
-			printf("Index too high. Should be 0-2, was %d\n",idx);
-			return;
-		}
+	int i;
+	/* battery_status */
+/* Battery status bits: 'battery_status' 
+#define BSTATUS_NOREADING (1 << 0)	// Exactly zero = no reading
+#define BSTATUS_OPENWIRE  (1 << 1)  // Negative or over 4.3v indicative of open wire
+#define BSTATUS_CELLTOOHI (1 << 2)  // One or more cells above max limit
+#define BSTATUS_CELLTOOLO (1 << 3)  // One or more cells below min limit
+#define BSTATUS_CELLBAL   (1 << 4)  // Cell balancing in progress
+#define BSTATUS_CHARGING  (1 << 5)  // Low power charger ON
+#define BSTATUS_DUMPTOV   (1 << 6)  // Discharge to a voltage in progress
+#define BSTATUS_CELLVRYLO (1 << 7)  // One or more cells very low 
+*/
+char cc;
+	if (oto_sw-- < 1)
+	{
+		oto_sw = 32;
+		printf_hdr_status();
+	}
+
+	for (i = 0; i < 8; i++)
+	{
+		if ((p->cd.uc[4] & (1 << i)) == 0)
+			cc = '.';
 		else
-		{  
-			cellmsg[idx].u32 = (extractu32(&p->cd.uc[4]));
-			cellmsg[idx].flag = 1; // Reset new readings flag
-		}
-		return;
+			cc = 'B';
+		printf("%c ",cc);
+	}
+	printf("    ");
+	/* fet_status */
+/* FET status bits" 'fet_status' 
+#define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
+#define FET_HEATER   (1 << 1) // 1 = HEATER FET ON
+#define FET_DUMP2    (1 << 2) // 1 = DUMP2 FET ON (external charger)
+#define FET_CHGR     (1 << 3) // 1 = Charger FET enabled: Normal charge rate
+#define FET_CHGR_VLC (1 << 4) // 1 = Charger FET enabled: Very Low Charge rate	
+*/
+	for (i = 0; i < 5; i++)
+	{
+		if ((p->cd.uc[5] & (1 << i)) == 0)
+			cc = '.';
+		else
+			cc = 'F';
+		printf("%c ",cc);
+		
+	}
+	printf("\n");
+	return;
 }
 
 /******************************************************************************

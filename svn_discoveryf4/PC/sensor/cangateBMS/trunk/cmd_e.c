@@ -29,11 +29,11 @@ static void miscq_miscq_dcdc_v(struct CANRCVBUF* p);
 static void miscq_fetbalbits (struct CANRCVBUF* p);
 static void miscq_proc_cal(struct CANRCVBUF* p);
 static void miscq_proc_adc(struct CANRCVBUF* p);
-static void miscq_bits_r(struct CANRCVBUF* p);
-static void timer_printresults(void);
-static void print_cal_adc(char* pfmt, uint8_t ncol);
-static void print_processor_adc_header(void);
-static void print_bits_r(void);
+//static void miscq_bits_r(struct CANRCVBUF* p);
+//static void timer_printresults(void);
+//static void print_cal_adc(char* pfmt, uint8_t ncol);
+//static void print_processor_adc_header(void);
+//static void print_bits_r(void);
 
 static void cmd_e_timerthread(void);
 static int starttimer(void);
@@ -69,7 +69,8 @@ static int starttimer(void);
  #define MISCQ_CURRENT_ADC 25 // Below cell #1 minus, current resistor: adc counts
  #define MISCQ_UNIMPLIMENT 26 // Command requested is not implemented
  #define MISCQ_SETFETBITS  27 // Set FET on/off discharge bits
- #define MISCQ_SETDCHGTST  28 // Set discharge test with heater fet load
+ #define MISCQ_SETDCHGTST_ON  28 // Set discharge test with heater fet load: ON
+ #define MISCQ_SETDCHGTST_OFF 29 // Set discharge test with heater fet load: OFF
 
 
 #define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
@@ -109,26 +110,25 @@ union UF
 struct CELLMSG
 {
 	double     d; // u32 converted to double
-
 	uint32_t u32; // reading
 	uint16_t u16; // reading (100uv)
 	uint8_t flag; // 0 = no reading; 1 = new reading; 2 = new bit reading
 	uint8_t  max; // reading index: max encountered
 };
-
-static struct CELLMSG cellmsg[NSTRING][NMODULE][NCELL];
+static struct CELLMSG cellmsg[NCELL];
 static struct CANRCVBUF cantx;
 static uint32_t canid_rx;
 static uint32_t canid_tx; // POLLer CAN ID (is one who "polls")
-static uint32_t canid_whoresp = CANID_RX_DEFAULT; 
-static uint8_t  whom;  // To whom is this addressed?
-static uint8_t  reqtype; // Request type (miscq code)
-static uint8_t  canseqnumber;
-static uint8_t cd_uc1 = (1 << 6); // Who responds: canid_tx.cd.uc[1] default: only specified CAN ID
+
+static uint32_t canid_whoresp = CANID_RX_DEFAULT; // Who responds?
+static uint32_t candid_poller = CANID_TX_DEFAULT; // Default pollster
+
+static uint8_t reqtype; // Request type (miscq code)
+static uint8_t canseqnumber;
+static uint8_t cd_uc1 = (0x1 << 6); // Who responds: canid_tx.cd.uc[1] default: only specified CAN ID
 
 /* Readings returned determines if string and modules are present. */
 static uint8_t yesstring[NSTRING]; // 0 = string number (0-NSTRING) not present
-static uint8_t yesmodule[NSTRING][NMODULE]; // 0 = module number (0 - NMODULE) not present
 static uint8_t nstring; // String number-1: 0-3
 static uint8_t nmodule; // Module number-1: 0-15
 
@@ -178,7 +178,6 @@ static uint8_t storeandcheckstringandmodule(struct CANRCVBUF* p)
 		err |= 0x2;
 	}
 	yesstring[nstring] = 1;
-	yesmodule[nstring][nmodule] = 1;
 	return err;
 }
 /******************************************************************************
@@ -199,9 +198,141 @@ static void printcanmsg(struct CANRCVBUF* p)
  * @brief 	: Print boilerplate
  * @param	: p = pointer to line
 *******************************************************************************/
+static char* puc1[] = {
+    	   "00 = spare; no response expected",
+    	   "01 = Only identified string and module responds",
+    	   "10 = All modules on identified string respond",
+	   	   "11 = All modules respond" 
+	   	};
+static void printfsettings(void)
+{
+	printf("BMS %08X  POLLer %08X who responds 0x%02X %s\n",canid_whoresp,cantx.id,cd_uc1,puc1[(cd_uc1 >> 6)&0x3] );
+	printf("ADC rate set: code: %d, ADC rate: %s\n",adcrate, pADCrate[adcrate] );
+	printf("Poll duration: %d (ms)\n",polldur);
+	return;
+}
+/*
+				"  x = A: Cell ADC raw counts for making calibration\n\t"
+				"  x = b: Bits: fet status, opencell wires, installed cells\n\t"
+				"  x = h: Help menu\n\t"				
+				"  x = s: Status\n\t"
+				"  x = t: Temperature calibrated readings (T1, T2, T3)\n\t"
+				"  x = T: Temperature ADC raw counts for making calibration (T1, T2, T3)\n\t"
+				"  x = v: BMS measured top-of-stack voltage\n\t"
+				"  x = V: PCB charger high voltage\n\t"				
+				"  x = d: DC-DC converter voltage\n\t"
+				"  x = w: Processor ADC calibrated readings\n\t"
+				"  x = W: Processor ADC raw counts making calibration\n\t"
+*/
+static char* psetmenu[] = {
+ " 28 SETDCHGTST_ON // Set discharge test with heater fet load: ON\n\t",
+ " 29 SETDCHGTST_OFF// Set discharge test with heater fet load: OFF	\n\t",
+};
+
+static void printsetmenu(char *p)
+{
+
+}
+
+/* Menu for selection of MISCQ codes that poll for readings. 
+   The first three chars in the following are MISCQ codes from
+   ~/GliderWinchItems/BMS/bmsadbms1818/OurTasks/cancomm_items.h
+   slightly revised to put code at beginning of line.
+
+NOTE: Not all of the selections are implemented (08/17/23)   
+*/
+static char* preadmenu[] = {
+ "  1 STATUS       // status\n\t",
+ "  2 CELLV_CAL    // cell voltage: calibrated\n\t",
+ "  3 CELLV_ADC    // cell voltage: adc counts\n\t",
+ "  4 TEMP_CAL     // temperature sensor: calibrated\n\t",
+ "  5 TEMP_ADC     // temperature sensor: adc counts for making calibration\n\t",
+ "  6 DCDC_V       // isolated dc-dc converter output voltage\n\t",
+ "  7 CHGR_V       // charger hv voltage\n\t",
+ "  8 HALL_CAL     // Hall sensor: calibrated\n\t",
+ "  9 HALL_ADC     // Hall sensor: adc counts for making calibration\n\t",
+ " 10 CELLV_HI     // Highest cell voltage\n\t",
+ " 11 CELLV_LO     // Lowest cell voltage\n\t",
+ " 12 FETBALBITS   // Read FET on/off discharge bits\n\t",
+ " 13 DUMP_ON	   // Turn on Dump FET for no more than payload [3]’ secs\n\t",
+ " 14 DUMP_OFF	   // Turn off Dump FET\n\t",
+ " 15 HEATER_ON    // Enable Heater mode to payload [3] temperature\n\t",
+ " 16 HEATER_OFF   // Turn Heater mode off.\n\t",
+ " 17 TRICKL_OFF   // Turn trickle charger off for no more than payload [3]’ secs\n\t",
+ " 18 TOPOFSTACK   // BMS top-of-stack voltage\n\t",
+ " 19 PROC_CAL     // Processor ADC calibrated readings\n\t",
+ " 20 PROC_ADC     // Processor ADC raw adc counts for making calibrations\n\t",
+ " 21 R_BITS       // Dump, dump2, heater, discharge bits\n\t",
+ " 24 CURRENT_CAL  // Below cell #1 minus, current resistor: calibrated\n\t",
+ " 25 CURRENT_ADC  // Below cell #1 minus, current resistor: adc counts\n\t",
+ "256 END_TABLE\n"
+};
+/******************************************************************************
+ * static int printreadmenu(void);
+ * @brief 	: Display menu for MISCQ readings, and get selection
+ * @return	: -1 = selection out-of-range, or selection MISCQ code
+*******************************************************************************/
+static int printreadmenu(void)
+{
+	int i,j,k;
+	int select;
+	printf("Poll selected misc readings.\n");
+	int code;
+	char buf[256];
+	// Print menu, find size
+	printf("\t");
+	for (i = 0; i < 256; i++)
+	{
+		printf("%s",preadmenu[i]);
+		sscanf(preadmenu[i],"%d",&code);
+		if (code == 256) // LAST menu code
+			break;
+	}
+	printf("\nEnter code number: n<enter>\n");
+	k = read (STDIN_FILENO, buf, 256);	// Read one or more chars from keyboard
+	sscanf(buf,"%d",&select);
+	printf("select: %d  ct: %d\n",select,i);
+	if ((select == 0) || (select > 255))
+	{
+		printf("Selection %d is not list, abort\n",select);
+		return -1;
+	}
+	// Print menu, find size
+	for (j = 0; j < i; j++)
+	{
+		sscanf(preadmenu[j],"%d",&code);
+//printf("%2d %2d %2d %s",j,code,select,preadmenu[j]);
+		if (code == select) // Found
+		{
+			printf("\nMISCQ code: %d: menu line: %s",select,preadmenu[j]);
+			return select;
+		}
+	}
+	printf("\nSomething went wrong with this menu lookup mess!\n");
+	printf("Selection: %d, no match\n",select);
+	return -1;
+}
+
 static void printmenu(char* p)
 {
-	printf(" e x [Minimum]\n");
+	printf("e - BMS => POLLING <== msgs\n\t"
+				"emx  Only one BMS responds (using current settings) \n\t"
+				"eax  All BMS nodes respond (using current settings) \n\t"
+				" where--\n\t"
+				"  x = h: Help menu\n\t"				
+				"  x = a: Cell readings (CMD_CMD_CELLPOLL format)\n\t"
+				"  x = s: Status\n\t"
+				"  x = j: Misc read something menu (CMD_CMD_TYPE2 format)\n\t"
+				"  x = k: Set something menu (CMD_CMD_TYPE2 format)\n\t"
+				"  x = fn: Set FET discharge status bits n: 0 = off; 1-18 = set #, 19 all on\n\t"
+				"  x = gn: Set discharge test: n: 0 = OFF, 1 = ON\n\t"
+				"ed  <set: Set duration between polls (default: 1000 ms)\n\t"
+				"ep  <set: pppppppp> Poller CAN ID (default: B0200000) \n\t"
+				"er  <set: r> Set ADC Rate code (0-7, default 0 = 422Hz, 8 = display rate list\n\t"
+				"es  <set: s> Set battery String number: 1-n, (default 1)\n\t"
+				"ew  <set: w> Set Who responds (BMS ID: aaaaaaaa, 0 = all)\n"
+				);	
+	printfsettings();
 	return;
 }
 
@@ -244,72 +375,61 @@ static void printmenu(char* p)
     	[3:0] Module number (0 – 7) (module #1 - #16) 
  */
 
-static uint32_t candid_poller = CANID_TX_DEFAULT; // Default pollster
 int cmd_e_init(char* p)
 {
 	uint32_t tmp;
 	uint32_t len = strlen(p);
-	int i,j,k;
+	int i;
+	int ret;
 
 	printf("%c%c %i\n",*p,*(p+1),len);
 
-	whom = 'c'; // To whom the request is issued.
-
 	/* This 'e' command */
 	cantx.cd.ull   = 0; // Clear all payload bytes
-	cantx.id       = candid_poller; // CAN ID sent (poller)
+	cantx.id       = candid_poller; // Pollster ID (Default CANID_TX_DEFAULT)
 	cantx.dlc      = 8;
-	cantx.cd.uc[0] = CMD_CMD_CELLPOLL; // Payload code: (42) Request BMS responses
+	cantx.cd.uc[0] = CMD_CMD_TYPE2; // Payload code: (42) Request BMS responses
+
+	/* Specify BMS nodes that will respond to poll. */
 	cantx.cd.uc[2] = cd_uc1; // Default: only specified unit responds, module #1
-	cantx.cd.ui[1] = CANID_RX_DEFAULT; // BMS node CANID
+	if (cd_uc1 == (0x1 << 6)) // Only specified CAN ID responds?
+		cantx.cd.ui[1] = canid_whoresp; // BMS CANID (Default )
+	else
+		cantx.cd.ui[1] = 0; // All, or string nodes, respond.
 
-	/* Show no strings|modules|cells have been reported. */
-	for (i = 0; i < NSTRING; i++)
+	if (len < 3)
 	{
-		yesstring[i] = 0;
-		for (j = 0; j < NMODULE; j++)
-		{
-			yesmodule[i][j] = 0;
-			for (k = 0; k < NCELL; k++)
-			{
-				cellmsg[i][j][k].flag = 0;
-			}
-		}
-	}
-
-	if (len < 4)
-	{
-		printmenu("Too few chars\n");
+		printmenu(p);
+		printf("Too few chars: %d\n",len);
 		return -1;
 	}
-	if (len > 3)
+	else
 	{	
 		/* POLLER requests BMS node, string, or all. */
+/* 2nd char commands that do not have an 'x' return; others 'break' */
 		switch ( *(p+1) )
 		{ 
-		case ' ': // Use default CANID for BMS and POLLER
-			cantx.cd.ui[1] = canid_whoresp; // 
-			whom = ' ';
-			break;
-
-		case 'w': // Set "Who" responds
+		case 'w': // 'ew' Set "Who" responds
 			if (len < 12)
 			{ // Not enough chars for a CAN ID
 				canid_whoresp = 0;
-				printf("All nodes respond: %d\n",canid_whoresp );
-				cd_uc1 = (3 << 6); // Save for re-entry init
+				printf("New: All nodes respond: %d\n",canid_whoresp );
+				printfsettings();
+				cd_uc1 = (0x3 << 6); // Save for re-entry init
 				cantx.cd.uc[1] = cd_uc1; // All BMSs respond
 				cantx.cd.ui[1] = 0; // CAN ID payload NULL
 				return 0;
 			}
 			sscanf((p+2),"%x",&canid_whoresp);
-			printf("BMS CAN ID: 0x%08X\n",canid_whoresp);
-			cd_uc1 = (1 << 6); // Save for re-entry init
+			printf("New: BMS CAN ID: 0x%08X only responds\n",canid_whoresp);
+			printfsettings();
+			cd_uc1 = (0x1 << 6); // Save for re-entry init
 			cantx.cd.uc[1] = cd_uc1; // Specified BMS responds
 			cantx.cd.ui[1] = canid_whoresp; // CAN ID of BMS
+			printfsettings();
 			return 0;
 
-		case 'r': // Set ADC "rate" code
+		case 'r': // 'er' Set ADC "rate" code (default = 0: 422 Hz)
 			if (len < 3)
 			{
 				adcrate = 0;
@@ -322,14 +442,14 @@ int cmd_e_init(char* p)
 				{
 					printf("\t%d: %s\n",i,pADCrate[i] );
 				}
-				adcrate = 4;
+				adcrate = 0; // 7KHz (normal) mode
 				return 0;
 			}
-			printf("ADC rate set: code: %d, ADC rate: %s\n",adcrate, pADCrate[adcrate] );
+			printf("New ADC rate set: code: %d, ADC rate: %s\n",adcrate, pADCrate[adcrate] );
+			printfsettings();
 				return 0;
 
-
-		case 'p': // Set POLL'er CAN ID
+		case 'p': // 'ep' Set POLL'er CAN ID
 			if (len < 12)
 			{
 				printf ("Set POLLer CAN ID: input too short: %d\n", len);
@@ -337,11 +457,12 @@ int cmd_e_init(char* p)
 				return -1;
 			}
 			sscanf( (p+2), "%x",&cantx.id);
-			printf("POLLer CAN ID set to: 0x%08X\n",cantx.id);
+			printf("New POLLer CAN ID set to: 0x%08X\n",cantx.id);
 			candid_poller = cantx.id;
+			printfsettings();
 			return 0;
 
-		case 'd': // Set "Duration" between poll msgs (ms)
+		case 'd': // 'ed' Set "Duration" between poll msgs (ms)
 			if (len < 5)			
 			{
 				printf("\nNot enough input chars to set poll duration\n");
@@ -355,50 +476,39 @@ int cmd_e_init(char* p)
 			}
 			if (polldur > 4000)
 			{
-				printf("Over 4000 (ms) may be longer than BMS heartbeats. ");
+				printf("Over 4000 (ms) may be longer than BMS heartbeats! ");
 			}
-			printf("Value set is: %d (ms)\n",polldur);
-			whom = 'd';
+			printf("New value set is: %d (ms)\n",polldur);
+			printfsettings();
 			return 0;
 
-		case 'm': // Use specified CANID
-			if ((len > 12) && (len < 22))
-			{ // Command has BMS CANID specified, POLLER is default
-				sscanf( (p+3), "%x",&canid_rx);
-			}
-			else if (len >= 22)
-			{ // Command has BMS and POLLER CANIDs specified
-				sscanf( (p+3), "%x %x",&canid_rx, &canid_tx);
-				cantx.id = canid_tx;
-			}
-			cantx.cd.ui[1] = canid_rx; // Set POLLER BMS target CANID
-			whom = 'm';
+		case 'h': // 'eh' Help
+			printmenu(p);
+			return 0;					
+
+		case 'm': // 'emx' Set single BMS response for 'x' command
+			cantx.cd.uc[1] = (0x1 << 6); // Use CAN ID in [4]-[7]
+			cd_uc1 = (0x1 << 6); // Save for command re-entry
+			cantx.cd.ui[1] = canid_whoresp;
 			break;
 
-		case 's': // Module String whom
+		case 's': // 'esx' String response
 			if (len > 13)
 			{
 				sscanf( (p+3), "%d %x",&tmp,&canid_tx);
 				cantx.id = canid_tx;
+				candid_poller = canid_tx; // Save for command re-enty
 			}
 			// Strings respond | String number
-			cantx.cd.uc[1] = (2 << 6) | ((tmp & 3) << 4); 
+			cantx.cd.uc[1] = (0x2 << 6) | ((tmp & 3) << 4); 
 			cantx.cd.ui[1] = 0; // NULL target CANID
 			cantx.cd.uc[2] = (adcrate << 4) | (groupctr << 0);
-			whom = 's';
 			break;
 
-		case 'a': // All BMS nodes
-			if (len > 13)
-			{ // Here it looks like POLLER CANID was specified
-				sscanf( (p+3), "%x",&canid_tx);
-				cantx.id = canid_tx;
-			}
-			cantx.cd.ui[1] = 0; // NULL target CANID
-			cantx.cd.uc[0] = CMD_CMD_CELLPOLL; // (42) Request BMS responses
-			cantx.cd.uc[1] = (3 << 6); // All BMSs respond
-			cantx.cd.uc[2] = (adcrate << 4) | (groupctr << 0);
-			whom = 'a';
+		case 'a': // 'eax' All BMS nodes
+			cantx.cd.ui[1] = 0; // NULL target CANID	
+			cantx.cd.uc[1] = (0x1 << 6); // Use CAN ID in [4]-[7]
+			cd_uc1 = (0x3 << 6); // Save for command re-entry
 			printf("eaa: All BMS nodes\n");
 			break;
 
@@ -407,85 +517,49 @@ int cmd_e_init(char* p)
 			canid_rx = 0;
 			return -1;
 		}
-		printf("whom polled: %c",whom);
 		printf ("\tCANID: BMS %08X  POLLER %08X\n",canid_rx,cantx.id);
 
-		/* Type of response. */
-		if (cantx.cd.uc[0] != CMD_CMD_CELLPOLL)
+		/* All but, 'x' == 'a' are CMD_CMD_TYPE2. */
+		cantx.cd.uc[0] = CMD_CMD_TYPE2; //  TYPE2 payload format 
+		cantx.cd.uc[1] = cd_uc1; // Poll: All, string, single
+
+		reqtype = *(p+2); // Save 'x' request code
+		switch (reqtype)
 		{
-			reqtype = *(p+2);
-			switch (reqtype)
-			{
-			case 'a': // Cell calibrated readings
-				printf("Poll: Cells: calibrated readings\n");
-				cantx.cd.uc[1] = MISCQ_CELLV_CAL; //  TYPE2 code
-				break;
+		case 'a': // Cell readings are CMD_CMD_CELLPOLL commands
+			printf("Poll: Cells: calibrated readings\n");
+			cantx.cd.uc[0] = CMD_CMD_CELLPOLL; // (42) Request BMS responses
+			cantx.cd.uc[1] = cd_uc1; // Poll: All, string, single
+			cantx.cd.uc[2] = (adcrate << 4) | (groupctr << 0);
+			break;
 
-			case 'A': // Cell ADC raw adc counts for making calibrations
-				printf("Poll: Cells: ADC Readings\n");
-				cantx.cd.uc[1] = MISCQ_CELLV_ADC; //  TYPE2 code
-				break;
+		case 'j': // Misc read something menu (CMD_CMD_TYPE2 format)\n\t"
+			ret = printreadmenu();
+			if (ret < 0)
+				return -1; // Failed, or aborted
+			cantx.cd.uc[2] = ret; //  [1] TYPE2 sub-code	
+			break;
 
-			case 't': // Temperature calibrated readings
-				printf("Poll: calibrated temperatures\n");
-				cantx.cd.uc[1] = MISCQ_TEMP_CAL; //  TYPE2 code			
-				break;
+		case 's': // Poll for status msgs
+			cantx.cd.uc[2] = MISCQ_STATUS; //  [1] TYPE2 sub-code			
+			printf("Poll: MISCQ_STATUS status code %d\n",cantx.cd.uc[2]);
+			break;				
 
-			case 'T': // Temperature raw adc counts for making calibrations
-				printf("Poll: thermistor ADC readings\n");
-				cantx.cd.uc[1] = MISCQ_TEMP_ADC; //  TYPE2 code			
-				break;
+		case 'g': // x = g: Set discharge test
+			cantx.cd.uc[2] = MISCQ_SETDCHGTST_ON; // Sub-code for BMS
+			polldur = 0; // One-Time-Only poll
+			break;			
 
-			case 's': // BMS measured top-of-stack voltage MISCQ_TOPOFSTACK	
-				printf("Poll: BMS measured top-of-stack voltage\n");
-				cantx.cd.uc[1] = MISCQ_TOPOFSTACK;  //  TYPE2 code
-				break;
+		case 'm': // x = m: Set mode
+//			cantx.cd.uc[2] = MISCQ_SETDCHGTST; // Sub-code for BMS
+//			cantx.cd.uc[4] = 0; // Set it OFF
+//			polldur = 0; // One-Time-Only poll
+			break;			
 
-			case 'd': // Isolated dc-dc converter output voltage
-				printf("Poll: Isolated dc-dc converter output voltage\n");
-				cantx.cd.uc[1] = MISCQ_DCDC_V;  //  TYPE2 code
-				break;
 
-			case 'f': // FET status for discharge
-				printf("Poll: discharge FET status bits\n");
-				cantx.cd.uc[1] = MISCQ_FETBALBITS;  //  TYPE2 code
-				break;
-
-			case 'w': // Processor ADC calibrated readings
-				printf("Poll: Processor ADC calibrated readings\n");
-				cantx.cd.uc[1] = MISCQ_PROC_CAL;  //  TYPE2 code
-				break;
-
-			case 'W': // Processor ADC raw adc counts for making calibrations
-				printf("Poll: Processor ADC raw counts for making calibrations\n");
-				cantx.cd.uc[1] = MISCQ_PROC_ADC;  //  TYPE2 code
-				break;	
-
-			case 'r': // Bits: fets, open cell wires, installed cells
-				printf("Poll: Bits: fet status, disicharge fets, open cell wires, installed cells\n");
-				printf( "\t  DUMP\n"
-						"\t  |HEATER\n"
-						"\t  ||DUMP2\n"
-						"\t  |||Trickle Chgr\n"
-						"\t  ||||Trickle Chgr Low rate\n"
-						"\t  ||||||||\n"
-					);
-				cantx.cd.uc[1] = MISCQ_R_BITS;  //  TYPE2 code
-				break;
-
-			case 'g': // x = g: Set discharge test
-				cantx.cd.uc[0] = CMD_CMD_TYPE2; //  TYPE2 code
-				cantx.cd.uc[1] = (0x1 << 6); // Only specified module responds
-				cantx.cd.uc[2] = MISCQ_SETDCHGTST; // Sub-code for BMS
-				polldur = 0; // One-Time-Only poll
-				break;			
-
-			default:
-				if (whom == 'd') 
-					break;
-				printf("3rd char not recognized: %c\n", *(p+2));
-				return -1;
-			}
+		default:
+			printf("3rd char not recognized: %c\n", *(p+2));
+			return -1;
 		}
 	}
 	printf("Poll duration (ms) is: %d\n",polldur);
@@ -589,9 +663,9 @@ printf("%2d %f\n",jdx,ftmp);
 		miscq_proc_adc(p);	
 		break;
 
-	case MISCQ_R_BITS: // 'r' Bits: fets, cells open wire, cells installed	
-		miscq_bits_r(p);	
-		break;		
+//	case MISCQ_R_BITS: // 'r' Bits: fets, cells open wire, cells installed	
+//		miscq_bits_r(p);	
+//		break;		
 
 	default:
 		printcanmsg(p); // CAN msg
@@ -633,8 +707,12 @@ static void cmd_e_timerthread(void)
 	if ((int)(timerctr - timernext) > 0)
 	{ // Time to output accumulated readings
 		timernext += polldur/10;
-		timer_printresults();
-		cantx.cd.uc[2] = (groupctr & 0x0f);
+//		timer_printresults();
+
+		// Cell group 4 bit counter 
+		if (cantx.cd.uc[0] == CMD_CMD_CELLPOLL)
+			cantx.cd.uc[2] = (groupctr & 0x0f);
+
 		sendcanmsg(&cantx);	// Send next request
 		groupctr += 1;
 		groupctr &= 0xff;
@@ -703,8 +781,8 @@ static void miscq_cellv_adc(struct CANRCVBUF* p)
 		}
 		else
 		{
-			cellmsg[nstring][nmodule][idx].d = extractfloat(&p->cd.uc[4]);
-			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag
+			cellmsg[idx].d = extractfloat(&p->cd.uc[4]);
+			cellmsg[idx].flag = 1; // Reset new readings flag
 		}
 	return;		
 }
@@ -725,8 +803,8 @@ static void miscq_cellv_cal(struct CANRCVBUF* p)
 		else
 		{
 			// Convert payload to float and scale to volts
-			cellmsg[nstring][nmodule][idx].d = (extractfloat(&p->cd.uc[4]));
-			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag		
+			cellmsg[idx].d = (extractfloat(&p->cd.uc[4]));
+			cellmsg[idx].flag = 1; // Reset new readings flag		
 		}
 		return;
 }
@@ -747,8 +825,8 @@ static void miscq_temp_cal(struct CANRCVBUF* p)
 		else
 		{  
 			// Convert payload to float and scale to deg F
-			cellmsg[nstring][nmodule][idx].d = (extractfloat(&p->cd.uc[4]));
-			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag
+			cellmsg[idx].d = (extractfloat(&p->cd.uc[4]));
+			cellmsg[idx].flag = 1; // Reset new readings flag
 		}
 		return;
 }
@@ -772,8 +850,8 @@ static void miscq_temp_adc(struct CANRCVBUF* p)
 		else
 		{  
 			// Convert payload to float and scale to deg F
-			cellmsg[nstring][nmodule][idx].d = (extractfloat(&p->cd.uc[4]));
-			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag
+			cellmsg[idx].d = (extractfloat(&p->cd.uc[4]));
+			cellmsg[idx].flag = 1; // Reset new readings flag
 		}
 		return;
 }		
@@ -785,8 +863,8 @@ static void miscq_temp_adc(struct CANRCVBUF* p)
 static void miscq_topofstack(struct CANRCVBUF* p)
 {
 	// Convert payload to float and scale to deg F
-	cellmsg[nstring][nmodule][0].d = (extractfloat(&p->cd.uc[4]));
-	cellmsg[nstring][nmodule][0].flag = 1; // Reset new readings flag
+	cellmsg[0].d = (extractfloat(&p->cd.uc[4]));
+	cellmsg[0].flag = 1; // Reset new readings flag
 	return;
 }
 /******************************************************************************
@@ -797,8 +875,8 @@ static void miscq_topofstack(struct CANRCVBUF* p)
 static void miscq_miscq_dcdc_v(struct CANRCVBUF* p)
 {
 	// Convert payload to float  and scale to deg F
-	cellmsg[nstring][nmodule][0].d = (extractfloat(&p->cd.uc[4]));
-	cellmsg[nstring][nmodule][0].flag = 1; // Show new reading is present
+	cellmsg[0].d = (extractfloat(&p->cd.uc[4]));
+	cellmsg[0].flag = 1; // Show new reading is present
 	return;
 }
 /******************************************************************************
@@ -814,11 +892,11 @@ static void miscq_fetbalbits (struct CANRCVBUF* p)
 	{
 		if ((tmp & 0x1) == 0)
 		{
-			cellmsg[nstring][nmodule][i].flag = 0;
+			cellmsg[i].flag = 0;
 		}
 		else
 		{
-			cellmsg[nstring][nmodule][i].flag = 2;
+			cellmsg[i].flag = 2;
 		}
 		tmp = (tmp >> 1);
 	}
@@ -841,8 +919,8 @@ static void miscq_proc_cal(struct CANRCVBUF* p)
 		else
 		{  
 			// Convert payload to double
-			cellmsg[nstring][nmodule][idx].d = (extractfloat(&p->cd.uc[4]));
-			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag
+			cellmsg[idx].d = (extractfloat(&p->cd.uc[4]));
+			cellmsg[idx].flag = 1; // Reset new readings flag
 		}
 		return;
 }
@@ -863,8 +941,8 @@ static void miscq_proc_adc(struct CANRCVBUF* p)
 		else
 		{  
 			// Convert payload to double
-			cellmsg[nstring][nmodule][idx].d = (extractfloat(&p->cd.uc[4]));
-			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag
+			cellmsg[idx].d = (extractfloat(&p->cd.uc[4]));
+			cellmsg[idx].flag = 1; // Reset new readings flag
 		}
 		return;
 }
@@ -873,6 +951,7 @@ static void miscq_proc_adc(struct CANRCVBUF* p)
  * @brief 	: Request: bits for fets, open wire, installed cells
  * @param	: p = pointer to CANRCVBUF with mesg
 *******************************************************************************/
+#if 0
 static void miscq_bits_r(struct CANRCVBUF* p)
 {
 	int idx = (p->cd.uc[3]);
@@ -884,17 +963,22 @@ static void miscq_bits_r(struct CANRCVBUF* p)
 		}
 		else
 		{  
-			cellmsg[nstring][nmodule][idx].u32 = (extractu32(&p->cd.uc[4]));
-			cellmsg[nstring][nmodule][idx].flag = 1; // Reset new readings flag
+			cellmsg[idx].u32 = (extractu32(&p->cd.uc[4]));
+			cellmsg[idx].flag = 1; // Reset new readings flag
 		}
 		return;
 }
+#endif
 /******************************************************************************
  * static void timer_printresults(void);
  * @brief 	: Timer triggers output accumulated readings
 *******************************************************************************/
+#if 0
 static void timer_printresults(void)
 {
+	if (cantx.cd.uc[0] == CMD_CMD_TYPE2)
+		return;
+
 		switch (reqtype)
 		{
 		case 'a': // Cell calibrated readings
@@ -940,19 +1024,19 @@ static void timer_printresults(void)
 			break;			
 
 		default:
-			if (whom == 'a') 
-				break;
 			printf("Timer oops: not coded: %c\n",reqtype);
 			break;
 		}
 	return;
 }
+#endif
 /******************************************************************************
  * static void print_cal_adc(char* pfmt, uint8_t ncol);
  * @brief 	: Output accumulated readings
  * @param   : pfmt = pointer to format string
  * @param   : ncol = number of columns (readings) on a line
 *******************************************************************************/
+#if 0
 static void print_cal_adc(char* pfmt, uint8_t ncol)
 {
 	int i,j,k; // FORTRAN reminder
@@ -975,8 +1059,6 @@ static void print_cal_adc(char* pfmt, uint8_t ncol)
 
 		for (j = 0; j < NMODULE; j++)
 		{
-			if (yesmodule[i][j] == 0) continue;
-
 			// Start line with string and module number
 			printf("%1d:%1d:",i,j);
 			for (k = 0; k < ncol; k++)
@@ -1002,6 +1084,7 @@ static void print_cal_adc(char* pfmt, uint8_t ncol)
 	}
 	return;
 }
+#endif
 /******************************************************************************
  * static void print_processor_adc_header(void);
  * @brief 	: Insert descriptive header for processor ADC
@@ -1018,6 +1101,7 @@ static void print_cal_adc(char* pfmt, uint8_t ncol)
 #define ADC1IDX_PA0_OPA_INP	  8 // IN5    24.5  9   FET current sense RC 1.8K|0.1u
 #define ADC1IDX_PA3_FET_CUR1  9 // IN8    12.5  10  OPA_OUT (PA0 amplified) 
 */
+#if 0
 static void print_processor_adc_header(void)
 {		
 	if (headerctr >= HEADERMAX)
@@ -1037,12 +1121,14 @@ static void print_processor_adc_header(void)
 	}
 	return;
 }
+#endif
 /******************************************************************************
  * static void print_cal_adc(char* pfmt, uint8_t ncol);
  * @brief 	: Output accumulated readings
  * @param   : pfmt = pointer to format string
  * @param   : ncol = number of columns (readings) on a line
 *******************************************************************************/
+#if 0
 static void print_bits_r(void)
 {
 	int i,j,k,m; // FORTRAN reminder
@@ -1140,3 +1226,55 @@ static void print_bits_r(void)
 	}
 	return;
 }
+		case 'A': // Cell ADC raw adc counts for making calibrations
+			printf("Poll: Cells: ADC Readings\n");
+			cantx.cd.uc[2] = MISCQ_CELLV_ADC; //  TYPE2 code
+			break;
+
+		case 't': // Temperature calibrated readings
+			printf("Poll: calibrated temperatures\n");
+			cantx.cd.uc[2] = MISCQ_TEMP_CAL; //  TYPE2 code			
+			break;
+
+		case 'T': // Temperature raw adc counts for making calibrations
+			printf("Poll: thermistor ADC readings\n");
+			cantx.cd.uc[2] = MISCQ_TEMP_ADC; //  TYPE2 code			
+			break;
+
+		case 'v': // BMS measured top-of-stack voltage MISCQ_TOPOFSTACK	
+			printf("Poll: BMS measured top-of-stack voltage\n");
+			cantx.cd.uc[2] = MISCQ_TOPOFSTACK;  //  TYPE2 code
+			break;
+
+		case 'd': // Isolated dc-dc converter output voltage
+			printf("Poll: Isolated dc-dc converter output voltage\n");
+			cantx.cd.uc[2] = MISCQ_DCDC_V;  //  TYPE2 code
+			break;
+
+		case 'f': // FET status for discharge
+			printf("Poll: discharge FET status bits\n");
+			cantx.cd.uc[2] = MISCQ_FETBALBITS;  //  TYPE2 code
+			break;		
+
+		case 'w': // Processor ADC calibrated readings
+			printf("Poll: Processor ADC calibrated readings\n");
+			cantx.cd.uc[2] = MISCQ_PROC_CAL;  //  TYPE2 code
+			break;
+
+		case 'W': // Processor ADC raw adc counts for making calibrations
+			printf("Poll: Processor ADC raw counts for making calibrations\n");
+			cantx.cd.uc[2] = MISCQ_PROC_ADC;  //  TYPE2 code
+			break;	
+
+		case 'r': // Bits: fets, open cell wires, installed cells
+			printf("Poll: Bits: fet status, disicharge fets, open cell wires, installed cells\n");
+			cantx.cd.uc[2] = MISCQ_R_BITS;  //  TYPE2 code
+			break;
+
+		case 's': // Poll for status msgs
+			cantx.cd.uc[2] = MISCQ_STATUS; //  [1] TYPE2 sub-code			
+			printf("Poll: MISCQ_STATUS status code %d\n",cantx.cd.uc[2]);
+			break;				
+
+
+#endif

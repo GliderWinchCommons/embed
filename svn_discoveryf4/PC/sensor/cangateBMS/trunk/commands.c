@@ -288,7 +288,7 @@ void do_pc_to_gateway(struct CANRCVBUF* p)
  * ************************************************************************************** */
 void do_printmenu(void)
 {
-	printf("a - Display selected BMS CAN  msgs\n");
+	printf("a - Display selected BMS CAN  msgs: a<enter> for menu\n");
 	printf("b - CONTACTOR: display polled msgs\n");
 	printf("c - request & display launch parameters\n");
 	printf("d - BMS heartbeat\n\t"
@@ -299,30 +299,7 @@ void do_printmenu(void)
 				"ds -         (bms status: CANID: B0201134)\n\t"
 				"ds aaaaaaaa  (bms status: CANID: aaaaaaaa)\n");
 
-	printf("e - BMS polling msgs\n\t"
-				"e x  default  (CANID: BMS B0A00000 POLL B0200000)\n\t"
-				"emx  aaaaaaaa <pppppppp> (CANIDs: BMS aaaaaaaa POLL pppppppp) \n\t"
-				"eax  All BMS nodes respond (using current POLLer) \n\t"
-				" where--\n\t"
-				"  x = a: Cell calibrated readings\n\t"
-				"  x = A: Cell ADC raw counts for making calibration\n\t"
-				"  x = h: PCB charger high voltage\n\t"
-				"  x = t: Temperature calibrated readings (T1, T2, T3)\n\t"
-				"  x = T: Temperature ADC raw counts for making calibration (T1, T2, T3)\n\t"
-				"  x = s: BMS measured top-of-stack voltage\n\t"
-				"  x = d: DC-DC converter voltage\n\t"
-				"  x = f: FET discharge status bits\n\t"
-				"  x = w: Processor ADC calibrated readings\n\t"
-				"  x = W: Processor ADC raw counts making calibration\n\t"
-				"  x = b: Bits: fet status, opencell wires, installed cells\n\t"
-				"  x = g: Set discharge test\n\t"
-				"ed  <set: Duration (decimal) (ms)> Set duration between polls (Default: 1000 ms)\n\t"
-				"ep  <set: pppppppp> Poller CAN ID (default: B0200000) \n\t"
-				"er  <set: r> Set ADC Rate code (0-7, default 0 = 422Hz, 8 = display rate list\n\t"
-				"es  <set: s> Set battery String number: 1-n, (default 1)\n\t"
-				"ew  <set: w> Set Who responds (BMS ID: aaaaaaaa, 0 = all)\n"
-				);
-
+	printf("e - BMS polling msgs: e<enter> for menu\n");
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");
     printf("g - GEVCUr: command request to retrieve all readings\n");
 	printf("h - MC_STATE: monitor \n");

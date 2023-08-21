@@ -512,7 +512,7 @@ int cmd_e_init(char* p)
 	cantx.cd.uc[0] = CMD_CMD_TYPE2; // Payload code: (42) Request BMS responses
 
 	/* Specify BMS nodes that will respond to poll. */
-	cantx.cd.uc[2] = cd_uc1; // Default: only specified unit responds, module #1
+	cantx.cd.uc[1] = cd_uc1; // Default: only specified unit responds, module #1
 	if (cd_uc1 == (0x1 << 6)) // Only specified CAN ID responds?
 		cantx.cd.ui[1] = canid_whoresp; // BMS CANID (Default )
 	else
@@ -655,14 +655,20 @@ int cmd_e_init(char* p)
 		case 'j': // Set code to READ something menu (CMD_CMD_TYPE2 format)\n\t"
 			ret = printreadmenu();
 			if (ret < 0)
+			{
+				printf("Selection j failed: %d\n",ret);
 				return -1; // Failed, or aborted
+			}
 			cantx.cd.uc[2] = ret; //  [1] TYPE2 MISCQ code	
 			break;
 
 		case 'k': // Misc SET something menu (CMD_CMD_TYPE2 format)\n\t"
 			ret = printsetmenu();
 			if (ret < 0)
+			{
+				printf("Selection k failed: %d\n",ret);
 				return -1; // Failed, or aborted
+			}
 			cantx.cd.uc[2] = ret; //  [1] TYPE2 sub-code	
 			break;			
 

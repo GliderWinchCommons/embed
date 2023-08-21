@@ -149,6 +149,7 @@ struct CELLMSG
 	uint8_t  max; // reading index: max encountered
 };
 static struct CELLMSG cellmsg[NCELL];
+static struct CELLMSG temperature[3];
 static uint8_t hbseq;
 static struct CANRCVBUF cantx;
 static uint32_t canid_rx;
@@ -279,7 +280,7 @@ int cmd_a_init(char* p)
 
 	if (len < 12)
 	{
-		printf("Too few chars\ne.g.: aa B0A00000\n");
+		printf("Too few chars\ne.g. for temperature: at B0A00000<enter>\n");
 		return -1;
 	}
 	sscanf( (p+2), "%x",&canid_rx);
@@ -344,7 +345,15 @@ int cmd_a_init(char* p)
 			printf("%c is not option\n", *(p+1));
 			return -1;
 		}
-	printf ("SELECT MSGS for CANID: %08X request code: %d\n",canid_rx,reqcode);		
+	printf ("SELECT MSGS for CANID: %08X ",canid_rx);	
+	if (cmdcode == CMD_CMD_CELLPOLL)	
+	{
+		printf("cell readings\n");
+	}
+	else
+	{
+		printf("MISCQ request code: %d\n",reqcode);
+	}
 
 	ncell_prev =   0;
 	headerctr  = HEADERMAX;
@@ -380,7 +389,6 @@ void cmd_a_do_msg(struct CANRCVBUF* p)
 	{
 		return; // CAN ID is not a BMS module function.
 	}
-
 	/* Here, CAN msg is from a BMS module. */
 	/* Ignore msgs that are not the type requested. */	
 /*44,	'[1]-[7] cell readings: responses to timeout heartbeat');
@@ -502,12 +510,13 @@ printf("cmdcode: %d\n",cmdcode);
 		return;
 	}
 	if ((respondcell == 2) && (cmdcode == CMD_CMD_TYPE2))
-	{
+	{		
 	/* Here, TYPE2 msg. */
 		if (reqcode != p->cd.uc[1])
 			return;
+		
 		switch (p->cd.uc[1])
-		{
+		{			
 		case MISCQ_CELLV_CAL: // 'a' Cell voltage: calibrated
 			miscq_cellv_cal(p);
 			break;
@@ -528,7 +537,7 @@ printf("cmdcode: %d\n",cmdcode);
 			miscq_status(p);
 			break;
 
-		case MISCQ_TEMP_CAL: // 't' Temperature calibrated readings
+		case MISCQ_TEMP_CAL: // 't' Temperature calibrated readings		
 			miscq_temp_cal(p);
 			break;
 
@@ -641,20 +650,26 @@ static void miscq_cellv_cal(struct CANRCVBUF* p)
 *******************************************************************************/
 static void miscq_temp_cal(struct CANRCVBUF* p)
 {
+//printcanmsg(p);
+
 	int idx = (p->cd.uc[3]);
-		if ((idx > 2) || (idx < 0))
-		{ // Here, index is too high.
-			printcanmsg(p);
-			printf("T1-T3 index should be [0-2] but was too high or low: %d\n",p->cd.uc[3] - 16);
-			return;
-		}
-		else
-		{  
-			// Convert payload to float and scale to deg F
-			cellmsg[idx].d = (extractfloat(&p->cd.uc[4]));
-			cellmsg[idx].flag = 1; // Reset new readings flag
-		}
-		return;
+	if (idx > 3)
+	{ // Here, index is too high.
+		printcanmsg(p);
+		printf("T1-T3 index should be [1-3] but was too high or low: %d\n",p->cd.uc[3]);
+	}
+	else
+	{  
+		// Convert payload to float and scale to deg F
+		temperature[idx].d = (extractfloat(&p->cd.uc[4]));
+		temperature[idx].flag = 1; // Reset new readings flag
+	}
+	if (idx == 2)
+	{ // Here, last of three readings received
+		printf("%6.1f %6.1f %6.1f %3d\n",temperature[0].d,temperature[1].d,temperature[2].d,p->cd.uc[0]);
+		temperature[0].d = 0;temperature[1].d = 0;temperature[2].d = 0;
+	}
+	return;
 }
 /******************************************************************************
  * static void miscq_temp_adc(struct CANRCVBUF* p);

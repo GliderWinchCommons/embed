@@ -57,9 +57,9 @@ static int starttimer(void);
  #define MISCQ_CELLV_HI   10 // Highest cell voltage
  #define MISCQ_CELLV_LO   11 // Lowest cell voltage
  #define MISCQ_FETBALBITS 12 // Read FET on|off discharge bits
- #define MISCQ_SET_DUMP	  13 // Set DUMP FET on|off
- #define MISCQ_SET_DUMP2  14 // Set DUMP2 FET FET: on|off
- #define MISCQ_SET_HEATER 15 // Set HEATER FET on|off
+ #define MISCQ_SET_DUMP	  13 // Set ON|OFF DUMP FET on|off
+ #define MISCQ_SET_DUMP2  14 // Set ON|OFF DUMP2 FET FET: on|off
+ #define MISCQ_SET_HEATER 15 // Set ON|OFF HEATER FET on|off
  #define MISCQ_TRICKL_OFF 17 // Turn trickle charger off for no more than ‘payload [3]’ secs
  #define MISCQ_TOPOFSTACK 18 // BMS top-of-stack voltage
  #define MISCQ_PROC_CAL   19 // Processor ADC calibrated readings
@@ -71,6 +71,8 @@ static int starttimer(void);
  #define MISCQ_SET_FETBITS  27 // Set FET on/off discharge bits
  #define MISCQ_SET_DCHGTST  28 // Set discharge test via heater fet load on|off
  #define MISCQ_SET_DCHGFETS 30 // Set discharge FETs: all, on|off, or single
+ #define MISCQ_SET_SELFDCHG 31 // Set ON|OFF self-discharge mode
+
 
 #define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
 #define FET_HEATER   (1 << 1) // 1 = HEATER FET ON
@@ -206,7 +208,7 @@ static char* preadmenu[] = {
  " 20 PROC_ADC     // Processor ADC raw adc counts for making calibrations\n\t",
  " 21 R_BITS       // Dump, dump2, heater, discharge bits\n\t",
  " 24 CURRENT_CAL  // Below cell #1 minus, current resistor: calibrated\n\t",
- " 25 CURRENT_ADC  // Below cell #1 minus, current resistor: adc counts\n\t",
+ " 25 CURRENT_ADC  // Below cell #1 minus, current resistor: adc counts\n",
  "256 END_TABLE\n"
 };
 /* Menu for MISCQ codes that set something in the BMS. */
@@ -215,7 +217,8 @@ static char* psetmenu[] = {
  " 14 SET_DUMP2      // Set DUMP2 FET FET: on|off\n\t",
  " 15 SET_HEATER     // Enable Heater mode to payload [3] temperature\n\t",
  " 28 SET_DCHGTST    // Set discharge test with heater fet load: ON|OFF\n\t",
- " 30 SET_DCHGFETS   // Set discharge FETs: all on or off, or single\n",
+ " 30 SET_DCHGFETS   // Set discharge FETs: all on or off, or single\n\t",
+ " 31 SET_SELFDCHG   // Set ON|OFF self-discharge mode\n",
  "256 END_TABLE\n" 
 };
 /******************************************************************************
@@ -230,6 +233,7 @@ static int get01m9(char *pset)
 	int k;
 	int subcode;
 
+	printf(" ON|OFF: Enter: 0 = OFF, 1 = ON, -9 = abort\n");
 	k = read (STDIN_FILENO, buf, 256);	// Read chars from keyboard
 	if (k > 1)
 	{ // Get code entered
@@ -243,7 +247,7 @@ static int get01m9(char *pset)
 		cantx.cd.uc[3] = subcode;
 		return subcode;
 	}
-	printf("Oops! Entry was %d and not 0, 1, or -9\n");
+	printf("Oops! Entry was %d and not 0, 1, or -9\n",subcode);
 	return subcode;
 }	
 /******************************************************************************
@@ -315,31 +319,28 @@ Requester payload[3]
 		break;
 
 	case MISCQ_SET_DUMP: // DUMP FET on/off
-		{
-			printf("SET DUMP FET ON/OFF: Enter: 0 = OFF, 1 = ON, -9 = abort\n");
+			printf("SET DUMP FET");
 			subcode = get01m9(pset);
-		}
 		break;
 
 	case MISCQ_SET_DCHGTST: // Discharge test on/off	
-		{
-			printf("SET DISCHARGE TEST MODE ON/OFF: Enter: 0 = OFF, 1 = ON, -9 = abort\n");
+			printf("SET DISCHARGE TEST MODE");
 			subcode = get01m9(pset);
-
-		}
+polldur = 0; // One shot			
 		break;
 
 	case MISCQ_SET_HEATER: // Heater FET on/off
-		{
-			printf("SET HEATER FET ON/OFF: Enter: 0 = OFF, 1 = ON, -9 = abort\n");
+			printf("SET HEATER FET");
 			subcode = get01m9(pset);
-		}
-		break;
+			break;
 
+	case MISCQ_SET_SELFDCHG: // Set self discharge mode
+		printf("SET SELF-DISCHARGE MODE");
+polldur = 0; // One shot		
+			subcode = get01m9(pset);
+			break;
 	default:
-		{
 			printf("menu2 error: j: %d code: %d\n",j,code);
-		}	
 	}
 	return subcode;
 }
@@ -385,7 +386,8 @@ static int printsetmenu(void)
 			ret = printsetmenu2(j,code);
 			if (ret >= 0)
 			{
-				cantx.cd.uc[4] = ret;
+				cantx.cd.uc[2] = select;
+				cantx.cd.uc[3] = ret;
 				return ret;
 			}
 			if (ret == -9)
@@ -636,7 +638,7 @@ int cmd_e_init(char* p)
 			// Strings respond | String number
 			cantx.cd.uc[1] = (0x2 << 6) | ((tmp & 3) << 4); 
 			cantx.cd.ui[1] = 0; // NULL target CANID
-			cantx.cd.uc[2] = (adcrate << 4) | (groupctr << 0);
+			cantx.cd.uc[2] = (adcrate << 4) | ((groupctr & 0xf) << 0);
 			break;
 
 		case 'a': // 'eax' All BMS nodes
@@ -672,6 +674,7 @@ int cmd_e_init(char* p)
 				printf("Selection j failed: %d\n",ret);
 				return -1; // Failed, or aborted
 			}
+printf("poll j\n");
 			cantx.cd.uc[2] = ret; //  [1] TYPE2 MISCQ code	
 			break;
 
@@ -682,7 +685,8 @@ int cmd_e_init(char* p)
 				printf("Selection k failed: %d\n",ret);
 				return -1; // Failed, or aborted
 			}
-			cantx.cd.uc[2] = ret; //  [1] TYPE2 sub-code	
+printf("poll k %d\n",ret);
+//			cantx.cd.uc[2] = ret; //  [1] TYPE2 sub-code	
 			break;			
 
 		case 's': // Poll for status msgs
@@ -737,6 +741,7 @@ void cmd_e_do_msg(struct CANRCVBUF* p)
  * @brief 	: Send CAN msg
  * @param	: pcan = pointer to CANRCVBUF with mesg
 *******************************************************************************/
+uint32_t www;
 static void sendcanmsg(struct CANRCVBUF* pcan)
 {
 	struct PCTOGATEWAY pctogateway; 
@@ -746,7 +751,7 @@ static void sendcanmsg(struct CANRCVBUF* pcan)
 	pctogateway.mode_link = MODE_LINK;	// Set mode for routines that receive and send CAN msgs
 	pctogateway.cmprs.seq = canseqnumber++;	// Add sequence number (for PC checking for missing msgs)
 	USB_toPC_msg_mode(fdp, &pctogateway, pcan); 	// Send to file descriptor (e.g. serial port)
-//printf("TX: %08x %d %02X\n",pcan->id, pcan->dlc, pcan->cd.u8[0]);
+//printcanmsg(pcan);	printf(" %4d\n",www++);
 	return;
 }
 /******************************************************************************
@@ -769,11 +774,11 @@ static void cmd_e_timerthread(void)
 
 		// Cell group 4 bit counter 
 		if (cantx.cd.uc[0] == CMD_CMD_CELLPOLL)
+		{
 			cantx.cd.uc[2] = (groupctr & 0x0f);
-
+			groupctr += 1;
+		}
 		sendcanmsg(&cantx);	// Send next request
-		groupctr += 1;
-		groupctr &= 0xff;
 	}
 	return;
 }

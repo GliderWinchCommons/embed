@@ -214,9 +214,9 @@ static char* psetmenu[] = {
  " 13 SET_DUMP	     // Turn on Dump FET for no more than payload [3]’ secs\n\t",
  " 14 SET_DUMP2      // Set DUMP2 FET FET: on|off\n\t",
  " 15 SET_HEATER     // Enable Heater mode to payload [3] temperature\n\t",
- " 28 SET_DCHGTST    // Set discharge test with heater fet load: ON\n\t",
- " 30 SET_DCHGFETS   // Set discharge FETs: all on or off, or single\n" 
- " 256 END_TABLE\n" 
+ " 28 SET_DCHGTST    // Set discharge test with heater fet load: ON|OFF\n\t",
+ " 30 SET_DCHGFETS   // Set discharge FETs: all on or off, or single\n",
+ "256 END_TABLE\n" 
 };
 /******************************************************************************
  * static int get01m9(char* pset);
@@ -243,21 +243,21 @@ static int get01m9(char *pset)
 		cantx.cd.uc[3] = subcode;
 		return subcode;
 	}
-	printf("Oops!\n");
+	printf("Oops! Entry was %d and not 0, 1, or -9\n");
 	return subcode;
 }	
 /******************************************************************************
- * static int printsetmenu2(void);
+ * static int printsetmenu2(int j);
  * @brief 	: Display menu for MISCQ settings, and get selection
  * @return	: -1 = selection out-of-range, or selection MISCQ code
 *******************************************************************************/
-static int printsetmenu2(int j)
+static int printsetmenu2(int j,int code)
 {
 	char buf[256];
 	int subcode;
 	int k;
 	char* pset = psetmenu[j];
-	switch(j)
+	switch(code)
 	{
 	case MISCQ_SET_DCHGFETS: // Set discharge FET bits
 /* MISCQ_SET_DCHGFETS Sub code for sending request. 
@@ -313,27 +313,33 @@ Requester payload[3]
 			printf("FET entry not not recognized\n");
 		}
 		break;
+
 	case MISCQ_SET_DUMP: // DUMP FET on/off
-		while(1==1)
 		{
 			printf("SET DUMP FET ON/OFF: Enter: 0 = OFF, 1 = ON, -9 = abort\n");
 			subcode = get01m9(pset);
 		}
 		break;
+
 	case MISCQ_SET_DCHGTST: // Discharge test on/off	
-		while(1==1)
 		{
 			printf("SET DISCHARGE TEST MODE ON/OFF: Enter: 0 = OFF, 1 = ON, -9 = abort\n");
 			subcode = get01m9(pset);
+
 		}
 		break;
+
 	case MISCQ_SET_HEATER: // Heater FET on/off
-		while(1==1)
 		{
 			printf("SET HEATER FET ON/OFF: Enter: 0 = OFF, 1 = ON, -9 = abort\n");
 			subcode = get01m9(pset);
 		}
-		break;	
+		break;
+
+	default:
+		{
+			printf("menu2 error: j: %d code: %d\n",j,code);
+		}	
 	}
 	return subcode;
 }
@@ -349,6 +355,7 @@ static int printsetmenu(void)
 	printf("Poll selected misc SETtings.\n");
 	int code;
 	char buf[256];
+	int ret;
 	// Print menu, find size
 	printf("\t");
 	for (i = 0; i < 256; i++)
@@ -375,8 +382,14 @@ static int printsetmenu(void)
 		if (code == select) // Found
 		{
 			printf("\nMISCQ code: %d: menu line: %s",select,psetmenu[j]);
-			printsetmenu2(j);
-			return select;
+			ret = printsetmenu2(j,code);
+			if (ret >= 0)
+			{
+				cantx.cd.uc[4] = ret;
+				return ret;
+			}
+			if (ret == -9)
+				return -1;
 		}
 	}
 	printf("\nSomething went wrong with this menu lookup mess!\n");

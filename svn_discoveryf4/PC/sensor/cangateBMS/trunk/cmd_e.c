@@ -154,7 +154,7 @@ static uint8_t walkfets_sw;
  * @brief 	: CAN msg 
  * @param	: p = pointer 
 *******************************************************************************/
-#if 0
+#if 1
 static void printcanmsg(struct CANRCVBUF* p)
 {
 	int i;
@@ -261,6 +261,7 @@ static int printsetmenu2(int j,int code)
 	int subcode;
 	int k;
 	char* pset = psetmenu[j];
+	walkfets_sw = 0;
 	switch(code)
 	{
 	case MISCQ_SET_DCHGFETS: // Set discharge FET bits
@@ -307,6 +308,7 @@ Requester payload[3]
 				walkfets_ctr = 1;
 				cantx.cd.uc[3] = 1; // Start with cell #1
 				printf("WALK FETs\n");
+				subcode = 1; // ret 1 instead of 99
 				break;
 			}
 			if (subcode == -9)
@@ -778,6 +780,18 @@ static void cmd_e_timerthread(void)
 			cantx.cd.uc[2] = (groupctr & 0x0f);
 			groupctr += 1;
 		}
+		if ((cantx.cd.uc[0] == CMD_CMD_TYPE2) && 
+			(cantx.cd.uc[2] == MISCQ_SET_DCHGFETS) &&
+			(walkfets_sw == 1))
+		{ // Here, walking FETs in progress
+			cantx.cd.uc[3] = walkfets_ctr;
+			printf("WALK FET #%02d\n",walkfets_ctr);
+			walkfets_ctr += 1;
+			if (walkfets_ctr > 18)
+				walkfets_ctr = 1;
+		}
+
+
 		sendcanmsg(&cantx);	// Send next request
 	}
 	return;

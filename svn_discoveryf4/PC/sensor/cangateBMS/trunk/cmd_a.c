@@ -29,6 +29,7 @@ static void miscq_proc_cal(struct CANRCVBUF* p);
 static void miscq_proc_adc(struct CANRCVBUF* p);
 static void print_cal_adc(char* pfmt, uint8_t ncol);
 static void print_processor_adc_header(void);
+static void miscq_current_cal(struct CANRCVBUF* p);
 //static void print_bits_r(void);
 
 void printf_hdr_status(void);
@@ -250,7 +251,8 @@ static void printmenu(char* p)
 		"  x = a: Cell calibrated readings\n\t"
 		"  x = A: Cell ADC raw counts for making calibration\n\t"
 		"  x = b: Bits: fet status, opencell wires, installed cells\n\t"
-		"  x = h: Help menu\n\t"				
+		"  x = h: Help menu\n\t"
+		"  x = i: Current sense: calibrated\n\t"
 		"  x = s: Status\n\t"
 		"  x = t: Temperature calibrated readings (T1, T2, T3)\n\t"
 		"  x = T: Temperature ADC raw counts for making calibration (T1, T2, T3)\n\t"
@@ -304,6 +306,11 @@ int cmd_a_init(char* p)
 		case 'A': // Cell ADC raw adc counts for making calibrations
 			printf("Poll: Cells: ADC Readings\n");
 			reqcode = MISCQ_CELLV_ADC; //  TYPE2 code
+			break;
+
+		case 'i':
+			printf("Current sense resistance: calibrated\n");
+			reqcode = MISCQ_CURRENT_CAL;
 			break;
 
 		case 't': // Temperature calibrated readings
@@ -537,6 +544,10 @@ printf("cmdcode: %d\n",cmdcode);
 			miscq_status(p);
 			break;
 
+		case MISCQ_CURRENT_CAL: // 'i' Calibrated current sense
+			miscq_current_cal(p);
+			break;			
+
 		case MISCQ_TEMP_CAL: // 't' Temperature calibrated readings		
 			miscq_temp_cal(p);
 			break;
@@ -555,6 +566,9 @@ printf("cmdcode: %d\n",cmdcode);
 
 		case MISCQ_PROC_ADC: // 'W' Processor ADC raw adc counts for making calibrations
 			miscq_proc_adc(p);	
+
+		case MISCQ_UNIMPLIMENT:
+			printf("Not implemented\n");
 			break;
 
 		default:
@@ -786,6 +800,17 @@ static void miscq_proc_adc(struct CANRCVBUF* p)
 			cellmsg[idx].flag = 1; // Reset new readings flag
 		}
 		return;
+}
+/******************************************************************************
+ * static void miscq_current_cal(struct CANRCVBUF* p);
+ * @brief 	: Request: Calibrated current from current sense resistance
+ * @param	: p = pointer to CANRCVBUF with mesg
+*******************************************************************************/
+static void miscq_current_cal(struct CANRCVBUF* p)
+{
+	double dtmp = (extractfloat(&p->cd.uc[4]));
+	printf("%10.2f\n",dtmp);
+	return;
 }
 /******************************************************************************
  * static void miscq_status(struct CANRCVBUF* p);

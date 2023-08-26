@@ -44,7 +44,7 @@ static int starttimer(void);
 #define CANID_RX_DEFAULT CANID_UNIT_BMS03 // B0A00000','UNIT_BMS03', 1,1,'U8_U8_U8_X4','BMS ADBMS1818 #01
 #define CANID_TX_DEFAULT CANID_UNI_BMS_PC_I //CANID_UNI_BMS_PC_I        // B0200000 //BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID // Default pollster
 
- #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
+  #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
  #define MISCQ_STATUS      1 // status
  #define MISCQ_CELLV_CAL   2 // cell voltage: calibrated
  #define MISCQ_CELLV_ADC   3 // cell voltage: adc counts
@@ -72,6 +72,8 @@ static int starttimer(void);
  #define MISCQ_SET_DCHGTST  28 // Set discharge test via heater fet load on|off
  #define MISCQ_SET_DCHGFETS 30 // Set discharge FETs: all, on|off, or single
  #define MISCQ_SET_SELFDCHG 31 // Set ON|OFF self-discharge mode
+ #define MISCQ_PRM_MAXCHG   32 // Get Parameter: Max charging current
+ #define MISCQ_SET_ZEROCUR  33 // 1 = Zero external current in effect; 0 = maybe not.
 
 
 #define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
@@ -208,17 +210,19 @@ static char* preadmenu[] = {
  " 20 PROC_ADC     // Processor ADC raw adc counts for making calibrations\n\t",
  " 21 R_BITS       // Dump, dump2, heater, discharge bits\n\t",
  " 24 CURRENT_CAL  // Below cell #1 minus, current resistor: calibrated\n\t",
- " 25 CURRENT_ADC  // Below cell #1 minus, current resistor: adc counts\n",
+ " 25 CURRENT_ADC  // Below cell #1 minus, current resistor: adc counts\n\t",
+ " 32 PRM_MAXCHG   // Get Parameter: Max charging current\n",
  "256 END_TABLE\n"
 };
 /* Menu for MISCQ codes that set something in the BMS. */
 static char* psetmenu[] = {
- " 13 SET_DUMP	     // Turn on Dump FET for no more than payload [3]’ secs\n\t",
- " 14 SET_DUMP2      // Set DUMP2 FET FET: on|off\n\t",
- " 15 SET_HEATER     // Enable Heater mode to payload [3] temperature\n\t",
- " 28 SET_DCHGTST    // Set discharge test with heater fet load: ON|OFF\n\t",
- " 30 SET_DCHGFETS   // Set discharge FETs: all on or off, or single\n\t",
- " 31 SET_SELFDCHG   // Set ON|OFF self-discharge mode\n",
+ " 13 SET_DUMP	    // Turn on Dump FET for no more than payload [3]’ secs\n\t",
+ " 14 SET_DUMP2     // Set DUMP2 FET FET: on|off\n\t",
+ " 15 SET_HEATER    // Enable Heater mode to payload [3] temperature\n\t",
+ " 28 SET_DCHGTST   // Set discharge test with heater fet load: ON|OFF\n\t",
+ " 30 SET_DCHGFETS  // Set discharge FETs: all on or off, or single\n\t",
+ " 31 SET_SELFDCHG  // Set ON|OFF self-discharge mode\n\t",
+ " 33 SET_ZEROCUR   // 1 = Zero external current in effect; 0 = maybe not.\n",
  "256 END_TABLE\n" 
 };
 /******************************************************************************
@@ -320,21 +324,26 @@ Requester payload[3]
 		}
 		break;
 
-	case MISCQ_SET_DUMP: // DUMP FET on/off
+	case MISCQ_SET_DUMP: // 13 DUMP FET on/off
 			printf("SET DUMP FET");
 			subcode = get01m9(pset);
 		break;
+
+	case MISCQ_SET_DUMP2: // 14 DUMP FET on/off
+			printf("SET DUMP2 FET");
+			subcode = get01m9(pset);
+		break;
+
+	case MISCQ_SET_HEATER: // 15 Heater FET on/off
+			printf("SET HEATER FET");
+			subcode = get01m9(pset);
+			break;
 
 	case MISCQ_SET_DCHGTST: // Discharge test on/off	
 			printf("SET DISCHARGE TEST MODE");
 			subcode = get01m9(pset);
 polldur = 0; // One shot			
 		break;
-
-	case MISCQ_SET_HEATER: // Heater FET on/off
-			printf("SET HEATER FET");
-			subcode = get01m9(pset);
-			break;
 
 	case MISCQ_SET_SELFDCHG: // Set self discharge mode
 		printf("SET SELF-DISCHARGE MODE");

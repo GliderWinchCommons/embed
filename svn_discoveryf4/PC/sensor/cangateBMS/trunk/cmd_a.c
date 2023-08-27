@@ -30,6 +30,8 @@ static void miscq_proc_adc(struct CANRCVBUF* p);
 static void print_cal_adc(char* pfmt, uint8_t ncol);
 static void print_processor_adc_header(void);
 static void miscq_current_cal(struct CANRCVBUF* p);
+static void miscq_read_aux(struct CANRCVBUF* p);
+static void miscq_proc_temp(struct CANRCVBUF* p);
 //static void print_bits_r(void);
 
 void printf_hdr_status(void);
@@ -58,11 +60,10 @@ static void miscq_status(struct CANRCVBUF* p);
  #define MISCQ_HALL_ADC    9 // Hall sensor: adc counts for making calibration
  #define MISCQ_CELLV_HI   10 // Highest cell voltage
  #define MISCQ_CELLV_LO   11 // Lowest cell voltage
- #define MISCQ_FETBALBITS 12 // Read FET on/off discharge bits
- #define MISCQ_DUMP_ON	  13 // Turn on Dump FET for no more than ‘payload [3]’ secs
- #define MISCQ_DUMP_OFF	  14 // Turn off Dump FET
- #define MISCQ_HEATER_ON  15 // Enable Heater mode to ‘payload [3] temperature
- #define MISCQ_HEATER_OFF 16 // Turn Heater mode off.
+ #define MISCQ_FETBALBITS 12 // Read FET on|off discharge bits
+ #define MISCQ_SET_DUMP	  13 // Set ON|OFF DUMP FET on|off
+ #define MISCQ_SET_DUMP2  14 // Set ON|OFF DUMP2 FET FET: on|off
+ #define MISCQ_SET_HEATER 15 // Set ON|OFF HEATER FET on|off
  #define MISCQ_TRICKL_OFF 17 // Turn trickle charger off for no more than ‘payload [3]’ secs
  #define MISCQ_TOPOFSTACK 18 // BMS top-of-stack voltage
  #define MISCQ_PROC_CAL   19 // Processor ADC calibrated readings
@@ -71,8 +72,16 @@ static void miscq_status(struct CANRCVBUF* p);
  #define MISCQ_CURRENT_CAL 24 // Below cell #1 minus, current resistor: calibrated
  #define MISCQ_CURRENT_ADC 25 // Below cell #1 minus, current resistor: adc counts
  #define MISCQ_UNIMPLIMENT 26 // Command requested is not implemented
- #define MISCQ_SETFETBITS  27 // Set FET on/off discharge bits
- #define MISCQ_SETDCHGTST  28 // Set discharge test with heater fet load
+ #define MISCQ_SET_FETBITS  27 // Set FET on/off discharge bits
+ #define MISCQ_SET_DCHGTST  28 // Set discharge test via heater fet load on|off
+ #define MISCQ_SET_DCHGFETS 30 // Set discharge FETs: all, on|off, or single
+ #define MISCQ_SET_SELFDCHG 31 // Set ON|OFF self-discharge mode
+ #define MISCQ_PRM_MAXCHG   32 // Get Parameter: Max charging current
+ #define MISCQ_SET_ZEROCUR  33 // 1 = Zero external current in effect; 0 = maybe not.
+ #define MISCQ_READ_AUX     34 // BMS responds with A,B,C,D AUX register readings (12 msgs)
+ #define MISCQ_READ_ADDR    35 // BMS responds with 'n' bytes sent in [3]
+ #define MISCQ_PROC_TEMP    36 // Processor calibrated internal temperature (deg C)
+
 
 
 #define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
@@ -226,6 +235,27 @@ static void printcanmsg(struct CANRCVBUF* p)
 	return;
 }
 /******************************************************************************
+ * static void printauxheader(void);
+ * @brief 	: Print more detail help.
+ ******************************************************************************/
+static void printauxheader(void)
+{	int i;
+	printf("\n");
+	for (i = 1; i < 6; i++)
+		printf("% 7d", i);
+
+	printf("    REF");
+
+	for (i = 6; i < 10; i++)
+		printf("% 7d", i);
+
+	printf("   RCVD");
+	printf(" OV UV RDVD1\n");
+
+	return;
+}
+
+/******************************************************************************
  * static void printhelp(void);
  * @brief 	: Print more detail help.
  ******************************************************************************/
@@ -251,6 +281,7 @@ static void printmenu(char* p)
 		"  x = a: Cell calibrated readings\n\t"
 		"  x = A: Cell ADC raw counts for making calibration\n\t"
 		"  x = b: Bits: fet status, opencell wires, installed cells\n\t"
+		"  x = c: Processor internal temperature (calibrated)\n\t",
 		"  x = h: Help menu\n\t"
 		"  x = i: Current sense: calibrated\n\t"
 		"  x = s: Status\n\t"
@@ -262,7 +293,7 @@ static void printmenu(char* p)
 		"  x = f: FET discharge status bits\n\t"
 		"  x = w: Processor ADC calibrated readings\n\t"
 		"  x = W: Processor ADC raw counts making calibration\n\t"
-		"  x = g: Set discharge test\n\t"
+		"  x = g: Display AUX registers\n\t"
 		);
 	return;
 }
@@ -308,6 +339,11 @@ int cmd_a_init(char* p)
 			reqcode = MISCQ_CELLV_ADC; //  TYPE2 code
 			break;
 
+		case 'c': // Processor internal temperature (calibrated)
+			printf("Processor internal temperature (deg C)\n");
+			reqcode = MISCQ_PROC_TEMP;
+			break;
+
 		case 'i':
 			printf("Current sense resistance: calibrated\n");
 			reqcode = MISCQ_CURRENT_CAL;
@@ -341,12 +377,20 @@ int cmd_a_init(char* p)
 		case 'w': // Processor ADC calibrated readings
 			printf("Poll: Processor ADC calibrated readings\n");
 			reqcode = MISCQ_PROC_CAL;  //  TYPE2 code
+			print_processor_adc_header(); // Place a header
 			break;
 
 		case 'W': // Processor ADC raw adc counts for making calibrations
 			printf("Poll: Processor ADC raw counts for making calibrations\n");
 			reqcode = MISCQ_PROC_ADC;  //  TYPE2 code
 			break;	
+
+		case 'g': // Display AUX registers
+			printf("Display AUX registers\n");
+			printauxheader();
+			reqcode = MISCQ_READ_AUX;  //  TYPE2 code
+			break;	
+
 
 	default:
 			printf("%c is not option\n", *(p+1));
@@ -571,6 +615,14 @@ printf("cmdcode: %d\n",cmdcode);
 			printf("Not implemented\n");
 			break;
 
+		case MISCQ_READ_AUX:
+			miscq_read_aux(p);
+			break;
+
+		case MISCQ_PROC_TEMP: // 36 Processor calibrated internal temperature (deg C)
+			miscq_proc_temp(p);
+			break;	
+
 		default:
 			printcanmsg(p); // CAN msg
 			printf("TYPE2 command code not in switch statement: %d\n", p->cd.uc[1]);
@@ -686,6 +738,36 @@ static void miscq_temp_cal(struct CANRCVBUF* p)
 	return;
 }
 /******************************************************************************
+ * static void miscq_read_aux(struct CANRCVBUF* p);
+ * @brief 	: Display AUX registers
+ * @param	: p = pointer to CANRCVBUF with mesg
+*******************************************************************************/
+static uint16_t aux_tmp[4*3];
+static void miscq_read_aux(struct CANRCVBUF* p)
+{
+	int i;
+	uint8_t idx = (p->cd.uc[3]);
+		if (idx > 10)
+		{ // Here,  Out-of-range
+			printcanmsg(p);
+			printf("Register index in this msg too high: %d\n",idx);
+			return;
+		}
+		else
+		{  
+			aux_tmp[idx+0] = p->cd.us[2];
+			aux_tmp[idx+1] = p->cd.us[3];
+		}
+		if (idx == 10)
+		{ // Here, last pair received
+			for (i = 0; i < 11; i++)
+				printf(" %6d",aux_tmp[i]);
+
+			printf("   0x%04X\n",aux_tmp[11]);
+		}
+		return;
+}		
+/******************************************************************************
  * static void miscq_temp_adc(struct CANRCVBUF* p);
  * @brief 	: Request: Thermistor temperatures, ADC readings
  * @param	: p = pointer to CANRCVBUF with mesg
@@ -762,8 +844,10 @@ static void miscq_fetbalbits (struct CANRCVBUF* p)
  * @brief 	: Request: Processor ADC readings, calibrated
  * @param	: p = pointer to CANRCVBUF with mesg
 *******************************************************************************/
+static double dadc_cal[9];
 static void miscq_proc_cal(struct CANRCVBUF* p)
 {
+	int i;
 	int idx = (p->cd.uc[3]);
 		if (idx > 9)
 		{ // Here,  is not 0-9
@@ -774,8 +858,15 @@ static void miscq_proc_cal(struct CANRCVBUF* p)
 		else
 		{  
 			// Convert payload to double
-			cellmsg[idx].d = (extractfloat(&p->cd.uc[4]));
-			cellmsg[idx].flag = 1; // Reset new readings flag
+			dadc_cal[idx] = (extractfloat(&p->cd.uc[4]));
+		}
+		if (idx == 8)
+		{
+			for (i = 0; i < 9; i++)
+			{
+				printf(" %8.3f",dadc_cal[i] );
+			}
+			printf("\n");
 		}
 		return;
 }
@@ -800,6 +891,18 @@ static void miscq_proc_adc(struct CANRCVBUF* p)
 			cellmsg[idx].flag = 1; // Reset new readings flag
 		}
 		return;
+}
+/******************************************************************************
+ * static void miscq_proc_temp(struct CANRCVBUF* p);
+ * @brief 	: Request: Processor internal temperature
+ * @param	: p = pointer to CANRCVBUF with mesg
+*******************************************************************************/
+static void miscq_proc_temp(struct CANRCVBUF* p)
+{
+	double dtmp;
+	dtmp = (extractfloat(&p->cd.uc[4]));
+	printf("%6.1f\n",dtmp);
+	return;
 }
 /******************************************************************************
  * static void miscq_current_cal(struct CANRCVBUF* p);
@@ -962,18 +1065,18 @@ static void print_cal_adc(char* pfmt, uint8_t ncol)
 */
 static void print_processor_adc_header(void)
 {		
-	if (headerctr >= HEADERMAX)
+//	if (headerctr >= HEADERMAX)
 	{
-		printf ("    "
-			    "    VREF"
-				" INTTEMP"
+		printf (
+			    "     VREF"
+				"  INTTEMP"
 				"   DC-DC"
-				"  HV DIV"
-				"  CUR OP"
-				"  SPARE1"
-				"  SPARE2"
-				" FET CUR"
-				"  FET RC"
+				"   HV DIV"
+				"   CUR OP"
+				"   SPARE1"
+				"   SPARE2"
+				"  FET CUR"
+				"   FET RC"
 				" OPA_OUT\n"
 			);
 	}

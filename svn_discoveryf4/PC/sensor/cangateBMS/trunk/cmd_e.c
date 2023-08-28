@@ -355,6 +355,13 @@ polldur = 0; // One shot
 polldur = 0; // One shot		
 			subcode = get01m9(pset);
 			break;
+
+	case MISCQ_PRM_MAXCHG: // 32 Get Parameter: Max charging current
+			printf("GET PARAMETER: MAXIMUM CHARGE RATE");
+polldur = 0; // One shot	
+			subcode = get01m9(pset);
+			break;
+
 	default:
 			printf("menu2 error: j: %d code: %d\n",j,code);
 	}

@@ -27,11 +27,11 @@ static void miscq_miscq_dcdc_v(struct CANRCVBUF* p);
 static void miscq_fetbalbits (struct CANRCVBUF* p);
 static void miscq_proc_cal(struct CANRCVBUF* p);
 static void miscq_proc_adc(struct CANRCVBUF* p);
-static void print_cal_adc(char* pfmt, uint8_t ncol);
 static void print_processor_adc_header(void);
 static void miscq_current_cal(struct CANRCVBUF* p);
 static void miscq_read_aux(struct CANRCVBUF* p);
 static void miscq_proc_temp(struct CANRCVBUF* p);
+static void printheader(void);
 //static void print_bits_r(void);
 
 void printf_hdr_status(void);
@@ -99,6 +99,7 @@ static void miscq_status(struct CANRCVBUF* p);
 
 #define HEADERMAX 16 // Number of print groups between placing a header
 
+#if 0
 static uint32_t adcrate;
 static char* pADCrate[] =
 {
@@ -111,6 +112,7 @@ static char* pADCrate[] =
   	"134211 usec,   26 Hz",  
 	"  2953 usec,  2KHz"
 };
+#endif
 
 char *pmiscq[] = {
  "MISCQ_HEARTBEAT   0", // reserved for heartbeat
@@ -161,26 +163,105 @@ struct CELLMSG
 static struct CELLMSG cellmsg[NCELL];
 static struct CELLMSG temperature[3];
 static uint8_t hbseq;
-static struct CANRCVBUF cantx;
-static uint32_t canid_rx;
-static uint8_t  whom;  // To whom is this addressed?
+//static struct CANRCVBUF cantx;
+static uint32_t canid_rx = CANID_RX_DEFAULT;
+//static uint8_t  whom;  // To whom is this addressed?
 static uint8_t  reqtype; // Request type (miscq code)
-static uint8_t  canseqnumber;
+static uint8_t reqcode;
+//static uint8_t  canseqnumber;
 //static uint8_t request;
 
 /* Readings returned determines if string and modules are present. */
-static uint8_t yesstring[NSTRING]; // 0 = string number (0-NSTRING) not present
-static uint8_t yesmodule[NSTRING][NMODULE]; // 0 = module number (0 - NMODULE) not present
-static uint8_t nstring; // String number-1: 0-3
-static uint8_t nmodule; // Module number-1: 0-15
-static uint8_t ncell_prev;
+//static uint8_t yesstring[NSTRING]; // 0 = string number (0-NSTRING) not present
+//static uint8_t yesmodule[NSTRING][NMODULE]; // 0 = module number (0 - NMODULE) not present
+//static uint8_t nstring; // String number-1: 0-3
+//static uint8_t nmodule; // Module number-1: 0-15
+//static uint8_t ncell_prev;
 static uint8_t headerctr;
-static uint8_t groupctr; // The six cell readings are sent in a group.
+//static uint8_t groupctr; // The six cell readings are sent in a group.
 static uint8_t cmdcode;
 static uint8_t responder;
 static uint8_t respondcell;
 static uint8_t reqcode;
 static uint8_t oto_sw;
+
+static char* preadmenu[] = {
+ "  1 STATUS       // status\n\t",
+ "  2 CELLV_CAL    // cell voltage: calibrated\n\t",
+ "  3 CELLV_ADC    // cell voltage: adc counts\n\t",
+ "  4 TEMP_CAL     // temperature sensor: calibrated\n\t",
+ "  5 TEMP_ADC     // temperature sensor: adc counts for making calibration\n\t",
+ "  6 DCDC_V       // isolated dc-dc converter output voltage\n\t",
+ "  7 CHGR_V       // charger hv voltage\n\t",
+ "  8 HALL_CAL     // Hall sensor: calibrated\n\t",
+ "  9 HALL_ADC     // Hall sensor: adc counts for making calibration\n\t",
+ " 10 CELLV_HI     // Highest cell voltage\n\t",
+ " 11 CELLV_LO     // Lowest cell voltage\n\t",
+ " 12 FETBALBITS   // Read FET on/off discharge bits\n\t",
+ " 17 TRICKL_OFF   // Turn trickle charger off for no more than payload [3]’ secs\n\t",
+ " 18 TOPOFSTACK   // BMS top-of-stack voltage\n\t",
+ " 19 PROC_CAL     // Processor ADC calibrated readings\n\t",
+ " 20 PROC_ADC     // Processor ADC raw adc counts for making calibrations\n\t",
+ " 21 R_BITS       // Dump, dump2, heater, discharge bits\n\t",
+ " 24 CURRENT_CAL  // Below cell #1 minus, current resistor: calibrated\n\t",
+ " 25 CURRENT_ADC  // Below cell #1 minus, current resistor: adc counts\n\t",
+ " 32 PRM_MAXCHG   // Get Parameter: Max charging current\n\t",
+ " 34 READ_AUX     // BMS responds with A,B,C,D AUX register readings (12 msgs)\n\t",
+ " 36 PROC_TEMP    // Processor calibrated internal temperature (deg C)\n",
+ "256 END_TABLE\n"
+};
+/******************************************************************************
+ * static int printreadmenu(void);
+ * @brief 	: Display menu for MISCQ readings, and get selection
+ * @return	: -1 = selection out-of-range, or selection MISCQ code
+*******************************************************************************/
+static int printreadmenu(void)
+{
+	int i,j,k;
+	int select;
+	printf("Display selected BMS CAN msgs\n");
+	int code;
+	char buf[256];
+	// Print menu, find size
+	printf("\t");
+	for (i = 0; i < 256; i++)
+	{
+		printf("%s",preadmenu[i]);
+		sscanf(preadmenu[i],"%d",&code);
+		if (code == 256) // LAST menu code
+			break;
+	}
+	printf("\nEnter code number: n<enter>\n");
+	k = read (STDIN_FILENO, buf, 256);	// Read one or more chars from keyboard
+	if (k < 1)
+	{
+		printf("no code number entered\n");
+		return -1;
+	}
+	sscanf(buf,"%d",&select);
+	printf("select: %d  ct: %d\n",select,i);
+	if ((select == 0) || (select > 255))
+	{
+		printf("Selection %d is not list, abort\n",select);
+		return -1;
+	}
+	// Print menu, find size
+	for (j = 0; j < i; j++)
+	{
+		sscanf(preadmenu[j],"%d",&code);
+//printf("%2d %2d %2d %s",j,code,select,preadmenu[j]);
+		if (code == select) // Found
+		{
+			printf("\nMISCQ code: %d: menu line: %s",select,preadmenu[j]);
+			reqcode = code;
+			return select;
+		}
+	}
+	printf("\nSomething went wrong with this menu lookup mess!\n");
+	printf("Selection: %d, no match\n",select);
+	return -1;
+}
+
 
 /******************************************************************************
  * static uint8_t storeandcheckstringandmodule(struct CANRCVBUF* p);
@@ -261,6 +342,12 @@ static void printauxheader(void)
  ******************************************************************************/
 static void printhelp(void)
 {
+	printf("Command options\n"
+		"aw = Set new CANID\n"
+		"aa = Display Cell readings\n"
+		"aq = Display TYPE2 MISCQ response\n"
+		);
+
 	printf("Help:\nCell reading lines end with code for initiator of msg\n\t"
 		"44 = HB (heartbeat) timeout\n\t"
 		"46 = EMC (B0000000) polled BMS\n\t"
@@ -268,147 +355,112 @@ static void printhelp(void)
 		"Heartbeat timeouts are timed from last polled cell readout request\n\t"
 		);
 }
-/******************************************************************************
- * static printmenu(char* p);
- * @brief 	: Print boilerplate
- * @param	: p = pointer to line
-*******************************************************************************/
-static void printmenu(char* p)
-{
-	printf("Display BMS CAN msgs: sub-options:\n\t"
-	"For ax <CAN ID> where x is--"
-		"  x = h: Help\n\t"
-		"  x = a: Cell calibrated readings\n\t"
-		"  x = A: Cell ADC raw counts for making calibration\n\t"
-		"  x = b: Bits: fet status, opencell wires, installed cells\n\t"
-		"  x = c: Processor internal temperature (calibrated)\n\t",
-		"  x = h: Help menu\n\t"
-		"  x = i: Current sense: calibrated\n\t"
-		"  x = s: Status\n\t"
-		"  x = t: Temperature calibrated readings (T1, T2, T3)\n\t"
-		"  x = T: Temperature ADC raw counts for making calibration (T1, T2, T3)\n\t"
-		"  x = v: BMS measured top-of-stack voltage\n\t"
-		"  x = V: PCB charger high voltage\n\t"				
-		"  x = d: DC-DC converter voltage\n\t"
-		"  x = f: FET discharge status bits\n\t"
-		"  x = w: Processor ADC calibrated readings\n\t"
-		"  x = W: Processor ADC raw counts making calibration\n\t"
-		"  x = g: Display AUX registers\n\t"
-		);
-	return;
-}
+
 int cmd_a_init(char* p)
 {
 //	uint32_t tmp;
 	uint32_t len = strlen(p);
 	int i;
 
-	printmenu(p);
-
-	oto_sw = 0; // One time switch for printing headers
-
-//	printf("%c%c %i\n",*p,*(p+1),len);
-
-	whom = 'c'; // To whom the request is issued.
-
-	if (len < 12)
+	if (len <= 2)
 	{
-		printf("Too few chars\ne.g. for temperature: at B0A00000<enter>\n");
+		printhelp();
+		printf("CANID default: 0x%08X\n",canid_rx);
 		return -1;
 	}
-	sscanf( (p+2), "%x",&canid_rx);
 
-		cmdcode = CMD_CMD_TYPE2;
-		reqtype = *(p+1);
-		switch (reqtype)
+	if (len > 2)
+	{ 
+		switch(*(p+1))
 		{
-		case 'h': // Help
-			printhelp();
-			break;
-
-		case 'a': // Cell calibrated readings
-			printf("Cell readings\n");
+		case 'w': // Set new CAN ID
+			if (len > 11)
+			{
+				sscanf((p+2),"%x",&canid_rx);
+				printf("New CANID set to %08X\n",canid_rx);
+			}
+			else
+			{
+				printf("Not enough chars for setting CAN ID\n"
+					"Example: ew B0A00000<enter>\n");
+			}
+			return 0;
+		case 'a': // Cell reading msgs
+			printf("CELL readings for CANID: %08X\n",canid_rx);
 			for (i = 0; i < 18; i++)
 				printf("%8d",i+1);
 			printf("\n");
-			cmdcode = CMD_CMD_CELLPOLL; //
+			cmdcode = CMD_CMD_CELLPOLL;
 			break;
-
-		case 'A': // Cell ADC raw adc counts for making calibrations
-			printf("Poll: Cells: ADC Readings\n");
-			reqcode = MISCQ_CELLV_ADC; //  TYPE2 code
+	
+		case 'q': // Type 2 msgs
+			reqtype = printreadmenu();
+			cmdcode = CMD_CMD_TYPE2;
+			printf("TYPE2 msg code: %d for CANIDs %08X\n",reqtype,canid_rx);
+			printheader();
 			break;
-
-		case 'c': // Processor internal temperature (calibrated)
-			printf("Processor internal temperature (deg C)\n");
-			reqcode = MISCQ_PROC_TEMP;
-			break;
-
-		case 'i':
-			printf("Current sense resistance: calibrated\n");
-			reqcode = MISCQ_CURRENT_CAL;
-			break;
-
-		case 't': // Temperature calibrated readings
-			printf("Poll: calibrated temperatures\n");
-			reqcode = MISCQ_TEMP_CAL; //  TYPE2 code			
-			break;
-
-		case 'T': // Temperature raw adc counts for making calibrations
-			printf("Poll: thermistor ADC readings\n");
-			reqcode = MISCQ_TEMP_ADC; //  TYPE2 code			
-			break;
-
-		case 's': // BMS measured top-of-stack voltage MISCQ_TOPOFSTACK	
-			reqcode = MISCQ_STATUS; //  [1] TYPE2 sub-code			
-			printf("Display Status, %s\n",pmiscq[MISCQ_STATUS]);
-			break;
-
-		case 'd': // Isolated dc-dc converter output voltage
-			printf("Poll: Isolated dc-dc converter output voltage\n");
-			reqcode = MISCQ_DCDC_V;  //  TYPE2 code
-			break;
-
-		case 'f': // FET status for discharge
-			printf("Poll: discharge FET status bits\n");
-			reqcode = MISCQ_FETBALBITS;  //  TYPE2 code
-			break;
-
-		case 'w': // Processor ADC calibrated readings
-			printf("Poll: Processor ADC calibrated readings\n");
-			reqcode = MISCQ_PROC_CAL;  //  TYPE2 code
-			print_processor_adc_header(); // Place a header
-			break;
-
-		case 'W': // Processor ADC raw adc counts for making calibrations
-			printf("Poll: Processor ADC raw counts for making calibrations\n");
-			reqcode = MISCQ_PROC_ADC;  //  TYPE2 code
-			break;	
-
-		case 'g': // Display AUX registers
-			printf("Display AUX registers\n");
-			printauxheader();
-			reqcode = MISCQ_READ_AUX;  //  TYPE2 code
-			break;	
-
-
-	default:
-			printf("%c is not option\n", *(p+1));
-			return -1;
 		}
-	printf ("SELECT MSGS for CANID: %08X ",canid_rx);	
-	if (cmdcode == CMD_CMD_CELLPOLL)	
-	{
-		printf("cell readings\n");
-	}
-	else
-	{
-		printf("MISCQ request code: %d\n",reqcode);
 	}
 
-	ncell_prev =   0;
+	oto_sw = 0; // One time switch for printing headers
+return 0;
+}
+/******************************************************************************
+ * static void printheader(void);
+ * @brief 	: Print appropriate header for TYPE2 selections
+ ******************************************************************************/
+static void printheader(void)
+{
+	switch (reqtype)
+	{
+	case MISCQ_CELLV_ADC: // Cell ADC raw adc counts for making calibrations
+		printf("Poll: Cells: ADC Readings\n");
+		break;
+
+	case MISCQ_PROC_TEMP: // Processor internal temperature (calibrated)
+		printf("Processor internal temperature (deg C)\n");
+		break;
+
+	case MISCQ_CURRENT_CAL:
+		printf("Current sense resistance: calibrated\n");
+		break;
+
+	case MISCQ_TEMP_CAL: // Temperature calibrated readings
+		printf("Poll: calibrated temperatures\n");
+		break;
+
+	case MISCQ_TEMP_ADC: // Temperature raw adc counts for making calibrations
+		printf("Poll: thermistor ADC readings\n");
+		break;
+
+	case MISCQ_STATUS: // BMS measured top-of-stack voltage MISCQ_TOPOFSTACK	
+		printf("Display Status, %s\n",pmiscq[MISCQ_STATUS]);
+		break;
+
+	case MISCQ_DCDC_V: // Isolated dc-dc converter output voltage
+		printf("Poll: Isolated dc-dc converter output voltage\n");
+		break;
+
+	case MISCQ_FETBALBITS: // FET status for discharge
+		printf("Poll: discharge FET status bits\n");
+		break;
+
+	case MISCQ_PROC_CAL: // Processor ADC calibrated readings
+		printf("Poll: Processor ADC calibrated readings\n");
+		print_processor_adc_header(); // Place a header
+		break;
+
+	case MISCQ_PROC_ADC: // Processor ADC raw adc counts for making calibrations
+		printf("Poll: Processor ADC raw counts for making calibrations\n");
+		break;	
+
+	case MISCQ_READ_AUX: // Display AUX registers
+		printf("Display AUX registers\n");
+		printauxheader();
+		break;	
+	}
 	headerctr  = HEADERMAX;
-	return 0;
+	return;
 }
 
 /******************************************************************************
@@ -438,6 +490,7 @@ void cmd_a_do_msg(struct CANRCVBUF* p)
 	uint32_t utmp = (p->id & 0xfffffffc);
 	if (utmp != canid_rx)
 	{
+//printf("utmp %08X:",utmp);printcanmsg(p);			
 		return; // CAN ID is not a BMS module function.
 	}
 	/* Here, CAN msg is from a BMS module. */
@@ -938,7 +991,7 @@ void printf_hdr_status(void)
 	"| | | | | | | |     | | | | Trickle Chgr Low rate\n"
 	"0 1 2 3 4 5 6 7     0 1 2 3 4\n",canid_rx);
 }
-static uint8_t hdrctr;
+//static uint8_t hdrctr;
 static void miscq_status(struct CANRCVBUF* p)
 {
 	int i;
@@ -996,7 +1049,7 @@ char cc;
  * @param   : pfmt = pointer to format string
  * @param   : ncol = number of columns (readings) on a line
 *******************************************************************************/
-#if 1
+#if 0
 static void print_cal_adc(char* pfmt, uint8_t ncol)
 {
 	int i,j,k; // FORTRAN reminder

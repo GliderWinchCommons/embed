@@ -19,6 +19,7 @@ This takes care of dispatching keyboard commands.
 #include "cmd_c.h"
 #include "cmd_d.h"
 #include "cmd_e.h"
+#include "cmd_E.h"
 #include "cmd_f.h"
 #include "cmd_h.h"
 #include "cmd_i.h"
@@ -91,6 +92,11 @@ void do_command_keybrd(char* p)
 	case 'e': // 'e' command
 		if (cmd_e_init(p) >= 0)
 			msg_sw = 'e';
+		break;		
+
+	case 'E': // 'E' command
+		if (cmd_e_init(p) >= 0)
+			msg_sw = 'E';
 		break;		
 
 	case 'f': // 'f' command: Display gps fix: lat/lon/ht
@@ -214,6 +220,10 @@ void do_canbus_msg(struct CANRCVBUF* p)
 		cmd_e_do_msg(p);
 		break;		
 
+	case 'E':
+		cmd_E_do_msg(p);
+		break;		
+
 	case 'f':
 		cmd_f_do_msg(p);		// Display fix
 		break;
@@ -300,6 +310,7 @@ void do_printmenu(void)
 				"ds aaaaaaaa  (bms status: CANID: aaaaaaaa)\n");
 
 	printf("e - BMS polling msgs: e<enter> for menu\n");
+	printf("E - EMCn: (also see p below) E<enter> for menu\n");
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");
     printf("g - GEVCUr: command request to retrieve all readings\n");
 	printf("h - MC_STATE: monitor \n");

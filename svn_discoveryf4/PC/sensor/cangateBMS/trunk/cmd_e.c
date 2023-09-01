@@ -542,7 +542,7 @@ int cmd_e_init(char* p)
 	int i;
 	int ret;
 
-	printf("Input replay: %c%c %i\n",*p,*(p+1),len);
+//	printf("Input replay: %c%c %i\n",*p,*(p+1),len);
 
 	cantx.cd.ull   = 0; // Clear all payload bytes
 	cantx.id       = candid_poller; // Pollster ID (Default CANID_TX_DEFAULT)
@@ -569,6 +569,11 @@ int cmd_e_init(char* p)
 		switch ( *(p+1) )
 		{ 
 		case 'w': // 'ew' Set "Who" responds
+			if (len < 3)
+			{
+				printf("Need more info--Enter 0 or a CAN ID\n");
+				return -1;
+			}
 			if (len < 12)
 			{ // Not enough chars for a CAN ID
 				canid_whoresp = 0;
@@ -580,6 +585,15 @@ int cmd_e_init(char* p)
 				return 0;
 			}
 			sscanf((p+2),"%x",&canid_whoresp);
+			if (canid_whoresp == 0)
+			{
+				printf("New: All nodes respond: %d\n",canid_whoresp );
+				printfsettings();
+				cd_uc1 = (0x3 << 6); // Save for re-entry init
+				cantx.cd.uc[1] = cd_uc1; // Specified BMS responds
+				cantx.cd.ui[1] = canid_whoresp; // CAN ID of BMS
+				return 0;				
+			}
 			printf("New: BMS CAN ID: 0x%08X only responds\n",canid_whoresp);
 			printfsettings();
 			cd_uc1 = (0x1 << 6); // Save for re-entry init
@@ -589,9 +603,14 @@ int cmd_e_init(char* p)
 			return 0;
 
 		case 'r': // 'er' Set ADC "rate" code (default = 0: 422 Hz)
-			if (len < 3)
+			if (len < 4)
 			{
-				adcrate = 0;
+				printf("ADC rate code 0-7 and I got nothing.\n" );
+				for (i = 0; i < 8; i++)
+				{
+					printf("\t%d: %s\n",i,pADCrate[i] );
+				}
+				return 0;
 			}
 			sscanf((p+2),"%d",&adcrate);
 			if (adcrate > 7)
@@ -646,9 +665,11 @@ int cmd_e_init(char* p)
 			return 0;					
 
 		case 'm': // 'emx' Set single BMS response for 'x' command
+			cantx.cd.ui[1] = canid_whoresp; // CAN ID of BMS
 			cantx.cd.uc[1] = (0x1 << 6); // Use CAN ID in [4]-[7]
 			cd_uc1 = (0x1 << 6); // Save for command re-entry
-			cantx.cd.ui[1] = canid_whoresp;
+			printf("Single CANID: 0x%08X\n",cantx.cd.ui[1]);
+			printfsettings();
 			break;
 
 		case 's': // 'esx' String response
@@ -669,6 +690,7 @@ int cmd_e_init(char* p)
 			cantx.cd.uc[1] = (0x3 << 6); // Use CAN ID in [4]-[7]
 			cd_uc1 = (0x3 << 6); // Save for command re-entry
 			printf("eaa: All BMS nodes\n");
+			printfsettings();
 			break;
 
 		default:
@@ -767,6 +789,8 @@ void cmd_e_do_msg(struct CANRCVBUF* p)
 uint32_t www;
 static void sendcanmsg(struct CANRCVBUF* pcan)
 {
+//int i;printf("%08X %d: ", pcan->id,pcan->dlc);for (i=0; i<pcan->dlc; i++) printf(" %02X",pcan->cd.uc[i]);printf("\n");
+
 	struct PCTOGATEWAY pctogateway; 
 //	pcan->id = canid_tx;
 //	pcan->dlc = 1;
@@ -787,7 +811,6 @@ static void cmd_e_timerthread(void)
 		return;
 
 	if (kaON == 0) return; // No timer generated msgs
-
 
 	timerctr += 1; // 10 ms tick counter
 	if ((int)(timerctr - timernext) > 0)
@@ -811,8 +834,6 @@ static void cmd_e_timerthread(void)
 			if (walkfets_ctr > 18)
 				walkfets_ctr = 1;
 		}
-
-
 		sendcanmsg(&cantx);	// Send next request
 	}
 	return;

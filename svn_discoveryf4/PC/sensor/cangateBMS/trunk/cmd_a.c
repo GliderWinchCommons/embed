@@ -46,7 +46,7 @@ static void miscq_status(struct CANRCVBUF* p);
 -- BMS module node
 -- Universal CAN msg: EMC_I = EMC sends; PC_I = PC sends; R = BMS responds; */
 #define CANID_RX_DEFAULT CANID_UNIT_BMS03 // B0A00000','UNIT_BMS03', 1,1,'U8_U8_U8_X4','BMS ADBMS1818 #01
-#define CANID_TX_DEFAULT CANID_UNI_BMS_PC_I //CANID_UNI_BMS_PC_I        // B0200000 //BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID // Default pollster
+#define CANID_TX_DEFAULT CANID_UNI_BMS_PC_I //CANID_UNI_BMS_PC_I        // AEC00000 //BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID // Default pollster
 
  #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
  #define MISCQ_STATUS      1 // status
@@ -185,6 +185,14 @@ static uint8_t respondcell;
 static uint8_t reqcode;
 static uint8_t oto_sw;
 
+/*
+Not implemented--*
+
+Likely never used--
+" 17 TRICKL_OFF   // Turn trickle charger off for no more than payload [3]’ secs\n\t",
+
+*/
+
 static char* preadmenu[] = {
  "  1 STATUS       // status\n\t",
  "  2 CELLV_CAL    // cell voltage: calibrated\n\t",
@@ -198,7 +206,6 @@ static char* preadmenu[] = {
  " 10 CELLV_HI     // Highest cell voltage\n\t",
  " 11 CELLV_LO     // Lowest cell voltage\n\t",
  " 12 FETBALBITS   // Read FET on/off discharge bits\n\t",
- " 17 TRICKL_OFF   // Turn trickle charger off for no more than payload [3]’ secs\n\t",
  " 18 TOPOFSTACK   // BMS top-of-stack voltage\n\t",
  " 19 PROC_CAL     // Processor ADC calibrated readings\n\t",
  " 20 PROC_ADC     // Processor ADC raw adc counts for making calibrations\n\t",
@@ -321,7 +328,18 @@ static void printcanmsg(struct CANRCVBUF* p)
  ******************************************************************************/
 static void printauxheader(void)
 {	int i;
-	printf("\n");
+	printf("\n"
+		"   HALL"
+		" THERM1"
+		" THERM2"
+		" THERM3"
+		" 5V REG"
+		" 3V REF"
+		" CUR SNS"
+		"   U$7 "
+		"   U$3 "
+		"   U$2 "
+		"\n");
 	for (i = 1; i < 6; i++)
 		printf("% 7d", i);
 
@@ -330,8 +348,8 @@ static void printauxheader(void)
 	for (i = 6; i < 10; i++)
 		printf("% 7d", i);
 
-	printf("   RCVD");
-	printf(" OV UV RDVD1\n");
+	printf("  RCVD ");
+	printf(" OV|UV|RDVD1\n");
 
 	return;
 }
@@ -350,8 +368,8 @@ static void printhelp(void)
 
 	printf("Help:\nCell reading lines end with code for initiator of msg\n\t"
 		"44 = HB (heartbeat) timeout\n\t"
-		"46 = EMC (B0000000) polled BMS\n\t"
-		"47 = PC  (B0200000) polled BMS\n\t"
+		"46 = EMC1 (B0000000) polled BMS\n\t"
+		"47 = PC   (AEC00000) polled BMS\n\t"
 		"Heartbeat timeouts are timed from last polled cell readout request\n\t"
 		);
 }
@@ -419,6 +437,10 @@ static void printheader(void)
 
 	case MISCQ_PROC_TEMP: // Processor internal temperature (calibrated)
 		printf("Processor internal temperature (deg C)\n");
+		break;
+
+	case MISCQ_HALL_CAL: // Hall effect current (AUX[0])
+		printf("GPIO1: Hall effect current\n");
 		break;
 
 	case MISCQ_CURRENT_CAL:
@@ -505,7 +527,8 @@ INSERT INTO CMD_CODES  VALUES ('CMD_CMD_MISCPC',    49,	'[1]-[7] misc data: resp
 //#define CHECKCODE	
 	responder = p->cd.uc[0];
 	if ((responder == CMD_CMD_CELLHB)  ||
-        (responder == CMD_CMD_CELLEMC) ||
+        (responder == CMD_CMD_CELLEMC1) ||
+        (responder == CMD_CMD_CELLEMC2) ||
         (responder == CMD_CMD_CELLPC)  )
 	{
 		respondcell = 1;
@@ -517,7 +540,8 @@ printcanmsg(p);
 	else
 	{
 		if ((responder == CMD_CMD_MISCHB)  ||
-            (responder == CMD_CMD_MISCEMC) ||
+            (responder == CMD_CMD_MISCEMC1) ||
+            (responder == CMD_CMD_MISCEMC2) ||
             (responder == CMD_CMD_MISCPC)  )
 		{
 			respondcell = 2;
@@ -642,6 +666,10 @@ printf("cmdcode: %d\n",cmdcode);
 			break;
 
 		case MISCQ_CURRENT_CAL: // 'i' Calibrated current sense
+			miscq_current_cal(p);
+			break;	
+
+		case MISCQ_HALL_CAL: 
 			miscq_current_cal(p);
 			break;			
 

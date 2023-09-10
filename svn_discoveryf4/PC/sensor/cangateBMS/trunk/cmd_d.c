@@ -196,7 +196,8 @@ INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLPC',    47,	'[1]-[7] cell readings: 
 */	/* Here, CAN msg is for us. */
 	// Is it cell readings 
 	if ( ((p->cd.uc[0] == CMD_CMD_CELLHB )  ||
-		  (p->cd.uc[0] == CMD_CMD_CELLEMC)  ||
+		  (p->cd.uc[0] == CMD_CMD_CELLEMC1)  ||
+		  (p->cd.uc[0] == CMD_CMD_CELLEMC2)  ||
 		  (p->cd.uc[0] == CMD_CMD_CELLPC )) && 
 		 ((request == 'c') || (request == 'z')) )
 	{

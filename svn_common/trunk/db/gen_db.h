@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2023-03-06 11:32:14.102
+// 2023-09-08 23:28:32.517
 
-#define CANID_COUNT 343
+#define CANID_COUNT 351
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -237,8 +237,10 @@
 #define  CANID_CMD_BEEPERV1_1     0xD3000000  // BEEPERV1       : BEEPERV1 1 MC: U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq
 #define  CANID_CMD_BEEPERV1_2     0xD3200000  // BEEPERV1       : BEEPERV1 2 CP sws: U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq
 #define  CANID_CMD_BEEPERV1_3     0xD3400000  // BEEPERV1       : BEEPERV1 3 Health: U8:cmd code, U8:ON, U8:OFF, S8:Chirp, U16: Freq
-#define  CANID_UNI_BMS_EMC_I      0xB0000000  // BMSV1          : BMSV1 UNIversal From EMC, Incoming msg to BMS: X4=target CANID
-#define  CANID_UNI_BMS_PC_I       0xB0200000  // BMSV1          : BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID
+#define  CANID_UNI_BMS_PC_I       0xAEC00000  // BMSV1          : BMSV1 UNIversal From PC,   Incoming msg to BMS: X4=target CANID
+#define  CANID_UNI_BMS_EMC_I      0xAEE00000  // BMSV1          : BMSV1 UNIversal From EMC,  Incoming msg to BMS: X4=target CANID
+#define  CANID_UNI_BMS_EMC1_I     0xB0000000  // BMSV1          : BMSV1 UNIversal From EMC1, Incoming msg to BMS: X4=target CANID
+#define  CANID_UNI_BMS_EMC2_I     0xB0200000  // BMSV1          : BMSV1 UNIversal From EMC2, Incoming msg to BMS: X4=target CANID
 #define  CANID_UNI_BMS01_R        0xB3040000  // BMSV1          : BQ76952   #BQ01 U8:module_ID,U8:cmd code,U8:spare,X4:4 byte value 
 #define  CANID_UNI_BMS02_R        0xB3060000  // BMSV1          : MAX14921  #MX01 U8:module_ID,U8:cmd code,U8:spare,X4:4 byte value 
 #define  CANID_UNI_BMS03_R        0xB3080000  // BMSV1          : ADBMS1818 #AD01 U8:module_ID,U8:cmd code,U8:spare,X4:4 byte value 
@@ -307,6 +309,12 @@
 #define  CANID_UNIT_BMS16         0xB2600000  // UNIT_BMS16     : BMS ADBMS1818 #14
 #define  CANID_UNIT_BMS17         0xB2800000  // UNIT_BMS17     : BMS ADBMS1818 #15
 #define  CANID_UNIT_BMS18         0xB2A00000  // UNIT_BMS18     : BMS ADBMS1818 #16
+#define  CANID_UNIT_EMCMMC1       0xA0000000  // UNIT_ECMCL1    : bmsmot 1 EMC/MMC Local
+#define  CANID_UNIT_EMCMMC2       0xA0200000  // UNIT_ECMCL2    : bmsmot 2 EMC/MMC Local
+#define  CANID_UNIT_EMCMMC3       0xA0400000  // UNIT_ECMCM     : bmsmot 3 EMC/MMC Master
+#define  CANID_UNIT_EMCMMC1R      0xA1600000  // UNIT_ECMCL1    : bmsmot 1 EMC/MMC Local R
+#define  CANID_UNIT_EMCMMC2R      0xA1800000  // UNIT_ECMCL2    : bmsmot 2 EMC/MMC Local R
+#define  CANID_UNIT_EMCMMC3R      0xA1400000  // UNIT_ECMCM     : bmsmot 3 EMC/MMC Master R
 #define  CANID_UNIT_2             0x04000000  // UNIT_2         : Sensor unit: Drive shaft encoder #1
 #define  CANID_UNIT_3             0x03800000  // UNIT_3         : Sensor unit: Engine
 #define  CANID_UNIT_4             0x03A00000  // UNIT_4         : Sensor unit: Lower sheave shaft encoder
@@ -365,7 +373,7 @@
 #define  TYP_ASC                 16        // 4           ascii chars
 #define  TYP_CANID               17        // 1           CANID (handled differently than a U32)
 
-#define CMD_CODES_COUNT 53
+#define CMD_CODES_COUNT 55
 #define  LDR_SET_ADDR            1         // 5 Set address pointer (not FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_SET_ADDR_FL         2         // 5 Set address pointer (FLASH) (bytes 2-5):  Respond with last written address.
 #define  LDR_CRC                 3         // 8 Get CRC: 4-7
@@ -407,15 +415,17 @@
 #define  CMD_SEND_LAUNCH_PARM    39        // Send msg to send burst of parameters
 #define  CMD_REQ_HISTOGRAM       40        // Request histogram: [1] ADC #: [2] # consecutive:[3]-[6] # DMA buffers accumuleted in bins
 #define  CMD_THISIS_HISTODATA    41        // Histogram data item: [1] ADC #:[2] bin # (0 - n), [3]-[6] bin count
-#define  CMD_CMD_CELLPOLL        42        // [1]-[7] cell readings request: emc or pc
-#define  CMD_CMD_TYPE2           43        // [1]-[7] format 2: misc responses to poll
-#define  CMD_CMD_CELLHB          44        // [1]-[7] cell readings: responses to timeout heartbeat
-#define  CMD_CMD_MISCHB          45        // [1]-[7] misc data: timeout heartbeat
-#define  CMD_CMD_CELLEMC         46        // [1]-[7] cell readings: response to emc sent CELLPOLL
-#define  CMD_CMD_CELLPC          47        // [1]-[7] cell readings: response to pc sent CELLPOLL
-#define  CMD_CMD_MISCEMC         48        // [1]-[7] misc data: response to emc sent CELLPOLL
-#define  CMD_CMD_MISCPC          49        // [1]-[7] misc data: response to pc sent CELLPOLL
-#define  CMD_CMD_HEARTBEAT       50        // [1]-[7] Send command code with status (see CANLoader1/canloader_proto.c)
+#define  CMD_CMD_CELLPOLL        42        // [1]-[7] [0] = cell readings request: emc or pc
+#define  CMD_CMD_TYPE2           43        // [1]-[7] [0] = format 2: request for misc
+#define  CMD_CMD_CELLHB          44        // [1]-[7] [0] = cell readings: responses to timeout heartbeat
+#define  CMD_CMD_MISCHB          45        // [1]-[7] [0] = misc data: timeout heartbeat TYPE2
+#define  CMD_CMD_CELLEMC1        46        // [1]-[7] [0] = cell readings: response to emc1 sent CELLPOLL
+#define  CMD_CMD_CELLPC          47        // [1]-[7] [0] = cell readings: response to pc sent CELLPOLL
+#define  CMD_CMD_MISCEMC1        48        // [1]-[7] [0] = misc data: response to emc1 sent TYPE2
+#define  CMD_CMD_MISCPC          49        // [1]-[7] [0] = misc data: response to pc sent TYPE2
+#define  CMD_CMD_HEARTBEAT       50        // [1]-[7] [0] = Send command code with status (see CANLoader1/canloader_proto.c)
+#define  CMD_CMD_CELLEMC2        51        // [1]-[7] [0] = cell readings: response to emc2 sent CELLPOLL
+#define  CMD_CMD_MISCEMC2        52        // [1]-[7] [0] = misc data: response to emc2 sent TYPE2
 #define  CMD_CMD_SYS_RESET_ALL   166       // 0xA6: [0] Cause System Reset for all
 #define  CMD_CMD_SYS_RESET_CID   167       // 0xA7: [0] Cause System Reset for CAN ID sent in payload
 #define  CMD_CMD_SYS_RESET_EXT   168       // 0xA8: [0] Extend current loader wait duration for all, [1] = wait in 0.1 sec steps
@@ -972,6 +982,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 907  */
+/* TOTAL COUNT OF #defines = 917  */
 /* Test 2016/06/12 */
 

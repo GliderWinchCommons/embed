@@ -42,7 +42,7 @@ static int starttimer(void);
 -- BMS module node
 -- Universal CAN msg: EMC_I = EMC sends; PC_I = PC sends; R = BMS responds; */
 #define CANID_RX_DEFAULT CANID_UNIT_BMS03 // B0A00000','UNIT_BMS03', 1,1,'U8_U8_U8_X4','BMS ADBMS1818 #01
-#define CANID_TX_DEFAULT CANID_UNI_BMS_PC_I //CANID_UNI_BMS_PC_I        // B0200000 //BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID // Default pollster
+#define CANID_TX_DEFAULT CANID_UNI_BMS_PC_I //CANID_UNI_BMS_PC_I        // AEC00000 //BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID // Default pollster
 
   #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
  #define MISCQ_STATUS      1 // status
@@ -192,7 +192,9 @@ static void printfsettings(void)
    ~/GliderWinchItems/BMS/bmsadbms1818/OurTasks/cancomm_items.h
    slightly revised to put code at beginning of line.
 
-NOTE: Not all of the selections are implemented (08/17/23)   
+NOTE: Not all of the selections are implemented (08/17/23) 
+ " 17 TRICKL_OFF   // Turn trickle charger off for no more than payload [3]’ secs\n\t",
+
 */
 static char* preadmenu[] = {
  "  1 STATUS       // status\n\t",
@@ -207,7 +209,6 @@ static char* preadmenu[] = {
  " 10 CELLV_HI     // Highest cell voltage\n\t",
  " 11 CELLV_LO     // Lowest cell voltage\n\t",
  " 12 FETBALBITS   // Read FET on/off discharge bits\n\t",
- " 17 TRICKL_OFF   // Turn trickle charger off for no more than payload [3]’ secs\n\t",
  " 18 TOPOFSTACK   // BMS top-of-stack voltage\n\t",
  " 19 PROC_CAL     // Processor ADC calibrated readings\n\t",
  " 20 PROC_ADC     // Processor ADC raw adc counts for making calibrations\n\t",
@@ -487,7 +488,7 @@ static void printmenu(char* p)
 				"  x = fn: Set FET discharge status bits n: 0 = off; 1-18 = set #, 19 all on\n\t"
 				"  x = gn: Set discharge test: n: 0 = OFF, 1 = ON\n\t"
 				"ed  <set: Set duration between polls (default: 1000 ms)\n\t"
-				"ep  <set: pppppppp> Poller CAN ID (default: B0200000) \n\t"
+				"ep  <set: pppppppp> Poller CAN ID (AEC00000(default),B0000000(EMC1),B0200000(EMC2)) \n\t"
 				"er  <set: r> Set ADC Rate code (0-7, default 0 = 422Hz, 8 = display rate list\n\t"
 				"es  <set: s> Set battery String number: 1-n, (default 1)\n\t"
 				"ew  <set: w> Set Who responds (BMS ID: aaaaaaaa, 0 = all)\n"
@@ -504,9 +505,9 @@ static void printmenu(char* p)
 *******************************************************************************/
 /*
 	printf("e - BMS polling msgs\n\t"
-				"e x  default  (CANID: BMS B0A00000 POLL B0200000)\n\t"
+				"e x  default  (CANID: BMS B0A00000 POLL AEC00000)\n\t"
 				"emx  aaaaaaaa <pppppppp>(CANID: BMS aaaaaaaa POLL pppppppp) \n\t"
-				"eax  <pppppppp> All BMS nodes respond (poll default: B0200000) a \n\t"
+				"eax  <pppppppp> All BMS nodes respond (poll default: AEC00000) a \n\t"
 				"esx  <s> (Battery string number: 1-n, default 1)\n\t"
 				" where--\n\t"
 				"  x = a: Cell calibrated readings\n\t"
@@ -631,7 +632,7 @@ int cmd_e_init(char* p)
 			if (len < 12)
 			{
 				printf ("Set POLLer CAN ID: input too short: %d\n", len);
-				printf ("Example: ep B0200000\n");
+				printf ("Example: ep AEC00000\n");
 				return -1;
 			}
 			sscanf( (p+2), "%x",&cantx.id);

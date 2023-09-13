@@ -1009,14 +1009,14 @@ void printf_hdr_status(void)
 	"| | Cell too high\n"
 	"| | | Cell too low\n"
 	"| | | | Balance in progress\n"
-	"| | | | | Charger low rate (VLC)\n"
+	"| | | | | Onboard charger ON\n"
 	"| | | | | | Discharge to target voltage in progress\n"
 	"| | | | | | | One or more cells very low\n"
 	"| | | | | | | |     DUMP FET ON\n"
 	"| | | | | | | |     | HEATER FET ON\n"
 	"| | | | | | | |     | | DUMP2 FET ON\n"
-	"| | | | | | | |     | | | Trickle Chgr normal rate\n"
-	"| | | | | | | |     | | | | Trickle Chgr Low rate\n"
+	"| | | | | | | |     | | | On board charger normal rate\n"
+	"| | | | | | | |     | | | | On board charger Low rate\n"
 	"0 1 2 3 4 5 6 7     0 1 2 3 4\n",canid_rx);
 }
 //static uint8_t hdrctr;

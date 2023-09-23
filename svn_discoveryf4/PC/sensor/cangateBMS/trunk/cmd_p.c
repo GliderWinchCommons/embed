@@ -58,7 +58,7 @@ static uint32_t timerctr;
 static uint32_t timernext; // Next timer count
 
 
-#define DEFAULT_POLLDUR 1000 // Duration in ms
+#define DEFAULT_POLLDUR 900 // Duration in ms
 static uint32_t polldur = DEFAULT_POLLDUR; // Number of polls per sec
 
 /******************************************************************************

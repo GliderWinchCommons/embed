@@ -32,6 +32,7 @@ static void miscq_current_cal(struct CANRCVBUF* p);
 static void miscq_read_aux(struct CANRCVBUF* p);
 static void miscq_proc_temp(struct CANRCVBUF* p);
 static void printheader(void);
+static void miscq_chg_limits(struct CANRCVBUF* p);
 //static void print_bits_r(void);
 
 void printf_hdr_status(void);
@@ -81,6 +82,7 @@ static void miscq_status(struct CANRCVBUF* p);
  #define MISCQ_READ_AUX     34 // BMS responds with A,B,C,D AUX register readings (12 msgs)
  #define MISCQ_READ_ADDR    35 // BMS responds with 'n' bytes sent in [3]
  #define MISCQ_PROC_TEMP    36 // Processor calibrated internal temperature (deg C)
+ #define MISCQ_CHG_LIMITS   37 // Show params: Module V max, Ext chg current max, Ext. chg bal
 
 
 
@@ -195,7 +197,7 @@ Likely never used--
 
 static char* preadmenu[] = {
  "  1 STATUS       // status\n\t",
- "  2 CELLV_CAL    // cell voltage: calibrated\n\t",
+ "  2 CELLV_CAL    // cell voltage: NOTE: for all cells use aa command\n\t",
  "  3 CELLV_ADC    // cell voltage: adc counts\n\t",
  "  4 TEMP_CAL     // temperature sensor: calibrated\n\t",
  "  5 TEMP_ADC     // temperature sensor: adc counts for making calibration\n\t",
@@ -214,7 +216,8 @@ static char* preadmenu[] = {
  " 25 CURRENT_ADC  // Below cell #1 minus, current resistor: adc counts\n\t",
  " 32 PRM_MAXCHG   // Get Parameter: Max charging current\n\t",
  " 34 READ_AUX     // BMS responds with A,B,C,D AUX register readings (12 msgs)\n\t",
- " 36 PROC_TEMP    // Processor calibrated internal temperature (deg C)\n",
+ " 36 PROC_TEMP    // Processor calibrated internal temperature (deg C)\n\t",\
+ " 37 MISCQ_CHG_LIMITS // Show params: Module V max, Ext chg current max, Ext. chg bal\n", 
  "256 END_TABLE\n"
 };
 /******************************************************************************
@@ -429,6 +432,7 @@ return 0;
  ******************************************************************************/
 static void printheader(void)
 {
+	oto_sw = 0;
 	switch (reqtype)
 	{
 	case MISCQ_CELLV_ADC: // Cell ADC raw adc counts for making calibrations
@@ -480,6 +484,10 @@ static void printheader(void)
 		printf("Display AUX registers\n");
 		printauxheader();
 		break;	
+
+	case MISCQ_CHG_LIMITS: // 37 Show params: Module V max, Ext chg current max, Ext. chg bal
+		printf("Display external charger limits\n");
+		break;
 	}
 	headerctr  = HEADERMAX;
 	return;
@@ -703,6 +711,10 @@ printf("cmdcode: %d\n",cmdcode);
 		case MISCQ_PROC_TEMP: // 36 Processor calibrated internal temperature (deg C)
 			miscq_proc_temp(p);
 			break;	
+
+		case MISCQ_CHG_LIMITS: // 37 Show params: Module V max, Ext chg current max, Ext. chg bal			
+			miscq_chg_limits(p);
+			break;
 
 		default:
 			printcanmsg(p); // CAN msg
@@ -1016,15 +1028,17 @@ void printf_hdr_status(void)
 	"| | | | | | | |     | HEATER FET ON\n"
 	"| | | | | | | |     | | DUMP2 FET ON\n"
 	"| | | | | | | |     | | | On board charger normal rate\n"
-	"| | | | | | | |     | | | | On board charger Low rate\n"
-	"0 1 2 3 4 5 6 7     0 1 2 3 4\n",canid_rx);
+	"| | | | | | | |     | | | | Charger low rate ON\n"
+	"| | | | | | | |     | | | | |   Self-discharge ON\n"
+	"| | | | | | | |     | | | | |   | One or more cells tripped\n"	
+	"0 1 2 3 4 5 6 7     0 1 2 3 4   0 1 \n",canid_rx);
 }
 //static uint8_t hdrctr;
 static void miscq_status(struct CANRCVBUF* p)
 {
 	int i;
-	/* battery_status */
-/* Battery status bits: 'battery_status' 
+/*
+// Battery status bits: 'battery_status' 
 #define BSTATUS_NOREADING (1 << 0)	// Exactly zero = no reading
 #define BSTATUS_OPENWIRE  (1 << 1)  // Negative or over 4.3v indicative of open wire
 #define BSTATUS_CELLTOOHI (1 << 2)  // One or more cells above max limit
@@ -1032,8 +1046,8 @@ static void miscq_status(struct CANRCVBUF* p)
 #define BSTATUS_CELLBAL   (1 << 4)  // Cell balancing in progress
 #define BSTATUS_CHARGING  (1 << 5)  // Low power charger ON
 #define BSTATUS_DUMPTOV   (1 << 6)  // Discharge to a voltage in progress
-#define BSTATUS_CELLVRYLO (1 << 7)  // One or more cells very low 
-*/
+#define BSTATUS_CELLVRYLO (1 << 7)  // One or more cells very low
+*/	
 char cc;
 	if (oto_sw-- < 1)
 	{
@@ -1050,7 +1064,6 @@ char cc;
 		printf("%c ",cc);
 	}
 	printf("    ");
-	/* fet_status */
 /* FET status bits" 'fet_status' 
 #define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
 #define FET_HEATER   (1 << 1) // 1 = HEATER FET ON
@@ -1065,12 +1078,23 @@ char cc;
 		else
 			cc = 'F';
 		printf("%c ",cc);
-		
+	}
+/* Mode status bits 'mode_status' 
+#define MODE_SELFDCHG  (1 << 0) // 1 = Self discharge; 0 = charging
+#define MODE_CELLTRIP  (1 << 1) // 1 = One or more cells tripped max	
+*/
+	printf("  ");
+	for (i = 0; i < 2; i++)
+	{
+		if ((p->cd.uc[6] & (1 << i)) == 0)
+			cc = '.';
+		else
+			cc = 'M';
+		printf("%c ",cc);
 	}
 	printf("\n");
 	return;
 }
-
 /******************************************************************************
  * static void print_cal_adc(char* pfmt, uint8_t ncol);
  * @brief 	: Output accumulated readings
@@ -1163,6 +1187,26 @@ static void print_processor_adc_header(void)
 	}
 	return;
 }
+/******************************************************************************
+ * static void miscq_chg_limits(struct CANRCVBUF* p);
+ * @brief 	: Module params: Max chg current, Balance chg current, module max V
+ * @param	: p = pointer to CANRCVBUF with mesg
+*******************************************************************************/
+static void miscq_chg_limits(struct CANRCVBUF* p)
+{
+	double f1 = p->cd.uc[4] * 0.1;
+	double f2 = p->cd.uc[5] * 0.1;
+	double f3 = p->cd.us[3] * 0.1;
+
+	if (oto_sw-- < 1)
+	{
+		oto_sw = 32;
+ 		printf("\n Max I  Bal I   Vmax  %08X\n",canid_rx);
+	}	
+	printf("%7.1f%7.1f%7.1f\n",f1,f2,f3);
+	return;
+}
+
 /******************************************************************************
  * static void print_cal_adc(char* pfmt, uint8_t ncol);
  * @brief 	: Output accumulated readings

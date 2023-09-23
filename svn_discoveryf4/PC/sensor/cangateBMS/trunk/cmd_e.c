@@ -77,6 +77,7 @@ static int starttimer(void);
  #define MISCQ_READ_AUX     34 // BMS responds with A,B,C,D AUX register readings (12 msgs)
  #define MISCQ_READ_ADDR    35 // BMS responds with 'n' bytes sent in [3]
  #define MISCQ_PROC_TEMP    36 // Processor calibrated internal temperature (deg C)
+ #define MISCQ_CHG_LIMITS   37 // Show params: Module V max, Ext chg current max, Ext. chg bal
 
 
 #define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
@@ -198,7 +199,7 @@ NOTE: Not all of the selections are implemented (08/17/23)
 */
 static char* preadmenu[] = {
  "  1 STATUS       // status\n\t",
- "  2 CELLV_CAL    // cell voltage: calibrated\n\t",
+ "  2 CELLV_CAL    // cell voltage: NOTE: poll cell readings use eaa command\n\t",
  "  3 CELLV_ADC    // cell voltage: adc counts\n\t",
  "  4 TEMP_CAL     // temperature sensor: calibrated\n\t",
  "  5 TEMP_ADC     // temperature sensor: adc counts for making calibration\n\t",
@@ -217,7 +218,8 @@ static char* preadmenu[] = {
  " 25 CURRENT_ADC  // Below cell #1 minus, current resistor: adc counts\n\t",
  " 32 PRM_MAXCHG   // Get Parameter: Max charging current\n\t",
  " 34 READ_AUX     // BMS responds with A,B,C,D AUX register readings (12 msgs)\n\t",
- " 36 PROC_TEMP    // Processor calibrated internal temperature (deg C)\n",
+ " 36 PROC_TEMP    // Processor calibrated internal temperature (deg C)\n\t",
+ " 37 MISCQ_CHG_LIMITS // Show params: Module V max, Ext chg current max, Ext. chg bal\n",
  "256 END_TABLE\n"
 };
 /* Menu for MISCQ codes that set something in the BMS. */

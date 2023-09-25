@@ -1201,7 +1201,7 @@ static void miscq_chg_limits(struct CANRCVBUF* p)
 	if (oto_sw-- < 1)
 	{
 		oto_sw = 32;
- 		printf("\n Max I  Bal I   Vmax  %08X\n",canid_rx);
+ 		printf("\n  Max I  Bal I   Vmax  %08X\n",canid_rx);
 	}	
 	printf("%7.1f%7.1f%7.1f\n",f1,f2,f3);
 	return;

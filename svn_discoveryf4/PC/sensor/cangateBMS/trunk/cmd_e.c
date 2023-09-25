@@ -44,7 +44,7 @@ static int starttimer(void);
 #define CANID_RX_DEFAULT CANID_UNIT_BMS03 // B0A00000','UNIT_BMS03', 1,1,'U8_U8_U8_X4','BMS ADBMS1818 #01
 #define CANID_TX_DEFAULT CANID_UNI_BMS_PC_I //CANID_UNI_BMS_PC_I        // AEC00000 //BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID // Default pollster
 
-  #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
+ #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
  #define MISCQ_STATUS      1 // status
  #define MISCQ_CELLV_CAL   2 // cell voltage: calibrated
  #define MISCQ_CELLV_ADC   3 // cell voltage: adc counts

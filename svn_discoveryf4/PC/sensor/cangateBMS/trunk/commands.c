@@ -95,7 +95,7 @@ void do_command_keybrd(char* p)
 		break;		
 
 	case 'E': // 'E' command
-		if (cmd_e_init(p) >= 0)
+		if (cmd_E_init(p) >= 0)
 			msg_sw = 'E';
 		break;		
 
@@ -310,7 +310,7 @@ void do_printmenu(void)
 				"ds aaaaaaaa  (bms status: CANID: aaaaaaaa)\n");
 
 	printf("e - BMS polling msgs: e<enter> for menu\n");
-	printf("E - EMCn: (also see p below) E<enter> for menu\n");
+	printf("E - EMCn: E<enter> for menu\n");
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");
     printf("g - GEVCUr: command request to retrieve all readings\n");
 	printf("h - MC_STATE: monitor \n");

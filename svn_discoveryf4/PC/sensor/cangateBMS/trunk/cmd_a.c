@@ -33,6 +33,7 @@ static void miscq_read_aux(struct CANRCVBUF* p);
 static void miscq_proc_temp(struct CANRCVBUF* p);
 static void printheader(void);
 static void miscq_chg_limits(struct CANRCVBUF* p);
+static void miscq_morse_trap(struct CANRCVBUF* p);
 //static void print_bits_r(void);
 
 void printf_hdr_status(void);
@@ -83,6 +84,7 @@ static void miscq_status(struct CANRCVBUF* p);
  #define MISCQ_READ_ADDR    35 // BMS responds with 'n' bytes sent in [3]
  #define MISCQ_PROC_TEMP    36 // Processor calibrated internal temperature (deg C)
  #define MISCQ_CHG_LIMITS   37 // Show params: Module V max, Ext chg current max, Ext. chg bal
+ #define MISCQ_MORSE_TRAP   38 // Retrieve stored morse_trap code & status codes.
 
 
 
@@ -216,8 +218,9 @@ static char* preadmenu[] = {
  " 25 CURRENT_ADC  // Below cell #1 minus, current resistor: adc counts\n\t",
  " 32 PRM_MAXCHG   // Get Parameter: Max charging current\n\t",
  " 34 READ_AUX     // BMS responds with A,B,C,D AUX register readings (12 msgs)\n\t",
- " 36 PROC_TEMP    // Processor calibrated internal temperature (deg C)\n\t",\
- " 37 MISCQ_CHG_LIMITS // Show params: Module V max, Ext chg current max, Ext. chg bal\n", 
+ " 36 PROC_TEMP    // Processor calibrated internal temperature (deg C)\n\t",
+ " 37 MISCQ_CHG_LIMITS // Show params: Module V max, Ext chg current max, Ext. chg bal\n\t", 
+ " 38 MISCQ_MORSE_TRAP // Retrieve stored morse_trap code & status codes.\n",
  "256 END_TABLE\n"
 };
 /******************************************************************************
@@ -488,6 +491,10 @@ static void printheader(void)
 	case MISCQ_CHG_LIMITS: // 37 Show params: Module V max, Ext chg current max, Ext. chg bal
 		printf("Display external charger limits\n");
 		break;
+
+	case MISCQ_MORSE_TRAP: // 38  Stored morse_trap code & status codes.
+		printf("Display rtc registers: morse_trap and status bytes\n");
+		break;
 	}
 	headerctr  = HEADERMAX;
 	return;
@@ -715,6 +722,10 @@ printf("cmdcode: %d\n",cmdcode);
 		case MISCQ_CHG_LIMITS: // 37 Show params: Module V max, Ext chg current max, Ext. chg bal			
 			miscq_chg_limits(p);
 			break;
+
+		case MISCQ_MORSE_TRAP: // 38  Stored morse_trap code & status codes.
+			miscq_morse_trap(p);
+			break;			
 
 		default:
 			printcanmsg(p); // CAN msg
@@ -1021,7 +1032,7 @@ void printf_hdr_status(void)
 	"| | Cell too high\n"
 	"| | | Cell too low\n"
 	"| | | | Balance in progress\n"
-	"| | | | | Onboard charger ON\n"
+	"| | | | | Onboard charger ON | DUMP2 ON\n"
 	"| | | | | | Discharge to target voltage in progress\n"
 	"| | | | | | | One or more cells very low\n"
 	"| | | | | | | |     DUMP FET ON\n"
@@ -1204,6 +1215,23 @@ static void miscq_chg_limits(struct CANRCVBUF* p)
  		printf("\n  Max I  Bal I   Vmax  %08X\n",canid_rx);
 	}	
 	printf("%7.1f%7.1f%7.1f\n",f1,f2,f3);
+	return;
+}
+/******************************************************************************
+ * static void miscq_morse_trap(struct CANRCVBUF* p);
+ * @brief 	: Status bytes held in RTC Registers 
+ * @param	: p = pointer to CANRCVBUF with mesg
+*******************************************************************************/
+static void miscq_morse_trap(struct CANRCVBUF* p)
+{
+	if (p->cd.uc[3] != 0)
+	{
+		printf("\nrtcregs: morse_code: %d\n",p->cd.ui[1]);
+	}
+	else
+	{
+		printf("\nrtcregs: morse_code: registers NG: %0x\n",p->cd.uc[3]);		
+	}
 	return;
 }
 

@@ -17,6 +17,7 @@ static void sendcanmsg(struct CANRCVBUF* pcan);
 static void printcanmsg(struct CANRCVBUF* p);
 
 static uint8_t canseqnumber;
+static uint32_t lctr; // Output line counter
 
 static void cmd_p_timerthread(void);
 static int starttimer(void);
@@ -83,6 +84,7 @@ static void printcanmsg(struct CANRCVBUF* p)
 *******************************************************************************/
 int cmd_p_init(char* p)
 {
+	lctr = 0;
 	uint32_t len = strlen(p);
 
 	printf("%c%c %i\n",*p,*(p+1),len);
@@ -122,7 +124,7 @@ int cmd_p_init(char* p)
 		}
 		return 0;
 
-	case 's': // Module String whom
+	case 's': // Enter voltage and current limits 
 		if (len > 10)
 		{
 			sscanf( (p+3), "%f %f",&fvolts, &famps);
@@ -156,7 +158,7 @@ int cmd_p_init(char* p)
 		sendcanmsg(&cantx);
 		break;
 
-	case 'o': // et charger off bit to 0	
+	case 'o': // Set charger off bit to 0	
 		cantx.cd.uc[4] = 0;
 		sendcanmsg(&cantx);
 		break;
@@ -201,6 +203,8 @@ void cmd_p_do_msg(struct CANRCVBUF* p)
 
 	if ((p->id & 0xfffffffc) != canid_rx)
 		return; // CAN ID is not ELCON Charger
+
+	printf("%5d ",lctr++);
 
 	printcanmsg(p);
 

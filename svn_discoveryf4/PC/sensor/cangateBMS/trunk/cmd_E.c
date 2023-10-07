@@ -96,8 +96,7 @@ char *paramlist = "../../../../../../../GliderWinchItems/BMS/bmsadbms1818/params
 
 extern int fdp;	/* port file descriptor */
 
-static void sendcanmsg_bits(uint32_t bits, uint8_t code);
-static void sendcan_type2(uint8_t code);
+static void sendcan_type2(uint8_t code, uint8_t set);
 static void sendcanmsg(struct CANRCVBUF* pcan);
 static void printcanmsg(struct CANRCVBUF* p);
 static void discovery(struct CANRCVBUF* p);
@@ -113,13 +112,7 @@ INSERT INTO CANID VALUES ('CANID_ELCON_RX','C0372FA4','ELCON1',1,1,'I16_I16_U8_U
 #define CANID_TX_DEFAULT CANID_ELCON_RX  // C0372FA4' This cmd SENDS; ==> ELCON receives <==
 #define CANID_STATUS_POLL CANID_UNI_BMS_PC_I // AEC00000 PC originates
 
-/* ASCII for ELCON status byte bits. */
-static char* tsw[5] = {
-	"HW FAIL: ",
-	"OVR TEMP ",
-	"INPUT ",
-	"BATT DISC ",
-	"COMM T.O. "};
+//#define SKIPPRINT
 
 union UF
 {
@@ -132,9 +125,11 @@ struct CHGVALUES
 	uint32_t ivolts;
 	uint32_t iamps;
 };
-static struct CHGVALUES chgfull; // Charge rate gleaned from modules
+static struct CHGVALUES chgfull;    // Charge rate gleaned from modules
 static struct CHGVALUES chgbalance; // Charge rate for balancing 
-static struct CHGVALUES* pchgcmd; // Values in last CAN command msg
+static struct CHGVALUES chgzero;    // Charge rate for balancing 
+static struct CHGVALUES chgwork;    // Current working values
+static struct CHGVALUES* pchgcmd;   // Values in last CAN command msg
 
 
 struct BMSNODE
@@ -155,7 +150,7 @@ static struct BMSNODE bmsnode[BMSNODESZ];
 // Module bits positioned index in BMSnode
 static uint32_t module_celltoohi; // One or more cells above max limit
 static uint32_t module_selfdchg;     // 1 = One or more cells tripped max
-static uint32_t module_celltrip;     // 1 = Self discharge; 0 = charging
+//static uint32_t module_celltrip;     // 1 = Self discharge; 0 = charging
 // String control: bits positioned by module index BMSnode list
 static uint32_t module_tripped; // 1 = Module reported one or cells over max
 static uint32_t module_mask; // Bits set for modules present
@@ -176,6 +171,7 @@ static uint8_t paramsize; // Number loaded into list
 static char buf[LINESIZE];
 
 static int8_t state; // 
+static int8_t doneflag; //
 
 // The following are 0.1 sec timer ticks
 #define SECSTOWAIT       50 // Duration to monitor
@@ -185,7 +181,7 @@ static int8_t state; //
 #define DISCOVERY_POLL   10 // Polling for discovery interval
 #define ELCON_INTERVAL   18 // ELCON timeout: it should report once per second
 #define ELCON_KEEP_ALIVE 10 // Number of 0.1 secs between ELCON keep-alive
-#define CANMSGSTIMEOUT   60 // Timeout for no CAN msgs coming in (gateway problems?)
+#define CANMSGSTIMEOUT  100 // Timeout for no CAN msgs coming in (gateway problems?)
 #define PROGRESSTIME     10 // Hapless op keep-alive
 #define CHGSTATPOLL      15 // Charging: wait to start next status update
 #define CHGWAITREPLY      5 // Charging: wait to for BMS nodes to respond
@@ -209,6 +205,7 @@ static struct CANRCVBUF cantx_type2; // Generic TYPE2 msg to read
 static struct CANRCVBUF cantx_type2k; // Generic TYPE2 msg to set
 static struct CANRCVBUF cantx_cells; // Poll for cell readings
 static struct CANRCVBUF cantx_elcon; // poll ELCON
+static struct CANRCVBUF cantx_dump;  // Specific module DUMP update
 
 //The following are for getting cell readings
 static uint32_t adcrate; // *1818 ADC rate. 
@@ -217,11 +214,6 @@ static uint8_t canseqnumber;
 
 static uint32_t canid_rx; // Receive ELCON
 
-//static float fvolts;
-//static float famps;
-//static uint32_t ivolts;
-//static uint32_t iamps;
-
 static uint32_t elcon_ivolts;
 static uint32_t elcon_iamps;
 static uint8_t elcon_overvolts; // 0 == OK; 1 = last report was over voltage
@@ -229,12 +221,6 @@ static uint8_t elcon_overvolts; // 0 == OK; 1 = last report was over voltage
 static double fmin_chg_cur;
 static double fmin_bal_cur;
 static double fmax_string_v;
-
-static float fmsgvolts;
-static float fmsgamps;
-
-
-uint32_t kaON;  // 0 = keep-alive is off; 1 = keep-alive = on.
 
 /******************************************************************************
  * static void print_chgingdisplay(void);
@@ -306,49 +292,50 @@ static void printfbits(uint32_t x, uint8_t n )
 		else
 			bitline[2*i] = '1';
 	}
-	bitline[2*i+1] = 0;
-	printf("%s",bitline);
+	bitline[2*n-1] = 0;
+	printf("|%s|",bitline);
 	return;
 }
 /******************************************************************************
- * static void sendcanmsg_bits(uint32_t bits, uint8_t code);
- * @brief 	: Send CAN msgs to turn DUMP on/off
+ * static void printdiscovered(void);
+ * @brief 	: printf discovered online BMS nodes
+ ******************************************************************************/
+static void printdiscovered(void)
+{
+	int i;
+	printf("Discovery list,bmsnodes_online: %d\n",bmsnodes_online);	
+	for (i = 0; i < bmsnodes_online; i++)
+	{
+		printf("%2d OK: LIMITS: ",i); 
+		printcanmsg(&bmsnode[i].canchg);
+		printf(" STATUS: ");
+		printcanmsg(&bmsnode[i].canstatus);printf("\n");
+	}
+	return;
+}
+/******************************************************************************
+ * static void sendcanmsg_dump(uint8_t bits);
+ * @brief 	: Send CAN msgs to each online module to turn DUMP on/off
  * @param   : bits: 1 = DUMP ON, 0 = DUMP OFF
- * @param   : code = MISCQ code (see #define)
  ******************************************************************************/
 static void sendcanmsg_dump(uint8_t bits)
 {
-	sendcanmsg_bits(bits,MISCQ_SET_DUMP);
-	return;
-}
-/******************************************************************************
- * static void sendcanmsg_bits(uint32_t bits, uint8_t code);
- * @brief 	: Send CAN msgs to turn DUMP on/off
- * @param   : bits: 1 = DUMP ON, 0 = DUMP OFF
- * @param   : code = MISCQ code (see #define)
- ******************************************************************************/
-static void sendcanmsg_bits(uint32_t bits, uint8_t code)
-{
 	int i;
-
-if ((~module_mask & bits) != 0)	
-{
-	printf("something wrong with module_mask and bits to set: mod: %08X bits: %08X\n",module_mask,bits);
-	state = -9;
-}
-
-	cantx_type2.cd.uc[2] = code;
 	for (i = 0; i < bmsnodes_online; i++)
 	{
-		if ((bits & (1 << i)) == 0)
+		if ((bits & (1<<i)) != 0)
 		{
-			cantx_type2.cd.uc[3] = 0;
+			cantx_dump.cd.uc[3] = 1;
 		}
 		else
 		{
-			cantx_type2.cd.uc[3] = 1;
+			cantx_dump.cd.uc[3] = 0;
 		}
-		sendcanmsg(&cantx_type2);
+		cantx_dump.cd.ui[1] = bmsnode[i].id;
+		sendcanmsg(&cantx_dump);
+#ifndef SKIPPRINT		
+printf("SEND-DUMP: %d %d 0x%08X: ",i,(bits & (1<<i)),cantx_dump.id);printcanmsg(&cantx_dump);printf("\n");
+#endif
 	}
 	return;
 }
@@ -374,17 +361,20 @@ static void sendcanmsg_elcon(struct CHGVALUES* pchgrate)
 		cantx_elcon.cd.uc[3] = (pchgrate->iamps & 0xFF);
 		cantx_elcon.cd.uc[4] = 0; // Charging on
 	}
+//printf("state: %d Sent to ELCON: ",state); printcanmsg(&cantx_elcon);printf("\n");
 	sendcanmsg(&cantx_elcon);
 	return;
 }
 /******************************************************************************
- * static void sendcan_type2(uint8_t code);
+ * static void sendcan_type2(uint8_t code, uint8_t set);
  * @brief 	: Send TYPE2 msg to elicit response from all BMS nodes
  * @param   : code = MISCQ code (see #define)
+ * @param   : set = cd.uc[3] (usually 0 or 1 to turn something off|on)
 *******************************************************************************/
-static void sendcan_type2(uint8_t code)
+static void sendcan_type2(uint8_t code, uint8_t set)
 {
 	cantx_type2.cd.uc[2] = code;
+	cantx_type2.cd.uc[3] = set;
 	sendcanmsg(&cantx_type2);
 	return;
 }
@@ -408,8 +398,9 @@ static int scansize(int len, int x)
 static void printhelp(void)
 {
 	printf("\n\t"
-	"Eh = prints this help\n\t"
+	"Eh: prints this help\n\t"
 	"En <count> = Set new count of BMS nodes on string\n\t"
+	"Ex: Shutdown ELCON\n "
 		);
 }
 /******************************************************************************
@@ -501,7 +492,16 @@ int cmd_E_init(char* p)
 
 	cantx_type2k = cantx_type2;
 
-		/* Set CAN msg for polling for cell voltage readings. */
+	/* BMS command to set specific module DUMP ON|OFF. */
+	cantx_dump.id       = CANID_STATUS_POLL; // 
+	cantx_dump.dlc      = 8;
+	cantx_dump.cd.ull   = 0; // Clear payload
+	cantx_dump.cd.uc[0] = CMD_CMD_TYPE2;
+	cantx_dump.cd.uc[1] = (0x1 << 6); // Use CAN ID in [4]-[7]
+	cantx_dump.cd.uc[2] = MISCQ_SET_DUMP;
+
+
+	/* Set CAN msg for polling for cell voltage readings. */
 	adcrate = 0; // *1818 ADC rate. 0 = 422 Hz
 	cantx_cells.id       = CANID_TX_DEFAULT; // 
 	cantx_cells.cd.ui[1] = 0; // NULL target CANID	
@@ -509,7 +509,20 @@ int cmd_E_init(char* p)
 	cantx_cells.cd.uc[1] = (0x3 << 6); // Use CAN ID in [4]-[7]
 	cantx_cells.cd.uc[2] = (adcrate << 4) | ((groupctr & 0xF) << 0);	
 
+	bmsnodes_online  = 0; // Number of discovered BMS nodes
+	module_celltoohi = 0; // One or more cells above max limit
+	module_selfdchg  = 0; // 1 = One or more cells tripped max
+	module_tripped   = 0; // 1 = Module reported one or cells over max
+	module_mask      = 0; // Bits set for modules present
+	module_responded = 0; // Status msgs received update bits
+	module_dump      = 0; // 1 = set bms dump on; 0 = off
+	state            = 0; // 
+	doneflag         = 0; //
 
+	chgzero.ivolts = 0;
+	chgzero.iamps  = 0;
+
+	timerctr   = 0;	
 
 	/* Check keyboard input. */
 	if (len < 3)
@@ -532,9 +545,9 @@ int cmd_E_init(char* p)
 		sscanf((p+2),"%d",&i); // get what they want as int
 		num_bms_modules = i; // egads a uint8_t!
 		printf("\nUntil cangateBMS restarted, number of modules on string now: %d\n",num_bms_modules);
-		break;;
+		break;
 
-	case 'v': // Discovery only
+	case 'v': // Discovery then charge
 		if (scansize(len,2) != 0) return -1;
 		printf("Start discovery of BMS nodes\n");
 		if (getbmslist() != 0) // Get list of possible BMS nodes
@@ -543,20 +556,16 @@ int cmd_E_init(char* p)
 			break;
 		}
 		discovery_init();
-		sendcan_type2(MISCQ_CHG_LIMITS);
-		sendcan_type2(MISCQ_STATUS);
+		sendcan_type2(MISCQ_CHG_LIMITS,0);
+		sendcan_type2(MISCQ_STATUS,0);
 		canmsgstimeout = timerctr + CANMSGSTIMEOUT;
 		break;
 
-	case 'j': // Set charger off bit to 1
-		cantx_elcon.cd.uc[4] = 1;
-		sendcanmsg(&cantx_elcon);
-		break;
+	case 'x': // Close down
+		sendcanmsg_dump(0);
+		sendcanmsg_elcon(&chgzero); // ELCON shutdown
+		return -1;
 
-	case 'o': // et charger off bit to 0	
-		cantx_elcon.cd.uc[4] = 0;
-		sendcanmsg(&cantx_elcon);
-		break;
 
 	default:
 		printf("2nd char not recognized: %c\n", *(p+1));
@@ -565,8 +574,9 @@ int cmd_E_init(char* p)
 			break;
 		}
 	}
-	timerctr   = 0;
+	
 	elcon_timer_keep_alive  = ELCON_KEEP_ALIVE;
+	sendcanmsg(&cantx_elcon);	// Send ELCON poll
 	starttimer();
 	return ret;
 }
@@ -611,7 +621,7 @@ void elcondatacheck(struct CANRCVBUF* p)
 	dtmp = elcon_ivolts * 0.1;
 	if (dtmp < FNOC_STRING_V)
 	{ // Here, ELCON presumed not connected to string
-		printf("ELCON reports: %0.1f volts and presumed not connected to string\n",dtmp);
+		printf("ELCON reports: %0.1f volts and presumed not connected to battery\n",dtmp);
 	}
 	if ((dtmp < FMIN_STRING_V) && (dtmp > FNOC_STRING_V))
 	{ // Here, string voltage too low for charging
@@ -621,7 +631,9 @@ void elcondatacheck(struct CANRCVBUF* p)
 	/* Check ELCON status byte. */
 	if ((p->cd.uc[4] & ((1 << 5) - 1)) != 0)
 	{ // Here one or more error flags
+#ifndef SKIPPRINT		
 		printf("ELCON status byte [4] = 0x%02X ",p->cd.uc[4]);
+#endif		
 		printfbits(p->cd.uc[4],5); printf("\n");
 		if ((p->cd.uc[4] & ELCON_STATUS_HW_FAIL) != 0)
 			printf("\tELCON reports HW_FAIL: hardware failure!\n");
@@ -637,6 +649,8 @@ void elcondatacheck(struct CANRCVBUF* p)
 
 		if ((p->cd.uc[4] & ELCON_STATUS_COMM_TO) != 0)
 			printf("\tELCON reports ELCON_STATUS_COMM_TO: communcation timeout\n");
+		state = 9; // Avoid repetitive error msgs.
+		return;
 	}
 	if (elcon_ivolts > fmax_string_v)
 		elcon_overvolts = 1;
@@ -668,6 +682,7 @@ static void charging_int(void)
 		{ 
 			printf("%08X did not report charger limits (code %d\n",MISCQ_CHG_LIMITS,bmsnode[i].id);
 			state = 9;
+			doneflag = 1;
 			return;
 		}
 		/* Sum max module voltages for string. */
@@ -680,11 +695,18 @@ static void charging_int(void)
 		if (tmp < min_bal_cur) min_bal_cur = tmp;
 	}
 
+printf("Max voltage (0.1) sum from modules: %d",max_string_v);
+max_string_v = 1385;
+printf(" is revised to %d\n",max_string_v);
+
 	/* Load two sets of values for setting ELCON. */
-	chgfull.ivolts    = max_string_v;
-	chgfull.iamps     = min_chg_cur;
-	chgbalance.ivolts = max_string_v;
-	chgbalance.iamps  = min_bal_cur;
+	chgfull.ivolts    = max_string_v; // Max rate
+	chgfull.iamps     = min_chg_cur;  // Max rate
+	chgbalance.ivolts = max_string_v; // Balancing (min) rate
+	chgbalance.iamps  = min_bal_cur;  // Balancing (min) rate
+
+	// Start with full rate
+	chgwork = chgfull;
 
 	fmax_string_v = max_string_v * 0.1;
 	fmin_chg_cur  = min_chg_cur * 0.1;
@@ -732,7 +754,7 @@ static void charging_int(void)
 	}
 
 	/* Charging state. */
-	state = 2;
+	state = 3;
 	return;
 }
 /******************************************************************************
@@ -757,6 +779,7 @@ static void discovery_end(void)
 	{
 		printf ("Discovered BMS nodes count %d not equal expected count %d\n",
 			bmsnodes_online,num_bms_modules);	
+		printdiscovered();
 			state = 9;		
 			return;
 	}
@@ -777,19 +800,16 @@ static void discovery_end(void)
 	}
 	if (flag == 0)
 	{ // All are OK, display list for hapless Op
+
+		/* Print list of nodes. */
 		printf("  ELCON    OK: "); 
 		printcanmsg(&elcon.can); printf(" : ");printfbits(elcon.can.cd.uc[4],5);printf("\n");
-		for (i = 0; i < bmsnodes_online; i++)
-		{
-			printf("%2d OK: LIMITS: ",i); 
-			printcanmsg(&bmsnode[i].canchg);
-			printf(" STATUS: ");
-			printcanmsg(&bmsnode[i].canstatus);printf("\n");
-		}
+		printdiscovered();
+
 		/* Make a bit mask for BMS nodes. */
 		module_mask = ((1 << bmsnodes_online) - 1);
 printf("module_mask: 0x%02X ",module_mask);printfbits(module_mask,8);printf("\n");
-		state = 2;
+		state = 3;
 		charging_int(); // Initialize charging phase
 		return; // Set state to charging phase
 	}
@@ -805,6 +825,7 @@ printf("module_mask: 0x%02X ",module_mask);printfbits(module_mask,8);printf("\n"
 	{
 		printf ("Discovered BMS nodes count %d not equal expected count %d\n",
 			bmsnodes_online,num_bms_modules);	
+		printdiscovered();
 	}
 	state = 9;
 	return; // Discovery failed
@@ -823,9 +844,9 @@ static void discovery_init(void)
 	elcon.can.id  = 0; // 0 = not yet found
 	elcon.present = 0; // Show ELCON not yet reported
 	module_mask   = 0; // No modules as yet found
-	discoverytime = timerctr + DISCOVERY_INTERVAL;
+	discoverytime     = timerctr + DISCOVERY_INTERVAL;
 	discoverytimepoll = timerctr + DISCOVERY_POLL;
-	elcon.timeout =timerctr + ELCON_INTERVAL + 100;
+	elcon.timeout     = timerctr + ELCON_INTERVAL + 100;
 printf("Discovery init:     discoverytime %3d\n",discoverytime);
 printf("Discovery init: discoverytimepoll %3d\n",discoverytimepoll);
 printf("Discovery init:     elcon.timeout %3d\n",elcon.timeout);
@@ -900,7 +921,11 @@ printcanmsg(p);printf("\n");
 *******************************************************************************/
 void module_status_update(struct CANRCVBUF* p, uint8_t j)
 {
-	// Set bit for this node in celltoohi 
+	bmsnode[j].canstatus = *p; // Save latest status response
+
+	// Set bit for module in a word for string
+	module_responded |= (1 << j); // Poll response results
+
 	if ((p->cd.uc[4] & BSTATUS_CELLTOOHI) == 0)
 		module_celltoohi &= ~(1 << j);
 	else
@@ -915,7 +940,7 @@ void module_status_update(struct CANRCVBUF* p, uint8_t j)
 }
 /******************************************************************************
  * static void charging_poll(struct CANRCVBUF* p);
- * @brief 	: Charging phase
+ * @brief 	: Charging phase: check incoming CAN msgs
  * @param   : p = pointer to CAN msg
 *******************************************************************************/
 static void charging_poll(struct CANRCVBUF* p)
@@ -925,16 +950,17 @@ static void charging_poll(struct CANRCVBUF* p)
 	for (j = 0; j < bmsnodes_online; j++)
 	{ // Here, the msg is in the list
 		if (bmsnode[j].id == p->id)
-		{
+		{ // Here, this CAN msg is in discovered list
+			// Reset timeout for this BMS node
+			bmsnode[j].timeout = timerctr + BMSPOLL_TIMEOUT;
+			bmsnode[j].can = *p; // Save lastest CAN 
+			// We are most interested in status at the moment
 			if (p->cd.uc[1] == MISCQ_STATUS)
 			{ // Here msg has the status
-				// Reset timeout for this BMS node
-				bmsnode[j].timeout = timerctr + BMSPOLL_TIMEOUT;
 				// Update last received status msg
-				bmsnode[j].canstatus = *p; 
-				module_status_update(p,j);
+				module_status_update(p,j);				
 			}
-			return;
+			return; // No need to check further
 		}
 	}
 	return;
@@ -942,7 +968,7 @@ static void charging_poll(struct CANRCVBUF* p)
 
 /******************************************************************************
  * void checkforelcon(struct CANRCVBUF* p);
- * @brief 	: Check for ELCON msgs
+ * @brief 	: Check for ELCON msgs 
 *******************************************************************************/
 void checkforelcon(struct CANRCVBUF* p)
 {
@@ -968,13 +994,20 @@ turned on by the hapless Op typing 'm' as the first char and hitting return.
 
 void cmd_E_do_msg(struct CANRCVBUF* p)
 {
-	int i;
+	/* Overall check on gateway functioning. */
 	canmsgstimeout = timerctr + CANMSGSTIMEOUT;
+	checkforelcon(p);	
+
+	/* When it is DONE! or bombed out, quit do things. */
+	if (state == 9)
+	{
+		return;
+	}
+
 
 	switch(state)
 	{
 	case 0: // Discovery 
-		checkforelcon(p);
 		discovery(p);
 		break;
 
@@ -982,16 +1015,14 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 		break;
 
 	case 2: // Charging phase
-		checkforelcon(p);
 		charging_poll(p);
 		break;
 	
 	case 3:
-		checkforelcon(p);
 		charging_poll(p);	
 		break;
 
-	case 4: // One or more modules did not respond to status updatge
+	case 4: // One or more modules did not respond to status update
 		break;	
 
 	case 8: // Successful completion.
@@ -1005,26 +1036,6 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 		state = 9;
 		break;
 	}
-	return;
-
-	if ((p->id & 0xfffffffc) != canid_rx)
-		return; // CAN ID is not ELCON Charger
-
-	printcanmsg(p);
-
-	uint32_t elcon_ivolts = (p->cd.uc[0] << 8) | (p->cd.uc[1]);
-	uint32_t elcon_iamps = (p->cd.uc[2] << 8) | (p->cd.uc[3]);
-	fmsgvolts = elcon_ivolts;
-	fmsgamps  = elcon_iamps;	
-	printf ("%6.1f V %6.1f I ", fmsgvolts * 0.1, fmsgamps * 0.1);
-	int ts;
-	for (i = 0; i < 5; i++)
-	{
-		ts = ((p->cd.uc[4] >> i) & 1);
-		printf(" :%s %d",tsw[i],ts);
-	}
-	printf("\n");
-
 	return;
 }
 /******************************************************************************
@@ -1043,10 +1054,11 @@ static void sendcanmsg(struct CANRCVBUF* pcan)
 	return;
 }
 /******************************************************************************
- * static void chgstatpoll(void);
- * @brief 	: Send keep-alive msg
+ * static int checkallresponed(void);
+ * @brief 	: 
+ * @return  : 0 = OK; -1 = not all responded.
 *******************************************************************************/	
-static void chgstatusget(void)
+static int checkallresponded(void)
 { // Here end of wait for BMS nodes to respond to status request
 	// Check all that responded
 	if (module_mask != module_responded)
@@ -1054,40 +1066,101 @@ static void chgstatusget(void)
 		state = 4; // Failure
 		module_dump = 0; // Set all dumps off JIC
 		sendcanmsg_dump(0);
-		sendcanmsg_elcon(0); // ELCON shutdown
-		return;
+		sendcanmsg_elcon(&chgzero); // ELCON shutdown
+		printf("One or more modules did not respond to status update: 0x%04X\n",module_responded);
+		return -1;
 	}
+	return 0;
+}
+/******************************************************************************
+ * static void reducechgcurrent(void);
+ * @brief 	: Cut back charging current command
+*******************************************************************************/
+#define CHG_REDUCE_FAC 0.625 // Reduction factor
+#define CHG_REDUCE_INC 0.1  // Reduction increment (amps)
+#define CHG_HILO 1.3 // ELCON switch from low current to hi pulses
+static int reducechgcurrent(void)
+{
+	float ftmpw; // Be lazy with floating point
+	if (chgwork.iamps != chgbalance.iamps)
+	{ // Here, we have not reached the minimum
+		ftmpw = (float)chgwork.iamps * 0.1;
+		if (ftmpw < CHG_HILO)
+		{ // Current level is in the ELCON low range
+			ftmpw -= CHG_REDUCE_INC; // Linear reduction
+		}
+		else
+		{ // Current in the ELCON high range
+			ftmpw *= CHG_REDUCE_FAC; // Reduce by a factor
+			if (ftmpw < (float)chgbalance.iamps)
+			{ // Here, reudction is below minimum
+				chgwork.iamps = chgbalance.iamps; // Min forever
+				return 0;
+			}
+		}
+		chgwork.iamps = ftmpw * 10.0;
+		return 1;
+	}
+	return 0;
+}	
+/******************************************************************************
+ * static void printchgrate(void);
+ * @brief 	: printf charge rate "work"
+*******************************************************************************/
+static void printchgrate(void)
+{
+	float famps = chgwork.iamps;
+	printf(" %7.1f",(famps*0.1));
+return;
+}
+
+/******************************************************************************
+ * static void chgstatpoll(void);
+ * @brief 	: 
+*******************************************************************************/	
+static void chgstatusget(void)
+{ // Here end of wait for BMS nodes to respond to status request
 	// Here all nodes updated their status
 	if (module_celltoohi != 0)
 	{ // Here one of more modules are showing one or more cells over target
-		sendcanmsg_elcon(0); // Set ELCON off
-		module_celltrip |= module_celltoohi; // Show module tripped max
-		if (module_mask == module_celltrip)
+		sendcanmsg_elcon(&chgzero); // Set ELCON off
+		if (reducechgcurrent() != 0)
+		{ // We haven't hit minimum
+			sendcanmsg_elcon(&chgwork); 
+			sendcanmsg_dump(module_celltoohi);
+#ifndef SKIPPRINT 
+		printf("celltoohi but not min current: reduced charge rate is"); printchgrate();printf("a\n");
+#endif
+			return;
+		}	
+		// Here, chg current at minimum AND cell too high
+		module_tripped |= module_celltoohi; // Show module tripped max
+		if (module_mask == module_tripped)
 		{ // Here, all modules have tripped their max.
-		sendcanmsg_dump(0);
-		sendcanmsg_elcon(0); // Shutdown ELCON
-		printf("All modules have tripped their max. ELCON set off. DONE!\n");
-		state = 8; // DONE
+			sendcanmsg_dump(0);
+			sendcanmsg_elcon(&chgzero); // Shutdown ELCON
+			sendcan_type2(MISCQ_SET_SELFDCHG,0); // Complete charge balancing
+			printf("\nAll modules have tripped their max. ELCON set off.\n"
+				"############################# DONE! #############################\n");
+			state = 9; // DONE
+			doneflag = 1;
+			return;
 		}
 		else
 		{ // Here, not all modules tripped max
 			// Turn BMS DUMP on for modules 'toohi'
 			sendcanmsg_dump(module_celltoohi);
+printf("chgstatusget: celltoohi: not all: %02X\n",module_celltoohi);
 		}
 	}
 	else
 	{ // Here, no modules report celltoohi
-		sendcanmsg_dump(0); // Turn off DUMPs
-		if (module_tripped == 0)
-		{
-			sendcanmsg_elcon(&chgfull); // Turn charger on
-		}
-		else
-		{
-			sendcanmsg_elcon(&chgbalance); // Turn charger on			
-		}
+		sendcanmsg_dump(0); // Turn off DUMPs JIC
+#ifndef SKIPPRINT 
+		printf("No modules report celltoohi: charge rate "); printchgrate();printf("\n");
+#endif
+		sendcanmsg_elcon(&chgwork); // Turn charger on to present working current
 	}
-
 	return;
 }
 /******************************************************************************
@@ -1096,7 +1169,7 @@ static void chgstatusget(void)
 *******************************************************************************/	
 static void cmd_E_timerthread(void)
 {
-	int i;
+	//int i;
 	timerctr += 1; // 100 ms tick running counter
 
 	if ((int)(timerctr - canmsgstimeout) > 0)
@@ -1104,6 +1177,11 @@ static void cmd_E_timerthread(void)
 		printf("CAN msgs are not coming in\n");
 		canmsgstimeout += CANMSGSTIMEOUT;
 		state = 9;
+	}
+
+	if (doneflag == 1)
+	{ // Stop 
+		return;
 	}
 
 	/* Send ELCON commands */
@@ -1141,8 +1219,8 @@ printf(" timerctr %d el %d state %d  ",timerctr, elcon.timeout,state);
 		if ((int)(timerctr - discoverytimepoll) > 0)
 		{
 			discoverytimepoll = timerctr + DISCOVERY_POLL;
-			sendcan_type2(MISCQ_CHG_LIMITS);
-			sendcan_type2(MISCQ_STATUS);
+			sendcan_type2(MISCQ_CHG_LIMITS,0);
+			sendcan_type2(MISCQ_STATUS,0);
 //			sendcanmsg(&cantx_chglmt);
 //			sendcanmsg(&cantx_status);
 			printf("Discovery poll %d\n",timerctr);
@@ -1150,15 +1228,22 @@ printf(" timerctr %d el %d state %d  ",timerctr, elcon.timeout,state);
 		break;
 
 	case 1:
+#ifndef SKIPPRINT
+printf("tthrd: 1 timerctr %d\n",timerctr);
+#endif
 		break;
 
 	case 2:
 		if ((int)(timerctr - timechgloop) > 0)
 		{ // BMS nodes should have responded by now
-			for (i = 0; i < bmsnodes_online; i++)
-			{ // Check response and update charging 
-					chgstatusget();
+#ifndef SKIPPRINT			
+printf("tthrd: 2 timerctr %d\n",timerctr);
+#endif
+			if (checkallresponded() != 0)
+			{ // state was set to 4;
+				break;
 			}
+			chgstatusget();
 			state = 3; // Waiting for next cycle
 			// Set wait for beginning next cycle
 			timechgstatuspoll = timerctr + CHGSTATPOLL; // +20
@@ -1170,13 +1255,18 @@ printf(" timerctr %d el %d state %d  ",timerctr, elcon.timeout,state);
 	case 3:	// Check for end of wait-for-next-cycle
 		if ((int)(timerctr - timechgstatuspoll) > 0)		
 		{ // Here, start a new charging update cycle
+#ifndef SKIPPRINT			
+printf("tthrd: 3 timerctr %d\n",timerctr);
+#endif
 			// Request cell readings (which triggers a status update)
 			cantx_cells.cd.uc[2] = (adcrate << 4) | ((groupctr & 0xF) << 0);
 			sendcanmsg(&cantx_cells);    // Cell readings
 			cantx_cells.cd.uc[2] = (groupctr & 0x0f);
 			groupctr += 1;
+			// Check that discovered modules update
+			module_responded = 0;
 			// Request status
-			sendcan_type2(MISCQ_STATUS); 
+			sendcan_type2(MISCQ_STATUS,0); 
 			// Wait for units to respond
 			timechgloop = timerctr + CHGWAITREPLY; // +5
 			state = 2;

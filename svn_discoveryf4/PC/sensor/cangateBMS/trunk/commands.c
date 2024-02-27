@@ -17,6 +17,7 @@ This takes care of dispatching keyboard commands.
 #include "cmd_a.h"
 #include "cmd_b.h"
 #include "cmd_c.h"
+#include "cmd_C.h"
 #include "cmd_d.h"
 #include "cmd_e.h"
 #include "cmd_E.h"
@@ -87,6 +88,11 @@ void do_command_keybrd(char* p)
 	case 'd': // 'd' command
 		if (cmd_d_init(p) >= 0)
 			msg_sw = 'd';
+		break;
+
+	case 'C': // 'C' command
+		if (cmd_C_init(p) >= 0)
+			msg_sw = 'C';
 		break;
 
 	case 'e': // 'e' command
@@ -211,6 +217,10 @@ void do_canbus_msg(struct CANRCVBUF* p)
 		cmd_c_do_msg(p);
 		break;
 
+	case 'C':
+		cmd_C_do_msg(p);
+		break;		
+
 	case 'd':
 		cmd_d_do_msg(p);
 //		do_pc_to_gateway(p);	// Hex listing of the CAN msg
@@ -301,6 +311,7 @@ void do_printmenu(void)
 	printf("a - Display selected BMS CAN  msgs: a<enter> for menu\n");
 	printf("b - CONTACTOR: display polled msgs\n");
 	printf("c - request & display launch parameters\n");
+	printf("C - : Cooling function C<enter> for menu\n");	
 	printf("d - BMS heartbeat\n\t"
 				"d  - default (cell readings by cell number: CANID: B0201134)\n\t"
 				"dc aaaaaaaa  (cell readings by cell number: CANID: aaaaaaaa\n\t"

@@ -709,11 +709,26 @@ printf(" is revised to %d\n",max_string_v);
 	chgwork = chgfull;
 
 	fmax_string_v = max_string_v * 0.1;
-	fmin_chg_cur  = min_chg_cur * 0.1;
-	fmin_bal_cur  = min_bal_cur * 0.1;
+	fmin_chg_cur  = min_chg_cur  * 0.1;
+	fmin_bal_cur  = min_bal_cur  * 0.1;
 	printf("Charging  current: %7.1fa\n",fmin_chg_cur);
 	printf("Balancing current: %7.1fa\n",fmin_bal_cur);
 	printf("Charger max volts: %7.2fv\n",fmax_string_v);
+
+/* Override */
+max_string_v = 1450;
+min_chg_cur  =   13;
+fmax_string_v = max_string_v * 0.1;
+fmin_chg_cur  = min_chg_cur  * 0.1;
+fmin_bal_cur  = min_bal_cur  * 0.1;
+printf("Charging  current override: %7.1fa\n",fmin_chg_cur);
+printf("Balancing current override: %7.1fa\n",fmin_bal_cur);
+printf("Charger max volts override: %7.2fv\n",fmax_string_v);
+chgfull.ivolts    = max_string_v; // Max rate
+chgfull.iamps     = min_chg_cur;  // Max rate
+chgwork = chgfull;
+
+
 
 	/* Check for bogus parameters received. */
 	if (fmax_string_v < FMIN_STRING_V)

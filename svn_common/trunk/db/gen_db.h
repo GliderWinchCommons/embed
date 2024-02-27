@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2023-09-08 23:28:32.517
+// 2023-10-29 11:45:55.169
 
-#define CANID_COUNT 351
+#define CANID_COUNT 334
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -255,24 +255,6 @@
 #define  CANID_UNI_BMS12_R        0xB31A0000  // BMSV1          : ADBMS1818 #AD10 U8:module_ID,U8:cmd code,U8:spare,X4:4 byte value 
 #define  CANID_UNI_BMS13_R        0xB31C0000  // BMSV1          : ADBMS1818 #AD11 U8:module_ID,U8:cmd code,U8:spare,X4:4 byte value 
 #define  CANID_UNI_BMS14_R        0xB31E0000  // BMSV1          : ADBMS1818 #AD12 U8:module_ID,U8:cmd code,U8:spare,X4:4 byte value 
-#define  CANID_CMD_BMS_CELLVQ_EMC 0xB0400000  // BMSV1          : BMSV1 U8: EMC requests to BMS to send cellv, cmd code
-#define  CANID_CMD_BMS_CELLVQ_PC  0xB0400004  // BMSV1          : BMSV1 U8: PC  requests to BMS to send cellv, cmd code
-#define  CANID_MSG_BMS_CELLV11R   0xB0201114  // BMSV1          : 01 BQ76952   #BQ01 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV12R   0xB0201124  // BMSV1          : 02 MAX14921  #MX01 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV13R   0xB0201134  // BMSV1          : 03 ADBMS1818 #AD02 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV14R   0xB0201144  // BMSV1          : 04 ADBMS1818 #AD03 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV15R   0xB0201154  // BMSV1          : 05 ADBMS1818 #AD04 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV16R   0xB0201164  // BMSV1          : 06 ADBMS1818 #AD05 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV17R   0xB0201174  // BMSV1          : 07 ADBMS1818 #AD06 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV18R   0xB0201184  // BMSV1          : 08 ADBMS1818 #AD07 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV21R   0xB0201214  // BMSV1          : 09 ADBMS1818 #AD08 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV22R   0xB0201224  // BMSV1          : 10 ADBMS1818 #AD09 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV23R   0xB0201234  // BMSV1          : 11 ADBMS1818 #AD10 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV24R   0xB0201244  // BMSV1          : 12 ADBMS1818 #AD11 U16:id,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV25R   0xB0201254  // BMSV1          : 25 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV26R   0xB0201264  // BMSV1          : 26 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV27R   0xB0201274  // BMSV1          : 27 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
-#define  CANID_MSG_BMS_CELLV28R   0xB0201284  // BMSV1          : 28 BMSV1 U8:n,U16:cellv n,U16:cellv n+1,U16:cellv n+2
 #define  CANID_CMD_BMS_MISCQ_EMC  0xB0400024  // BMSV1          : BMSV1 U8: EMC requests for BMS to value for given cmd code
 #define  CANID_CMD_BMS_MISCQ_PC   0xB0400014  // BMSV1          : BMSV1 U8: PC  requests for BMS to value for given cmd code
 #define  CANID_CMD_BMS_MISC11R    0xB0401114  // BMSV1          : 11 BMSV1 U8:module_ID,U8:cmd code,U8:spare,X4:4 byte value 
@@ -309,12 +291,13 @@
 #define  CANID_UNIT_BMS16         0xB2600000  // UNIT_BMS16     : BMS ADBMS1818 #14
 #define  CANID_UNIT_BMS17         0xB2800000  // UNIT_BMS17     : BMS ADBMS1818 #15
 #define  CANID_UNIT_BMS18         0xB2A00000  // UNIT_BMS18     : BMS ADBMS1818 #16
-#define  CANID_UNIT_EMCMMC1       0xA0000000  // UNIT_ECMCL1    : bmsmot 1 EMC/MMC Local
-#define  CANID_UNIT_EMCMMC2       0xA0200000  // UNIT_ECMCL2    : bmsmot 2 EMC/MMC Local
-#define  CANID_UNIT_EMCMMC3       0xA0400000  // UNIT_ECMCM     : bmsmot 3 EMC/MMC Master
-#define  CANID_UNIT_EMCMMC1R      0xA1600000  // UNIT_ECMCL1    : bmsmot 1 EMC/MMC Local R
-#define  CANID_UNIT_EMCMMC2R      0xA1800000  // UNIT_ECMCL2    : bmsmot 2 EMC/MMC Local R
-#define  CANID_UNIT_EMCMMC3R      0xA1400000  // UNIT_ECMCM     : bmsmot 3 EMC/MMC Master R
+#define  CANID_UNIT_EMCMMC1       0xA0000000  // UNIT_ECMCL1    : bmsmot 1 EMC/MMC Local1
+#define  CANID_UNIT_EMCMMC2       0xA0200000  // UNIT_ECMCL2    : bmsmot 2 EMC/MMC Local2
+#define  CANID_UNIT_EMCMMCM       0xA0400000  // UNIT_ECMCM     : bmsmot 3 EMC/MMC Master
+#define  CANID_CMD_EMCMMC1_PC     0xA1600000  // UNIT_ECM1PC    : bmsmot 1 PC SENDS
+#define  CANID_CMD_EMCMMC1_EMC    0xA1800000  // UNIT_ECM1EMC   : bmsmot 1 EMC SENDS
+#define  CANID_CMD_EMCMMC2_PC     0xA1A00000  // UNIT_ECM2PC    : bmsmot 2 PC SENDS
+#define  CANID_CMD_EMCMMC2_EMC    0xA1E00000  // UNIT_ECM2EMC   : bmsmot 2 EMC SENDS
 #define  CANID_UNIT_2             0x04000000  // UNIT_2         : Sensor unit: Drive shaft encoder #1
 #define  CANID_UNIT_3             0x03800000  // UNIT_3         : Sensor unit: Engine
 #define  CANID_UNIT_4             0x03A00000  // UNIT_4         : Sensor unit: Lower sheave shaft encoder
@@ -982,6 +965,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 917  */
+/* TOTAL COUNT OF #defines = 900  */
 /* Test 2016/06/12 */
 

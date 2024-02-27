@@ -25,6 +25,7 @@ commands.o \
 cmd_a.o \
 cmd_b.o \
 cmd_c.o \
+cmd_C.o \
 cmd_d.o \
 cmd_e.o \
 cmd_E.o \

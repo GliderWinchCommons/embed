@@ -51,6 +51,10 @@ static uint32_t polldur = DEFAULT_POLLDUR; // Duration between polls
 static char subchar = 't'; // Default is temperature from heartbeat
 static char subsubchar = 'c'; // Default C verus F deg reporting
 
+static int sw_print_col_hdr = 0; // 0 = no print; print column headers evert 'n'
+static uint32_t lctr;
+
+
 static uint8_t reqtype; // Request type (miscq code)
 static uint8_t canseqnumber;
 
@@ -63,6 +67,34 @@ static uint8_t ncell_prev;
 static uint8_t headerctr;
 
 
+/******************************************************************************
+ * static void printheading_temperature(void);
+ * @brief 	: Cc and Cf columng heading
+ ******************************************************************************/
+static uint8_t oto1_sw; // One-time header print switch
+static int repctr1;
+static void printheading_temperature(void)
+{
+	if ((sw_print_col_hdr == 0) && (oto1_sw != 0))
+		return;
+	repctr1 += 1;
+	if ((repctr1 >= sw_print_col_hdr) || (oto1_sw == 0))
+	{
+		repctr1 = 0;
+		printf(      
+		"         Alert over-temperature/Status (bits)\n"
+		"         |  Pump Outlet\n"
+		"         |  |  Motor Oulet\n"
+		"         |  |  |  Heat Exchanger Outlet\n"
+		"         |  |  |  |  Ambient air\n"
+		"         |  |  |  |  |  Spare (jic)\n"
+        "         |  |  |  |  |  |  | DMOC CAN msg report\n"
+        " payload[1][2][3][4][5][6][7]\n"
+		);
+		oto1_sw  = 1;
+	}
+	return;
+}
 /******************************************************************************
  * static printcanmsg(struct CANRCVBUF* p);
  * @brief 	: CAN msg 
@@ -87,6 +119,7 @@ static void printfsettings(void)
 	printf("Poll duration: %d (ms)\n",polldur);
 	printf("Poller CAN ID: %08X\n",candid_poller); // Pollster
 	printf("Responder  ID: %08X\n",canid_whoresp); // Who responds
+	printf("Column hdr ct: %8d (0 = off)\n",sw_print_col_hdr);
 	return;
 }
 
@@ -98,6 +131,7 @@ static void printmenu(char* p)
 				"Cp <pppppppp> set Poller CAN ID (EMC1-PC:A1600000(default),(EMC2-PC:A1E00000\n\t"
 				"Cw <pppppppp> set Responder CAN ID (EMC1:A0000000(default),(EMC2:A0200000\n\t"
 				"Cd <pppppppp> set duration (ms) between polls (default: 0 = no polling)\n\t"
+				"Cm <nnn> Printf Column header: 0 = no; n = print every n lines\n\t "
 				);	
 	printfsettings();
 	return;
@@ -184,7 +218,14 @@ int cmd_C_init(char* p)
 		case 'c': // Report temperature in deg C
 			subchar    = 't';
 			subsubchar = 'c';
-			return 0;		
+			return 0;	
+
+		case 'm': // Print column header counts				
+			sscanf((p+3), "%d",&sw_print_col_hdr);
+			if (sw_print_col_hdr < 0)
+				printf("Column header count negative! %d\n",sw_print_col_hdr);
+			return -1;
+
 
 		case ' ': // Null
 			printmenu(p);
@@ -221,6 +262,9 @@ static void print_t(struct CANRCVBUF* pcan)
 {
 	int i;
 	float ftmp;
+	printheading_temperature(); // Column header
+	printf("%6d ",lctr++);
+	printf(" %02X",pcan->cd.uc[1]);
 	for (i = 2; i < 8; i++)
 	{
 		if (pcan->cd.uc[i] == 0xA5)
@@ -246,13 +290,12 @@ static void print_t(struct CANRCVBUF* pcan)
  * void cmd_C_do_msg(struct CANRCVBUF* p);
  * @brief 	: Output msgs from Cooling function
 *******************************************************************************/
-static uint32_t lctr;
 void cmd_C_do_msg(struct CANRCVBUF* p)
 {
 	if ((p->id & 0xfffffffc) != canid_whoresp)
 		return; // Not responder we want
 
-	printf("%5d ",lctr++);
+//	printf("%5d ",lctr++);
 //	printcanmsg(p);
 
 	switch(subchar)

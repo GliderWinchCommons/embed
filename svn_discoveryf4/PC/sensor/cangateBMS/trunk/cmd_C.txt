@@ -1,0 +1,47 @@
+======================================================================
+cmc_C.txt
+
+Some static variables have default set when the program loads..
+Commands can change these variables.
+To restore the defaults, exit and re-execute the program.
+
+Defaults:
+Cp: CAN ID that this program sends (i.e. Poller) (A1600000)
+Cw: CAN ID that this program checks for response (A0000000)
+Cd: Duration between poll msgs sent (0)
+Subcommand, e.g. 't' for temperature
+Count of lines between printing Column header (0)
+
+Header printing--
+- The header printed depends on the motor/relay or
+temperature subcommand, and matches the CAN payload
+layout.
+
+- The default (0) prints the header once upon startup. 
+
+- A value greater than zero inserts a header every 'n'
+lines.
+
+Polling--
+(See: GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
+      for CAN ID assignments)
+1. Set the duration between the sending of CAN poll msgs.
+	E.g. Cd 500<enter> sets 500 ms (two per second)
+	When the duration is zero no poll msgs are sent.
+
+2. Set CAN ID to send if not default
+	E.g. Cp A1A00000 [EMCL2]
+
+3. Set CAN ID for response if not default
+	E.g. Cw A0200000
+	Response CAN ID has to match the CAN ID in the parameter file
+	in the bmsmot/emcmmc/F446/params.
+
+4. Polling starts when the Cs command completes.
+   The default duration set is 1000 ms. 
+
+   The emcmmc software has keep-alive for the relay and motors ports
+   so continuous polling is needed to maintain the settings being
+   sent.
+======================================================================
+

@@ -422,7 +422,9 @@ int cmd_C_init(char* p)
 	cantx.cd.ull   = 0; // Clear all payload bytes
 	cantx.id       = candid_poller; // Pollster ID (Default CANID_TX_DEFAULT)
 	cantx.dlc      = 8;
-	cantx.cd.uc[1] = cmd_code;
+	cantx.cd.uc[0] = cmd_code;
+
+	can_motry_tx = cantx;
 
 //	flag_can_motry_rx = 0; // motor & relay update flag.
 
@@ -483,13 +485,13 @@ int cmd_C_init(char* p)
 		case 'f': // Report temperature in deg F
 			subchar    = 't';
 			subsubchar = 'f';
-			cantx.cd.uc[1] = EMCL_COOLING_STATUS1;
+			cantx.cd.uc[0] = EMCL_COOLING_STATUS1;
 			return 0;
 
 		case 'c': // Report temperature in deg C
 			subchar    = 't';
 			subsubchar = 'c';
-			cantx.cd.uc[1] = EMCL_COOLING_STATUS1;
+			cantx.cd.uc[0] = EMCL_COOLING_STATUS1;
 			return 0;	
 
 		case 'm': // Print column header counts				
@@ -500,14 +502,15 @@ int cmd_C_init(char* p)
 
 		case 'g': // GET: Cooling motor pct and relay status
 			subchar    = 'g';
-			cantx.cd.uc[1] = EMCL_MOTOR_RY_STATUS2; //38 GET: Relay status groups OA, OB, and PWM PCT for OC motors		
+			cantx.cd.uc[0] = EMCL_MOTOR_RY_STATUS2; //38 GET: Relay status groups OA, OB, and PWM PCT for OC motors		
 			break;
 
 		case 's': // Set Relay and motor pct
 			rets = Cs_inputs();
 			if (rets == 0) return 0;
 			subchar    = 's';
-			cantx.cd.uc[1] = EMCL_MOTOR_RY_SET; //37 SET: Relays and PWM PCT for motors
+			cantx.cd.ull = can_motry_tx.cd.ull;
+			cantx.cd.uc[0] = EMCL_MOTOR_RY_SET; //37 SET: Relays and PWM PCT for motors
 			polldur = 1000; // Needs to be at least keep-alive rate
 			break;
 

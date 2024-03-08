@@ -396,7 +396,7 @@ static void printmenu(char* p)
 				"Cf Temperature (F) \n\t"
 				"Cg GET: Cooling motor pct and relay status\n\t"
 				"Cs SET: Relays and cooling motors percent\n\t "
-				"Cz Stop poll msgs from sending (sets polldur = 0)\n\t"
+				"Cz SET: Force responder''s keep-alive timeout and cease polling\n\t"
 				"Cp <pppppppp> set Poller CAN ID (EMC1-PC:A1600000(default),(EMC2-PC:A1E00000\n\t"
 				"Cw <pppppppp> set Responder CAN ID (EMC1:A0000000(default),(EMC2:A0200000\n\t"
 				"Cd <pppppppp> set duration (ms) between polls (default: 0 = no polling)\n\t"
@@ -514,8 +514,12 @@ int cmd_C_init(char* p)
 			polldur = 1000; // Needs to be at least keep-alive rate
 			break;
 
-		case 'z': // Stop polling
+		case 'z': // End CAN control of relays & motors
+			cantx.cd.ull = 0;
+			cantx.cd.uc[0] = EMCL_MOTOR_RY_SET;//37 // SET: Relays and PWM PCT for motors
+			cantx.cd.uc[1] = 0x80; //  bit 7: 1 = revert to automatic control
 			polldur = 0;
+			sendcanmsg(&cantx);	// Send first request
 			break;			
 
 		case ' ': // Null

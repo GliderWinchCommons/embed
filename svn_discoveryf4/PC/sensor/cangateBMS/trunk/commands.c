@@ -156,7 +156,7 @@ void do_command_keybrd(char* p)
 		break;
 
 	case 'q': // 'q' CAN bus loader file edit-check only.
-		if (cmd_q_init(p) < 0);	// Run edit-check on file only.
+		if (cmd_q_init(p) < 0)	// Run edit-check on file only.
 			msg_sw = 'q';
 		break;
 

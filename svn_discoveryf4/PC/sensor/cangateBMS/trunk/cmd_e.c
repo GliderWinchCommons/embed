@@ -139,7 +139,7 @@ static uint8_t cd_uc1 = (0x1 << 6); // Who responds: canid_tx.cd.uc[1] default: 
 //static uint8_t nstring; // String number-1: 0-3
 //static uint8_t nmodule; // Module number-1: 0-15
 
-uint32_t kaON;  // 0 = keep-alive is off; 1 = keep-alive = on.
+uint32_t kaON1;  // 0 = keep-alive is off; 1 = keep-alive = on.
 static uint32_t timerctr;
 static uint32_t timernext; // Next timer count
 
@@ -750,7 +750,7 @@ printf("poll k %d\n",ret);
 	printf("Poll duration (ms) is: %d\n",polldur);
 	ncell_prev =   0;
 	headerctr  = HEADERMAX;
-	kaON       =   1;
+	kaON1       =   1;
 	timerctr   = 0;
 	timernext  = polldur/10;
 
@@ -789,7 +789,7 @@ void cmd_e_do_msg(struct CANRCVBUF* p)
  * @brief 	: Send CAN msg
  * @param	: pcan = pointer to CANRCVBUF with mesg
 *******************************************************************************/
-uint32_t www;
+uint32_t www1;
 static void sendcanmsg(struct CANRCVBUF* pcan)
 {
 //int i;printf("%08X %d: ", pcan->id,pcan->dlc);for (i=0; i<pcan->dlc; i++) printf(" %02X",pcan->cd.uc[i]);printf("\n");
@@ -801,7 +801,7 @@ static void sendcanmsg(struct CANRCVBUF* pcan)
 	pctogateway.mode_link = MODE_LINK;	// Set mode for routines that receive and send CAN msgs
 	pctogateway.cmprs.seq = canseqnumber++;	// Add sequence number (for PC checking for missing msgs)
 	USB_toPC_msg_mode(fdp, &pctogateway, pcan); 	// Send to file descriptor (e.g. serial port)
-//printcanmsg(pcan);	printf(" %4d\n",www++);
+//printcanmsg(pcan);	printf(" %4d\n",www1++);
 	return;
 }
 /******************************************************************************
@@ -813,7 +813,7 @@ static void cmd_e_timerthread(void)
 	if (polldur == 0)
 		return;
 
-	if (kaON == 0) return; // No timer generated msgs
+	if (kaON1 == 0) return; // No timer generated msgs
 
 	timerctr += 1; // 10 ms tick counter
 	if ((int)(timerctr - timernext) > 0)

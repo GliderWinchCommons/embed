@@ -61,7 +61,7 @@ uint8_t bt_flag;
 extern FILE *fpXbin;
 extern int fdp;	/* port file descriptor */
 
-static void download_settimeout(uint32_t sec, uint32_t nsec);
+static void download_settimeout(uint32_t sec, long nsec);
 
 enum STATES_MSG
 {
@@ -326,7 +326,7 @@ void download_canbus_msg(struct CANRCVBUF* p)
 	if ((p->id & 0xfffffffc) != CANnodeid) return;
 
 	/* Here, CAN msg from target CAN node. */
-	download_settimeout(0, (50*MSEC)); // 50 ms timeout reset one-shot timer
+	download_settimeout(1, (50*MSEC)); // 1000 ms timeout reset one-shot timer
 
 #if 0
 printf("Rcv: state_msg %d state_timer %d: ",state_msg,state_timer);
@@ -373,7 +373,7 @@ printf("\n");
 					// Send load addr to node
 					send_U8nnnX4(CANnodeid,LDR_SET_ADDR_FL, xbin_addr);
 					state_timer = STATE_TIM_SET_ADDR_TO; // Timeout takes action here
-					download_settimeout(0, (50*MSEC)); // 50 ms Timeout duration
+					download_settimeout(0, (555*MSEC)); // 50 ms Timeout duration
 					state_msg = STATE_MSG_ADDR_RESPONSE;
 					bin_ct = 0;
 					/* Here either expect a response to LDR_SET_ADDR_FL cmd or a timeout */
@@ -385,7 +385,7 @@ printf("\n");
 			/* NEXT STEP: Check that checksums match. */
 				send_U8nnnX4(CANnodeid,LDR_CHKSUM,xbin_checksum); // Send request checksum
 				state_timer = STATE_TIM_CHKSUM_TO; // Timeout takes action here
-				download_settimeout(0, (50*MSEC)); // 50 ms Timeout duration
+				download_settimeout(0, (555*MSEC)); // 50 ms Timeout duration
 				state_msg = STATE_MSG_CHKSUM;
 		}
 		break;
@@ -414,7 +414,7 @@ printf("\n");
 xx:				
 				send_U8nnnX4(CANnodeid,LDR_SET_ADDR_FL, xbin_addr);
 				state_timer = STATE_TIM_SET_ADDR_TO; // Timeout takes action here
-				download_settimeout(0, (50*MSEC)); // 50 ms Timeout duration
+				download_settimeout(0, (555*MSEC)); // 50 ms Timeout duration
 				state_msg = STATE_MSG_ADDR_RESPONSE;
 				state_timer_retry_ct = 0; // Reset time out retry count
 				bin_ct = 0;
@@ -582,7 +582,7 @@ void download_time_chk(void)
 
 		case STATE_TIM_SQUELCH: // Send squelch to loader HB's for everybody
 			send_U8nnnX4(CANID_UNI_BMS_PC_I,LDR_SQUELCH, (10*CANSEC)); // 10 sec squelch
-			download_settimeout(0, (50*MSEC)); // 50 ms timeout, JIC a HB from target is in progress.
+			download_settimeout(0, (555*MSEC)); // 50 ms timeout, JIC a HB from target is in progress.
 			state_timer_retry_ct = 0; // Number CRC request timeout retries
 			state_msg_retry_ct = 0;   // Number of results mismatched CAN msg code retries
 			state_timer = STATE_TIM_REQ_CRC; // After 50 ms. Send first CRC request
@@ -655,7 +655,7 @@ void download_time_chk(void)
  * param    : sec  = secs to wait
  * param    : nsec = nanosecs to wait (max = 999999999,i.e. 0.999... secs)
 *******************************************************************************/
-static void download_settimeout(uint32_t sec, uint32_t nsec)
+static void download_settimeout(uint32_t sec, long nsec)
 {
 	new_value.it_value.tv_sec =  sec;
 	new_value.it_value.tv_nsec = nsec;
@@ -664,6 +664,7 @@ static void download_settimeout(uint32_t sec, uint32_t nsec)
    	if (ret != 0)
    	{
 		printf("## FAIL download_time_chk2:timer_settime %d\n",ret);
+		printf("sec %d, nsec %ld\n",sec,nsec);
 		exit_flag = 1; exit_code = (-4);
    	}
 

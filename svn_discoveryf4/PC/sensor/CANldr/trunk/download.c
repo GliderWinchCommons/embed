@@ -326,7 +326,7 @@ void download_canbus_msg(struct CANRCVBUF* p)
 	if ((p->id & 0xfffffffc) != CANnodeid) return;
 
 	/* Here, CAN msg from target CAN node. */
-	download_settimeout(0, (50*MSEC)); // 50 ms timeout reset one-shot timer
+	download_settimeout(0, (1000*MSEC)); // 1000 ms timeout reset one-shot timer
 
 #if 0
 printf("Rcv: state_msg %d state_timer %d: ",state_msg,state_timer);

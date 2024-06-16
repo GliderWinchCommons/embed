@@ -5,6 +5,11 @@
 * Description        : Select lines based on a file with CAN ids
 *******************************************************************************/
 /*
+04/06/2024 revisions
+gcc canid-filter.c -o canid-filter -lm && ./canid-filter filter-file-deh.txt
+
+See script: CAN-filter-incoming
+
 09/07/2018 Hack reformat2.c
 
 05-20-2012 Uli test problem
@@ -28,6 +33,7 @@ gcc canid-filter.c -o canid-filter && ./canid-filter ~/GliderWinchCommons/embed/
 #include <stdint.h>
 #include <stdlib.h>
 
+#define LISTTHELIST
 
 /* Line buffer size */
 #define LINESIZE 2048
@@ -44,6 +50,8 @@ FILE* fpIn;
 int main(int argc, char **argv)
 {
 	int i;
+	int m;
+	unsigned int ui;
 	uint32_t id;
 
 
@@ -52,8 +60,14 @@ int main(int argc, char **argv)
 		printf ("\nInput file did not open %s\n",*(argv+1)); return -1;
 	}
 
-	while ( (fgets (&buf[0],LINESIZE,fpIn)) != NULL)	// Get a line from stdin
+//printf("Filter file opend:%s\n",*(argv+1));
+
+	while ( (fgets (&buf[0],LINESIZE,fpIn)) != NULL)
 	{
+		i = strlen(buf);
+		if (i < 7) continue;
+		if (buf[0] == '#') continue;
+
 
 		sscanf(buf,"%x\n",&canid[filtersz]);
 		filtersz += 1;
@@ -71,17 +85,26 @@ int main(int argc, char **argv)
 	while ( (fgets (&buf[0],LINESIZE,stdin)) != NULL)	// Get a line from stdin
 	{
 		i = strlen(buf);
-
+		if (i < 7) 
+		{
+			printf("\t\tSHORT: %i",i);
+			continue;
+		}
+		// Convert CAN id to friendly format
+		id = 0;
+		for (m = 10; m >= 2; m-=2)
+		{
+			sscanf(&buf[m],"%2x",&ui);
+			id = (id << 8) + ui;
+		}
+		// Check msg against list
 		for (i = 0; i < filtersz; i++)
 		{
-			sscanf(buf,"%x\n",&id);
-		
 			if (id == canid[i])
+			{
+				printf("%s",buf);
 				break;			
-		}
-		if (i < filtersz)
-		{
-			printf("%s",buf);
+			}
 		}
 	}
 	return 0;

@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
 	int	port;	// Socket port number
 //	char xbuf[256];
 
-printf ("\n### CANGATECON ### 02/03/2022\n\n");
+printf ("\n### CANGATEBMS ### 04/14/2024\n\n");
 
 printf("BAUDRATE is FIXED AT: %s baud\n",baudratesetting);
 
@@ -333,7 +333,7 @@ printf("%d %s\n",i, argv[i]);
 		if (fdp < 0)
 		{ 
 			printf("## SOCKET DID NOT OPEN ##: ip %s, port: %i\n",argv[1],port);
-			printf("  Comands that use CAN msgs will not work. \n"
+			printf("  Commands that use CAN msgs will not work. \n"
 				"  Cmd q (edit .txt file) will work.\n\n");		
 		}
 		else

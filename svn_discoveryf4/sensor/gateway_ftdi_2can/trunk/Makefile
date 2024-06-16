@@ -112,7 +112,8 @@ OBJS = $(SRCS:.c=.o)
 #OPENOCD		   = /usr/bin/openocd
 
 OPENOCD_SCRIPTS	= $(OPENOCD_BASE)/openocd/scripts
-OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/stlink-v2.cfg
+# OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/stlink-v2.cfg
+OPENOCD_FLASHER	= $(OPENOCD_SCRIPTS)/interface/stlink.cfg
 OPENOCD_BOARD	= $(OPENOCD_SCRIPTS)/board/stm32f4discovery.cfg
 
 ###################################################

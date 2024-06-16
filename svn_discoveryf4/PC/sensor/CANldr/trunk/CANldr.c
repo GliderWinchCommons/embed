@@ -392,7 +392,7 @@ printf("%d %s\n",i, argv[i]);
 	lineinK.idx = 0;lineinS.idx=0;	/* jic */
 
 	/* Timer for detecting response failure from gateway/CAN BUS */
-	select_timeout = 1000;	// 1000 usec (1 ms) timeout
+	select_timeout = 1000*10;	// 1000 usec (1 ms) timeout
 	struct timeval TMDETECT = {0,select_timeout}; //  timeout
 	struct timeval tmdetect;
 

@@ -326,7 +326,7 @@ void download_canbus_msg(struct CANRCVBUF* p)
 	if ((p->id & 0xfffffffc) != CANnodeid) return;
 
 	/* Here, CAN msg from target CAN node. */
-	download_settimeout(1, (50*MSEC)); // 1000 ms timeout reset one-shot timer
+	download_settimeout(1, (50*MSEC)); // 1050 ms timeout reset one-shot timer
 
 #if 0
 printf("Rcv: state_msg %d state_timer %d: ",state_msg,state_timer);
@@ -455,7 +455,9 @@ printf("#A# STATE_MSG_ADDR_RESPONSE: check msg\n");
 			state_timer_retry_ct = 0; // Reset timeout retry counter
 
 			// Set timeout for sending. 
-			download_settimeout((req_size/1500 + 1), 0); // 
+//			download_settimeout((req_size/1500 + 1), 0); // 
+	download_settimeout(0, (900*MSEC));
+
 			send_CANnodeid_data();
 			state_timer = STATE_TIM_DATA_END_OF_TO;
 			state_msg = STATE_MSG_DATA_END_OF;
@@ -517,7 +519,8 @@ if (req_size == 0xFEEDBACC)
 			// Here, we sent EOB, so there is more to send
 			req_size = p->cd.ui[1]; // Size (bytes) of request
 			state_timer = STATE_TIM_DATA_END_OF_TO; // Reset timer
-			download_settimeout((req_size/1500 + 1), 0); // 
+//			download_settimeout((req_size/1500 + 1), 0); // 
+	download_settimeout(0, (900*MSEC));
 			send_CANnodeid_data(); // Send a burst
 			break;
 		}
@@ -530,7 +533,8 @@ if (req_size == 0xFEEDBACC)
 				bin_ct_prev = bin_ct;
 				crc_prev = crc;
 				bt_flag = 0; // JIC this was the last request
-				download_settimeout((req_size/1500 + 1), 0); // 
+//				download_settimeout((req_size/1500 + 1), 0); // 
+	download_settimeout(0, (900*MSEC));
 				send_CANnodeid_data();
 				break;
 			}
@@ -582,7 +586,7 @@ void download_time_chk(void)
 
 		case STATE_TIM_SQUELCH: // Send squelch to loader HB's for everybody
 			send_U8nnnX4(CANID_UNI_BMS_PC_I,LDR_SQUELCH, (10*CANSEC)); // 10 sec squelch
-			download_settimeout(0, (555*MSEC)); // 50 ms timeout, JIC a HB from target is in progress.
+			download_settimeout(0, (50*MSEC)); // 50 ms timeout, JIC a HB from target is in progress.
 			state_timer_retry_ct = 0; // Number CRC request timeout retries
 			state_msg_retry_ct = 0;   // Number of results mismatched CAN msg code retries
 			state_timer = STATE_TIM_REQ_CRC; // After 50 ms. Send first CRC request
@@ -603,7 +607,7 @@ void download_time_chk(void)
 			send_U8nnnX4(CANnodeid,LDR_CRC, xbin_crc);
 			state_timer = STATE_TIM_REQ_CRC_TO;
 			state_msg   = STATE_MSG_REQ_CRC; // Expect CRC ACK or NACK
-			download_settimeout(0, (100*MSEC)); // 100 ms timeout
+			download_settimeout(0, (500*MSEC)); // 100 ms timeout
 			break;
 
 		case STATE_TIM_CHKSUM_TO:

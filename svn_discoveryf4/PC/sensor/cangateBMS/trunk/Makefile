@@ -11,13 +11,10 @@ LIBCOMMONALL    =$(SRCDIR)/../../../../common_all/trunk
 
 # Compiler flags -Os = no optimization, -Os = minimum space, -O3 = fastest
 CFLAGS		= -Wall -Wstrict-prototypes \
--I../../../../sw_discoveryf4/trunk/lib/libmiscstm32f4 \
--I../../../../sw_discoveryf4/trunk/lib \
--I$(LIBCOMMONALL) \
 
 
 # Libraries (.a)
-LDFLAGS         = -L../../../../common_all/trunk/PC -lcommon_all -lz -lpthread
+LDFLAGS         =   -lz -lpthread
 
 # List of files to be compiled
 OBJS = $(NAME).o \
@@ -45,6 +42,8 @@ cmd_w.o \
 sockclient.o \
 timer_thread.o \
 var_size_chk.o \
+PC_gateway_comm.o \
+USB_PC_gateway.o \
 
 
 

@@ -14,6 +14,7 @@ This lifts & modifies some code from--
 #include "cmd_n.h"
 #include <time.h>
 #include <string.h>
+#include <stdint.h>
 
 #define CAN_TIMESYNCX 0x00400000	// Time sync CAN messge
 
@@ -33,6 +34,13 @@ static u32 idx_cmd_n_ct;	// Index for double buffering can msg counts
 
 /* 1 second timing versus counts between time messages */
 static u32 timemode;	// 0 = timer, 1 = counts between time messages
+
+/* Count payloads for a more accurate bus load percentage. */
+#define CANBAUD 500000
+static uint32_t dlcsum;
+static uint32_t dlcsum_prev;
+static uint32_t msg_inct;
+static uint32_t msg_inct_prev;
 /******************************************************************************
  * void cmd_n_init(char* p);
  * @brief 	: Reset 
@@ -165,12 +173,12 @@ static u32 throttle = 0;
 				}
 			}
 //			printf("%4u\n",totalct);
-
+#if 0
 /* Add: byte ct and utilization */
 /* NOTE: baud rate is hard coded, e.g. 230400. */
 static unsigned int debug_inct_prev = 0;
 extern unsigned int debug_inct;
-double x = (debug_inct - debug_inct_prev)*10.0;
+double x = (debug_inct - debug_inct_prev);
 printf("%3u %5u %4.1f",totalct, (debug_inct - debug_inct_prev), (x*100)/2000000 );
 //printf("%3u %4.1f",totalct, (x*100)/921600 ); // Total msg ct, pct bandwidth used
 //extern u32 err_seq;
@@ -178,10 +186,21 @@ printf("%3u %5u %4.1f",totalct, (debug_inct - debug_inct_prev), (x*100)/2000000 
 //printf(" %u %u\n",err_seq, err_ascii);
 printf("\n");
 debug_inct_prev = debug_inct;
-
+#endif
+			int32_t i1 = (int32_t)(msg_inct - msg_inct_prev);
+			int32_t i2 = (int32_t)(dlcsum - dlcsum_prev);
+//printf("inct %4d dlcsum %5d ",i1,i2);
+			double d3  = (i2 * 8); // Number of payload bits
+			double d4  = (i1 * (64+11)) + d3; // Total number bits
+//printf(" d3 %5.0f d4 %5.0f :",d3,d4);
+			printf(":%4d %4.1f\n",i1, d4*(100.0/CANBAUD));
+			msg_inct_prev = msg_inct;
+			dlcsum_prev   = dlcsum;
 		}
 	}
 	cmd_n_count(p->id);	// Build table and count msgs
+	dlcsum += p->dlc;   // Count payload bytes
+	msg_inct += 1;      // Count CAN msgs
 
 	return;
 }

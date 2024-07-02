@@ -30,6 +30,7 @@ static void displaycell_ncurses(char* str, int n, uint8_t r, uint8_t c);
 static void init_fixed_ncurses(void);
 static uint32_t bubble_sort (uint32_t *a, uint32_t n);
 static void init_fixed_ncurses_rows(void);
+static void init_stringsummary_ncurses(void);
 
 /*  From: GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
 -- BMS module node
@@ -174,6 +175,7 @@ static uint8_t groupctr; // The six cell readings are sent in a group.
 static WINDOW * mainwin;
 static uint8_t colorok = 0; // 0 = Color supported; 1 = not supported
 static uint8_t windowup = 0; // 0 = Window not up; 1 = Window not closed
+static uint8_t ssn_update_sw = 0; // 0 = module summary headings need update
 /******************************************************************************
  * static void init_canidtbl(void);
  * @brief 	: Initialize CANID to default ONCE.
@@ -217,6 +219,10 @@ static void canidtbl_add(struct CANRCVBUF* p)
 
 	/* Update rows */
 	init_fixed_ncurses_rows();
+
+	/* update module summary fixed info. */
+	ssn_update_sw = 0;
+	init_stringsummary_ncurses();
 	return;
 }
 
@@ -398,8 +404,8 @@ INSERT INTO CMD_CODES  VALUES ('CMD_CMD_MISCEMC2',  52,	'[1]-[7] [0] = misc data
 		}
 		/* Table is expected to have all BMS nodes entered. */
 		if (m == idx_modtbl)
-		{ // Let hapless Op know a module is not in the table
-			canidtbl_add(p); // Add CAN id to table
+		{ // Add CAN id to table
+			canidtbl_add(p); 
 		}
 		/* Build module cell readings. */
 		build_mod_readings(p,m);
@@ -408,6 +414,69 @@ INSERT INTO CMD_CODES  VALUES ('CMD_CMD_MISCEMC2',  52,	'[1]-[7] [0] = misc data
 		return;
 	}
 	return;
+}
+/******************************************************************************
+ * static void init_stringsummary_ncurses(void);
+ * @brief 	: Set first column, column headers for module summary info
+*******************************************************************************/
+#define RX 18
+static void init_stringsummary_ncurses(void)
+{		
+	int i;
+	int rx = RX; // Place below lines with modules
+	char str[256];
+//Is this necessary?
+	if (ssn_update_sw == 1) return;
+	ssn_update_sw = 1;
+
+	/* Module summary statistics headings. */
+	sprintf(str,"    total    ave     max  at    min  at  std");
+	displaycell_ncurses(str, 0, rx, 5);		
+
+	/* Column with row ids */
+	rx += 1;
+	for (i = 0; i < idx_modtbl; i++)
+	{
+		sprintf(str,"%04X: ",(canidtbl[i] >> 16));
+		// Color white on black, row rx, column 0 
+		displaycell_ncurses(str, 0, rx, 0);		
+		rx += 2;
+	}
+
+	/* String summary statistics. */
+	sprintf(str,"TOTAL:");
+	displaycell_ncurses(str, 0, rx, 0);		
+
+	return;
+}
+/******************************************************************************
+ * static void prepare_n_display_stringsummary(int m);
+ * @brief 	: Total and stats for all modules
+*******************************************************************************/
+void prepare_n_display_stringsummary(int m)
+{	
+	int i;
+	double dd  = stats_mod[m].std * 1.0;
+	double ds  = stats_mod[m].sum * 0.001;
+	double da  = stats_mod[m].ave;
+	double dx  = stats_mod[m].max;
+	double dn  = stats_mod[m].min;
+	int ax = stats_mod[m].max_at;
+	int an = stats_mod[m].min_at;
+	char str[192];
+
+	sprintf(str,"%7.2f %7.1f %7.1f %2d %7.1f %2d %4.1f ",
+		          ds,   da,  dx,   ax,  dn,  an,  dd);
+	displaycell_ncurses(str, 5, m*2+RX+1, 7);
+
+	/* Update total, */
+	double tsum = 0;
+	for (i = 0; i < idx_modtbl; i++)
+		tsum += stats_mod[m].sum;
+	tsum *= .001;
+	sprintf(str,"%8.1f",tsum);
+	displaycell_ncurses(str,13, (idx_modtbl*2+RX+1), 5);
+	return;	
 }
 /******************************************************************************
  * static void prepare_n_display(uint8_t m);
@@ -462,12 +531,15 @@ static void prepare_n_display(uint8_t m)
 		}
 		displaycell_ncurses(str, n, (2*m+1), (c*7)+4);
 	}
+// Place module summary at end of cell voltage row
+#if 0
 double dx  = stats_mod[m].max;
 double dn  = stats_mod[m].min;
 int ax = stats_mod[m].max_at;
 int an = stats_mod[m].min_at;
 sprintf(str,"%7.1f %7.1f %2d %7.1f %2d %4.1f ",dave,dx,ax,dn,an,dstdx);
 displaycell_ncurses(str, 5, (2*m+1),18*7+5 );
+#endif
 	return;
 }
 /******************************************************************************
@@ -550,10 +622,11 @@ static void build_mod_readings(struct CANRCVBUF* p, int m)
 			dstd = 0.1*sqrt(dsqsum/nc);
 			stats_mod[m].std = dstd;
 
-			/* Display w colors based on deviations. */
+			/* Display w colors based on stats. */
 			prepare_n_display(m);
-
-refresh();			
+			/* update summary. */
+			prepare_n_display_stringsummary(m);
+			refresh();
 		}
 
 		/* Update to new sequence number. */
@@ -680,7 +753,7 @@ static void init_ncurses(void)
 			init_pair(10, COLOR_BLUE,    COLOR_YELLOW);
 			init_pair(11, COLOR_WHITE,   COLOR_BLUE);
 			init_pair(12, COLOR_WHITE,   COLOR_MAGENTA);
-			init_pair(13, COLOR_BLACK,   COLOR_CYAN);
+			init_pair(13, COLOR_BLACK,   COLOR_WHITE);
 			return;
 	}
 	printf("Window colors not supported\n");
@@ -755,10 +828,11 @@ static void init_fixed_ncurses(void)
 		displaycell_ncurses(str, 0, 0, cx);		
 		cx += 7;
 	}
+#if 0	
 	/* Column statistics headings. */
 	sprintf(str," ave     max  at    min  at  std");
 	displaycell_ncurses(str, 5, 0, cx+4);		
-
+#endif
 	refresh();
 	return;
 }                                                                                                                                                                      

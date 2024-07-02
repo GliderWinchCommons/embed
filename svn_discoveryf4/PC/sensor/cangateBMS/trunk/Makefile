@@ -14,7 +14,7 @@ CFLAGS		= -Wall -Wstrict-prototypes \
 
 
 # Libraries (.a)
-LDFLAGS         =   -lz -lpthread
+LDFLAGS         =   -lz -lpthread -lm -lncurses
 
 # List of files to be compiled
 OBJS = $(NAME).o \
@@ -38,6 +38,7 @@ cmd_p.o \
 cmd_q.o \
 cmd_r.o \
 cmd_s.o \
+cmd_t.o \
 cmd_w.o \
 sockclient.o \
 timer_thread.o \

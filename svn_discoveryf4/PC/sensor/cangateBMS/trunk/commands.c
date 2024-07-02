@@ -33,6 +33,7 @@ This takes care of dispatching keyboard commands.
 #include "cmd_q.h"
 #include "cmd_r.h"
 #include "cmd_s.h"
+#include "cmd_t.h"
 #include "cmd_w.h"
 
 extern int fpListsw;
@@ -170,6 +171,12 @@ void do_command_keybrd(char* p)
 		msg_sw = 's';
 		break;
 
+	case 't': // 't' command
+		if (cmd_t_init(p) >= 0)
+			msg_sw = 't';
+		break;		
+
+
 	case 'k': // CONTACTOR: Keep-alive/command testing
 
 		cmd_k_init(p);
@@ -183,6 +190,7 @@ void do_command_keybrd(char* p)
 		msg_sw = 'x';
 		cmd_q_initsw = 0;	// OTO initialization switch
 		kaON = 0; // cmd_e timer by-pass
+		close_ncurses(); // Command 't' window 
 		break;
 
 	case 'c': // 'c' requests & displays launch parameters
@@ -270,6 +278,10 @@ void do_canbus_msg(struct CANRCVBUF* p)
 		cmd_s_do_msg(p);
 		break;
 
+	case 't':
+		cmd_t_do_msg(p);
+		break;			
+
 	case 'k':
 		cmd_k_do_msg(p);
 		break;
@@ -347,7 +359,7 @@ void do_printmenu(void)
 	printf("q - Identify received msgs from CANID.sql file\n");
 	printf("r - send high priority RESET\n");
 	printf("s - CONTACTOR: command request to retrieve all readings\n");
-	printf("t - \n");
+	printf("t - Display all cell voltages of battery string in fixed window\n");
 	printf("u - list msg id's and msg ct between CAN 1 sec time mgs (e.g. u 00600000)\n");
 	printf("w - list msgs float (wf), integer (wi), half (wh), BigEnd 2 byte int (wy), byte (wb), with payload byte offset, (wi1 E1800000)\n");
 	printf("x - cancel command\n");

@@ -1,0 +1,4 @@
+# install-ncurses
+# 0701/2024
+
+sudo apt-get install libncurses5-dev libncursesw5-dev

@@ -150,9 +150,10 @@ struct STATS
 	uint8_t min_at;
 	/* Others */
 	double t[3];  // Temperatures
-	uint8_t batt; // Status battery
-	uint8_t fet;  // Status fets
-	uint8_t mode; // Status mode
+	double current;
+	uint8_t bat; // Status battery
+	uint8_t fet; // Status fets
+	uint8_t mod; // Status mode
 };
 struct STATS stats_mod[NMODULE];
 
@@ -288,10 +289,10 @@ static void init_cantx(struct CANRCVBUF* p, uint8_t cmdcmd, uint8_t subcmd)
 	return;
 }
 /******************************************************************************
- * static void getset_temp(struct CANRCVBUF* p);
+ * static void getset_temp(struct CANRCVBUF* p, uint8_t m);
  * @brief 	: Load temperature reading from CAN msg into module array struct
  * @param   : p = pointer to CAN msg
- * @param	: cmdcmd = code for poll
+ * @param	: m = index for stats_mod struct array
 *******************************************************************************/
 static void getset_temp(struct CANRCVBUF* p, uint8_t m)
 {
@@ -307,6 +308,38 @@ static void getset_temp(struct CANRCVBUF* p, uint8_t m)
 	float fpay = fi.f;
 	double dpay = fpay;
 	stats_mod[m].t[idx] = dpay;
+	return;
+}
+/******************************************************************************
+ * static void getset_current(struct CANRCVBUF* p, uint8_t m);
+ * @brief 	: Load current sense reading from CAN msg into module array struct
+ * @param   : p = pointer to CAN msg
+ * @param	: m = index for stats_mod struct array
+*******************************************************************************/
+static void getset_current(struct CANRCVBUF* p, uint8_t m)
+{
+	union FI
+	{
+		float f;
+		uint32_t ui;
+	}fi;
+	fi.ui = p->cd.ui[1];
+	float fpay = fi.f;
+	double dpay = fpay;
+	stats_mod[m].current = dpay;
+	return;
+}
+/******************************************************************************
+ * static void getset_status(struct CANRCVBUF* p, uint8_t m);
+ * @brief 	: Load status bytes from CAN msg into module array struct
+ * @param   : p = pointer to CAN msg
+ * @param	: m = index for stats_mod struct array
+*******************************************************************************/
+static void getset_status(struct CANRCVBUF* p, uint8_t m)
+{
+	stats_mod[m].bat = p->cd.uc[4];
+	stats_mod[m].fet = p->cd.uc[5];
+	stats_mod[m].mod = p->cd.uc[6];
 	return;
 }
 
@@ -471,8 +504,10 @@ INSERT INTO CMD_CODES  VALUES ('CMD_CMD_MISCEMC2',  52,	'[1]-[7] [0] = misc data
 			getset_temp(p,m);
 			break;
 		case MISCQ_CURRENT_CAL: // (24) Current sense calibrated
+			getset_current(p,m);
 			break;
 		case MISCQ_STATUS: // (01) Status: battery, fets, mode
+			getset_status(p,m);
 			break;
 		}
 	}
@@ -494,7 +529,7 @@ static void init_stringsummary_ncurses(void)
 	ssn_update_sw = 1;
 
 	/* Module summary statistics headings. */
-	sprintf(str,"    total    ave     max  at    min  at  std   T1    T2    T3");
+	sprintf(str,"    total    ave     max  at    min  at  std   T1    T2    T3    I   BATFETMOD");
 	displaycell_ncurses(str, 0, rx, 5);		
 
 	/* Column with row ids */
@@ -538,6 +573,16 @@ void prepare_n_display_stringsummary(int m)
 	double dt3 = stats_mod[m].t[2];
 	sprintf(str," %5.1f %5.1f %5.1f ",dt1,dt2,dt3);
 	displaycell_ncurses(str, 5, m*2+RX+1, 7+42);
+
+	double cur = stats_mod[m].current;
+	sprintf(str," %5.1f ",cur);
+	displaycell_ncurses(str, 5, m*2+RX+1, 7+42+18);
+
+	unsigned int s1 = stats_mod[m].bat;
+	unsigned int s2 = stats_mod[m].fet;
+	unsigned int s3 = stats_mod[m].mod;
+	sprintf(str," %02X %02X %02X",s1,s2,s3);
+	displaycell_ncurses(str, 5, m*2+RX+1, 7+42+18+6);
 
 	/* Update total, */
 	double tsum = 0;

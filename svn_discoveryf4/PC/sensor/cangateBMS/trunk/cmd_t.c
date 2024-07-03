@@ -139,6 +139,7 @@ struct STATAT // Statistic "at"
 
 struct STATS
 {
+	/* Cell voltages. */
 	double sum;
 	double ave;
 	double max;
@@ -147,6 +148,11 @@ struct STATS
 	uint32_t n;
 	uint8_t max_at;
 	uint8_t min_at;
+	/* Others */
+	double t[3];  // Temperatures
+	uint8_t batt; // Status battery
+	uint8_t fet;  // Status fets
+	uint8_t mode; // Status mode
 };
 struct STATS stats_mod[NMODULE];
 
@@ -156,11 +162,14 @@ static uint8_t  canseqtbl[NMODULE];
 static uint8_t idx_modtbl; // Index module: 0 - 8
 static uint8_t oto_sw_canidtbl; // 0 = initialized to default
 
-
 //static struct CELLMSG cellmsg[NCELL];
-static struct CANRCVBUF cantx;
+static struct CANRCVBUF cantx;  // Poll: Cell voltage
+static struct CANRCVBUF cantxT; // Poll: Temperature
+static struct CANRCVBUF cantxS; // Poll: Status
+static struct CANRCVBUF cantxC; // Poll: Current sense
+
 static uint32_t canid_rx;
-static uint32_t canid_tx; // POLLer CAN ID (is one who "polls")
+//static uint32_t canid_tx; // POLLer CAN ID (is one who "polls")
 static uint32_t candid_poller = CANID_TX_DEFAULT; // Default pollster
 static uint8_t kaON1 = 0;
 static uint8_t canseqnumber;
@@ -172,9 +181,9 @@ static uint32_t polldur = DEFAULT_POLLDUR; // Duration between polls
 
 static uint8_t groupctr; // The six cell readings are sent in a group.
 
-static WINDOW * mainwin;
+WINDOW * mainwin;
 static uint8_t colorok = 0; // 0 = Color supported; 1 = not supported
-static uint8_t windowup = 0; // 0 = Window not up; 1 = Window not closed
+uint8_t windowup = 0; // 0 = Window not up; 1 = Window not closed
 static uint8_t ssn_update_sw = 0; // 0 = module summary headings need update
 /******************************************************************************
  * static void init_canidtbl(void);
@@ -262,6 +271,44 @@ static void printmenu(char* p)
 	printfsettings();
 	return;
 }
+/******************************************************************************
+ * static void init_cantx(struct CANRCVBUF* p, uint8_t cmdcmd);
+ * @brief 	: Set fixed items in CAN msg sent out to poll BMS units
+ * @param   : p = pointer to CAN msg
+ * @param	: cmdcmd = code for poll
+*******************************************************************************/
+static void init_cantx(struct CANRCVBUF* p, uint8_t cmdcmd, uint8_t subcmd)
+{
+	p->cd.ull   = 0; // Clear all payload bytes
+	p->id       = candid_poller; // Pollster ID (Default CANID_TX_DEFAULT)
+	p->dlc      = 8;
+	p->cd.uc[0] = cmdcmd; // Request code
+	p->cd.uc[1] = 0xC0;   // All BMS nodes respond
+	p->cd.uc[2] = subcmd; // Sub-command
+	return;
+}
+/******************************************************************************
+ * static void getset_temp(struct CANRCVBUF* p);
+ * @brief 	: Load temperature reading from CAN msg into module array struct
+ * @param   : p = pointer to CAN msg
+ * @param	: cmdcmd = code for poll
+*******************************************************************************/
+static void getset_temp(struct CANRCVBUF* p, uint8_t m)
+{
+	uint8_t idx = (p->cd.uc[3] & 0x3);
+	if (idx > 2) idx = 2; // JIC
+
+	union FI
+	{
+		float f;
+		uint32_t ui;
+	}fi;
+	fi.ui = p->cd.ui[1];
+	float fpay = fi.f;
+	double dpay = fpay;
+	stats_mod[m].t[idx] = dpay;
+	return;
+}
 
 /******************************************************************************
  * int cmd_t_init(char* p);
@@ -284,14 +331,19 @@ int cmd_t_init(char* p)
 
 	init_canidtbl(); // Initialize default if not previous done.
 
-	cantx.cd.ull   = 0; // Clear all payload bytes
-	cantx.id       = candid_poller; // Pollster ID (Default CANID_TX_DEFAULT)
-	cantx.dlc      = 8;
-	cantx.cd.uc[0] = CMD_CMD_CELLPOLL; // (42) Request BMS responses
-	cantx.cd.uc[1] = 0xC0; // All BMS nodes respond
-	cantx.cd.ui[1] = 0; // NULL for individual CAN id
-adcrate = 1; // Index for BMS module for adcrate
-	cantx.cd.uc[2] = (adcrate << 4) | ((groupctr & 0xF) << 0);
+	/* Cell voltage poll msg. */
+	adcrate = 1; // Index for BMS module for adcrate
+//	cantx.cd.uc[2] = (adcrate << 4) | ((groupctr & 0xF) << 0);
+	init_cantx(&cantx, CMD_CMD_CELLPOLL, (adcrate << 4) | ((groupctr & 0xF) << 0)); // (42) Request cell voltages
+
+	/* Temperature reading poll (04). */
+	init_cantx(&cantxT, CMD_CMD_TYPE2, MISCQ_TEMP_CAL);
+
+	/* Status report. (01) */
+	init_cantx(&cantxS, CMD_CMD_TYPE2, MISCQ_STATUS);
+
+	/* Below cell #1 minus, current resistor: calibrated (24) */
+	init_cantx(&cantxC, CMD_CMD_TYPE2, MISCQ_CURRENT_CAL);
 
 	if (len < 3)
 	{ // Here fat fingered Op
@@ -393,28 +445,40 @@ INSERT INTO CMD_CODES  VALUES ('CMD_CMD_HEARTBEAT', 50,	'[1]-[7] [0] = Send comm
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLEMC2',  51,	'[1]-[7] [0] = cell readings: response to emc2 sent CELLPOLL');
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_MISCEMC2',  52,	'[1]-[7] [0] = misc data: response to emc2 sent TYPE2');
 */
-	if (p->cd.uc[0] == CMD_CMD_CELLPC)
-	{ // Here, Type of response is cell readings
 
-		// Find string and module for this CAN id
-		for (m = 0; m < idx_modtbl; m++)
-		{
-			if (canidtbl[m] == utmp)
-				break; // Found!
-		}
-		/* Table is expected to have all BMS nodes entered. */
-		if (m == idx_modtbl)
-		{ // Add CAN id to table
-			canidtbl_add(p); 
-		}
-		/* Build module cell readings. */
-		build_mod_readings(p,m);
-		/* Add to statistics. */
-		/* Enter into screen. */
+	// Find string and module for this CAN id
+	for (m = 0; m < idx_modtbl; m++)
+	{
+		if (canidtbl[m] == utmp)
+			break; // Found!
+	}
+	/* Table is expected to have all BMS nodes entered. */
+	if (m == idx_modtbl)
+	{ // Add CAN id to table
+		canidtbl_add(p); 
+	}
+
+	if (p->cd.uc[0] == CMD_CMD_CELLPC)
+	{ // Here, Response to PC requesting Cell voltages
+		build_mod_readings(p,m); // Build module cell readings.
 		return;
+	}
+	if (p->cd.uc[0] == CMD_CMD_MISCPC)		
+	{ // Here, Response to PC requesting misc (various) readings
+		switch(p->cd.uc[1])
+		{
+		case MISCQ_TEMP_CAL: // (04) Temperature
+			getset_temp(p,m);
+			break;
+		case MISCQ_CURRENT_CAL: // (24) Current sense calibrated
+			break;
+		case MISCQ_STATUS: // (01) Status: battery, fets, mode
+			break;
+		}
 	}
 	return;
 }
+
 /******************************************************************************
  * static void init_stringsummary_ncurses(void);
  * @brief 	: Set first column, column headers for module summary info
@@ -430,7 +494,7 @@ static void init_stringsummary_ncurses(void)
 	ssn_update_sw = 1;
 
 	/* Module summary statistics headings. */
-	sprintf(str,"    total    ave     max  at    min  at  std");
+	sprintf(str,"    total    ave     max  at    min  at  std   T1    T2    T3");
 	displaycell_ncurses(str, 0, rx, 5);		
 
 	/* Column with row ids */
@@ -468,6 +532,12 @@ void prepare_n_display_stringsummary(int m)
 	sprintf(str,"%7.2f %7.1f %7.1f %2d %7.1f %2d %4.1f ",
 		          ds,   da,  dx,   ax,  dn,  an,  dd);
 	displaycell_ncurses(str, 5, m*2+RX+1, 7);
+
+	double dt1 = stats_mod[m].t[0];
+	double dt2 = stats_mod[m].t[1];
+	double dt3 = stats_mod[m].t[2];
+	sprintf(str," %5.1f %5.1f %5.1f ",dt1,dt2,dt3);
+	displaycell_ncurses(str, 5, m*2+RX+1, 7+42);
 
 	/* Update total, */
 	double tsum = 0;
@@ -697,7 +767,11 @@ static void cmd_t_timerthread(void)
 			groupctr += 1;
 		}
 
-		sendcanmsg(&cantx);	// Send next request
+		/* Send msgs to poll various readings. */
+		sendcanmsg(&cantx);	 // Cell voltages (6 responses)
+		sendcanmsg(&cantxT); // Temperature readings (3 responses)
+		sendcanmsg(&cantxS); // Send next request (1 response)
+		sendcanmsg(&cantxC); // Send next request (1 response)
 	}
 	return;
 }

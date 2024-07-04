@@ -18,6 +18,7 @@
 #include "timer_thread.h" // Timer thread for sending keep-alive CAN msgs
 #include "../../../../../svn_common/trunk/db/gen_db.h"
 #include "../../../../../svn_common/trunk/common_can.h"
+#include "cmd_t_help.c"
 
 extern int fdp;	/* port file descriptor */
 
@@ -459,6 +460,7 @@ int cmd_t_init(char* p)
 
 		case 'h': // 'th' Help
 			printmenu(p);
+			printf("%s",cmd_t_help);
 			return 0;					
 
 		default:

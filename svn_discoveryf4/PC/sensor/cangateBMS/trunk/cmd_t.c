@@ -274,9 +274,10 @@ static void printfsettings(void)
 /******************************************************************************/
 static void printmenu(char* p)
 {
-	printf("t - Fixed window BMS Cell voltage display for up to 2 strings\n\t"
+	printf("t - Fixed window BMS string display with module summary and cell voltages\n\t"
 				"td  <set: Set duration between polls (default: 1000 ms)\n\t"
 				"tp  <set: pppppppp> Poller CAN ID (AEC00000(default),B0000000(EMC1),B0200000(EMC2)) \n\t"
+				"th  Display a verbose discription of display\n\t"
 				);	
 	printfsettings();
 	return;

@@ -38,6 +38,7 @@ static void init_stringsummary_ncurses(void);
 #define CANID_RX_DEFAULT CANID_UNIT_BMS03 // B0A00000','UNIT_BMS03', 1,1,'U8_U8_U8_X4','BMS ADBMS1818 #01
 #define CANID_TX_DEFAULT CANID_UNI_BMS_PC_I //CANID_UNI_BMS_PC_I        // AEC00000 //BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID // Default pollster
 
+/* See GliderWinchItems/BMS/bmsadbms1818/Ourtasks/cancomm_items.h */
  #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
  #define MISCQ_STATUS      1 // status
  #define MISCQ_CELLV_CAL   2 // cell voltage: calibrated
@@ -72,6 +73,8 @@ static void init_stringsummary_ncurses(void);
  #define MISCQ_READ_ADDR    35 // BMS responds with 'n' bytes sent in [3]
  #define MISCQ_PROC_TEMP    36 // Processor calibrated internal temperature (deg C)
  #define MISCQ_CHG_LIMITS   37 // Show params: Module V max, Ext chg current max, Ext. chg bal
+ #define MISCQ_MORSE_TRAP   38 // Retrieve stored morse_trap code.
+ #define MISCQ_FAN_STATUS   39 // Retrieve fan: pct and rpm 
 
 #define NSTRING  2 // Max number of strings in a winch
 #define NMODULE  8 // Max number of modules in a string
@@ -144,16 +147,19 @@ struct STATS
 	double ave;
 	double max;
 	double min;
-	double std;
-	uint32_t n;
-	uint8_t max_at;
-	uint8_t min_at;
+	double std; // Standard deviation
+	uint32_t n; // Number of cells in stats
+	uint8_t max_at; // Index for max cell
+	uint8_t min_at; // Index for min cell
+
 	/* Others */
-	double t[3];  // Temperatures
-	double current;
-	uint8_t bat; // Status battery
-	uint8_t fet; // Status fets
-	uint8_t mod; // Status mode
+	double t[3];    // Temperatures
+	double current; // Current sense (calibrated)
+	uint8_t bat;    // Status battery
+	uint8_t fet;    // Status fets
+	uint8_t mod;    // Status mode
+	uint8_t fanspeed; // Fan speed (0-100%)
+	double  fanrpm;   // Fan rpm
 };
 struct STATS stats_mod[NMODULE];
 
@@ -168,6 +174,8 @@ static struct CANRCVBUF cantx;  // Poll: Cell voltage
 static struct CANRCVBUF cantxT; // Poll: Temperature
 static struct CANRCVBUF cantxS; // Poll: Status
 static struct CANRCVBUF cantxC; // Poll: Current sense
+static struct CANRCVBUF cantxF; // Poll: Fan speed & rpm
+
 
 static uint32_t canid_rx;
 //static uint32_t canid_tx; // POLLer CAN ID (is one who "polls")
@@ -342,7 +350,25 @@ static void getset_status(struct CANRCVBUF* p, uint8_t m)
 	stats_mod[m].mod = p->cd.uc[6];
 	return;
 }
-
+/******************************************************************************
+ * static void getset_fan(struct CANRCVBUF* p, uint8_t m);
+ * @brief 	: Load status bytes from CAN msg into module array struct
+ * @param   : p = pointer to CAN msg
+ * @param	: m = index for stats_mod struct array
+*******************************************************************************/
+static void getset_fan_status(struct CANRCVBUF* p, uint8_t m)
+{
+	union FI
+	{
+		float f;
+		uint32_t ui;
+	}fi;
+	fi.ui = p->cd.ui[1];
+	double dpay = fi.f;
+	stats_mod[m].fanrpm = dpay;
+	stats_mod[m].fanspeed = p->cd.uc[3];
+	return;
+}
 /******************************************************************************
  * int cmd_t_init(char* p);
  * @brief 	: Reset 
@@ -377,6 +403,10 @@ int cmd_t_init(char* p)
 
 	/* Below cell #1 minus, current resistor: calibrated (24) */
 	init_cantx(&cantxC, CMD_CMD_TYPE2, MISCQ_CURRENT_CAL);
+
+	/* Fan speed (0-100%) and fan rpm. (39) */
+	init_cantx(&cantxF, CMD_CMD_TYPE2, MISCQ_FAN_STATUS);
+
 
 	if (len < 3)
 	{ // Here fat fingered Op
@@ -509,6 +539,9 @@ INSERT INTO CMD_CODES  VALUES ('CMD_CMD_MISCEMC2',  52,	'[1]-[7] [0] = misc data
 		case MISCQ_STATUS: // (01) Status: battery, fets, mode
 			getset_status(p,m);
 			break;
+		case MISCQ_FAN_STATUS: // (39) Fan speed, fan rpm			
+			getset_fan_status(p,m);
+			break;
 		}
 	}
 	return;
@@ -529,7 +562,7 @@ static void init_stringsummary_ncurses(void)
 	ssn_update_sw = 1;
 
 	/* Module summary statistics headings. */
-	sprintf(str,"    total    ave     max  at    min  at  std   T1    T2    T3    I   BATFETMOD");
+	sprintf(str,"    total    ave     max  at    min  at  std   T1    T2    T3    I  BATFETMOD D2HCL BCD STB  fan  fanrpm");
 	displaycell_ncurses(str, 0, rx, 5);		
 
 	/* Column with row ids */
@@ -555,6 +588,9 @@ static void init_stringsummary_ncurses(void)
 void prepare_n_display_stringsummary(int m)
 {	
 	int i;
+	char str[192];
+
+	/* Cell voltage statistics. */
 	double dd  = stats_mod[m].std * 1.0;
 	double ds  = stats_mod[m].sum * 0.001;
 	double da  = stats_mod[m].ave;
@@ -562,33 +598,82 @@ void prepare_n_display_stringsummary(int m)
 	double dn  = stats_mod[m].min;
 	int ax = stats_mod[m].max_at;
 	int an = stats_mod[m].min_at;
-	char str[192];
-
 	sprintf(str,"%7.2f %7.1f %7.1f %2d %7.1f %2d %4.1f ",
 		          ds,   da,  dx,   ax,  dn,  an,  dd);
 	displaycell_ncurses(str, 5, m*2+RX+1, 7);
 
+    /* Thermistor temperature readings. */
 	double dt1 = stats_mod[m].t[0];
 	double dt2 = stats_mod[m].t[1];
 	double dt3 = stats_mod[m].t[2];
 	sprintf(str," %5.1f %5.1f %5.1f ",dt1,dt2,dt3);
 	displaycell_ncurses(str, 5, m*2+RX+1, 7+42);
 
+	/* Current sense (calibrated) reading. */
 	double cur = stats_mod[m].current;
 	sprintf(str," %5.1f ",cur);
 	displaycell_ncurses(str, 5, m*2+RX+1, 7+42+18);
 
+	/* Status bytes. */
 	unsigned int s1 = stats_mod[m].bat;
 	unsigned int s2 = stats_mod[m].fet;
 	unsigned int s3 = stats_mod[m].mod;
-	sprintf(str," %02X %02X %02X",s1,s2,s3);
+	sprintf(str," %02X %02X %02X ",s1,s2,s3);
 	displaycell_ncurses(str, 5, m*2+RX+1, 7+42+18+6);
 
-	/* Update total, */
+	/* FET status bits. D2HCL */
+	// D - DUMP
+	// 2 - DUMP2
+	// H - Heater
+	// C - Charger
+	// L - Low current, cells too low
+	//
+	// bit = 0 green background (n=8)
+	// bit = 1 red background (n=9)
+	sprintf(str," ");
+	for (i = 0; i < 5; i++)
+	{	
+		if (s2 & (1 << i))
+			displaycell_ncurses(str, 8, m*2+RX+1, 7+42+18+6+9+1+i);
+		else
+			displaycell_ncurses(str, 9, m*2+RX+1, 7+42+18+6+9+1+i);
+	}
+
+	/* Battery status BCD. */
+	// B - Balancing in progress
+	// C - Charging
+	// D - Dump in progress
+	sprintf(str," ");
+	for (i = 0; i < 3; i++)
+	{	
+		if (s1 & (1 << (i+4)) )
+			displaycell_ncurses(str, 8, m*2+RX+1, 7+42+18+6+9+1+6+i);
+		else
+			displaycell_ncurses(str, 9, m*2+RX+1, 7+42+18+6+9+1+6+i);
+	}
+
+	/* Mode status STB. */
+	// S - Self-discharge in progress
+	// T - Cells tripped
+	// B - Cells tripped and below hysteresis
+	sprintf(str," ");
+	for (i = 0; i < 3; i++)
+	{	
+		if (s3 & (1 << i) )
+			displaycell_ncurses(str, 8, m*2+RX+1, 7+42+18+6+9+1+6+4+i);
+		else
+			displaycell_ncurses(str, 9, m*2+RX+1, 7+42+18+6+9+1+6+4+i);
+	}
+
+	/* Fan speed and rpm. */
+	sprintf(str," %3d %5.0f",stats_mod[m].fanspeed,stats_mod[m].fanrpm);
+	displaycell_ncurses(str, 5, m*2+RX+1, 7+42+18+6+9+1+6+4+4);	
+
+	/* Total string voltage. */
 	double tsum = 0;
 	for (i = 0; i < idx_modtbl; i++)
 		tsum += stats_mod[m].sum;
-	tsum *= .001;
+	tsum *= .001; // Convert mv to volts
 	sprintf(str,"%8.1f",tsum);
 	displaycell_ncurses(str,13, (idx_modtbl*2+RX+1), 5);
 	return;	
@@ -815,8 +900,9 @@ static void cmd_t_timerthread(void)
 		/* Send msgs to poll various readings. */
 		sendcanmsg(&cantx);	 // Cell voltages (6 responses)
 		sendcanmsg(&cantxT); // Temperature readings (3 responses)
-		sendcanmsg(&cantxS); // Send next request (1 response)
-		sendcanmsg(&cantxC); // Send next request (1 response)
+		sendcanmsg(&cantxS); // Status (1 response)
+		sendcanmsg(&cantxC); // Current sense (1 response)
+		sendcanmsg(&cantxF); // Fan speed & rpm (1 response)
 	}
 	return;
 }

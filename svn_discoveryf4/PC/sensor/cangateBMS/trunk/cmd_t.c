@@ -457,7 +457,7 @@ int cmd_t_init(char* p)
 			}
 			printf("New value set is: %d (ms)\n",polldur);
 			printfsettings();
-			return 0;
+			break;
 
 		case 'h': // 'th' Help
 			printmenu(p);
@@ -472,9 +472,9 @@ int cmd_t_init(char* p)
 
 	}
 
-	kaON1       =   1;
-	timerctr   = 0;
-	timernext  = polldur/10;
+	kaON1      =   1;
+	timerctr   =   0;
+	timernext  =  50;
 
 	sendcanmsg(&cantx);	// Send first request
 	if (polldur != 0)
@@ -511,6 +511,9 @@ INSERT INTO CMD_CODES  VALUES ('CMD_CMD_HEARTBEAT', 50,	'[1]-[7] [0] = Send comm
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLEMC2',  51,	'[1]-[7] [0] = cell readings: response to emc2 sent CELLPOLL');
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_MISCEMC2',  52,	'[1]-[7] [0] = misc data: response to emc2 sent TYPE2');
 */
+	/* Return if response is not to a PC generated poll. */
+	if (!( (p->cd.uc[0] == CMD_CMD_MISCPC) || (p->cd.uc[0] == CMD_CMD_CELLPC) ))
+		return;
 
 	// Find string and module for this CAN id
 	for (m = 0; m < idx_modtbl; m++)
@@ -565,7 +568,7 @@ static void init_stringsummary_ncurses(void)
 	ssn_update_sw = 1;
 
 	/* Module summary statistics headings. */
-	sprintf(str,"    total    ave     max  at    min  at  std   T1    T2    T3    I  BATFETMOD D2HCL BCD STB  fan  fanrpm");
+	sprintf(str,"    total    ave     max  at    min  at  std Tambi Tcell Texit   I  BATFETMOD D2HCL BCD STB  fan  fanrpm");
 	displaycell_ncurses(str, 0, rx, 5);		
 
 	/* Column with row ids */

@@ -425,6 +425,7 @@ int cmd_t_init(char* p)
 		case 'a':
 				init_ncurses();  // Initialize display window
 				init_fixed_ncurses(); // Set row and column numbers in window
+				init_stringsummary_ncurses(); // Summary row and columns headers
 				break;
 
 		case 'p': // 'tp' Set POLL'er CAN ID
@@ -448,9 +449,9 @@ int cmd_t_init(char* p)
 			}
 			sscanf( (p+3), "%d",&polldur);
 			printf("\nPoll duration: %d\n", polldur);
-			if (polldur < 20)
+			if (polldur < 100)
 			{
-				printf("Less than 20 (ms) is too short. ");
+				printf("Less than 100 (ms) is too short. ");
 			}
 			if (polldur > 4000)
 			{
@@ -458,7 +459,7 @@ int cmd_t_init(char* p)
 			}
 			printf("New value set is: %d (ms)\n",polldur);
 			printfsettings();
-			break;
+			return 0;
 
 		case 'h': // 'th' Help
 			printmenu(p);
@@ -747,15 +748,6 @@ static void prepare_n_display(uint8_t m)
 		}
 		displaycell_ncurses(str, n, (2*m+1), (c*7)+4);
 	}
-// Place module summary at end of cell voltage row
-#if 0
-double dx  = stats_mod[m].max;
-double dn  = stats_mod[m].min;
-int ax = stats_mod[m].max_at;
-int an = stats_mod[m].min_at;
-sprintf(str,"%7.1f %7.1f %2d %7.1f %2d %4.1f ",dave,dx,ax,dn,an,dstdx);
-displaycell_ncurses(str, 5, (2*m+1),18*7+5 );
-#endif
 	return;
 }
 /******************************************************************************
@@ -836,15 +828,7 @@ static void build_mod_readings(struct CANRCVBUF* p, int m)
 				}
 			}
 			dstd = 0.1*sqrt(dsqsum/nc);
-			stats_mod[m].std = dstd;
-
-#if 0 // Move code to do display before next poll msgs are sent
-			/* Display w colors based on stats. */
-			prepare_n_display(m);
-			/* update summary. */
-			prepare_n_display_stringsummary(m);
-			refresh();
-#endif					
+			stats_mod[m].std = dstd;			
 		}
 
 		/* Update to new sequence number. */
@@ -1067,11 +1051,7 @@ static void init_fixed_ncurses(void)
 		displaycell_ncurses(str, 0, 0, cx);		
 		cx += 7;
 	}
-#if 0	
-	/* Column statistics headings. */
-	sprintf(str," ave     max  at    min  at  std");
-	displaycell_ncurses(str, 5, 0, cx+4);		
-#endif
+
 	refresh();
 	return;
 }                                                                                                                                                                      

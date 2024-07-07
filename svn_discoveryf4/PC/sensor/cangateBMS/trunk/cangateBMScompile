@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+# cangateBMScompile $1 $2
+cd ~/GliderWinchCommons/embed/svn_discoveryf4/PC/sensor/cangateBMS/trunk
+make clean
+make
+# Arg: IP PORT
+# Example: cangateBMS 192.168.2.139 32123
+ ./cangateBMS $1 $2
+ 

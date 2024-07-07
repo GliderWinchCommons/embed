@@ -161,6 +161,7 @@ struct STATS
 	uint8_t mod;    // Status mode
 	uint8_t fanspeed; // Fan speed (0-100%)
 	double  fanrpm;   // Fan rpm
+	uint8_t responded; // 0 = no response to poll, 1 = OK
 };
 struct STATS stats_mod[NMODULE];
 
@@ -519,7 +520,10 @@ INSERT INTO CMD_CODES  VALUES ('CMD_CMD_MISCEMC2',  52,	'[1]-[7] [0] = misc data
 	for (m = 0; m < idx_modtbl; m++)
 	{
 		if (canidtbl[m] == utmp)
+		{
+			stats_mod[m].responded = 1;	// At least one response from poll
 			break; // Found!
+		}
 	}
 	/* Table is expected to have all BMS nodes entered. */
 	if (m == idx_modtbl)
@@ -735,6 +739,12 @@ static void prepare_n_display(uint8_t m)
 			sprintf(str," OK?");
 			break;
 		}
+		/* Check if module responsded to poll. */
+		if (stats_mod[m].responded == 0)
+		{ // Here no responses to all the poll msgs
+			n  = 0;
+			sprintf(str," ------");
+		}
 		displaycell_ncurses(str, n, (2*m+1), (c*7)+4);
 	}
 // Place module summary at end of cell voltage row
@@ -828,11 +838,13 @@ static void build_mod_readings(struct CANRCVBUF* p, int m)
 			dstd = 0.1*sqrt(dsqsum/nc);
 			stats_mod[m].std = dstd;
 
+#if 0 // Move code to do display before next poll msgs are sent
 			/* Display w colors based on stats. */
 			prepare_n_display(m);
 			/* update summary. */
 			prepare_n_display_stringsummary(m);
 			refresh();
+#endif					
 		}
 
 		/* Update to new sequence number. */
@@ -893,6 +905,22 @@ static void cmd_t_timerthread(void)
 	timerctr += 1; // 10 ms tick counter
 	if ((int)(timerctr - timernext) > 0)
 	{ // Time to output accumulated readings
+// But before doing this display the previous poll's results
+		/* Display w colors based on stats. */
+		int m;
+		for (m = 0; m < idx_modtbl; m++)
+		{
+			/* Update cell voltage rows. */
+			prepare_n_display(m);
+
+			/* Update module summary. */
+			prepare_n_display_stringsummary(m);
+
+			/* Reset flag that shows response. */
+			stats_mod[m].responded = 0;	
+		}
+			refresh();
+
 		timernext += polldur/10;
 //		timer_printresults();
 

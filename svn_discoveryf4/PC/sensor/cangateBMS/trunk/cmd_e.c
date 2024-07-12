@@ -44,6 +44,7 @@ static int starttimer(void);
 #define CANID_RX_DEFAULT CANID_UNIT_BMS03 // B0A00000','UNIT_BMS03', 1,1,'U8_U8_U8_X4','BMS ADBMS1818 #01
 #define CANID_TX_DEFAULT CANID_UNI_BMS_PC_I //CANID_UNI_BMS_PC_I        // AEC00000 //BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID // Default pollster
 
+/* See GliderWinchItems/BMS/adbms1818/Ourtasks/cancomm_items.h for latest version. */
  #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
  #define MISCQ_STATUS      1 // status
  #define MISCQ_CELLV_CAL   2 // cell voltage: calibrated
@@ -78,7 +79,9 @@ static int starttimer(void);
  #define MISCQ_READ_ADDR    35 // BMS responds with 'n' bytes sent in [3]
  #define MISCQ_PROC_TEMP    36 // Processor calibrated internal temperature (deg C)
  #define MISCQ_CHG_LIMITS   37 // Show params: Module V max, Ext chg current max, Ext. chg bal
-
+ #define MISCQ_MORSE_TRAP   38 // Retrieve stored morse_trap code.
+ #define MISCQ_FAN_STATUS   39 // Retrieve fan: pct and rpm 
+ #define MISCQ_FAN_SET_SPD  40 // Set fan: pct (0 - 100)
 
 #define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
 #define FET_HEATER   (1 << 1) // 1 = HEATER FET ON
@@ -219,7 +222,8 @@ static char* preadmenu[] = {
  " 32 PRM_MAXCHG   // Get Parameter: Max charging current\n\t",
  " 34 READ_AUX     // BMS responds with A,B,C,D AUX register readings (12 msgs)\n\t",
  " 36 PROC_TEMP    // Processor calibrated internal temperature (deg C)\n\t",
- " 37 MISCQ_CHG_LIMITS // Show params: Module V max, Ext chg current max, Ext. chg bal\n",
+ " 37 MISCQ_CHG_LIMITS // Show params: Module V max, Ext chg current max, Ext. chg bal\n\t",
+ " 39 MISCQ_FAN_STATUS // Retrieve fan: pct and rpm\n",
  "256 END_TABLE\n"
 };
 /* Menu for MISCQ codes that set something in the BMS. */
@@ -230,7 +234,8 @@ static char* psetmenu[] = {
  " 28 SET_DCHGTST   // Set discharge test with heater fet load: ON|OFF\n\t",
  " 30 SET_DCHGFETS  // Set discharge FETs: all on or off, or single\n\t",
  " 31 SET_SELFDCHG  // Set ON|OFF self-discharge mode\n\t",
- " 33 SET_ZEROCUR   // 1 = Zero external current in effect; 0 = maybe not.\n",
+ " 33 SET_ZEROCUR   // 1 = Zero external current in effect; 0 = maybe not.\n\t",
+ " 40 SET_FAN_PCT   // Cooling FAN pwm percentage: (0 - 100) [0 = OFF]\n",
  "256 END_TABLE\n" 
 };
 /******************************************************************************
@@ -260,6 +265,33 @@ static int get01m9(char *pset)
 		return subcode;
 	}
 	printf("Oops! Entry was %d and not 0, 1, or -9\n",subcode);
+	return subcode;
+}	
+/******************************************************************************
+ * static int get02(char* pset, int min, int max);
+ * @brief 	: Keyboard input with value\
+ * @param   : min = minimum check
+ * @param   : max = maximum check
+ * @param   : pset = pointer to associated string
+ * @return  : value entered; ~0L = abort
+*******************************************************************************/
+static int get02(char* pset, int min, int max)
+{
+	char buf[256];
+	int k;
+	int subcode;
+	do
+	{
+		printf(" Enter an integer value in range: MIN: %d  MAX: %d (x = abort)\n", min, max);
+		k = read (STDIN_FILENO, buf, 256);	// Read chars from keyboard
+		if (k == 0)
+			return ~0L;
+		if (buf[0] == 'x')
+			return ~0L;
+		sscanf(buf,"%d",&subcode);
+	} while ((subcode < min) || (subcode > max));
+
+	printf("For selection:%s: set value %d\n",pset,subcode);
 	return subcode;
 }	
 /******************************************************************************
@@ -364,6 +396,11 @@ polldur = 0; // One shot
 polldur = 0; // One shot	
 			subcode = get01m9(pset);
 			break;
+
+  case	MISCQ_FAN_SET_SPD: // 40 Set Fan percent (0-100)
+ 			subcode = get02(pset, 0, 100);
+ 			cantx.cd.uc[3] = subcode;
+  		break;
 
 	default:
 			printf("menu2 error: j: %d code: %d\n",j,code);

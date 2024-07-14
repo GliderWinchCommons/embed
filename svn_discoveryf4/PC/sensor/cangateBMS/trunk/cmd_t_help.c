@@ -36,7 +36,7 @@ char* cmd_t_help = {
 "min    - minimum voltage cell (mv)\n"
 "min_at - cell number of minimum cell\n"
 "std    - standard deviation of cells\n"
-"T1, T2, T3 - Thermistor calibrated temperatures (deg C)\n"
+"Tamb, Tcell, Texit - Thermistor calibrated temperatures (deg C)\n"
 "I      - BMS current sense w calibrated current (amps)\n"
 "BAT    - Battery status byte (hex)\n"
 "FET    - FET status byte (hex)\n"

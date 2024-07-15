@@ -574,7 +574,7 @@ static void init_stringsummary_ncurses(void)
 	ssn_update_sw = 1;
 
 	/* Module summary statistics headings. */
-	sprintf(str,"    total    ave     max  at    min  at  std Tambi Tcell Texit   I  BATFETMOD D2HCL BCD STB  fan  fanrpm");
+	sprintf(str,"    total    ave     max  at    min  at  std Tambi Tcell Texit   I  BATFETMOD DH2CL BCD STB  fan  fanrpm");
 	displaycell_ncurses(str, 0, rx, 5);		
 
 	/* Column with row ids */
@@ -635,8 +635,8 @@ void prepare_n_display_stringsummary(int m)
 
 	/* FET status bits. D2HCL */
 	// D - DUMP
-	// 2 - DUMP2
 	// H - Heater
+	// 2 - DUMP2
 	// C - Charger
 	// L - Low current, cells too low
 	//

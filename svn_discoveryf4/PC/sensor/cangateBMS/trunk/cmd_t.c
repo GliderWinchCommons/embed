@@ -900,11 +900,13 @@ static void cmd_t_timerthread(void)
 
 			/* Update module summary. */
 			prepare_n_display_stringsummary(m);
-
-			/* Reset flag that shows response. */
-			stats_mod[m].responded = 0;	
 		}
 			refresh();
+
+		for (m = 0; m < idx_modtbl; m++)
+		{ /* Reset flag that shows response. */
+			stats_mod[m].responded = 0;	
+		}
 
 		timernext += polldur/10;
 //		timer_printresults();

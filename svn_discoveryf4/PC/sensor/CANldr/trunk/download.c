@@ -125,7 +125,7 @@ bldct += 1;
  ******************************************************************************/
 static void printCANmsg(struct CANRCVBUF* pcan)
 {
-	printf("\t0x%08X %d: %2d, ",pcan->id,pcan->dlc,pcan->cd.uc[0]);
+	printf("\t0x%08X %d: uc[0] %dd: ",pcan->id,pcan->dlc,pcan->cd.uc[0]);
 	for (int i= 0; i < pcan->dlc; i++)
 		printf(" %02X",pcan->cd.uc[i]);
 	printf("\n");
@@ -336,7 +336,7 @@ printf("\n");
 #endif
 
 	/* Ignore a heartbeat msg which may have come in */
-	if (p->id == CMD_CMD_HEARTBEAT) 
+	if ((p->id == CMD_CMD_HEARTBEAT) || (p->id == CMD_CMD_MISCHB))
 	{
 		state_timer = STATE_TIM_SQUELCH;
 		printf("HB msg: state_msg %d state_timer %d\n",state_msg,state_timer);
@@ -352,7 +352,7 @@ printf("\n");
 		{
 			printf("Node response unexpected: STATE_MSG_REQ_CRC: expected cmd %d got %d\n\t",LDR_CRC, p->cd.uc[0]);
 			printCANmsg(p); // Print CAN msg
-			exit_flag = 1; exit_code = (-14); 
+//			exit_flag = 1; exit_code = (-14); 
 			return;
 		}
 		else
@@ -361,7 +361,7 @@ printf("\n");
 			{
 				printf("Node response: STATE_MSG_REQ_CRC: dlc not 8 got %d\n\t",p->dlc);
 				printCANmsg(p); // Print CAN msg
-				exit (-15);	
+//				exit (-15);	
 			}
 			/* Payload has node's CRC. */
 			if (p->cd.ui[1] != xbin_crc) // Note: word compare
@@ -404,7 +404,7 @@ printf("\n");
 			{
 				printf("Node response: STATE_MSG_CHKSUM: dlc not 8 got %d\n\t",p->dlc);
 				printCANmsg(p); // Print CAN msg
-				exit (-17);	
+//				exit (-17);	
 			}
 			/* Payload has node's CHKSUM code and dlc of 8. Do checksums match? */
 			if (p->cd.ui[1] != xbin_checksum) // Note: word compare
@@ -493,7 +493,7 @@ printf("#A# STATE_MSG_ADDR_RESPONSE: check msg\n");
 		// Node sends 0xFEEDBACC when CRC sent in EOF payload matches
 		if ( (req_size > (1024*1024) || (req_size == 0)) && !(req_size == 0xFEEDBACC) ) 
 		{
-			printf("STATE_MSG_DATA_END_OF: BOGUS req_size: %08X %d\n",req_size,req_size);
+			printf("STATE_MSG_DATA_END_OF: BOGUS req_size: 0x%08X %d\n",req_size,req_size);
 			printCANmsg(p); // Print CAN msg
 			exit_flag = 1; exit_code = (-13); exit(-13);
 			return;

@@ -190,6 +190,12 @@ static uint32_t timernext; // Next timer count
 #define DEFAULT_POLLDUR 1000 // Duration in ms
 static uint32_t polldur = DEFAULT_POLLDUR; // Duration between polls
 
+/* Parameters for setting voltage reading colors. */
+#define DEFAULT_STD_X   1.5f // Multiplier for standard deviation
+#define DEFAULT_MIN_MV  3.0f // Minimum difference from ave for flagging w a color
+static float color_std_x   = DEFAULT_STD_X;
+static float color_min_mv  = DEFAULT_MIN_MV;
+
 static uint8_t groupctr; // The six cell readings are sent in a group.
 
 WINDOW * mainwin;
@@ -270,6 +276,7 @@ static void printfsettings(void)
 {
 	printf("BMS POLLer %08X\t",cantx.id );
 	printf("Poll duration: %d (ms)\n",polldur);
+	printf("Color highlight thresholds: std dev multiplier: %0.1f minimum mv %0.1f \n", color_std_x, color_min_mv);
 	return;
 }
 /******************************************************************************/
@@ -278,8 +285,10 @@ static void printmenu(char* p)
 	printf("t - Fixed window BMS string display with module summary and cell voltages\n\t"
 				"ta  Fixed window display all BMS nodes voltages a module summary\n\t"
 				"td  <set: Set duration between polls (default: 1000 ms)\n\t"
+				"tz  <std multiplier> <minimum mv>: Set threshold for color highlighting (default: 1.5 3.0)\n\t"
 				"tp  <set: pppppppp> Poller CAN ID (AEC00000(default),B0000000(EMC1),B0200000(EMC2)) \n\t"
-				"th  Display a verbose discription of display\n\t"
+				"th  Display a verbose discription of display\n"
+				"Settings--\n"
 				);	
 	printfsettings();
 	return;
@@ -465,7 +474,17 @@ int cmd_t_init(char* p)
 		case 'h': // 'th' Help
 			printmenu(p);
 			printf("%s",cmd_t_help);
-			return 0;					
+			return 0;
+
+		case 'z': // 'tz' "tz  <std multiplier> <minimum mv>: Set threshold for color highlighting (default: 1.5 3.0)\n\t"			
+			if (len < 5)			
+			{
+				printf("\nNot enough input chars to set std dev multiplier and minimum mv threshold\n");
+				return -1;
+			}
+			sscanf( (p+3), "%f %f",&color_std_x, &color_min_mv);
+			printfsettings();
+			return 0;
 
 		default:
 			printf("2nd char not recognized: %c\n", *(p+1));
@@ -574,7 +593,7 @@ static void init_stringsummary_ncurses(void)
 	ssn_update_sw = 1;
 
 	/* Module summary statistics headings. */
-	sprintf(str,"    total    ave     max  at    min  at  std Tambi Tcell Texit   I  BATFETMOD DH2CL BCD STB  fan  fanrpm");
+	sprintf(str,"    total    ave     max  at    min  at  std Tambi Tcell Texit   I  BAT FET MOD DH2CL BCD STB  fan  fanrpm");
 	displaycell_ncurses(str, 0, rx, 5);		
 
 	/* Column with row ids */
@@ -630,7 +649,7 @@ void prepare_n_display_stringsummary(int m)
 	unsigned int s1 = stats_mod[m].bat;
 	unsigned int s2 = stats_mod[m].fet;
 	unsigned int s3 = stats_mod[m].mod;
-	sprintf(str," %02X %02X %02X ",s1,s2,s3);
+	sprintf(str," %02X  %02X  %02X ",s1,s2,s3);
 	displaycell_ncurses(str, 5, m*2+RX+1, 7+42+18+6);
 
 	/* FET status bits. D2HCL */
@@ -646,9 +665,9 @@ void prepare_n_display_stringsummary(int m)
 	for (i = 0; i < 5; i++)
 	{	
 		if (s2 & (1 << i))
-			displaycell_ncurses(str, 8, m*2+RX+1, 7+42+18+6+9+1+i);
+			displaycell_ncurses(str, 8, m*2+RX+1, 7+42+18+6+11+1+i);
 		else
-			displaycell_ncurses(str, 9, m*2+RX+1, 7+42+18+6+9+1+i);
+			displaycell_ncurses(str, 9, m*2+RX+1, 7+42+18+6+11+1+i);
 	}
 
 	/* Battery status BCD. */
@@ -659,9 +678,9 @@ void prepare_n_display_stringsummary(int m)
 	for (i = 0; i < 3; i++)
 	{	
 		if (s1 & (1 << (i+4)) )
-			displaycell_ncurses(str, 8, m*2+RX+1, 7+42+18+6+9+1+6+i);
+			displaycell_ncurses(str, 8, m*2+RX+1, 7+42+18+6+11+1+6+i);
 		else
-			displaycell_ncurses(str, 9, m*2+RX+1, 7+42+18+6+9+1+6+i);
+			displaycell_ncurses(str, 9, m*2+RX+1, 7+42+18+6+11+1+6+i);
 	}
 
 	/* Mode status STB. */
@@ -672,14 +691,14 @@ void prepare_n_display_stringsummary(int m)
 	for (i = 0; i < 3; i++)
 	{	
 		if (s3 & (1 << i) )
-			displaycell_ncurses(str, 8, m*2+RX+1, 7+42+18+6+9+1+6+4+i);
+			displaycell_ncurses(str, 8, m*2+RX+1, 7+42+18+6+11+1+6+4+i);
 		else
-			displaycell_ncurses(str, 9, m*2+RX+1, 7+42+18+6+9+1+6+4+i);
+			displaycell_ncurses(str, 9, m*2+RX+1, 7+42+18+6+11+1+6+4+i);
 	}
 
 	/* Fan speed and rpm. */
 	sprintf(str," %3d %5.0f",stats_mod[m].fanspeed,stats_mod[m].fanrpm);
-	displaycell_ncurses(str, 5, m*2+RX+1, 7+42+18+6+9+1+6+4+4);	
+	displaycell_ncurses(str, 5, m*2+RX+1, 7+42+18+6+11+1+6+4+4);	
 
 	/* Total string voltage. */
 	double tsum = 0;
@@ -697,24 +716,27 @@ void prepare_n_display_stringsummary(int m)
 *******************************************************************************/
 static void prepare_n_display(uint8_t m)
 {
-	double dtmp,dtmp1;
+	double dtmp,dtmp1,dtmp2;
 	uint8_t c; // Cell index
 	uint8_t n; // Color index
 	char str[192]; // Temp string
 
 	// Threshold around average for color highlight
-	double dstdx = stats_mod[m].std * 1.0;
+	// Require at least cololr_min_mv difference frm average
+	double dstdx = stats_mod[m].std * color_std_x;
 	double dave  = stats_mod[m].ave;
 
 	for (c = 0; c < NCELL; c++)
 	{
 		switch (cellinfo[m][c].ok)
 		{
-		case 0: // Set color if cell outside 1.0 std 
+		case 0: // Set color if cell outside 2.0 std 
 			dtmp = ((cellinfo[m][c].d * 0.1) - dave);
 			dtmp1 = dtmp;
-			if (dtmp1< 0) dtmp1 = -dtmp1;
-			if (dtmp1 > dstdx)
+			if (dtmp1 < 0) dtmp1 = -dtmp1;
+			dtmp2 = dtmp;
+			if (dtmp2 < 0) dtmp2 = -dtmp2;
+			if ((dtmp1 > dstdx) && (dtmp2 > color_min_mv))
 			{
 				if (dtmp > 0)
 					n = 11;

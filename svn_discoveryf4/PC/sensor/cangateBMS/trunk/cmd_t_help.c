@@ -11,7 +11,7 @@ char* cmd_t_help = {
 " ===============================================\n"	
 "Module Columns displaying selected status bits\n"
 "(red = on; green = off)\n"
-"   D2HCL (FET status)\n"
+"   DH2CL (FET status)\n"
  "D - DUMP   FET\n"
  "H - HEATER FET\n"
  "2 - DUMP2  FET\n"

@@ -186,7 +186,7 @@ static char* puc1[] = {
 	   	};
 static void printfsettings(void)
 {
-	printf("BMS %08X  POLLer %08X who responds 0x%02X %s\n",canid_whoresp,cantx.id,cd_uc1,puc1[(cd_uc1 >> 6)&0x3] );
+	printf("BMS %08X  POLLer %08X\n\twho responds code: 0x%02X bits: %s\n",canid_whoresp,cantx.id,cd_uc1,puc1[(cd_uc1 >> 6)&0x3] );
 	printf("ADC rate set: code: %d, ADC rate: %s\n",adcrate, pADCrate[adcrate] );
 	printf("Poll duration: %d (ms)\n",polldur);
 	return;

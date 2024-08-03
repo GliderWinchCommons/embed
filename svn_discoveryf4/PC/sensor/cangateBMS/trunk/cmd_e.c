@@ -82,6 +82,8 @@ static int starttimer(void);
  #define MISCQ_MORSE_TRAP   38 // Retrieve stored morse_trap code.
  #define MISCQ_FAN_STATUS   39 // Retrieve fan: pct and rpm 
  #define MISCQ_FAN_SET_SPD  40 // Set fan: pct (0 - 100)
+ #define MISCQ_PROG_CRC     41 // Retrieve installed program's: CRC
+ #define MISCQ_PROG_CHKSUM  42 // Retrieve installed program's: Checksum
 
 #define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
 #define FET_HEATER   (1 << 1) // 1 = HEATER FET ON
@@ -222,8 +224,11 @@ static char* preadmenu[] = {
  " 32 PRM_MAXCHG   // Get Parameter: Max charging current\n\t",
  " 34 READ_AUX     // BMS responds with A,B,C,D AUX register readings (12 msgs)\n\t",
  " 36 PROC_TEMP    // Processor calibrated internal temperature (deg C)\n\t",
- " 37 MISCQ_CHG_LIMITS // Show params: Module V max, Ext chg current max, Ext. chg bal\n\t",
- " 39 MISCQ_FAN_STATUS // Retrieve fan: pct and rpm\n",
+ " 37 MISCQ_CHG_LIMITS  // Show params: Module V max, Ext chg current max, Ext. chg bal\n\t",
+ " 39 MISCQ_FAN_STATUS  // Retrieve fan: pct and rpm\n\t",
+ " 41 MISCQ_PROG_CRC    // Retrieve installed program's: CRC\n\t",
+ " 42 MISCQ_PROG_CHKSUM // Retrieve installed program's: Checksum\n\t",
+ " 43 MISCQ_PROG_CRCCHK // Retrieve for both 41 and 42 (two msgs)\n", 
  "256 END_TABLE\n"
 };
 /* Menu for MISCQ codes that set something in the BMS. */

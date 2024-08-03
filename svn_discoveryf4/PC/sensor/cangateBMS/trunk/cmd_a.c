@@ -85,8 +85,11 @@ static void miscq_status(struct CANRCVBUF* p);
  #define MISCQ_PROC_TEMP    36 // Processor calibrated internal temperature (deg C)
  #define MISCQ_CHG_LIMITS   37 // Show params: Module V max, Ext chg current max, Ext. chg bal
  #define MISCQ_MORSE_TRAP   38 // Retrieve stored morse_trap code & status codes.
-
-
+ #define MISCQ_FAN_STATUS   39 // Retrieve fan: pct and rpm 
+ #define MISCQ_FAN_SET_SPD  40 // Set fan: pct (0 - 100)
+ #define MISCQ_PROG_CRC     41 // Retrieve installed program's: CRC
+ #define MISCQ_PROG_CHKSUM  42 // Retrieve installed program's: Checksum
+ #define MISCQ_PROG_CRCCHK  43 // Retrieve for both 41 and 42 (two msgs)
 
 #define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
 #define FET_HEATER   (1 << 1) // 1 = HEATER FET ON

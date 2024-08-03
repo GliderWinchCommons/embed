@@ -34,6 +34,7 @@ This takes care of dispatching keyboard commands.
 #include "cmd_r.h"
 #include "cmd_s.h"
 #include "cmd_t.h"
+#include "cmd_v.h"
 #include "cmd_w.h"
 
 extern int fpListsw;
@@ -140,6 +141,11 @@ void do_command_keybrd(char* p)
 		msg_sw = 'n';
 		break;
 
+	case 'v': // 'v' command
+		if (cmd_v_init(p) >= 0)
+			msg_sw = 'v';
+		break;				
+
 	case 'w': // 'w' command (list a float payload for a canid)
 		if (cmd_w_init(p) >= 0) // negative return means invalid input
 			msg_sw = 'w';
@@ -189,7 +195,9 @@ void do_command_keybrd(char* p)
 		do_printmenu();	  // Nice display for the hapless Op.
 		msg_sw = 'x';
 		cmd_q_initsw = 0;	// OTO initialization switch
-		kaON = 0; // cmd_e timer by-pass
+		kaON  = 0; // cmd_e timer by-pass
+//		kaON1 = 0; // cmd_a timer by-pass
+//		kaON2 = 0; // cmd_v timer by-pass
 		close_ncurses(); // Command 't' window 
 		break;
 
@@ -290,6 +298,10 @@ void do_canbus_msg(struct CANRCVBUF* p)
 		cmd_q_do_msg(p);
 		break;
 
+	case 'v':
+		cmd_v_do_msg(p);
+		break;				
+
 	case 'w':
 		cmd_w_do_msg(p);
 		break;
@@ -362,6 +374,7 @@ void do_printmenu(void)
 	printf("t - Display all cell voltages of battery string in fixed window\n");
 	printf("u - list msg id's and msg ct between CAN 1 sec time mgs (e.g. u 00600000)\n");
 	printf("w - list msgs float (wf), integer (wi), half (wh), BigEnd 2 byte int (wy), byte (wb), with payload byte offset, (wi1 E1800000)\n");
+	printf("v - Version check (BMS) using CRC and CHKSUM\n");
 	printf("x - cancel command\n");
 	printf("Control C to quit program\n");
 	return;

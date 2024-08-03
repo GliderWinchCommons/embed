@@ -40,6 +40,7 @@ cmd_r.o \
 cmd_s.o \
 cmd_t.o \
 cmd_w.o \
+cmd_v.o \
 sockclient.o \
 timer_thread.o \
 var_size_chk.o \

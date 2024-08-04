@@ -496,7 +496,7 @@ printf("Number entries: %d\n",idxcrcchkx);
 		{ // Here, file found in: ~/GliderWinchItems/BMS/*1818/params/
 			while ((fgets(line,128,fTXT)) > 0)
 			{
-//printf("%s\n",line);
+printf("%s\n",line);
 				sscanf(line,"%x %x %x %lx",&cmpx.id,&cmpx.crc,&cmpx.chk,&cmpx.t);
 printf("%08X  %08X  %08X %lX\n",cmpx.id, cmpx.crc, cmpx.chk,cmpx.t);
 			}
@@ -504,6 +504,7 @@ printf("%08X  %08X  %08X %lX\n",cmpx.id, cmpx.crc, cmpx.chk,cmpx.t);
 		}
 		else
 		{
+//printf("FILE: %s ",s);
 			printf("No crcchk.txt file: %08X\n",crcchkx[k].id);
 		}
 	}

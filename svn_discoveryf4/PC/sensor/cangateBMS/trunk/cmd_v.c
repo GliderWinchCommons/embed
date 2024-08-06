@@ -516,7 +516,7 @@ printf("Number entries: %d\n",idxcrcchkx);
 		}
 		else
 		{
-			printf("No crcchk.txt file: %08X\n",crcchkx[k].id);
+			printf("No crcchk.txt file: %08X %s\n",crcchkx[k].id,s);
 		}
 			printf("\n");
 	}

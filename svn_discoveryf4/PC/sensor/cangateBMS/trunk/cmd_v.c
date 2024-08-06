@@ -469,6 +469,7 @@ struct CMPX
 	uint32_t crc;    // CRC
 	uint32_t chk;    // CHKSUM
 	time_t t;
+	char ctim[196];
 };
 static struct CMPX cmpx;
 
@@ -488,24 +489,36 @@ static void comparcrcchk(void)
 printf("Number entries: %d\n",idxcrcchkx);
 	for (int k = 0; k < idxcrcchkx; k++)
 	{
-		strcpy(s,"../../../../../../../GliderWinchItems/BMS/bmsadbms1818/params/");
+		/* Build the path/file */
+		const char* w = getenv("HOME");
+		strcpy(s,w);
+		strcat(s,"/GliderWinchItems/BMS/bmsadbms1818/params/");
 		sprintf(d,"%08X",crcchkx[k].id);
 		strcat(s,d);
-		strcat(s, "-crcchk.txt");		
+		strcat(s, "-crcchk.txt");
+
 		if ((fTXT = fopen(s,"r")) != NULL)
 		{ // Here, file found in: ~/GliderWinchItems/BMS/*1818/params/
 			while ((fgets(line,128,fTXT)) > 0)
 			{
-//printf("%s\n",line);
 				sscanf(line,"%x %x %x %lx",&cmpx.id,&cmpx.crc,&cmpx.chk,&cmpx.t);
-printf("%08X  %08X  %08X %lX\n",cmpx.id, cmpx.crc, cmpx.chk,cmpx.t);
+//printf("%08X  %08X  %08X %lX\n",cmpx.id, cmpx.crc, cmpx.chk,cmpx.t);
+				if ((cmpx.crc == crcchkx[k].crc) && (cmpx.chk == crcchkx[k].chk))
+				{
+					printf("MATCH: ");
+				}
+				else
+				{
+					printf("-----: ");					
+				}
+				printf("%s",line);
 			}
-			printf("\n");
 		}
 		else
 		{
 			printf("No crcchk.txt file: %08X\n",crcchkx[k].id);
 		}
+			printf("\n");
 	}
 	return;
 }

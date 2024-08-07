@@ -703,10 +703,11 @@ void prepare_n_display_stringsummary(int m)
 	/* Total string voltage. */
 	double tsum = 0;
 	for (i = 0; i < idx_modtbl; i++)
-		tsum += stats_mod[m].sum;
+		tsum += stats_mod[i].sum;
 	tsum *= .001; // Convert mv to volts
-	sprintf(str,"%8.1f",tsum);
-	displaycell_ncurses(str,13, (idx_modtbl*2+RX+1), 5);
+	sprintf(str,"%8.2f",tsum);
+	displaycell_ncurses(str,13, (idx_modtbl*2+RX+1), 6);
+
 	return;	
 }
 /******************************************************************************
@@ -829,7 +830,7 @@ static void build_mod_readings(struct CANRCVBUF* p, int m)
 				cellinfo[m][c].ok = 3;
 			}
 		}
-		/* End of first pass through readlings. */
+		/* End of first pass through readings. */
 		/* Compute statistics. */
 		if (nc > 0)
 		{

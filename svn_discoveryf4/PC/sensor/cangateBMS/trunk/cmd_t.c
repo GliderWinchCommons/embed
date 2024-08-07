@@ -699,8 +699,15 @@ void prepare_n_display_stringsummary(int m)
 	/* Fan speed and rpm. */
 	sprintf(str," %3d %5.0f",stats_mod[m].fanspeed,stats_mod[m].fanrpm);
 	displaycell_ncurses(str, 5, m*2+RX+1, 7+42+18+6+11+1+6+4+4);	
-
-	/* Total string voltage. */
+	return;
+}
+/******************************************************************************
+ * static void prepare_n_display_total(int m);
+ * @brief 	: Total voltage
+*******************************************************************************/
+static void prepare_n_display_total(int m)
+{
+	int i;
 	double tsum = 0;
 	for (i = 0; i < idx_modtbl; i++)
 		tsum += stats_mod[i].sum;
@@ -924,6 +931,7 @@ static void cmd_t_timerthread(void)
 			/* Update module summary. */
 			prepare_n_display_stringsummary(m);
 		}
+		prepare_n_display_total(m);
 			refresh();
 
 		for (m = 0; m < idx_modtbl; m++)

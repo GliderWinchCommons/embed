@@ -708,6 +708,7 @@ void prepare_n_display_stringsummary(int m)
 static void prepare_n_display_total(int m)
 {
 	int i;
+	char str[128];
 	double tsum = 0;
 	for (i = 0; i < idx_modtbl; i++)
 		tsum += stats_mod[i].sum;

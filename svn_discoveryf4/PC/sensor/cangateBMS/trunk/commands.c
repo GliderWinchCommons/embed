@@ -113,8 +113,8 @@ void do_command_keybrd(char* p)
 		break;
 
 	case 'h': // 'h' command: histogram readout
-		if (cmd_h_init(p) >= 0) // negative return means invalid input
-			msg_sw = 'h';
+		do_printmenu();	  // Nice display for the hapless Op.
+		msg_sw = 'h';
 		break;
 
 	case 'i': // LEVELWIND: display hearteate: status & state
@@ -188,11 +188,15 @@ void do_command_keybrd(char* p)
 		cmd_k_init(p);
 		msg_sw = 'k';
 		break;
-
+static uint8_t menu_oto_sw = 0;
 	case 'x': // 'x' cancels current command
 //		cmd_a_do_stop();  // Disable ascii sending if enabled
+		if (menu_oto_sw == 0)
+		{
+			menu_oto_sw = 1;
+			do_printmenu();	  // Nice display for the hapless Op.
+		}
 		timer_thread_shutdown(); // Cancel timer thread if running
-		do_printmenu();	  // Nice display for the hapless Op.
 		msg_sw = 'x';
 		cmd_q_initsw = 0;	// OTO initialization switch
 		kaON  = 0; // cmd_e timer by-pass
@@ -255,7 +259,7 @@ void do_canbus_msg(struct CANRCVBUF* p)
 		break;
 
 	case 'h':
-		cmd_h_do_msg(p);
+//		cmd_h_do_msg(p);
 		break;
 
 	case 'i':
@@ -348,7 +352,7 @@ void do_printmenu(void)
 	printf("E - EMCn: E<enter> for menu\n");
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");
     printf("g - GEVCUr: command request to retrieve all readings\n");
-	printf("h - MC_STATE: monitor \n");
+	printf("h - This menu \n");
 	printf("i - LEVELWIND: display status & state\n");
 	printf("j - LEVELWIND: send command display response\n");
 	printf("k - CONTACTOR: keep-alive\n\t"

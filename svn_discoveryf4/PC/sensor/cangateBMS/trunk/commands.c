@@ -194,7 +194,7 @@ static uint8_t menu_oto_sw = 0;
 		if (menu_oto_sw == 0)
 		{
 			menu_oto_sw = 1;
-			do_printmenu();	  // Nice display for the hapless Op.
+//			do_printmenu();	  // Nice display for the hapless Op.
 		}
 		timer_thread_shutdown(); // Cancel timer thread if running
 		msg_sw = 'x';

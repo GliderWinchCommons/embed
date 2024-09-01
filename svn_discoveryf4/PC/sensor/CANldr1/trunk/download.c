@@ -46,12 +46,10 @@ int state_timer_retry_ct;
 int state_msg_retry_ct;
 
 uint64_t binchksum;
-uint64_t binchksum_prev;
 uint32_t req_size; // Number byte the node requests
 uint32_t bin_ct;
 uint32_t bin_ct_prev;
 uint32_t crc;
-uint32_t crc_prev;
 uint8_t data_retry_ct;
 
 /* Flags for termination of sending. */
@@ -204,7 +202,9 @@ static void send_CANnodeid_data(void)
 
 	/* Save in case we have to retransmit. */
 	bin_ct_prev = bin_ct;
-	crc_prev = crc;
+
+	/* Each burst is checked for crc. */
+	crc = ~0L;  // CRC initialized.
 
 	cantx.id       = CANnodeid;
 	cantx.cd.uc[0] = LDR_DATA; // CAN msg code
@@ -220,7 +220,6 @@ unsigned int tct = 0;
 	while(bt_flag == 0)
 	{
 		i = 1; // Load payload index: start with payload uc[1];
-
 		/* End when request fulfilled or end of xbin load. */
 		while ((i < 8) && (bt_flag == 0)) // Max 7 bytes per CAN msg
 		{
@@ -448,12 +447,10 @@ printf("#A# STATE_MSG_ADDR_RESPONSE: check msg\n");
 			/* Here request size is suficiently reasonable. */
 			printf("STATE_MSG_ADDR_RESPONSE: OK. begin loading. req_size: %d\n",req_size);
 			/* Beginning of load inits. */
-			crc = ~0L;  // CRC initialized.
 			bin_ct         = 0; // Binary data array, bin[], index
 			buildword      = 0; // CRC & checksum byte->word
 			buildword_ct   = 0;
 			binchksum      = 0;
-			binchksum_prev = 0;
 			state_timer_retry_ct = 0; // Reset timeout retry counter
 
 			// Set timeout for sending. 
@@ -523,7 +520,7 @@ if (req_size == 0xFEEDBACC)
 //			download_settimeout((req_size/1500 + 1), 0); // 
 	download_settimeout(0, (900*MSEC));
 	
-			bin_ct_prev = bin_ct; // Save in case retry needed
+			data_retry_ct = 0; // Reset if previous was a retry
 			crc = ~0L;  // CRC initialized.
 			send_CANnodeid_data(); // Send a burst
 			break;
@@ -531,6 +528,7 @@ if (req_size == 0xFEEDBACC)
 
 		if (p->cd.uc[0] == LDR_NACK)
 		{ // Node rejects and is sorrowful
+printf("LDR_NACK: bin_ct %d data_retry_ct %d\n",bin_ct, data_retry_ct);
 			data_retry_ct += 1;
 			if (data_retry_ct < 3)
 			{ // Execute a retransmission

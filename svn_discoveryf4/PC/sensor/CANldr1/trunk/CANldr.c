@@ -414,14 +414,11 @@ printf("%d %s\n",i, argv[i]);
 	
 		select (fdp+1, &ready, NULL, NULL, &tmdetect);	/* Wait for something to happen */
 
-//		cmd_k_timeout(); // If msg_sw == k, send keep-alive contactor msgs.
-
 		/* Send again if we timed out waiting for an expected response */
 		if ( !( (FD_ISSET(fdp, &ready)) || (FD_ISSET(STDIN_FILENO, &ready)) ) )
 		{ // When no file descriptors are responsible, then it must have been the timeout expiring
 		/* Sending test msgs to CAN if we opened a file with the list. */
 			tmdetect = TMDETECT;		/* Refresh timeout timer */
-//			cmd_c_do_msg(NULL);	// Poll cmd_c: launch parameter timeout detection
 			download_time_chk();
 		}
 
@@ -432,14 +429,8 @@ printf("%d %s\n",i, argv[i]);
 			if ( xret != 0 ) // Did the above result in frame, or line, from the gateway?
 			{ // Here yes.  We have a msg, but it might not be valid.
 				if (xret == 1)
-				{ // Here the msg had not errors.
+				{ // Here the msg had no errors.
 					do_canbus_msg(&canrcvbuf);	// Do something appropriate to the command in effect (commands.c)
-
-					/* Poll for outputting test msgs, timed/throttled by counting incoming CAN msgs. */
-//					if (fpListsw > 0)
-//					{
-//						cmd_s_do_msg(fpList, fdp, &canrcvbuf);
-//					}
 				}
 				else
 				{ // Something wrong with the msg

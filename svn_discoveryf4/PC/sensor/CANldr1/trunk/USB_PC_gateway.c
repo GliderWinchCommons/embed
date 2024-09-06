@@ -8,11 +8,11 @@
 10-04-2013 - revised so that 'PC_gateway_comm.[ch]' has routines common to PC and stm32,
    and this routine is USART1 specific.
 10-16-2013 - copy and revised for USB instead of USART1
+09-03-2024 - update 'write' to account for buffer full
 */
 
 #include <fcntl.h>
 #include <unistd.h>
-
 
 #include "USB_PC_gateway.h"
 #include "PC_gateway_comm.h"
@@ -150,12 +150,33 @@ unsigned int debug_outct = 0; // Debug: Running count of outgoing chars
 int USB_toPC_msgASCII(int fd, struct PCTOGATECOMPRESSED* p)
 {
 	int sz;
+	int ret;
+	int idx;
 
 	/* Convert binary to ascii, and prepare with sequence number at beginning, plus checksum and newline termination */
 	sz = PC_msg_prepASCII(&b[0], BUFFSIZE, p);
+	int sz_save = sz;
 
-	/* Send to USB or other output */
-	return	write(fd, b, sz);
+	if (sz == 0) 
+		return -1;
+
+	idx = 0; // Index into output buffer
+	ret = 0; // Number bytes returned from write
+	while(ret < sz)
+	{
+		/* Send to USB or other output */
+		ret = write(fd, &b[idx], sz);
+		if (ret < 0)
+			return ret; // Error
+		if (ret < sz)
+		{ // All bytes did not get loaded
+printf("write: %d\n",ret);
+			usleep(20000); // Give it some time
+		}
+		sz  -= ret; // Remaining bytes
+		idx += ret; // Point to next attempt
+	} 
+	return sz_save;	
 }
 
 /* **************************************************************************************

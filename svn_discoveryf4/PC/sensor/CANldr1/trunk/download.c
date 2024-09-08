@@ -290,7 +290,15 @@ printf("eob sent: %d",bin_ct);
 	loadpay(&cantx.cd.uc[4], crc); // Set CRC as last word in payload
 printf(" crc %08X\n",crc);
 
-	usleep(USLEEP);
+if (bin_ct > 65000)
+{
+	usleep(1000);
+}
+else
+{
+	usleep(1000);
+}
+
 	sendcanmsg(&cantx); // Tell CAN node we are done and wait your reply.
 	return;
 }

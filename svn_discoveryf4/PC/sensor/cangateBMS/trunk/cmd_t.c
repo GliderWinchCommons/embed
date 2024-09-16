@@ -593,7 +593,7 @@ static void init_stringsummary_ncurses(void)
 	ssn_update_sw = 1;
 
 	/* Module summary statistics headings. */
-	sprintf(str,"    total    ave     max  at    min  at  std Tambi Tcell Texit   I  BAT FET MOD DH2CL BCD STB  fan  fanrpm");
+	sprintf(str,"    total    ave     max  at    min  at  std Tambi Tcell Texit   I  BAT FET MOD DH2CL ZX+-BCD  STB  fan  fanrpm");
 	displaycell_ncurses(str, 0, rx, 5);		
 
 	/* Column with row ids */
@@ -674,8 +674,17 @@ void prepare_n_display_stringsummary(int m)
 	// B - Balancing in progress
 	// C - Charging
 	// D - Dump in progress
+/*
+#define BSTATUS_NOREADING (1 << 0)	// Exactly zero = no reading
+#define BSTATUS_OPENWIRE  (1 << 1)  // Negative or over 5v indicative of open wire
+#define BSTATUS_CELLTOOHI (1 << 2)  // One or more cells above max limit
+#define BSTATUS_CELLTOOLO (1 << 3)  // One or more cells below min limit
+#define BSTATUS_CELLBAL   (1 << 4)  // Cell balancing in progress
+#define BSTATUS_CHARGING  (1 << 5)  // Charging in progress
+#define BSTATUS_DUMPTOV   (1 << 6)  // Dump to a voltage in progress
+*/		
 	sprintf(str," ");
-	for (i = 0; i < 3; i++)
+	for (i = 0; i < 7; i++)
 	{	
 		if (s1 & (1 << (i+4)) )
 			displaycell_ncurses(str, 8, m*2+RX+1, 7+42+18+6+11+1+6+i);
@@ -689,16 +698,16 @@ void prepare_n_display_stringsummary(int m)
 	// B - Cells tripped and below hysteresis
 	sprintf(str," ");
 	for (i = 0; i < 3; i++)
-	{	
-		if (s3 & (1 << i) )
-			displaycell_ncurses(str, 8, m*2+RX+1, 7+42+18+6+11+1+6+4+i);
+	{	// Set red/grn according to on/off of bit
+		if (s3 & (1 << i) ) 
+			displaycell_ncurses(str, 8, m*2+RX+1, 7+42+18+6+11+1+6+9+i);
 		else
-			displaycell_ncurses(str, 9, m*2+RX+1, 7+42+18+6+11+1+6+4+i);
+			displaycell_ncurses(str, 9, m*2+RX+1, 7+42+18+6+11+1+6+9+i);
 	}
 
 	/* Fan speed and rpm. */
 	sprintf(str," %3d %5.0f",stats_mod[m].fanspeed,stats_mod[m].fanrpm);
-	displaycell_ncurses(str, 5, m*2+RX+1, 7+42+18+6+11+1+6+4+4);	
+	displaycell_ncurses(str, 5, m*2+RX+1, 7+42+18+6+11+1+6+9+4);	
 	return;
 }
 /******************************************************************************

@@ -105,24 +105,22 @@ int cmd_p_init(char* p)
 	cantx.cd.ull   = 0; // Clear all payload bytes
 	cantx.cd.uc[4] = 1; // Battery protection, charger close output
 
-	if (len < 3)
-	{
-		sendcanmsg(&cantx);
-		return 0;
 
-	}	
 	/* POLLER requests BMS node, string, or all. */
 	switch ( *(p+1) )
 	{ 
 	case ' ': // 'This is a p' with a space following
-		sendcanmsg(&cantx);
+		sendcanmsg(&cantx); // Send (default) msg to turn ELCON charging off.
 		return 0;
 
-	case 'd': // Display msg from ELCON, do not send to ELCON
+	case 'd': // Display msg =>from<= ELCON, do not send to ELCON
 		{
-			printf("\nNot enough input chars to set poll duration\n");
+			printf("\nDisplay msg ELCON sends\n");
 		}
 		return 0;
+
+	case 'm': // Display msg =>to<= ELCON that someone else sends
+		return 0; // Skip starting polling	
 
 	case 's': // Enter voltage and current limits 
 		if (len > 10)
@@ -167,6 +165,8 @@ int cmd_p_init(char* p)
 		printf("2nd char not recognized: %c\n", *(p+1));
 		return -1;
 	}
+
+	sendcanmsg(&cantx);
 	timerctr   = 0;
 	timernext  = polldur/10;
 	starttimer();
@@ -182,11 +182,11 @@ This routine is entered each time a CAN msg is received, if command 'm' has been
 turned on by the hapless Op typing 'm' as the first char and hitting return.
 */
 static char* tsw[5] = {
-	"HW FAIL: ",
-	"OVR TEMP ",
-	"INPUT ",
-	"BATT DISC ",
-	"COMM T.O. "};
+	"HW FAIL:",
+	"OVR TEMP",
+	"INPUT",
+	"BATT DISC",
+	"COMM TO"};
 
 void cmd_p_do_msg(struct CANRCVBUF* p)
 {
@@ -201,27 +201,37 @@ void cmd_p_do_msg(struct CANRCVBUF* p)
 	     ../../../../../svn_common/trunk/db/gen_db.h */
 
 
-	if ((p->id & 0xfffffffc) != canid_rx)
-		return; // CAN ID is not ELCON Charger
+	if ((p->id & 0xfffffffc) == canid_rx)
+	{ // ELCON sent this msg
+		printf("%5d ",lctr++);
+		printcanmsg(p);
 
-	printf("%5d ",lctr++);
+		uint32_t itmpvolts = (p->cd.uc[0] << 8) | (p->cd.uc[1]);
+		uint32_t itmpamps = (p->cd.uc[2] << 8) | (p->cd.uc[3]);
+		fmsgvolts = itmpvolts;
+		fmsgamps  = itmpamps;	
+		printf ("%6.1f V %6.1f I ", fmsgvolts * 0.1, fmsgamps * 0.1);
 
-	printcanmsg(p);
-
-	uint32_t itmpvolts = (p->cd.uc[0] << 8) | (p->cd.uc[1]);
-	uint32_t itmpamps = (p->cd.uc[2] << 8) | (p->cd.uc[3]);
-	fmsgvolts = itmpvolts;
-	fmsgamps  = itmpamps;	
-	printf ("%6.1f V %6.1f I ", fmsgvolts * 0.1, fmsgamps * 0.1);
-
-	for (i = 0; i < 5; i++)
-	{
-		ts = ((p->cd.uc[4] >> i) & 1);
-		printf(" :%s %d",tsw[i],ts);
+		for (i = 0; i < 5; i++)
+		{
+			ts = ((p->cd.uc[4] >> i) & 1);
+			printf(" :%s %d",tsw[i],ts);
+		}
+		printf("\n");
 	}
-	printf("\n");
+	else if ((p->id & 0xfffffffc) == cantx.id)
+	{ // Someone else sent this msg =>to<= the ELCON
+		printf("%5d ",lctr++);
+		printcanmsg(p);
 
-	return;
+		uint32_t itmpvolts = (p->cd.uc[0] << 8) | (p->cd.uc[1]);
+		uint32_t itmpamps = (p->cd.uc[2] << 8) | (p->cd.uc[3]);
+		fmsgvolts = itmpvolts;
+		fmsgamps  = itmpamps;	
+		printf ("%6.1f V %6.1f I  CHG ON: %d\n",fmsgvolts*0.1,fmsgamps*0.1,(p->cd.uc[4] & 1));
+
+	}
+	return; // CAN ID is not ELCON Charger
 }
 /******************************************************************************
  * static void sendcanmsg(struct CANRCVBUF* pcan);

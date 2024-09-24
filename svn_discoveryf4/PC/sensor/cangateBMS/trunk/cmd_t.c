@@ -686,7 +686,7 @@ void prepare_n_display_stringsummary(int m)
 	sprintf(str," ");
 	for (i = 0; i < 7; i++)
 	{	
-		if (s1 & (1 << (i+4)) )
+		if (s1 & (1<<i) )
 			displaycell_ncurses(str, 8, m*2+RX+1, 7+42+18+6+11+1+6+i);
 		else
 			displaycell_ncurses(str, 9, m*2+RX+1, 7+42+18+6+11+1+6+i);

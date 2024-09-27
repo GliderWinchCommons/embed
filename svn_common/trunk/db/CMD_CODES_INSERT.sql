@@ -71,6 +71,9 @@ INSERT INTO CMD_CODES  VALUES ('CMD_CMD_HEARTBEAT', 50,	'[1]-[7] [0] = Send comm
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_CELLEMC2',  51,	'[1]-[7] [0] = cell readings: response to emc2 sent CELLPOLL');
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_MISCEMC2',  52,	'[1]-[7] [0] = misc data: response to emc2 sent TYPE2');
 
+INSERT INTO CMD_CODES  VALUES ('CMD_EMC_SETMODE',   53,	'[1]-[7] [0] = misc data: EMC TYPE2');
+
+
 
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_SYS_RESET_ALL',166,	'0xA6: [0] Cause System Reset for all');
 INSERT INTO CMD_CODES  VALUES ('CMD_CMD_SYS_RESET_CID',167,	'0xA7: [0] Cause System Reset for CAN ID sent in payload');

@@ -184,8 +184,8 @@ static uint32_t canid_rx;
 static uint32_t candid_poller = CANID_TX_DEFAULT; // Default pollster
 static uint8_t kaON1 = 0;
 static uint8_t canseqnumber;
-static uint32_t timerctr;
-static uint32_t timernext; // Next timer count
+static uint32_t timerctr;  // Timer 10 ms running tick counter
+static uint32_t timernext; // Next timer count to send msgs
 
 #define DEFAULT_POLLDUR 1000 // Duration in ms
 static uint32_t polldur = DEFAULT_POLLDUR; // Duration between polls
@@ -494,9 +494,9 @@ int cmd_t_init(char* p)
 
 	}
 
-	kaON1      =   1;
 	timerctr   =   0;
 	timernext  =  50;
+	kaON1      =   1;
 
 	sendcanmsg(&cantx);	// Send first request
 	if (polldur != 0)

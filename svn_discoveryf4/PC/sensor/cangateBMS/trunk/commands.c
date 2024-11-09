@@ -163,7 +163,8 @@ void do_command_keybrd(char* p)
 		break;
 
 	case 'q': // 'q' CAN bus loader file edit-check only.
-		if (cmd_q_init(p) < 0)	// Run edit-check on file only.
+		if (cmd_q_init(p) == 0)	// Run edit-check on file only.
+//cmd_q_init(p);			
 			msg_sw = 'q';
 		break;
 
@@ -367,8 +368,8 @@ void do_printmenu(void)
 	printf("n - list msg id's and msg ct during 1 sec (coarse computer timing)\n");
 	printf("p - ELCON Charger: \n\t"
 				"p  Set voltage and current to zero\n\t"
-				"pd Display ELCON sends: CANID: C7FA872E)\n\t"
-				"pm Display msg =>others sent<= to ELCON: C0372FA4)\n\t"
+				"pd Display ELCON sends: (CANID: C7FA872E)\n\t"
+				"pm Display msg => OTHERS SENT <= to ELCON: (CANID: C0372FA4)\n\t"
 				"ps <vvv.v> <iii.i> Set voltage and current (CANID: C0372FA4)\n\t"
 				"pj Set charger off bit to 1 \n\t"
 				"po Set charger off bit to 0\n");

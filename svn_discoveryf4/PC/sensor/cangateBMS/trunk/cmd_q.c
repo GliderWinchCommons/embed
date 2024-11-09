@@ -127,7 +127,8 @@ int cmd_q_init(char *p)
 				}
 			}
 		}
-//		for (i = 0; i < wk.size; i++)
+		printf("Command q: Size of sql file edited = %d\n",wk.size);
+//		for (int i = 0; i < wk.size; i++)
 //		{
 //			printf("%4d 0X%08X %s: %s: %s: %s\n",i,canidsql[i].id,canidsql[i].name,canidsql[i].hex,canidsql[i].type,canidsql[i].msg_fmt);
 //		}
@@ -149,11 +150,12 @@ static void print_list(struct CANIDSQL* p)
  * void cmd_q_do_msg(struct CANRCVBUF* p);
  * @brief 	: Build table and print
 *******************************************************************************/
+uint32_t ctrx;
+
 void cmd_q_do_msg(struct CANRCVBUF* p)
 {
 	int i;
 	if (cmd_q_initsw == 0) return;
-
 	for (i = 0; i < wk.listsz; i++)
 	{
 		if (p->id == canidlist[i].id)

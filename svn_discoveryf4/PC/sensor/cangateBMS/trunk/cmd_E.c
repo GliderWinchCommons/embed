@@ -92,7 +92,7 @@
 #define ELCON_STATUS_COMM_TO   (1 << 4) // Communications timeout
 
 FILE* fpIn;
-char *paramlist = "../../../../../../../GliderWinchItems/BMS/bmsadbms1818/params/paramIDlist";
+char *paramlist = "/GliderWinchItems/BMS/bmsadbms1818/params/paramIDlist";
 
 extern int fdp;	/* port file descriptor */
 
@@ -434,7 +434,13 @@ static void printcanmsg(struct CANRCVBUF* p)
 static int getbmslist(void)
 {
 	uint32_t id;
-	if ( (fpIn = fopen (paramlist,"r")) == NULL)
+	char *home_dir  = getenv("HOME");
+	char *fullpath = malloc(strlen(home_dir)+1 + strlen(paramlist)+1);
+    strcpy(fullpath, home_dir);
+    strcat(fullpath, paramlist);
+    printf("paramlist: fullpath: %s\n", fullpath);
+
+	if ( (fpIn = fopen (fullpath,"r")) == NULL)
 	{
 		printf ("\nFile with possible BMS node CAN IDs did not open: %s\n",paramlist); 
 		printf ("Run mklist1.c to generate file\n");

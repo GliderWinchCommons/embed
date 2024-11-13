@@ -38,6 +38,7 @@ static void miscq_morse_trap(struct CANRCVBUF* p);
 
 void printf_hdr_status(void);
 static void miscq_status(struct CANRCVBUF* p);
+static void cp_can_msg_display(struct CANRCVBUF* p);
 
 /* 16b codes for impossible voltage readings. */
 #define CELLVBAD   65535 // Yet to be defined
@@ -191,6 +192,8 @@ static uint8_t responder;
 static uint8_t respondcell;
 static uint8_t reqcode;
 static uint8_t oto_sw;
+
+static uint8_t cmd2;
 
 /*
 Not implemented--*
@@ -362,7 +365,24 @@ static void printauxheader(void)
 
 	return;
 }
-
+/******************************************************************************
+ * static void printCPheader(void);
+ * @brief 	: Print Control Panel CAN msg header
+ ******************************************************************************/
+static void printCPheader(void)
+{
+	printf("  seq S ..  ER   SW     CL\n");
+	return;
+}
+/******************************************************************************
+ * static void printCP_help(void);
+ * @brief 	: Print Control Panel CAN msg header
+ ******************************************************************************/
+static void printCP_help(void)
+{
+	system("cat cmd_ac.txt");
+	return;
+}
 /******************************************************************************
  * static void printhelp(void);
  * @brief 	: Print more detail help.
@@ -372,6 +392,7 @@ static void printhelp(void)
 	printf("Command options\n"
 		"aw = Set new CANID\n"
 		"aa = Display Cell readings\n"
+		"ap = Display Control Panel CAN msg\n"
 		"aq = Display TYPE2 MISCQ response\n"
 		);
 
@@ -404,6 +425,7 @@ int cmd_a_init(char* p)
 
 	if (len > 2)
 	{ 
+		cmd2 = *(p+1); // Save
 		switch(*(p+1))
 		{
 		case 'w': // Set new CAN ID
@@ -425,6 +447,12 @@ int cmd_a_init(char* p)
 			printf("\n");
 			cmdcode = CMD_CMD_CELLPOLL;
 			break;
+
+		case 'p': // Display Control Panel msgs
+			printCP_help();
+			printf("\n");
+			printCPheader();
+			break;			
 	
 		case 'q': // Type 2 msgs
 			reqtype = printreadmenu();
@@ -432,6 +460,10 @@ int cmd_a_init(char* p)
 			printf("TYPE2 msg code: %d for CANIDs %08X\n",reqtype,canid_rx);
 			printheader();
 			break;
+
+		default:
+			printf("%c is not 2nd char list\n",*(p+1));
+			printhelp();
 		}
 	}
 
@@ -525,6 +557,17 @@ void cmd_a_do_msg(struct CANRCVBUF* p)
 	uint8_t celln;
 	double dtmp;
 //	uint8_t err;
+
+	if (cmd2 == 'p')
+	{ // Here Control Panel Display 
+		if ((p->id & 0xfffffffc) == 0x32000000)
+		{ // Here, CP panel msg
+			cp_can_msg_display(p);
+			return;
+		}
+	}
+
+
 	/* Expect the BMS node CAN msg format TYPE2, etc
 	     and skip other CAN IDs.
 	   These #defines originate from the processing of the .sql file
@@ -1349,3 +1392,15 @@ static void print_bits_r(void)
 	return;
 }
 #endif
+
+/******************************************************************************
+ * static void cp_can_msg_display(struct CANRCVBUF* p);
+ * @brief 	: Display Control Panel CAN msg
+ ******************************************************************************/
+static uint32_t cpctr;
+static void cp_can_msg_display(struct CANRCVBUF* p)
+{
+	float cl_pos = p->cd.us[3];
+	printf("%5d %01X %01X %04X %04X %7.2f\n",cpctr++,p->cd.uc[0],p->cd.uc[1],p->cd.us[1], p->cd.us[2],cl_pos * 0.01);
+	return;
+}

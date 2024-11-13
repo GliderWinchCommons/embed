@@ -337,7 +337,7 @@ void do_pc_to_gateway(struct CANRCVBUF* p)
  * ************************************************************************************** */
 void do_printmenu(void)
 {
-	printf("a - Display selected BMS CAN  msgs: a<enter> for menu\n");
+	printf("a - Display selected BMS & CP CAN msgs: a<enter> for menu\n");
 	printf("b - CONTACTOR: display polled msgs\n");
 	printf("c - request & display launch parameters\n");
 	printf("C - : Cooling function C<enter> for menu\n");	

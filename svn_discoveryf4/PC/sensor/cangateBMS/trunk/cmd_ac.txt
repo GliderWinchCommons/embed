@@ -1,0 +1,21 @@
+CP status msg--
+CANID_HB_CPSWSCLV1_5,0x32000000, U8_U8_U16_U16_S16,:status:spare:sw err:sws on/off:CL +/- 10000');
+U8_U8_U16_U16_S16  ,49,7,[0]:uint8_t,[1]:uint8_t,[2:3]:uint16_t,[4:5]:uint16_t,[6:7]:int16_t
+pay[0] - status
+    bit[7:2] = reserved
+	bit[1] 0 = no errs in sws; 1 = one or more sws have err, or are indeterminate 
+    bit[0] 0 = not calibrated; 1 = CL calibrated;
+pay[1] = reserverd
+pay[2:3] = bit position for sws with err status
+pay[4:5] = bit position for sw on/off (1 = off)
+pay[6:7] = CL position percent * 100: +/- 10000 (100.00%)
+
+Switch position mapping--
+0 - Safe/Active switch pair after dpdt logic applied
+1 - Prep
+2 - ARM
+3 - Zero Odometer
+4 - Zero Tension
+5 - CL full foward
+6 - CL full rest
+7 - 15 reserved :Sw positions not reported default to OPEN

@@ -1,0 +1,3 @@
+# cangateBMSstart. Copy this into ~/bin
+cd ~/GliderWinchCommons/embed/svn_discoveryf4/PC/sensor/cangateBMS/trunk
+./cangateBMS $1 $2

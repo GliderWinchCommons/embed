@@ -4,7 +4,5 @@
 cd ~/GliderWinchCommons/embed/svn_discoveryf4/PC/sensor/cangateBMS/trunk
 make clean
 make
+cp cangateBMSstart ~/bin/cangateBMS
 sudo cp cangateBMS /usr/local/bin
-
-
-

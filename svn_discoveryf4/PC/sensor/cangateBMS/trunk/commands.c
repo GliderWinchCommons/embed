@@ -350,7 +350,7 @@ void do_printmenu(void)
 				"ds aaaaaaaa  (bms status: CANID: aaaaaaaa)\n");
 
 	printf("e - BMS polling msgs: e<enter> for menu\n");
-	printf("E - EMCn: E<enter> for menu\n");
+	printf("E - EMCn (ELCON chging): E<enter> for menu\n");
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");
     printf("g - GEVCUr: command request to retrieve all readings\n");
 	printf("h - This menu \n");

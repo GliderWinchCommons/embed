@@ -988,42 +988,36 @@ static void charging_poll(struct CANRCVBUF* p)
 }
 
 /******************************************************************************
- * void checkforelcon(struct CANRCVBUF* p);
+ * void elcon_tx(struct CANRCVBUF* p);
  * @brief 	: Check for ELCON msgs 
 *******************************************************************************/
-void checkforelcon(struct CANRCVBUF* p)
+void elcon_tx(struct CANRCVBUF* p)
 {
-	if (CANID_ELCON_TX == p->id)
-	{ // Here, ELCON tx and we rx
 //printcanmsg(p);printf("do_msg: timerctr %d el %d\n",timerctr, elcon.timeout);
-		elcon.can = *p; // Save latest response from ELCON
-		elcon.present = 1;
-		elcon.timeout = timerctr + ELCON_INTERVAL;
-		elcondatacheck(p); // Update ELCON payload data
-		return;
-	}
+	elcon.can = *p; // Save latest response from ELCON
+	elcon.present = 1;
+	elcon.timeout = timerctr + ELCON_INTERVAL;
+	elcondatacheck(p); // Update ELCON payload data
+	return;
 }
 
 /******************************************************************************
  * void cmd_E_do_msg(struct CANRCVBUF* p);
  * @brief 	: Output msgs for the id that was entered with the 'm' command
 *******************************************************************************/
-/*
-This routine is entered each time a CAN msg is received, if command 'm' has been
-turned on by the hapless Op typing 'm' as the first char and hitting return.
-*/
-
 void cmd_E_do_msg(struct CANRCVBUF* p)
 {
-	/* Overall check on gateway functioning. */
+	/* Overall check on gateway functioning. Reset timeout. */
 	canmsgstimeout = timerctr + CANMSGSTIMEOUT;
-	checkforelcon(p);	
 
-	/* When it is DONE! or bombed out, quit do things. */
-	if (state == 9)
+	/* Handle CAN msgs */
+	// ELCON sent this msg
+	if (CANID_ELCON_TX == p->id)
 	{
-		return;
+		elcon_tx(p);
+		return;	
 	}
+
 
 
 	switch(state)
@@ -1050,6 +1044,7 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 		break; 
 
 	case 9:
+		printf("DONE, or bombed out\n");
 		break;
 
 	default:
@@ -1059,6 +1054,9 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 	}
 	return;
 }
+
+//xQueueSendToBack(CanTxQHandle,&ps->canbms,4);
+
 /******************************************************************************
  * static void sendcanmsg(struct CANRCVBUF* pcan);
  * @brief 	: Send CAN msg

@@ -38,11 +38,11 @@ DESCRIPTION varchar(128) NOT NULL UNIQUE
 );
 */
 
-#define CSSIZE_NAME 48
-#define CSSIZE_HEX 8
-#define CSSIZE_TYPE 24
-#define CSSIZE_MSG_FMT 16
-#define CSSIZE_DESCRIPTION 128
+#define CSSIZE_NAME 60
+#define CSSIZE_HEX 16
+#define CSSIZE_TYPE 64
+#define CSSIZE_MSG_FMT 64
+#define CSSIZE_DESCRIPTION 256
 struct CANIDSQL
 {
 	unsigned int id;

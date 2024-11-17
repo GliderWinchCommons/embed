@@ -128,10 +128,10 @@ int cmd_q_init(char *p)
 			}
 		}
 		printf("Command q: Size of sql file edited = %d\n",wk.size);
-//		for (int i = 0; i < wk.size; i++)
-//		{
-//			printf("%4d 0X%08X %s: %s: %s: %s\n",i,canidsql[i].id,canidsql[i].name,canidsql[i].hex,canidsql[i].type,canidsql[i].msg_fmt);
-//		}
+		for (int i = 0; i < wk.size; i++)
+		{
+			printf("%4d 0X%08X %s: %s: %s: %s\n",i,canidsql[i].id,canidsql[i].name,canidsql[i].hex,canidsql[i].type,canidsql[i].msg_fmt);
+		}
 		cmd_q_initsw = 1;	// Show initialization has been completed		
 	}
 	return 0;
@@ -156,6 +156,9 @@ void cmd_q_do_msg(struct CANRCVBUF* p)
 {
 	int i;
 	if (cmd_q_initsw == 0) return;
+
+//if (p->id == 0x00000000) return; // Who sent this!
+
 	for (i = 0; i < wk.listsz; i++)
 	{
 		if (p->id == canidlist[i].id)
@@ -165,6 +168,9 @@ void cmd_q_do_msg(struct CANRCVBUF* p)
 	}
 	/* Here, CANID not in list */
 	canidlist[wk.listsz].id = p->id;	// Add CAN id to list
+
+if (p->id == 0x0) printf("\nZero id: 0X%08X\n",p->id);
+
 	// Find CAN id in CANID database
 	canidlist[wk.listsz].idx = -1;		// Default if not found
 	for (i = 0; i < wk.size; i++)
@@ -175,7 +181,9 @@ void cmd_q_do_msg(struct CANRCVBUF* p)
 			break;
 		}
 	}
+
 	wk.listsz += 1;
+	
 
 	printf("\n\n");
 
@@ -183,7 +191,7 @@ void cmd_q_do_msg(struct CANRCVBUF* p)
 	{
 		if (canidlist[i].idx < 0)
 		{ // Here CANID not found in sql list
-			print_list(&canidlistnotfound);
+			printf("0X%08X       NOT in sql file\n",canidlist[i].id);
 		}
 		else
 		{

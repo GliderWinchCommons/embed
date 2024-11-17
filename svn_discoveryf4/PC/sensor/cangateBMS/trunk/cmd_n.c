@@ -215,7 +215,7 @@ static void cmd_n_count(u32 id)
 	int i = 0;
 	int b;
 
-	if (id == 0) return; // Debugging
+//	if (id == 0) return; // Debugging
 
 	/* Get the current cttbl buffer index */
 	b = (idx_cmd_n_ct & 0x01);

@@ -9,6 +9,8 @@
 */
 
 #include "cmd_m.h"
+static uint32_t mctr;
+static uint32_t mctr_prev;
 
 /******************************************************************************
  * int cmd_m_init(char* p);
@@ -21,8 +23,11 @@ static  char type;
 
 int cmd_m_init(char* p)
 {
+	mctr = 0;
+	mctr_prev = 0;
+
 	type = *(p+1); 
-        switch (type)
+    switch (type)
 	{
 	case ' ':
 		if (strlen(p) < 6)
@@ -63,13 +68,21 @@ turned on by the hapless Op typing 'm' as the first char and hitting return.
 void cmd_m_do_msg(struct CANRCVBUF* p)
 {
 	int i;
+	int diff;
 	double dtmp1, dtmp2;
 
+	mctr += 1;
+
 	if (!((p->id & 0xfffffffc) == (keybrd_id & 0xfffffffc))) return;
+
+	/* Show number of CAN msgs between this CAN ID. */
+	diff = (int)(mctr - mctr_prev);
+	mctr_prev = mctr;
+
 	switch (type)
 	{
 	case ' ':
-		printf("%08x %d ",p->id, p->dlc);
+		printf("%6d %4d %08x %d ",mctr, diff, p->id, p->dlc);
 		for (i = 0; i < (p->dlc & 0xf); i++)
 			printf("%02X ",p->cd.u8[i]);
 		printf("\n");

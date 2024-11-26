@@ -13,6 +13,8 @@ static 	u32 keybrd_id;
 static 	u32 payloadidx;	// Can payload byte index 0 - 5
 static 	char payloadtype; // integer or float
 static   char type;
+static u32 msgctr; // Running count of incoming msgs
+static u32 msgctr_prev;
 
 /******************************************************************************
  * int cmd_w_init(char* p);
@@ -68,7 +70,7 @@ int cmd_w_init(char* p)
 		payloadtype = 'y';
 		break;
 	case 'b': // Payload as integer byte
-		payloadtype = 'y';
+		payloadtype = 'b';
 		break;
 	default:
 		printerror("Second char should be i,f,y, or b\n");
@@ -92,6 +94,8 @@ int cmd_w_init(char* p)
 	}
 	sscanf((p+3), "%x",&keybrd_id);
   	printf ("ID: %x Starting at payload index: %d Type: %c\n",keybrd_id, payloadidx,payloadtype);
+  	msgctr = 0;
+  	msgctr_prev = 0;
    return 0;
 }
 
@@ -106,6 +110,7 @@ turned on by the hapless Op typing 'm' as the first char and hitting return.
 void cmd_w_do_msg(struct CANRCVBUF* p)
 {
 	int i;
+	int32_t diff;
 	union FINT
 	{
 		float f;
@@ -115,6 +120,8 @@ void cmd_w_do_msg(struct CANRCVBUF* p)
 		int32_t n;
 	}uf;
 
+	msgctr += 1;
+
 	if (!((p->id & 0xfffffffc) == (keybrd_id & 0xfffffffc))) return;
 
 	if (p->dlc < (payloadidx + 2))
@@ -122,33 +129,38 @@ void cmd_w_do_msg(struct CANRCVBUF* p)
 		printf("%08X %d dlc should be %d\n",p->id, p->dlc,(payloadidx + 2));
 		return;
 	}
+
+	/* Number of CAN msgs between selected msg. */
+	diff = (int32_t)(msgctr - msgctr_prev);
+	msgctr_prev = msgctr;
+
 	switch (payloadtype)
 	{
 	case ' ':
 	case 'i':
 		for (i = 0; i < 4; i++)	// Copy payload payload bytes into integer
 			uf.uc[i] = p->cd.uc[i+payloadidx];							
-		printf("%08X %d %8d\n",p->id, p->dlc, uf.i);
+		printf("LE FULL: %6d %4d %08X %d %8d\n",msgctr, diff, p->id, p->dlc, uf.i);
 		break;
 
 	case 'h':
 		uf.u16[0] = (p->cd.uc[payloadidx+1] << 8) + p->cd.uc[payloadidx];
-		printf("%08X %d %8d\n",p->id, p->dlc, uf.u16[0]);
+		printf("LE HALF: %6d %4d %08X %d %8d\n",msgctr, diff, p->id, p->dlc, uf.u16[0]);
 		break;
 		
 	case 'y': // Big Endian 2 byte int payload
 			uf.i = (p->cd.uc[payloadidx] << 8) + p->cd.uc[payloadidx+1];
-		printf("%08X %d %d %8d\n",p->id, payloadidx, p->dlc, uf.n );
+		printf("BE HALF: %6d %4d %08X %d %d %8d\n",msgctr, diff, p->id, payloadidx, p->dlc, uf.n );
 		break;
 
 	case 'b': // Single byte
-		printf("%08X %d %8d %08X\n",p->id, p->dlc,p->cd.uc[payloadidx],p->cd.uc[payloadidx]);
+		printf("BYTE: %6d %4d %08X %d %4d %02X\n",msgctr, diff, p->id, p->dlc,p->cd.uc[payloadidx],p->cd.uc[payloadidx]);
 		break;
 
 	case 'f':
 		for (i = 0; i < 4; i++)	// Copy payload bytes into float
 			uf.uc[i] = p->cd.uc[i+payloadidx];							
-		printf("%08X %d %f\n",p->id, p->dlc, uf.f);
+		printf(" %6d  %4d %08X %d %f\n",msgctr, diff, p->id, p->dlc, uf.f);
 		break;
 
 	default:

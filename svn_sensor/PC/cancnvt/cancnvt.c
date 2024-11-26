@@ -45,6 +45,7 @@ E1C00000      0X70E       1806        29 LAT_LON_HT 	 CANID_HB_GPS_LLH_1
 void cmd_f_do_msg(char* po, struct CANRCVBUF* p);
 uint8_t DMOCchecksum(uint32_t id, uint8_t* puc, uint8_t dlc);
 int DMOCstate(char* pc, uint8_t status);
+int directconvert(char *pcout);
 
 
 /* Temporary payload define until updated in database */
@@ -85,6 +86,7 @@ struct PAYTBL
 struct PAYTBL paytbl[96];
 unsigned int paytblsz = 0;
 
+struct CANTBL cantblx;
 
 /* Identify time sync and date/time CAN msg CAN ids */
 char tag;	// 'T' for date/time; 'S' for time sync msg
@@ -228,26 +230,26 @@ printf("canid_insert file opened: %s\n",canid_insert);
 
 	/* --------- SORT BY CAN ID ---------------------------------------------------------------------- */
 	qsort(&cantbl[0], cantblsz, sizeof(struct CANTBL), cmpfunc);// Sort for bsearch'ing
-
+printf("\nCANTBL S = sorted\n");
 	for (i = 0; i < cantblsz; i++)
 	{
 		printf("S %3d 0x%08X %3d\n",i,cantbl[i].id,cantbl[i].fmt_code);
 	}
+	printf("\n=============== BEGIN CONVERTING DATA ====================\n");
 /* ==================== Convert data ================================================ */
 	int m;
 	int n;
 	unsigned int ui;
-	struct CANTBL cantblx;
+	
 	struct CANTBL* ptbl;
 	char cout[512];
-int tmp1,tmp2,tmp3;
-double ftmp1,ftmp2;
-int n1;
+	uint32_t msgctr = 0;
 
 	while ( (fgets (&buf[0],LINESZ,stdin)) != NULL)	// Get a line from stdin
 	{
 		if (strlen(buf) > 12)
 		{
+			msgctr += 1;
 //printf("%s",buf);
 			// The ascii hex order is little endian.  Convert to an unsigned int
 			cantblx.id = 0;
@@ -263,6 +265,17 @@ int n1;
 			{
 				sscanf(&buf[12+2*m],"%2x",(unsigned int*)&cantblx.uc[m]);
 			}
+
+			// Convert payload by directly checking CAN ID
+			int ret = directconvert(&cout[0]);
+			if (ret != 0) 
+			{
+				  printf("%6d ",msgctr);
+				  printf("0x%08X  99 :dlc %i:",cantblx.id,cantblx.dlc);
+					printf("%s\n",cout);
+					continue;
+			}
+			// Convert payload by using PAYLOAD code
 		
 			// Lookup payload code
 				ptbl = bsearch(&cantblx.id, &cantbl[0], cantblsz, sizeof(struct CANTBL), cmpfunc);
@@ -271,14 +284,16 @@ int n1;
 					cantblx.fmt_code = ptbl->fmt_code;
 
 //printf("K %08X %2d: %2d:",cantblx.id,cantblx.dlc,cantblx.fmt_code);
-//for (n = 0; n < cantblx.dlc; n++) printf(" %02x",cantblx.uc[n]);printf("\n");
+//for (n = 0; n < cantblx.dlc; n++) 
+//		printf(" %02x",cantblx.uc[n]);
+//printf("\n");
 
 					n = sprintf(&cout[0],"0x%08X %3d ",cantblx.id,ptbl->fmt_code);
 					payloadcnvt(&cout[n],&cantblx);
 				}
 				else
 				{ // Here CAN id was not in CANID_INSERT.sql table
-//printf("ID: 0x%08X dlc: %d %s \n",cantblx.id, cantblx.dlc,buf);
+printf("ID: 0x%08X dlc: %d %s \n",cantblx.id, cantblx.dlc,buf);
 					if (!((cantblx.id == 0) || (cantblx.dlc > 8)))
 					{
 						n = sprintf(&cout[0],"0x%08X  99 :dlc %i:",cantblx.id,cantblx.dlc);
@@ -286,62 +301,6 @@ int n1;
 						{
 							sprintf(&cout[m*3+n]," %02X",cantblx.uc[m]);
 						}
-if (cantblx.id == 0xCA000000) // 0X650 - HV bus status
-{
- tmp1 = cantblx.uc[0]*256+cantblx.uc[1];
- tmp2 = cantblx.uc[2]*256+cantblx.uc[3];
- ftmp1 = (double)tmp1 * 0.1;
- ftmp2 = ((double)tmp2 * 0.1) - 500.0;
- sprintf(&cout[m*3+n]," HVrx 0x%04X 0x%04X %8d %8d %7.1f %7.1f",tmp1,tmp2,tmp1,tmp2-5000,ftmp1,ftmp2);
-}
-if (cantblx.id == 0xCA200000) // 0X651 - Temperature
-{
- sprintf(&cout[m*3+n]," TMrx %6d %6d %6d",cantblx.uc[0]-40,cantblx.uc[1]-40,cantblx.uc[2]-40);
-}
-
-if (cantblx.id == 0x47400000)    //  0X23A - Torque
-{
- tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
- tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
- tmp3 = cantblx.uc[4]*(1<<8)+cantblx.uc[5];
- sprintf(&cout[m*3+n]," TQrx %6d %6d %6d %4u",tmp1-30000,tmp2-30000,tmp3-30000,cantblx.uc[6]);
-}
-if (cantblx.id == 0x47600000) // 0x23B - speed and current operation status
-{
- tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
- n1 = sprintf(&cout[m*3+n]," SPrx 0x%04X %6d 0x%02X %2u ",tmp1,tmp1-20000,cantblx.uc[6],cantblx.uc[6]>>4);
- DMOCstate(&cout[m*3+n+n1], cantblx.uc[6]);
-}
-if (cantblx.id == 0x47C00000) //      0X23E --DQ volt amps rx
-{
- tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
- tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
- sprintf(&cout[m*3+n]," DQrx 0x%04X %6d 0x%04X %6d ",tmp1,tmp1,tmp2,tmp2);
-}
-if (cantblx.id == 0x46400000) //      0X232 --Speed tx
-{
-  tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
-  sprintf(&cout[m*3+n]," SPtx 0x%04X %d",tmp1,tmp1-20000);
-}
-if (cantblx.id == 0x46600000) //      0X233 --Torque tx
-{
- tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
- tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
- sprintf(&cout[m*3+n]," ??tx 0x%04X %6d 0x%04X %6d ",tmp1,tmp1-30000,tmp2,tmp2-30000);
-}
-//Power limits plus setting ambient temp and whether to cool power train or go into limp mode
-if (cantblx.id == 0x46800000) //     0X234 
-{
- tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1]; // Regen watt limit ... MaxRegenWatts
- tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3]; // Accel limit ... MaxAccelWatts
- sprintf(&cout[m*3+n]," MWtx 0x%04X %6d 0x%04X %6d ",tmp1,4*(65000-tmp1),tmp2,4*tmp2);
-}
-if (cantblx.id == 0x05683004) // 0X00ad0600 unknown 29b DMOC
-{
- tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
- tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
- sprintf(&cout[m*3+n]," ??rx 0x%04X %6d 0x%04X %6d ",tmp1,tmp1,tmp2,tmp2-30000);
-}
 
 					}
 					else
@@ -353,12 +312,13 @@ if (cantblx.id == 0x05683004) // 0X00ad0600 unknown 29b DMOC
 #ifdef SELECT_SINGLECANID
 //if (cantblx.id == 0xCA000000)
 //if (cantblx.id == 0xCA200000)
-//if (cantblx.id == 0x47400000)
+if (cantblx.id == 0x47400000)
 //if (cantblx.id == 0x47600000)
-if (cantblx.id == 0x46800000)
+//if (cantblx.id == 0x46800000)
 //if (cantblx.id == 0x05683004)
 #endif
-				printf("%s\n",cout);
+			printf("%6d ",msgctr);
+			printf("%s\n",cout);
 		}
 	}
 printf("\nTEST of chksum generation\n");
@@ -415,6 +375,7 @@ void payloadcnvt(char* p, struct CANTBL* pcanx)
 	float ff;
 	int m;
 	struct CANRCVBUF can;
+	int16_t i16;
 
 	struct tm* tb;
 	char c[96];
@@ -468,6 +429,17 @@ void payloadcnvt(char* p, struct CANTBL* pcanx)
 	case U8_FF:
 		ff = payff(pcanx,1);
 		sprintf(p,"%12.6f",ff);
+		break;
+
+  case I16_I16_X6:
+  	i16 = pcanx->uc[0]<<8 | pcanx->uc[1];
+  	n = sprintf(p,"%5d ",i16);
+  	i16 = pcanx->uc[2]<<8 | pcanx->uc[3];
+  	sprintf((p+n),"%5d ",i16);
+  	break;
+
+	case U8_U8_U8: // CANID_CMD_CNTCTRKAR','E3C00000','CNTCTR',1,6,'U8_U8_U8','Contactor1: R KeepAlive response');  	
+		sprintf(p,"%02X %02X %02X",pcanx->uc[0],pcanx->uc[1],pcanx->uc[2] );
 		break;
 
 	case UNIXTIME:
@@ -662,3 +634,88 @@ void DmocMotorController::sendCmd3() {
 	CanHandler::getInstanceEV()->sendFrame(output);
 }
 */
+
+/* *************************************************************************
+ * int directconvert(char *pcout)
+ * @brief	: If CANID found, add output to cout
+ * @param	: pcout = pointer to location to begin adding chars
+ * @return	: 0 = not in this list; 1 handled
+ * *************************************************************************/
+int directconvert(char *pcout)
+{
+	int tmp1,tmp2,tmp3;
+	double ftmp1,ftmp2;
+	int n1;
+
+	if (cantblx.id == 0xCA000000) // 0X650 - HV bus status
+	{
+	 tmp1 = cantblx.uc[0]*256+cantblx.uc[1];
+	 tmp2 = cantblx.uc[2]*256+cantblx.uc[3];
+	 ftmp1 = (double)tmp1 * 0.1;
+	 ftmp2 = ((double)tmp2 * 0.1) - 500.0;
+	 sprintf(pcout," HVrx 0x%04X 0x%04X %8d %8d %7.1f %7.1f",tmp1,tmp2,tmp1,tmp2-5000,ftmp1,ftmp2);
+	 return 1;
+	}
+	if (cantblx.id == 0xCA200000) // 0X651 - Temperature
+	{
+	 sprintf(pcout," TMrx %6d %6d %6d",cantblx.uc[0]-40,cantblx.uc[1]-40,cantblx.uc[2]-40);
+	 return 1;
+	}
+
+	if (cantblx.id == 0x47400000)    //  0X23A - Torque
+	{
+	 tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
+	 tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
+	 tmp3 = cantblx.uc[4]*(1<<8)+cantblx.uc[5];
+	 sprintf(pcout," TQrx %6d %6d %6d %4u",tmp1-30000,tmp2-30000,tmp3-30000,cantblx.uc[6]);
+	 return 1;
+	}
+	if (cantblx.id == 0x47600000) // 0x23B - speed and current operation status
+	{
+	 tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
+	 n1 = sprintf(pcout," SPrx 0x%04X %6d 0x%02X %2u ",tmp1,tmp1-20000,cantblx.uc[6],cantblx.uc[6]>>4);
+	 DMOCstate((pcout+n1), cantblx.uc[6]);
+	 return 1;
+	}
+	if (cantblx.id == 0x47C00000) //      0X23E --DQ volt amps rx
+	{
+	 tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
+	 tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
+	 sprintf(pcout," DQrx 0x%04X %6d 0x%04X %6d ",tmp1,tmp1,tmp2,tmp2);
+	 return 1;
+	}
+	if (cantblx.id == 0x46400000) //      0X232 --Speed tx
+	{
+	  tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
+	  sprintf(pcout," SPtx 0x%04X %d",tmp1,tmp1-20000);
+	 return 1;
+	}
+	if (cantblx.id == 0x46600000) //      0X233 --Torque tx
+	{
+	 tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
+	 tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
+	 sprintf(pcout," ??tx 0x%04X %6d 0x%04X %6d 0x%02X ",tmp1,tmp1-30000,tmp2,tmp2-30000, cantblx.uc[6]);
+	 return 1;
+	}
+	//Power limits plus setting ambient temp and whether to cool power train or go into limp mode
+	if (cantblx.id == 0x46800000) //     0X234 
+	{
+	 tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1]; // Regen watt limit ... MaxRegenWatts
+	 tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3]; // Accel limit ... MaxAccelWatts
+	 sprintf(pcout," MWtx 0x%04X %6d 0x%04X %6d ",tmp1,4*(65000-tmp1),tmp2,4*tmp2);
+	 return 1;
+	}
+	if (cantblx.id == 0x05683004) // 0X00ad0600 unknown 29b DMOC
+	{
+	 tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
+	 tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
+	 sprintf(pcout," ??rx 0x%04X %6d 0x%04X %6d ",tmp1,tmp1,tmp2,tmp2-30000);
+	 return 1;
+	}
+	if (cantblx.id == 0x32000000)
+	{ // CANID_HB_CPSWSCLV1_5','32000000','CP',      1,1,'U8_U8_U16_U16_S16','HB_CPSWSV1 5:status:spare:sw err:sws on/off:CL +/- 10000');
+		n1 = sprintf(pcout, "%02X %04X %5d ",cantblx.uc[0],(cantblx.uc[3]<<8 | cantblx.uc[4]),(cantblx.uc[6]<<8 | cantblx.uc[7]) );
+		return 1;
+	}
+	return 0;
+}

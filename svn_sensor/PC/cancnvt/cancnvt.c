@@ -12,6 +12,9 @@ gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/GliderWinchItems/dynamometer/doc
 11/25/2024--
 gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/GliderWinchItems/GEVCUr/logs/log241120
 
+Note: This has a mix of using the PAYLOAD_INSERT to format the payload and formatting the
+payload for each different CAN ID.
+
 (All caps came from database.  Others are temporarily local.)
 ( rx = received from DMOC; tx = sent by GEVCU)
 00400000      0X002          2      7717 U8 	 CANID_HB_TIMESYNC

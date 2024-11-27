@@ -9,6 +9,9 @@ gcc -Wall cancnvt.c -o cancnvt
 gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/logcsa/181008_212136
 gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt | tee gsm1
 
+11/25/2024--
+gcc -Wall cancnvt.c -o cancnvt && ./cancnvt < ~/GliderWinchItems/GEVCUr/logs/log241120
+
 (All caps came from database.  Others are temporarily local.)
 ( rx = received from DMOC; tx = sent by GEVCU)
 00400000      0X002          2      7717 U8 	 CANID_HB_TIMESYNC
@@ -687,14 +690,14 @@ int directconvert(char *pcout)
 	if (cantblx.id == 0x46400000) //      0X232 --Speed tx
 	{
 	  tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
-	  sprintf(pcout," SPtx 0x%04X %d",tmp1,tmp1-20000);
+	  sprintf(pcout," SPtx 0x%04X %d 0x%02X",tmp1,tmp1-20000, cantblx.uc[6]);
 	 return 1;
 	}
 	if (cantblx.id == 0x46600000) //      0X233 --Torque tx
 	{
 	 tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1];
 	 tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3];
-	 sprintf(pcout," ??tx 0x%04X %6d 0x%04X %6d 0x%02X ",tmp1,tmp1-30000,tmp2,tmp2-30000, cantblx.uc[6]);
+	 sprintf(pcout," TQtx 0x%04X %6d 0x%04X %6d 0x%02X ",tmp1,tmp1-30000,tmp2,tmp2-30000, cantblx.uc[6]);
 	 return 1;
 	}
 	//Power limits plus setting ambient temp and whether to cool power train or go into limp mode
@@ -702,7 +705,7 @@ int directconvert(char *pcout)
 	{
 	 tmp1 = cantblx.uc[0]*(1<<8)+cantblx.uc[1]; // Regen watt limit ... MaxRegenWatts
 	 tmp2 = cantblx.uc[2]*(1<<8)+cantblx.uc[3]; // Accel limit ... MaxAccelWatts
-	 sprintf(pcout," MWtx 0x%04X %6d 0x%04X %6d ",tmp1,4*(65000-tmp1),tmp2,4*tmp2);
+	 sprintf(pcout," MWtx 0x%04X %6d 0x%04X %6d 0x%02X",tmp1,4*(65000-tmp1),tmp2,4*tmp2,cantblx.uc[6]);
 	 return 1;
 	}
 	if (cantblx.id == 0x05683004) // 0X00ad0600 unknown 29b DMOC

@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2024-11-12 19:54:23.895
+// 2024-12-10 20:57:33.534
 
-#define CANID_COUNT 350
+#define CANID_COUNT 354
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -311,6 +311,10 @@
 #define  CANID_CMD_EMCMMC2_EMC    0xA1E00000  // UNIT_ECM2EMC   : bmsmot 2 EMC SENDS
 #define  CANID_CMD_PC_EMC         0x98000000  // UNIT_PC2EMC    : PC sends commands to EMC
 #define  CANID_CMD_EMC_EMC        0x98200000  // UNIT_EMC2EMC   : EMC sends commands to EMC1 or 2
+#define  CANID_UNIT_ENCODER1      0x83200000  // UNIT_ENCODER   : DiscoveryF4 encoder demo winch
+#define  CANID_UNIT_ENCODER2      0x83400000  // UNIT_ENCODER   : DiscoveryF4 encoder proxy
+#define  CANID_CMD_ENCODER1       0x83200004  // UNIT_ENCODER   : DiscoveryF4 encoder demo winch: command
+#define  CANID_CMD_ENCODER2       0x83400004  // UNIT_ENCODER   : DiscoveryF4 encoder proxy command
 #define  CANID_UNIT_2             0x04000000  // UNIT_2         : Sensor unit: Drive shaft encoder #1
 #define  CANID_UNIT_3             0x03800000  // UNIT_3         : Sensor unit: Engine
 #define  CANID_UNIT_4             0x03A00000  // UNIT_4         : Sensor unit: Lower sheave shaft encoder
@@ -983,6 +987,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 918  */
+/* TOTAL COUNT OF #defines = 922  */
 /* Test 2016/06/12 */
 

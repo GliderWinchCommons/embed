@@ -1,0 +1,12 @@
+icocah board assembly notes
+12/27/2016
+
+1.  LED solder mask keepout missing
+
+  Need to scrape solder mask away.
+
+2.  JP19 to pin 1 of MCP2551 katie' barn
+
+No need for a via up, then down.
+
+

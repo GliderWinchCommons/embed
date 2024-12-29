@@ -33,6 +33,8 @@ void printerror(char *p)
 	printf("wfx 30e00000 [float payload starting at [x] x 0 - 5]\n");
 	printf("wy0 30e00000 [integer payload starting at [0] # BIG ENDIAN #]\n");
 	printf("wb0 30e00000 [byte payload starting at [0]]\n");
+	printf("wff 83e00000 Two floats\n");
+	printf("wfi 83a00000 One float [0], one int[4]\n");
 	return;
 }
 
@@ -58,7 +60,15 @@ int cmd_w_init(char* p)
     	return 0;
 	
 	case 'f': // Payload as float
-		payloadtype = 'f';
+		if (*(p+2) == 'f')
+			payloadtype = '2'; // Two floats (FF_FF)
+		else
+		{
+			if (*(p+2) == 'i') // Float int (FF_S32)
+				payloadtype = '3';
+			else
+				payloadtype = 'f'; // Single float w offset idx
+		}
 		break;
 	case 'i': // Payload as integer
 		payloadtype = 'i';
@@ -88,8 +98,11 @@ int cmd_w_init(char* p)
 		case '7':
 			payloadidx = *(p+2) - '0'; // Convert to decimal
 			break;
+		case 'f':
+		case 'i':
+			break;
 		default:
-			printerror("Payload index not 0 - 5\n");
+			printerror("Payload index not 0 - 5, or\n  wff <can id>\n  wfi <can id>\n");
 			return -1;
 	}
 	sscanf((p+3), "%x",&keybrd_id);
@@ -160,8 +173,25 @@ void cmd_w_do_msg(struct CANRCVBUF* p)
 	case 'f':
 		for (i = 0; i < 4; i++)	// Copy payload bytes into float
 			uf.uc[i] = p->cd.uc[i+payloadidx];							
-		printf(" %6d  %4d %08X %d %f\n",msgctr, diff, p->id, p->dlc, uf.f);
+		printf(" %6d  %4d %08X %d %15.6f\n",msgctr, diff, p->id, p->dlc, uf.f);
 		break;
+
+	case '2': // Two floats, payload type: (FF_FF)
+		for (i = 0; i < 4; i++)	// Copy payload bytes into float
+			uf.uc[i] = p->cd.uc[i];							
+		printf(" %6d  %4d %08X %d %15.6f ",msgctr, diff, p->id, p->dlc, uf.f);
+		for (i = 0; i < 4; i++)	// Copy payload bytes into float
+			uf.uc[i] = p->cd.uc[i+4];							
+		printf(" %15.6f\n",uf.f);
+		break;
+
+    case '3': // Float, int, payload type: (FF_S32)
+		for (i = 0; i < 4; i++)	// Copy payload bytes into float
+			uf.uc[i] = p->cd.uc[i];							
+		printf(" %6d  %4d %08X %d %15.6f ",msgctr, diff, p->id, p->dlc, uf.f);
+		printf(" %15d\n",p->cd.ui[1]);
+		break;
+
 
 	default:
 		printf("something wrong with w command. type = %c\n", payloadtype);

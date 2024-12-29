@@ -494,14 +494,14 @@ INSERT INTO CANID VALUES ('CANID_CMD_PC_EMC','98000000','UNIT_PC2EMC', 1,1,'U8_U
 INSERT INTO CANID VALUES ('CANID_CMD_EMC_EMC','98200000','UNIT_EMC2EMC', 1,1,'U8_U8_U8_X4','EMC sends commands to EMC1 or 2');
 
 -- shaft_encoder Mk2 (demo winch) (UNIT: sends readings and CAN loader address; CMD: receives commands from PC, or HC.)
-INSERT INTO CANID VALUES ('CANID_UNIT_ENCODER1','83200000','UNIT_ENCODER', 1,1,'U8_VAR','DiscoveryF4 encoder demo winch');
-INSERT INTO CANID VALUES ('CANID_UNIT_ENCODER2','83400000','UNIT_ENCODER', 1,1,'U8_VAR','DiscoveryF4 encoder proxy');
+INSERT INTO CANID VALUES ('CANID_UNIT_ENCODER1','83200000','UNIT_ENCODER', 1,1,'U8_VAR','DiscoveryF4 encoder demo winch:');
+INSERT INTO CANID VALUES ('CANID_UNIT_ENCODER2','83400000','UNIT_ENCODER', 1,1,'U8_VAR','DiscoveryF4 encoder      proxy:');
 INSERT INTO CANID VALUES ('CANID_CMD_ENCODER1', '83600000','UNIT_ENCODER', 1,1,'U8_VAR','DiscoveryF4 encoder demo winch: command');
-INSERT INTO CANID VALUES ('CANID_CMD_ENCODER2', '83800000','UNIT_ENCODER', 1,1,'U8_VAR','DiscoveryF4 encoder proxy command');
-INSERT INTO CANID VALUES ('CANID_MSG1_ENCODER1','83A00000','UNIT_ENCODER', 1,1,'FF_FF' ,'DiscoveryF4 encoder demo winch: lineout, speed');
-INSERT INTO CANID VALUES ('CANID_MSG1_ENCODER2','83C00000','UNIT_ENCODER', 1,1,'FF_FF' ,'DiscoveryF4 encoder proxy: lineout, speed');
-INSERT INTO CANID VALUES ('CANID_MSG2_ENCODER1','83E00000','UNIT_ENCODER', 1,1,'FF_FF' ,'DiscoveryF4 encoder demo winch: accel, encoder counter');
-INSERT INTO CANID VALUES ('CANID_MSG2_ENCODER2','84000000','UNIT_ENCODER', 1,1,'FF_FF' ,'DiscoveryF4 encoder proxy: accel, encoder counter');
+INSERT INTO CANID VALUES ('CANID_CMD_ENCODER2', '83800000','UNIT_ENCODER', 1,1,'U8_VAR','DiscoveryF4 encoder      proxy: command');
+INSERT INTO CANID VALUES ('CANID_MSG1_ENCODER1','83A00000','UNIT_ENCODER', 1,1,'FF_FF' ,'DiscoveryF4 encoder demo winch: lineout, drum speed');
+INSERT INTO CANID VALUES ('CANID_MSG1_ENCODER2','83C00000','UNIT_ENCODER', 1,1,'FF_FF' ,'DiscoveryF4 encoder      proxy: lineout, drum speed');
+INSERT INTO CANID VALUES ('CANID_MSG2_ENCODER1','83E00000','UNIT_ENCODER', 1,1,'FF_S32','DiscoveryF4 encoder demo winch: accel, encoder counter');
+INSERT INTO CANID VALUES ('CANID_MSG2_ENCODER2','84000000','UNIT_ENCODER', 1,1,'FF_S32','DiscoveryF4 encoder      proxy: accel, encoder counter');
 
 
 INSERT INTO CANID VALUES ('CANID_UNIT_2', '04000000','UNIT_2', 1,1,'U8','Sensor unit: Drive shaft encoder #1');

@@ -544,7 +544,7 @@ if (req_size == 0xFEEDBACC)
 {
 	printf("### EOF sent. Node returned: %d req_size: %08X bt_flag: 0x%2X\n",p->cd.uc[0],req_size,bt_flag);
 	printf("xbin_in_ct: 0x%08X %d\n",xbin_in_ct,xbin_in_ct);
-	send_U8nnnX4(CANID_UNI_BMS_PC_I,LDR_RESET,0); // Send reset to "everybody" (i.e. 0 payload word)
+	send_U8nnnX4(CANID_UNI_BMS_PC_I,LDR_RESET,CANnodeid); // Send reset to "everybody" (i.e. 0 payload word)
 	cantx.cd.uc[0] = LDR_RESET;
 	sendcanmsg(&cantx);
 	printf("### RESET sent: %08X\n",cantx.id);
@@ -556,7 +556,7 @@ if (req_size == 0xFEEDBACC)
 		{ // Node was happy and asks for more data
 			if ((bt_flag & TOTAL_FLAG) != 0)
 			{ // Here, we sent EOF (end of bin array)
-//		send_U8nnnX4(CANID_UNI_BMS_PC_I,LDR_RESET,0); // Send reset to "everybody" (i.e. 0 payload word)
+//		send_U8nnnX4(CANID_UNI_BMS_PC_I,LDR_RESET,CANnodeid); // Send reset to "everybody" (i.e. 0 payload word)
 				cantx.cd.uc[0] = LDR_RESET;
 				sendcanmsg(&cantx);
 
@@ -629,7 +629,7 @@ void download_time_chk(void)
 			return;
 
 		case STATE_TIM_RESET: // Send CAN msg to reset
-			send_U8nnnX4(CANID_UNI_BMS_PC_I,LDR_RESET,0); // Send reset to "everybody" (i.e. 0 payload word)
+			send_U8nnnX4(CANID_UNI_BMS_PC_I,LDR_RESET,CANnodeid); // Send reset to "everybody" (i.e. 0 payload word)
 			state_timer = STATE_TIM_SQUELCH;
 //			download_settimeout(0, (100*MSEC)); // 100 ms timeout
 			timertickctr = (100/10);  // 100 ms timeout	

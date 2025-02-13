@@ -21,7 +21,22 @@ gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout20032
 
 gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout200329.txt csvfieldselect200329.txt < ~/GliderWinchItems/GEVCUr/docs/data/log200329-1.txt | tee log200329.csv
 
+01/29/2025
+To compile--
+gcc -Wall cancnvtmatlab.c -o cancnvtmatlab
 
+To run--
+File Arguments. Two files--
+'layout' defines how the payload fields are unpacked for each CAN ID
+'select' selects the payloads to be included in the csv file
+
+Input & output is std--
+E.g.
+Input from log file, output to console--
+./cancnvtmatlab csvlinelayout250127-1915.txt csvfieldselect200329.txt < ../cancnvt/log250127-1915.txt
+
+Input from log file, output to console AND file--
+./cancnvtmatlab csvlinelayout250127-1915.txt csvfieldselect200329.txt < ../cancnvt/log250127-1915.txt | tee cancnvtmatlab-250127-1915.csv
 
 Arguments: 
   Options <-option>
@@ -224,8 +239,9 @@ static char* copydesc(char *po, char *pi)
 int main(int argc, char **argv)
 {
 	int i,j,k;
-int mm = 0;
-char* pv;
+	int mm = 0;
+	char* pv;
+	uint8_t errflag = 0;
 
 	/* =============== Check command line arguments ===================================== */
 	if (argc < 2)
@@ -611,8 +627,14 @@ unsigned int kflag;
 			{ // Here, Not found: this CAN id does not have a payload layout entry in the array
 				if (cmdsw_b == 0)	// Skip this line command line switch is off
 					printf("# Not in payload layout array: 0X%08X\n", can.id);
+				else
+					errflag = 1;
 			}
 		}		
+	}
+	if (errflag != 0)
+	{
+		printf("\n# Not in payload layout array error, one or more times\n");
 	}
 }
 
@@ -694,6 +716,8 @@ struct CANFIELD
    char c[NAMESZ];       // Description field
 };
 
+For convenience, the following from PAYLOAD_TYPE_INSERT.sql--
+
 ('NONE',      0,  0, ' No payload bytes');
 ('FF',        1,  4, ' [0]-[3]: Full Float');			--
 ('FF_FF',     2,  8, ' [0]-[3]: Full Float[0]; [4]-[7]: Full Float[1]');	--
@@ -732,33 +756,59 @@ struct CANFIELD
 ('I16',            35, 2,'[1]-[0]:uint16_t');	--
 ('U8_VAR',         36, 2,'[0]-uint8_t: [1]-[n]: variable dependent on first byte');	--
 ('U8_S8_S8_S8_S8', 37, 5,'[0]:uint8_t:[1]:[2]:[3]:[4]:int8_t (signed)');	--
+('Y16_Y16_Y16_Y16',38,8,'[1]-[0]:[3]-[2]:[5]-[4]:[7]-[6]:int16_t');
+('U8_U8_U8_U8_FF' ,39,8,'[0]:[1]:[2]:[3]:uint8_t,[4-7]:Full-Float');
+('U8_U8_U8_S8_U16',40,6,'[0]:[1]:[2]:uint8_t,[3]:int_8,[[4]-[5]:uint16_t');
+('U8_8'           ,41,8,'[0]-[7]: unit8_t[8]');
+('S8_U8_7'        ,42,8,'[0]:int8_t,unit8_t[7]');
+('S8_S16_FF_V'    ,43,7,'[0]:int8_t,uint16_t, added FF if DLC = 7');
+('U8_U8_U8_X4'    ,44,7,'[0]:uint8_t:drum bits,uint8_t:command,uin8_t:subcmd,X4:four byte value');
+('S8_U8'          ,45,8,'[0]:int8_t,unit8_t');
+('U8_U8_U16_U16_U16'  ,46,7,'[0]:uint8_t,[1]:uint8_t,[2:3],[4:5],[6:7]:uint16_t');
+('U16_U16_U16_U16'    ,47,7,'[0:1],[2:3],[4:5],[6:7]:uint16_t');
+('I16_I16_U8_U8_U8_U8',48,8,'[1]-[0]:[3]-[2]:Big E,[4-7]uint8_t');
+('U8_U8_U16_U16_S16'  ,49,7,'[0]:uint8_t,[1]:uint8_t,[2:3]:uint16_t,[4:5]:uint16_t,[6:7]:int16_t');
+('FF_S32'             ,50,8,'[0]-[3]: float; [4]-[7]: int32_t[1]');	--
 
 
 ('LVL2B',	249,  6, ' [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table');	--
 ('LVL2R',	250,  6, ' [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table');	--
 ('UNDEF',	255,  8, ' Undefined');			--
+
 */
 
 void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 {
 	/* k is index into payload field array. */
-	if (pfld->fldnum < 1) return; // JIC field number zero 
+	if (pfld->fldnum < 1) 
+	{
+		printf("ERROR 123: convertpayload pfld->fldnum %d is less than 1\n",pfld->fldnum);
+		return; // JIC field number zero 
+	}
 	uint8_t k = pfld->fldnum-1; // k is index to payload field within 8 byte payload array
 
+	/* Union used to convert Little Endian payload bytes to float, ints, etc. */
 	union
 	{
 		unsigned int ui;
 		signed int si;
+		uint16_t us[2]; // Unsigned 16b
+		 int16_t ss[2]; // Signed 16b
 		float ff;
 	}ui_ff;
-	ui_ff.ff = 0;
+	ui_ff.ui = 0;
 
 	int16_t y16x;
 	int16_t y16off;
 
 	/* Conversion to double after byte extraction. */
-	// Most are unsigned, so default to 0
-	char flag = 0; // unsigned = 0, signed = 1, float = 2;
+	// flag: Most are unsigned, so default to 0
+	 // 0  unsigned
+	 // 1  signed
+	 // 2  float
+	 // 3  16 rollover
+	 // 4  16b signed
+	char flag = 0;
 
 	switch(pfld->paytype)
 	{ 
@@ -804,6 +854,11 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 		ui_ff.ui = pcanx->cd.uc[k];
 		break;
 
+	case S8_U8:
+		if (k == 0) {ui_ff.si = pcanx->cd.uc[0]; break;}
+		if (k == 1) {flag = 1; ui_ff.ui = pcanx->cd.uc[1];}
+		break;
+
 	case U32:
 	case U32_U32:
 		ui_ff.ui = payU32(pcanx,k*4);
@@ -831,6 +886,19 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 			ui_ff.ui = payU32(pcanx,2); 
 			flag = 1;
 		}
+		break;
+
+	case FF_S32:
+		if (k == 0) {flag = 2; ui_ff.ff = payFF(pcanx,0); break;}
+		if (k == 1) {flag = 1; ui_ff.si = payU32(pcanx,4);}
+		break;
+
+  case U8_U8_U16_U16_S16:
+		if (k == 0) {ui_ff.ui = pcanx->cd.uc[0]; break;}
+		if (k == 1) {ui_ff.ui = pcanx->cd.uc[1]; break;}
+		if (k == 2) {ui_ff.ss[0] = payU16(pcanx,2); break;}
+		if (k == 3) {ui_ff.ss[0] = payU16(pcanx,4); break;}
+	  if (k == 4) {flag = 4; ui_ff.ss[0] = payU16(pcanx,6);}
 		break;
 
 	case xxS32:
@@ -879,8 +947,9 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 	else if (flag == 0)
 		pfld->lgr = ui_ff.ui; // Unsigned -> double
 	else if (flag == 2)
-		pfld->lgr = ui_ff.ff; // float -> double
+		pfld->lgr = ui_ff.ff; // float -> double	
 #else
+
 	/* Calibrate and update last-good-reading as double */
 	pfld->lgr = (pfld->lgr + pfld->offset) * pfld->scale;
 
@@ -906,6 +975,11 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 		y16x   = (y16x + y16off); // Apply offset (signed)
 		pfld->lgr = y16x;         // Convert 16b to double
 		pfld->lgr = pfld->lgr * pfld->scale; // Apply scaling
+		break;
+
+	case 4: // 16b signed		
+		pfld->lgr = ui_ff.ss[0];
+		pfld->lgr = (pfld->lgr + pfld->offset) * pfld->scale;
 		break;
 	}
 #endif

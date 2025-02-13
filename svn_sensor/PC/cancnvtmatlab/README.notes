@@ -27,6 +27,7 @@ gcc -Wall cancnvtmatlab.c -o cancnvtmatlab
      c - csv position lines between csv data lines
      h - help
      '-' with none of the above chars show help
+     # - skip printing missing CAN ids
 
 Example:
 ./cancnvtmatlab  csvlinelayout.txt csvfieldselect.txt < ~/GliderWinchItems/dynamometer/docs/data/logfile190524a.txt | tee logfile190524a.csv

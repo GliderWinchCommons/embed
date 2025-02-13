@@ -539,7 +539,8 @@ INSERT INTO CANID VALUES ('CANID_UNIT_1E','04800000','UNIT_1E',1,1,'U8','Discove
 INSERT INTO CANID VALUES ('CANID_UNIT_1F','04A00000','UNIT_1F',1,1,'U8','Pwrbox: Blue Pill perf board');
 INSERT INTO CANID VALUES ('CANID_UNIT_20','04E00000','UNIT_20',1,1,'U8','Gateway4: 1 CAN');
 INSERT INTO CANID VALUES ('CANID_UNIT_21','05000000','UNIT_21',1,1,'U8','Contactor1: Blue Pill Mboard');
-INSERT INTO CANID VALUES ('CANID_UNIT_22','05200000','UNIT_22',1,1,'U8','GEVCUr: gevcu replasement: DiscoveyF4 Control Panel');
+INSERT INTO CANID VALUES ('CANID_UNIT_22','05200000','UNIT_22',1,1,'U8','GEVCUr: gevcu replacement: DiscoveyF4 Control Panel: demo winch');
+INSERT INTO CANID VALUES ('CANID_UNIT_23','05800000','UNIT_23',1,1,'U8','GEVCUr: gevcu replacement: DiscoveyF4 Control Panel: proxy');
 INSERT INTO CANID VALUES ('CANID_ALL_PC' ,'05400000','UNIT_X1',1,1,'U8','PC sends to all CAN loaders');
 INSERT INTO CANID VALUES ('CANID_ALL_OTH','05600000','UNIT_X2',1,1,'U8','Someone else sends to all CAN loaders');
 

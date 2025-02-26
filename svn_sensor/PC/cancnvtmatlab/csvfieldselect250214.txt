@@ -49,7 +49,7 @@ S   0  53 "%0.1f"        "CANID_MSG1_ENCODER1: DiscoveryF4 encoder demo winch: l
 S   0  54 "%0.2f"        "CANID_MSG1_ENCODER1: DiscoveryF4 encoder demo winch: motor speed like edges "
 S   0  55 "%0.3f"        "CANID_MSG2_ENCODER1: DiscoveryF4 encoder demo winch: motor accel like edges"
 S   0  56 "%0.3f"        "CANID_MSG2_ENCODER1: DiscoveryF4 encoder demo winch: motor accel 1/64th counts"
-S   0  57 "%0.2f"        "CANID_MSG3_ENCODER1: DiscoveryF4 encoder demo winch: motor speed: 1/64th counts "
+S   0  57 "%0.2f"        "CANID_MSG3_ENCODER1: DiscoveryF4 encoder demo winch: motor speed 1/64th counts "
 S   0  58 "%0.0f"        "CANID_MSG3_ENCODER1: DiscoveryF4 encoder demo winch: encoder counter"
 
 

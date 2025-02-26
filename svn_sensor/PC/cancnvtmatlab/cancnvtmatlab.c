@@ -141,7 +141,7 @@ int csvselectsz = 0;    // Number of entries loaded
 struct CANFIELD
 {
 	unsigned int linenum; // Line number
-	unsigned int fldnum;  // Payload field number
+	  signed int fldnum;  // Payload field number
 	unsigned int paytype; // Payload type number
 	double offset;        // Offset
    double scale;         // Scale
@@ -151,12 +151,13 @@ struct CANFIELD
 
 /* CAN field layout list */
 #define CANFLDLAYOUTSZ 512
-#define MAXNUMFIELDS 5
+#define MAXNUMFIELDS 16
 struct CANFLDLAYOUT	
 {
 	unsigned int id;      // CAN id
 	struct CANFIELD canfield[MAXNUMFIELDS];
 }canfldlayout[CANFLDLAYOUTSZ];
+
 int canfldlayoutsz = 0;  // Number of entries loaded
 
 unsigned int canidtimetick = 0; // CAN id for GPS 64/sec time ticks
@@ -307,7 +308,7 @@ mm = 0;
 	int flag = 0;
 	unsigned int linenum;
 	unsigned int id;
-	unsigned int fldnum;  // Payload field number
+	  signed int fldnum;  // Payload field number
 	unsigned int paytype; // Payload type number
 	double offset;        // Offset
    double scale;         // Scale
@@ -570,7 +571,7 @@ unsigned int kflag;
 //			if (canidtimetick == can.id)
 			skip += 1;
 			if (canidtimetick == can.id)
-      	{ // Here, CAN msg is a time tick msg
+      { // Here, CAN msg is a time tick msg
 				// Generate CSV line using last-good-reading
 				// Build CSV line
   				skip = 0; // Debugging skip count to throttle output
@@ -776,18 +777,6 @@ For convenience, the following from PAYLOAD_TYPE_INSERT.sql--
 ('UNDEF',	255,  8, ' Undefined');			--
 
 */
-
-void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
-{
-	/* k is index into payload field array. */
-	if (pfld->fldnum < 1) 
-	{
-		printf("ERROR 123: convertpayload pfld->fldnum %d is less than 1\n",pfld->fldnum);
-		return; // JIC field number zero 
-	}
-	uint8_t k = pfld->fldnum-1; // k is index to payload field within 8 byte payload array
-
-	/* Union used to convert Little Endian payload bytes to float, ints, etc. */
 	union
 	{
 		unsigned int ui;
@@ -796,6 +785,14 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 		 int16_t ss[2]; // Signed 16b
 		float ff;
 	}ui_ff;
+
+void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
+{
+	
+	uint8_t k = pfld->fldnum-1; // k is index to payload field within 8 byte payload array
+
+	/* Union used to convert Little Endian payload bytes to float, ints, etc. */
+	union ui_ff;
 	ui_ff.ui = 0;
 
 	int16_t y16x;
@@ -812,10 +809,20 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 
 	switch(pfld->paytype)
 	{ 
+	case BMS_MULTI: 
+		flag = convertpayloadBMS_MULTI(pcanx, int k, pfld);
+return;
+
 	case I16:
 	case I16_I16:
 	case I16_I16_I16_I16:
 		ui_ff.ui = payI16(pcanx,k*2);
+		break;
+
+	case I16_I16_U8_U8_U8_U8: // ELCON format
+		if (k == 0) {ui_ff.ui = payI16(pcanx,0); break;}
+		if (k == 1) {ui_ff.ui = payI16(pcanx,2); break;}
+		if (k >= 2) {ui_ff.ui = pcanx->cd.uc[k+2]; break;}
 		break;
 
 	case I16_X6:
@@ -828,7 +835,7 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 		if (k == 2) {ui_ff.ui = pcanx->cd.uc[5];   break;}
 		break;
 
-	case I16__I16:
+	case I16__I16: // Not sure what this is about!
 		if (k == 1) k = 2;
 	case I16_I16_I16_X6:
 		if (k != 3) {ui_ff.ui = payI16(pcanx,k*2);break;}
@@ -1058,4 +1065,85 @@ k = field index number
 	else if (k == 4) pfld->lgr = gfx.ht;
 	return;
 }
+/* ******************************************************************************** 
+ * char convertpayloadBMS_MULTI(struct CANRCVBUF* pcanx, int k, struct CANFIELD* pfld);
+ * @brief	: Convert payload for multi-format layout
+ * @param	: pcanx = pointer to CAN msg
+ * @param	: k = field index
+ * @param : pfld = pointer to struct with fields
+ * @return: flag setting
+ **********************************************************************************/
+/* FIELD =>offset<= numbering for BMS
+	 0 - 17 Cells #1- #18 readings (0.1 mv)
+	18 - Temperature #1
+	19 - Temperature #2
+	20 - Temperature #3
+  21 - Fan RPM
+  22 - Fan pwm
+  23 - Current sensor
+  24 - Status: bat
+  25 - Status: fet
+  26 - Status: mode
+*/
+char convertpayloadBMS_MULTI(struct CANRCVBUF* p, int k, struct CANFIELD* pfld)
+{
+	int i;
+	uint8_t celln;
+	double dtmp;
+	union FI
+	{
+		float f;
+		uint32_t ui;
+	}fi;	
 
+	switch (p->cd.uc[0])
+	{
+	case CMD_CMD_CELLPC: // Here, Response to PC requesting Cell voltages
+		celln = (p->cd.uc[1] >> 4) & 0xf; // Cell number of 1st payload U16
+		for (i = 0; i < 3; i++)
+		{ // Convert U16 cell reading and save in field array for this CAN ID
+			dtmp = p->cd.us[i+1]; // Convert to float
+			*(pfld + i + celln).lgr = dtmp;
+		}
+		break;
+
+// TODO: Additional fields
+	case CMD_CMD_MISCPC: // Here, Response to PC requesting misc (various) readings
+		switch(p->cd.uc[1])
+		{
+		case MISCQ_TEMP_CAL: // (04) BMS Temperature
+			uint8_t idx = (p->cd.uc[3] & 0x3);
+			if (idx > 2) idx = 2; // JIC
+			fi.ui = p->cd.ui[1];
+			float ftmp = fi.f;
+			dtmp = fpay;
+			*(pfld + 18 + idx).lgr = dtmp;
+			break;
+
+		case MISCQ_FAN_STATUS: // (39) Fan speed, fan rpm		
+			fi.ui = p->cd.ui[1]; // RPM
+			dtmp  = fi.f;
+			*(pfld + 21).lgr = dtmp;
+			*(pfld + 22).lgr = p->cd.uc[3];
+			break;
+
+		case MISCQ_CURRENT_CAL: // (24) Current sense calibrated
+			fi.ui = p->cd.ui[1];
+			dtmp = fi.f;
+			*(pfld + 23).lgr = dtmp;
+			break;
+
+		case MISCQ_STATUS: // (01) Status: battery, fets, mode
+			*(pfld + 24).lgr = p->cd.uc[4]; // Battery
+			*(pfld + 25).lgr = p->cd.uc[5]; // FETs
+			*(pfld + 26).lgr = p->cd.uc[6]; // Mode
+			break;
+		}	
+
+	default:
+		print("convertpayloadBMS_MULTI: CAN cd.uc[0] (%d) not in switch case, %08X\n",p->cd.uc[0],p->id);
+		break;
+	}
+
+	return;
+}

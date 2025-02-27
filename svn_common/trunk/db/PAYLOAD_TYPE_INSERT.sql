@@ -76,7 +76,6 @@ INSERT INTO PAYLOAD_TYPE VALUES ('U8_U8_U16_U16_S16'  ,49,7,'[0]:uint8_t,[1]:uin
 INSERT INTO PAYLOAD_TYPE VALUES ('FF_S32'             ,50,8,'[0]-[3]: float; [4]-[7]: int32_t[1]');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('BMS_MULTI'          ,51,8,'BMS: payload format dependent on payload bytes [0], [1]');
 
-
 INSERT INTO PAYLOAD_TYPE VALUES ('LVL2B',	249,  6, ' [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('LVL2R',	250,  6, ' [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table');	--
 INSERT INTO PAYLOAD_TYPE VALUES ('UNDEF',	255,  8, ' Undefined');			--

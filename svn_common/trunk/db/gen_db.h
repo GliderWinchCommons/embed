@@ -1,5 +1,5 @@
 // Defines from database pcc
-// 2025-02-26 12:34:07.96
+// 2025-02-26 20:16:59.153
 
 #define CANID_COUNT 361
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
@@ -493,7 +493,7 @@
 #define  I16_I16_U8_U8_U8_U8     48        // [1]-[0]:[3]-[2]:Big E,[4-7]uint8_t              
 #define  U8_U8_U16_U16_S16       49        // [0]:uint8_t,[1]:uint8_t,[2:3]:uint16_t,[4:5]:uint16_t,[6:7]:int16_t
 #define  FF_S32                  50        // [0]-[3]: float; [4]-[7]: int32_t[1]             
-#define  BMS_MULTI               51        // BMS: following payload format dependent on payload byte
+#define  BMS_MULTI               51        // BMS: payload format dependent on payload bytes [0], [1]
 #define  LVL2B                   249       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      

@@ -1,7 +1,7 @@
 // Defines from database pcc
-// 2025-01-10 20:31:58.567
+// 2025-02-26 12:34:07.96
 
-#define CANID_COUNT 360
+#define CANID_COUNT 361
 #define  CANID_MSG_TENSION_0      0x48000000  // TENSION_a      : Tension_0: Default measurement canid
 #define  CANID_MSG_TENSION_a11    0x38000000  // TENSION_a      : Tension_a11: Drum 1 calibrated tension, polled by time msg
 #define  CANID_MSG_TENSION_a21    0x38200000  // TENSION_a      : Tension_a12: Drum 1 calibrated tension, polled by time msg
@@ -315,12 +315,12 @@
 #define  CANID_UNIT_ENCODER2      0x83400000  // UNIT_ENCODER   : DiscoveryF4 encoder      proxy:
 #define  CANID_CMD_ENCODER1       0x83600000  // UNIT_ENCODER   : DiscoveryF4 encoder demo winch: command
 #define  CANID_CMD_ENCODER2       0x83800000  // UNIT_ENCODER   : DiscoveryF4 encoder      proxy: command
-#define  CANID_MSG1_ENCODER1      0x83A00000  // UNIT_ENCODER   : DiscoveryF4 encoder demo winch: lineout, drum speed
-#define  CANID_MSG1_ENCODER2      0x83C00000  // UNIT_ENCODER   : DiscoveryF4 encoder      proxy: lineout, drum speed
-#define  CANID_MSG2_ENCODER1      0x83E00000  // UNIT_ENCODER   : DiscoveryF4 encoder demo winch: accel, encoder speed
-#define  CANID_MSG2_ENCODER2      0x84000000  // UNIT_ENCODER   : DiscoveryF4 encoder      proxy: accel, encoder speed
-#define  CANID_MSG3_ENCODER1      0x84200000  // UNIT_ENCODER   : DiscoveryF4 encoder demo winch: drum speed, encoder counter
-#define  CANID_MSG3_ENCODER2      0x84400000  // UNIT_ENCODER   : DiscoveryF4 encoder      proxy: drum speed, encoder counter
+#define  CANID_MSG1_ENCODER1      0x83A00000  // UNIT_ENCODER   : DiscoveryF4 encoder demo winch: lineout, motor speed like edges
+#define  CANID_MSG1_ENCODER2      0x83C00000  // UNIT_ENCODER   : DiscoveryF4 encoder      proxy: lineout, motor speed like edges
+#define  CANID_MSG2_ENCODER1      0x83E00000  // UNIT_ENCODER   : DiscoveryF4 encoder demo winch: motor accel like edges|motor accel 1/64 cts
+#define  CANID_MSG2_ENCODER2      0x84000000  // UNIT_ENCODER   : DiscoveryF4 encoder      proxy: motor accel like edges|motor accel 1/64 cts
+#define  CANID_MSG3_ENCODER1      0x84200000  // UNIT_ENCODER   : DiscoveryF4 encoder demo winch: motor speed 1/64 cts|encoder counter
+#define  CANID_MSG3_ENCODER2      0x84400000  // UNIT_ENCODER   : DiscoveryF4 encoder      proxy: motor speed 1/64 cts|encoder counter
 #define  CANID_UNIT_2             0x04000000  // UNIT_2         : Sensor unit: Drive shaft encoder #1
 #define  CANID_UNIT_3             0x03800000  // UNIT_3         : Sensor unit: Engine
 #define  CANID_UNIT_4             0x03A00000  // UNIT_4         : Sensor unit: Lower sheave shaft encoder
@@ -351,7 +351,8 @@
 #define  CANID_UNIT_1F            0x04A00000  // UNIT_1F        : Pwrbox: Blue Pill perf board
 #define  CANID_UNIT_20            0x04E00000  // UNIT_20        : Gateway4: 1 CAN
 #define  CANID_UNIT_21            0x05000000  // UNIT_21        : Contactor1: Blue Pill Mboard
-#define  CANID_UNIT_22            0x05200000  // UNIT_22        : GEVCUr: gevcu replasement: DiscoveyF4 Control Panel
+#define  CANID_UNIT_22            0x05200000  // UNIT_22        : GEVCUr: gevcu replacement: DiscoveyF4 Control Panel: demo winch
+#define  CANID_UNIT_23            0x05800000  // UNIT_23        : GEVCUr: gevcu replacement: DiscoveyF4 Control Panel: proxy
 #define  CANID_ALL_PC             0x05400000  // UNIT_X1        : PC sends to all CAN loaders
 #define  CANID_ALL_OTH            0x05600000  // UNIT_X2        : Someone else sends to all CAN loaders
 #define  CANID_FILTER             0x07000000  // UNIT_XX        : hub-server sandbox CAN filter management
@@ -440,7 +441,7 @@
 #define  CMD_CMD_SYS_RESET_CID   167       // 0xA7: [0] Cause System Reset for CAN ID sent in payload
 #define  CMD_CMD_SYS_RESET_EXT   168       // 0xA8: [0] Extend current loader wait duration for all, [1] = wait in 0.1 sec steps
 
-#define PAYLOAD_TYPE_COUNT 54
+#define PAYLOAD_TYPE_COUNT 55
 #define  NONE                    0         // No payload bytes                                
 #define  FF                      1         // [0]-[3]: Full Float                             
 #define  FF_FF                   2         // [0]-[3]: Full Float[0]; [4]-[7]: Full Float[1]  
@@ -492,6 +493,7 @@
 #define  I16_I16_U8_U8_U8_U8     48        // [1]-[0]:[3]-[2]:Big E,[4-7]uint8_t              
 #define  U8_U8_U16_U16_S16       49        // [0]:uint8_t,[1]:uint8_t,[2:3]:uint16_t,[4:5]:uint16_t,[6:7]:int16_t
 #define  FF_S32                  50        // [0]-[3]: float; [4]-[7]: int32_t[1]             
+#define  BMS_MULTI               51        // BMS: following payload format dependent on payload byte
 #define  LVL2B                   249       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Board code),[2]-[5]see table
 #define  LVL2R                   250       //  [2]-[5]: (uint8_t[0],uint8_t[1] cmd:Readings code),[2]-[5]see table
 #define  UNDEF                   255       //  Undefined                                      
@@ -994,6 +996,6 @@
 #define  PROG_TENSION_READINGS_BOARD_TXINT_EMPTYLIST	14        // Count: TX interrupt with pending list empty     
 #define  PROG_TENSION_READINGS_BOARD_CAN1_BOGUS_CT	15        // Count: bogus CAN1 IDs rejected                  
 
-/* TOTAL COUNT OF #defines = 929  */
+/* TOTAL COUNT OF #defines = 931  */
 /* Test 2016/06/12 */
 

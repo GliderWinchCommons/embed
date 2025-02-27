@@ -172,6 +172,8 @@ unsigned int linect = 0;
 FILE* fpIn[FILECTSZ];
 int filect = 0;
 
+char convertpayloadBMS_MULTI(struct CANRCVBUF* p, int k, struct CANFIELD* pfld);
+
 char *paytype = "../../../svn_common/trunk/db/PAYLOAD_TYPE_INSERT.sql";
 char *canid_insert = "../../../svn_common/trunk/db/CANID_INSERT.sql";
 
@@ -1073,6 +1075,43 @@ k = field index number
  * @param : pfld = pointer to struct with fields
  * @return: flag setting
  **********************************************************************************/
+/* See GliderWinchItems/BMS/bmsadbms1818/Ourtasks/cancomm_items.h */
+ #define MISCQ_HEARTBEAT   0   // reserved for heartbeat
+ #define MISCQ_STATUS      1 // status
+ #define MISCQ_CELLV_CAL   2 // cell voltage: calibrated
+ #define MISCQ_CELLV_ADC   3 // cell voltage: adc counts
+ #define MISCQ_TEMP_CAL    4 // temperature sensor: calibrated
+ #define MISCQ_TEMP_ADC    5 // temperature sensor: adc counts for making calibration
+ #define MISCQ_DCDC_V      6 // isolated dc-dc converter output voltage
+ #define MISCQ_CHGR_V      7 // charger hv voltage
+ #define MISCQ_HALL_CAL    8 // Hall sensor: calibrated
+ #define MISCQ_HALL_ADC    9 // Hall sensor: adc counts for making calibration
+ #define MISCQ_CELLV_HI   10 // Highest cell voltage
+ #define MISCQ_CELLV_LO   11 // Lowest cell voltage
+ #define MISCQ_FETBALBITS 12 // Read FET on|off discharge bits
+ #define MISCQ_SET_DUMP	  13 // Set ON|OFF DUMP FET on|off
+ #define MISCQ_SET_DUMP2  14 // Set ON|OFF DUMP2 FET FET: on|off
+ #define MISCQ_SET_HEATER 15 // Set ON|OFF HEATER FET on|off
+ #define MISCQ_TRICKL_OFF 17 // Turn trickle charger off for no more than ‘payload [3]’ secs
+ #define MISCQ_TOPOFSTACK 18 // BMS top-of-stack voltage
+ #define MISCQ_PROC_CAL   19 // Processor ADC calibrated readings
+ #define MISCQ_PROC_ADC   20 // Processor ADC raw adc counts for making calibrations
+ #define MISCQ_R_BITS     21 // Dump, dump2, heater, discharge bits
+ #define MISCQ_CURRENT_CAL 24 // Below cell #1 minus, current resistor: calibrated
+ #define MISCQ_CURRENT_ADC 25 // Below cell #1 minus, current resistor: adc counts
+ #define MISCQ_UNIMPLIMENT 26 // Command requested is not implemented
+ #define MISCQ_SET_FETBITS  27 // Set FET on/off discharge bits
+ #define MISCQ_SET_DCHGTST  28 // Set discharge test via heater fet load on|off
+ #define MISCQ_SET_DCHGFETS 30 // Set discharge FETs: all, on|off, or single
+ #define MISCQ_SET_SELFDCHG 31 // Set ON|OFF self-discharge mode
+ #define MISCQ_PRM_MAXCHG   32 // Get Parameter: Max charging current
+ #define MISCQ_SET_ZEROCUR  33 // 1 = Zero external current in effect; 0 = maybe not.
+ #define MISCQ_READ_AUX     34 // BMS responds with A,B,C,D AUX register readings (12 msgs)
+ #define MISCQ_READ_ADDR    35 // BMS responds with 'n' bytes sent in [3]
+ #define MISCQ_PROC_TEMP    36 // Processor calibrated internal temperature (deg C)
+ #define MISCQ_CHG_LIMITS   37 // Show params: Module V max, Ext chg current max, Ext. chg bal
+ #define MISCQ_MORSE_TRAP   38 // Retrieve stored morse_trap code.
+ #define MISCQ_FAN_STATUS   39 // Retrieve fan: pct and rpm 
 /* FIELD =>offset<= numbering for BMS
 	 0 - 17 Cells #1- #18 readings (0.1 mv)
 	18 - Temperature #1
@@ -1089,7 +1128,9 @@ char convertpayloadBMS_MULTI(struct CANRCVBUF* p, int k, struct CANFIELD* pfld)
 {
 	int i;
 	uint8_t celln;
+	char flag;
 	double dtmp;
+
 	union FI
 	{
 		float f;
@@ -1103,7 +1144,7 @@ char convertpayloadBMS_MULTI(struct CANRCVBUF* p, int k, struct CANFIELD* pfld)
 		for (i = 0; i < 3; i++)
 		{ // Convert U16 cell reading and save in field array for this CAN ID
 			dtmp = p->cd.us[i+1]; // Convert to float
-			*(pfld + i + celln).lgr = dtmp;
+			(pfld + i + celln)->lgr = dtmp;
 		}
 		break;
 
@@ -1116,34 +1157,34 @@ char convertpayloadBMS_MULTI(struct CANRCVBUF* p, int k, struct CANFIELD* pfld)
 			if (idx > 2) idx = 2; // JIC
 			fi.ui = p->cd.ui[1];
 			float ftmp = fi.f;
-			dtmp = fpay;
-			*(pfld + 18 + idx).lgr = dtmp;
+			dtmp = ftmp;
+			(pfld + 18 + idx)->lgr = dtmp;
 			break;
 
 		case MISCQ_FAN_STATUS: // (39) Fan speed, fan rpm		
 			fi.ui = p->cd.ui[1]; // RPM
 			dtmp  = fi.f;
-			*(pfld + 21).lgr = dtmp;
-			*(pfld + 22).lgr = p->cd.uc[3];
+			(pfld + 21)->lgr = dtmp;
+			(pfld + 22)->lgr = p->cd.uc[3];
 			break;
 
 		case MISCQ_CURRENT_CAL: // (24) Current sense calibrated
 			fi.ui = p->cd.ui[1];
 			dtmp = fi.f;
-			*(pfld + 23).lgr = dtmp;
+			(pfld + 23)->lgr = dtmp;
 			break;
 
 		case MISCQ_STATUS: // (01) Status: battery, fets, mode
-			*(pfld + 24).lgr = p->cd.uc[4]; // Battery
-			*(pfld + 25).lgr = p->cd.uc[5]; // FETs
-			*(pfld + 26).lgr = p->cd.uc[6]; // Mode
+			(pfld + 24)->lgr = p->cd.uc[4]; // Battery
+			(pfld + 25)->lgr = p->cd.uc[5]; // FETs
+			(pfld + 26)->lgr = p->cd.uc[6]; // Mode
 			break;
 		}	
 
 	default:
-		print("convertpayloadBMS_MULTI: CAN cd.uc[0] (%d) not in switch case, %08X\n",p->cd.uc[0],p->id);
+		printf("convertpayloadBMS_MULTI: CAN cd.uc[0] (%d) not in switch case, %08X\n",p->cd.uc[0],p->id);
 		break;
 	}
 
-	return;
+	return flag;
 }

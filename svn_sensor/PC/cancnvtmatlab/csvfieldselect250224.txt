@@ -1,0 +1,144 @@
+# csvfieldselect.txt - select CAN fields for csv line output
+# 05/17/2019
+# 02/01/2025 Update
+# 02/24/2025 Revise for BMS type payloads
+#  BMS payloads depend on the bytes [0] and [1], therefore the
+#    extraction is determined by these bytes
+#
+# Column 1: Type of line: 'S' = select field type of line
+# Column 2: CSV line field position number (=>IGNORED<=)
+#  Revision: 2 is the payload selection
+# Column 3: Field definition: CAN field identification number
+#  Revision: 3 is 'T' line selection (CAN ID w payload type)
+# Column 4: Format field for printf of this field
+# Column 5: Description of field
+#
+# NOTE: format field must be a 'f' type as the last-good-reading is always a double
+#
+# NOTE: The following order of lines is the csv field position
+#
+#  -- field format       description
+# csv  id
+S   0   1 "%0.0f"        "CANID_HB_TIMESYNC: (0-63)"
+S   0  18 "%0.1f"        "Command: Torque"
+S   0  13 "%0.1f"        "DMOC Actual Torque"
+S   0  16 "%0.1f"        "Command: Speed"
+S   0   7 "%0.1f"        "DMOC Actual Speed (rpm?)"
+S   0  42 "%0.1f"        "Contactor1: poll response: HV1 battery"
+S   0   5 "%0.1f"        "DMOC HV status: voltage (volts)"
+S   0  43 "%0.1f"        "Contactor1: poll response: Battery Current sensor1"
+S   0   6 "%0.1f"        "DMOC HV status: current (amps)"
+S   0  40 "%0.1f"        "Contactor1: poll response: HV2 battery gnd to: DMOC+"
+S   0  41 "%0.1f"        "Contactor1: poll response: HV3 battery gnd to:DMOC-"
+S   0  30 "%0.3f"        "Tension_a11: Drum 1 calibrated tension, polled by time msg"
+S   0  31 "%0.3f"        "Tension_a12: Drum 1 calibrated tension, polled by time msg"
+S   0   2 "%0.0f"        "DMOC Temperature: Rotor (degC)"
+S   0   3 "%0.0f"        "DMOC Temperature: Inverter: payload (degC)"
+S   0   4 "%0.0f"        "DMOC Temperature: Stator: payload (degC)"
+S   0   8 "%0.0f"        "DMOC Status code (in hi-nibble)"
+S   0   9 "%0.1f"        "DMOC D volts"
+S   0  10 "%0.1f"        "DMOC D amps"
+S   0  11 "%0.1f"        "DMOC Q volts"
+S   0  12 "%0.1f"        "DMOC Q amps"
+S   0  26 "%0.0f"        "UNIXTIME CANID_HB_GPS_TIME_1: status"
+S   0  34 "%0.0f"        "UNIXTIME CANID_HB_GPS_TIME_1: epoc_secs"
+S   0  25 "%0.0f"        "Command: Alive byte"
+S   0  44 "%0.1f"        "Contactor1: R KeepAlive response [0] bit[6-7] command:bit [0-3] main state"
+S   0  45 "%0.1f"        "Contactor1: R KeepAlive response [1] error code: 0 = no error"
+S   0  46 "%0.1f"        "Contactor1: R KeepAlive response [2] substates"
+S   0  47 "%0.1f"        "Contactor1: I KeepAlive: bit[6-7] command"
+S   0  17 "%0.0f"        "Command: Key state"
+S   0  48 "%0.0f"        "GEVCUr: CANID_LOG_DMOCCMDSPD: Desired speed"
+S   0  49 "%0.0f"        "GEVCUr: CANID_LOG_DMOCCMDSPD: Integrator"
+S   0  53 "%0.1f"        "CANID_MSG1_ENCODER1: DiscoveryF4 encoder demo winch: lineout"
+S   0  54 "%0.2f"        "CANID_MSG1_ENCODER1: DiscoveryF4 encoder demo winch: motor speed like edges "
+S   0  55 "%0.3f"        "CANID_MSG2_ENCODER1: DiscoveryF4 encoder demo winch: motor accel like edges"
+S   0  56 "%0.3f"        "CANID_MSG2_ENCODER1: DiscoveryF4 encoder demo winch: motor accel 1/64th counts"
+S   0  57 "%0.2f"        "CANID_MSG3_ENCODER1: DiscoveryF4 encoder demo winch: motor speed 1/64th counts "
+S   0  58 "%0.0f"        "CANID_MSG3_ENCODER1: DiscoveryF4 encoder demo winch: encoder counter"
+#
+S   0  69 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL  1"
+S   1  70 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL  2"
+S   2  71 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL  3"
+S   3  72 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL  4"
+S   4  73 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL  5"
+S   5  74 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL  6"
+S   6  75 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL  7"
+S   7  76 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL  8"
+S   8  77 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL  9"
+S   9  78 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL 10"
+S  10  79 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL 11"
+S  11  80 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL 12"
+S  12  81 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL 13"
+S  13  82 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL 14"
+S  14  83 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL 15"
+S  15  84 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL 16"
+S  16  85 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL 17"
+S  17  86 "%0.1f"        "CANID_UNIT_BMS03 B0A00000 CELL 18"
+#
+S   0 150 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL  1"
+S   1 151 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL  2"
+S   2 152 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL  3"
+S   3 153 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL  4"
+S   4 154 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL  5"
+S   5 155 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL  6"
+S   6 156 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL  7"
+S   7 157 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL  8"
+S   8 158 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL  9"
+S   9 159 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL 10"
+S  10 160 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL 11"
+S  11 161 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL 12"
+S  12 162 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL 13"
+S  13 163 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL 14"
+S  14 164 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL 15"
+S  15 165 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL 16"
+S  16 166 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL 17"
+S  17 167 "%0.1f"        "CANID_UNIT_BMS06 B1000000 CELL 18"
+#
+S   0 366 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL  1"
+S   1 367 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL  2"
+S   2 368 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL  3"
+S   3 369 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL  4"
+S   4 370 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL  5"
+S   5 371 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL  6"
+S   6 372 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL  7"
+S   7 373 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL  8"
+S   8 374 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL  9"
+S   9 375 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL 10"
+S  10 376 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL 11"
+S  11 377 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL 12"
+S  12 378 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL 13"
+S  13 379 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL 14"
+S  14 380 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL 15"
+S  15 381 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL 16"
+S  16 382 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL 17"
+S  17 383 "%0.1f"        "CANID_UNIT_BMS14 B2200000 CELL 18"
+# ELCON
+S   0  59 "%0.1f"        "CANID_ELCON_TX Charger transmit volts"
+S   0  60 "%0.1f"        "CANID_ELCON_TX Charger transmit amps"
+S   0  61 "%0.0f"        "CANID_ELCON_TX Charger transmit status"
+S   0  62 "%0.1f"        "CANID_ELCON_RX Charger receive volts"
+S   0  63 "%0.1f"        "CANID_ELCON_RX Charger receive amps"
+S   0  64 "%0.0f"        "CANID_ELCON_RX Charger receive status"
+
+# NOTE: format field must be a 'f' type as the last-good-reading is always a double
+# Uncomment to added the following to the CSV line
+#  csv  id
+#S  --  25 "%0.0f"           "Command: Alive byte"
+#S  --  22 "%0.0f"           "Command: Regen watt limit"
+#S  --  23 "%0.0f"           "Command: Regen accel limit"
+#S  --  24 "%0.0f"           "Command: Deg C"
+#S  --  28 "%0.0f"        "CANID_HB_LOGGER_1"
+#S  --  29 "%0.0f"        "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) fix"
+#S  --  35 "%0.0f"        "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) nsats"
+#S  --  36 "%0.0f"        "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) lat"
+#S  --  37 "%0.0f"        "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) lon"
+#S  --  38 "%0.0f"        "LAT_LON_HT CANID_HB_GPS_LLH_1 (3 msgs) ht"
+#S  --  27 "%0.0f"        "CANID_HB_GATEWAY2"
+#S  --  19 "%0.1f"        "Command: Torque (copy)"
+#S  --  20 "%0.1f"        "Command: Torque standby"
+#S  --  14 "%0.1f"        "DMOC Torque(29b msg?)"
+#S  --  15 "%0.1f"        "DMOC Torque(29b msg?)"
+#S  --  32 "%0.3f"        "Tension_a11: Heartbeat"
+#S  --  33 "%0.3f"        "Tension_a21: Heartbeat"
+

@@ -122,10 +122,10 @@ char buf[LINESZ];
 
 /* CAN id selection input file  */
 #define NAMESZ 128	// Max size of name field
-#define CSVLINESZ 1024	// Max output line size
+#define CSVLINESZ 2048	// Max output line size
 
 /* CAN field selection input list */
-#define CSVSELECTSZ 512
+#define CSVSELECTSZ 1024
 struct CSVSELECT
 {
 	unsigned int pos;	   // Position on csv line
@@ -144,14 +144,14 @@ struct CANFIELD
 	  signed int fldnum;  // Payload field number
 	unsigned int paytype; // Payload type number
 	double offset;        // Offset
-   double scale;         // Scale
+   double scale;        // Scale
 	double lgr;           // Last Good Reading
-   char c[NAMESZ];       // Description field
+   char c[NAMESZ];      // Description field
 };
 
 /* CAN field layout list */
 #define CANFLDLAYOUTSZ 512
-#define MAXNUMFIELDS 16
+#define MAXNUMFIELDS 32
 struct CANFLDLAYOUT	
 {
 	unsigned int id;      // CAN id
@@ -172,7 +172,7 @@ unsigned int linect = 0;
 FILE* fpIn[FILECTSZ];
 int filect = 0;
 
-char convertpayloadBMS_MULTI(struct CANRCVBUF* p, int k, struct CANFIELD* pfld);
+char convertpayloadBMS_MULTI(struct CANRCVBUF* p, struct CANFIELD* pfld);
 
 char *paytype = "../../../svn_common/trunk/db/PAYLOAD_TYPE_INSERT.sql";
 char *canid_insert = "../../../svn_common/trunk/db/CANID_INSERT.sql";
@@ -289,10 +289,9 @@ int main(int argc, char **argv)
 		printf("\nMore arguments than input files allowed: argc = %d, command sw ct = %d, file ct allowed = %d\n",argc, argflag, FILECTSZ);
 		return -1;
 	}
-
 //printf("cmdsw: t %i  x %i  c %i #%i\n",cmdsw_t,cmdsw_x,cmdsw_c,cmdsw_b);	
-
 //printf("argc: %i\n",argc);
+
 	/* =============== Read input specification files ================================================ */
 	int ii;
 	for (ii = 1; ii < argc; ii++)
@@ -460,7 +459,7 @@ n += 1;
 			printf("\t\t%s\n",csvselect[i].c);
 		}
 	}
-
+//return 0;
 /* ============= Make list of CAN id versus field definition number ================== */
 /*
 struct CSVSELECT
@@ -618,11 +617,18 @@ unsigned int kflag;
 			pcanfldlayout = bsearch(&can.id, &canfldlayout[0], canfldlayoutsz, sizeof(struct CANFLDLAYOUT), cmpfunc);
 			if (pcanfldlayout != NULL)
 			{ // Found in CAN layout array
-				for (k = 0; k < MAXNUMFIELDS; k++)
+				if (pcanfldlayout->canfield[0].paytype == BMS_MULTI)
 				{
-					if (pcanfldlayout->canfield[k].fldnum != 0)
-					{ // Convert & calibrate payload, and update last good reading (lgr)
-						convertpayload(&can, &pcanfldlayout->canfield[k]);
+					convertpayloadBMS_MULTI(&can, &pcanfldlayout->canfield[0]);
+				}
+				else
+				{
+					for (k = 0; k < MAXNUMFIELDS; k++)
+					{
+						if (pcanfldlayout->canfield[k].fldnum != 0)
+						{ // Convert & calibrate payload, and update last good reading (lgr)
+							convertpayload(&can, &pcanfldlayout->canfield[k]);						
+						}
 					}
 				}
 			}
@@ -790,6 +796,8 @@ For convenience, the following from PAYLOAD_TYPE_INSERT.sql--
 
 void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 {
+//	if (pfld->paytype == 51)
+//printf("PAY: canid %08X pfld->paytype %d\n",pcanx->id, pfld->paytype);
 	
 	uint8_t k = pfld->fldnum-1; // k is index to payload field within 8 byte payload array
 
@@ -812,7 +820,7 @@ void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 	switch(pfld->paytype)
 	{ 
 	case BMS_MULTI: 
-		flag = convertpayloadBMS_MULTI(pcanx, int k, pfld);
+printf("\n\nconvertpayload case BMS_MULTI: SHOULD NOT HAVE COME HERE! %08X\n\n",pcanx->id);
 return;
 
 	case I16:
@@ -1068,10 +1076,9 @@ k = field index number
 	return;
 }
 /* ******************************************************************************** 
- * char convertpayloadBMS_MULTI(struct CANRCVBUF* pcanx, int k, struct CANFIELD* pfld);
+ * char convertpayloadBMS_MULTI(struct CANRCVBUF* pcanx, struct CANFIELD* pfld);
  * @brief	: Convert payload for multi-format layout
  * @param	: pcanx = pointer to CAN msg
- * @param	: k = field index
  * @param : pfld = pointer to struct with fields
  * @return: flag setting
  **********************************************************************************/
@@ -1124,11 +1131,11 @@ k = field index number
   25 - Status: fet
   26 - Status: mode
 */
-char convertpayloadBMS_MULTI(struct CANRCVBUF* p, int k, struct CANFIELD* pfld)
+char convertpayloadBMS_MULTI(struct CANRCVBUF* p, struct CANFIELD* pfld)
 {
 	int i;
 	uint8_t celln;
-	char flag;
+	char flag = 0;
 	double dtmp;
 
 	union FI
@@ -1145,6 +1152,7 @@ char convertpayloadBMS_MULTI(struct CANRCVBUF* p, int k, struct CANFIELD* pfld)
 		{ // Convert U16 cell reading and save in field array for this CAN ID
 			dtmp = p->cd.us[i+1]; // Convert to float
 			(pfld + i + celln)->lgr = dtmp;
+//printf("BAT %08X %d %0.1f\n",p->id,celln+i, dtmp*0.1);
 		}
 		break;
 
@@ -1180,9 +1188,10 @@ char convertpayloadBMS_MULTI(struct CANRCVBUF* p, int k, struct CANFIELD* pfld)
 			(pfld + 26)->lgr = p->cd.uc[6]; // Mode
 			break;
 		}	
+		break;
 
 	default:
-		printf("convertpayloadBMS_MULTI: CAN cd.uc[0] (%d) not in switch case, %08X\n",p->cd.uc[0],p->id);
+		printf("convertpayloadBMS_MULTI: CAN cd.uc([0] %d) ([1] %d) not in switch case, %08X\n",p->cd.uc[0],p->cd.uc[1],p->id);
 		break;
 	}
 

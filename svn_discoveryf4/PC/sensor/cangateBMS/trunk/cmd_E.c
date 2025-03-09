@@ -199,7 +199,7 @@ static uint32_t timechgstatuspoll;
 static uint32_t timechgloop;
 
 /* Supply a default number of modules on the string. */
-static uint8_t num_bms_modules = 6; // Number of BMS modules on string
+static uint8_t num_bms_modules = 3;//6; // Number of BMS modules on string
 
 static struct CANRCVBUF cantx_type2; // Generic TYPE2 msg to read
 static struct CANRCVBUF cantx_type2k; // Generic TYPE2 msg to set

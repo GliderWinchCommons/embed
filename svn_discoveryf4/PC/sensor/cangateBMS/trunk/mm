@@ -1,7 +1,9 @@
 # make and install
 # 07/01/2024
+# 03/08/2025 version for GliderWinchCommons not in home directory
 #
-cd ~/GliderWinchCommons/embed/svn_discoveryf4/PC/sensor/cangateBMS/trunk
+# cd ~/GliderWinchCommons/embed/svn_discoveryf4/PC/sensor/cangateBMS/trunk
+#
 make clean
 make
 cp cangateBMSstart ~/bin/cangateBMS

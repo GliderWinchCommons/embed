@@ -26,6 +26,7 @@ INSERT INTO CANID VALUES ('CANID_ELCON_TX','C7FA872E','ELCON1',1,1,'I16_I16_U8_U
 INSERT INTO CANID VALUES ('CANID_ELCON_RX','C0372FA4','ELCON1',1,1,'I16_I16_U8_U8_U8_U8','ELCON Charger receive: '); */
 #define CANID_RX_DEFAULT CANID_ELCON_TX  // C7FA872C' This cmd RECEIVES; ELCON transmits
 #define CANID_TX_DEFAULT CANID_ELCON_RX  // C0372FA4' This cmd SENDS; ELCON receives
+
 union UF
 {
 	uint8_t uc[4];
@@ -157,6 +158,10 @@ int cmd_p_init(char* p)
 		break;
 
 	case 'o': // Set charger off bit to 0	
+		cantx.cd.uc[0] = (ivolts >> 8);
+		cantx.cd.uc[1] = (ivolts & 0xFF);
+		cantx.cd.uc[2] = (iamps >> 8);
+		cantx.cd.uc[3] = (iamps & 0xFF);		
 		cantx.cd.uc[4] = 0;
 		sendcanmsg(&cantx);
 		break;

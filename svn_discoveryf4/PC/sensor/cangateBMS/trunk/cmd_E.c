@@ -615,8 +615,7 @@ int cmd_E_init(char* p)
  * static void elcondatacheck(struct CANRCVBUF* p);
  * @brief 	: Update elcon payload and check voltage
  * @param   : p = pointer to CAN msg
- * @return  : 
-*******************************************************************************/
+ ******************************************************************************/
 void elcondatacheck(struct CANRCVBUF* p)
 {
 	double dtmp;
@@ -898,6 +897,7 @@ static void discovery(struct CANRCVBUF* p)
 			}
 			if (j == bmsnodes_online)
 			{ // Not found in list. Add to online list
+printf("BMS node found %08X\n",p->id);
 				bmsnode[j].id = p->id;
 				bmsnodes_online += 1;
 				if (bmsnodes_online >= BMSNODESZ)
@@ -1018,8 +1018,6 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 		return;	
 	}
 
-
-
 	switch(state)
 	{
 	case 0: // Discovery 
@@ -1044,8 +1042,12 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 		break; 
 
 	case 9:
-		printf("DONE, or bombed out\n");
+		printf("DONE, or bombed out %08X\n", p->id);
+		state = 10;
 		break;
+
+	case 10:
+		break;		
 
 	default:
 		printf("cmd_E_do_msg: switch statement error: %d\n",state);

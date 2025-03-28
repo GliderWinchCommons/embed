@@ -24,3 +24,23 @@ Fans runs for currents above 1.2a.
 
 4. Resume charging at last voltage/current limit-- po
 
+5. Troubleshooting
+
+Typical line--
+Col 1 - sequence number
+Col 2 - ELCON TX (ELCON sends this msg)
+Col 3 - DLC
+Col 4-5 ELCON reports voltage (big endian, 0.1 volts)
+Col 6-7 ELCON reports amps (big endian, 0.1 amps)
+Col 8   ELCON reports status
+Col 9-11 ELCON reserved, zeros
+Col 12  ELCON payload voltages
+Col 13  ELCON payload amps
+Remaining columns are status--
+Zero is "OK"
+INPUT     = 1 means AC input off
+BATT DISC = 1 means HV DC is low (~ 110v)
+COMM TO   = 1 means Communications Timed out
+  5 secs with no valid ELCON CAN msg received
+
+545  C7FA872C 8: 07 C8 00 00 10 00 00 00 199.2 V    0.0 I  :HW FAIL: 0 :OVR TEMP 0 :INPUT 0 :BATT DISC 0 :COMM TO 1

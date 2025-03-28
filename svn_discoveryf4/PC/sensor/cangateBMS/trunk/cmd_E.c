@@ -400,6 +400,7 @@ static void printhelp(void)
 	printf("\n\t"
 	"Eh: prints this help\n\t"
 	"En <count> = Set new count of BMS nodes on string\n\t"
+	"Ev: BMS discovery followed by charging\n\t"
 	"Ex: Shutdown ELCON\n "
 		);
 }
@@ -460,7 +461,7 @@ static int getbmslist(void)
 			return -1;
 		}
 	}
-	printf("Parameter list: paramsize %d\n",paramsize);
+	printf("paramIDlist (BMS nodes): paramsize %d\n",paramsize);
 	for (int j = 0; j < paramsize; j++)
 		printf("%2d %08X\n",j+1,paramid[j]);
 	printf("\n");
@@ -509,10 +510,10 @@ int cmd_E_init(char* p)
 
 	/* Set CAN msg for polling for cell voltage readings. */
 	adcrate = 0; // *1818 ADC rate. 0 = 422 Hz
-	cantx_cells.id       = CANID_TX_DEFAULT; // 
+	cantx_cells.id       = CANID_STATUS_POLL; // 
 	cantx_cells.cd.ui[1] = 0; // NULL target CANID	
 	cantx_cells.cd.uc[0] = CMD_CMD_CELLPOLL; // (42) Request BMS responses
-	cantx_cells.cd.uc[1] = (0x3 << 6); // Use CAN ID in [4]-[7]
+	cantx_cells.cd.uc[1] = (0x3 << 6); // 0xC0 = All BMS nodes respond
 	cantx_cells.cd.uc[2] = (adcrate << 4) | ((groupctr & 0xF) << 0);	
 
 	bmsnodes_online  = 0; // Number of discovered BMS nodes
@@ -541,6 +542,8 @@ int cmd_E_init(char* p)
 	/* POLLER requests BMS node, string, or all. */
 	switch ( *(p+1) )
 	{ 
+	case '\n':
+	case ' ':
 	case 'h':
 		printhelp();
 		printsettings();
@@ -700,8 +703,8 @@ static void charging_int(void)
 		if (tmp < min_bal_cur) min_bal_cur = tmp;
 	}
 
-printf("Max voltage (0.1) sum from modules: %d",max_string_v);
-max_string_v = 1385;
+printf("\nMax voltage (0.1) sum from modules: %d",max_string_v);
+max_string_v = 2151;
 printf(" is revised to %d\n",max_string_v);
 
 	/* Load two sets of values for setting ELCON. */
@@ -716,21 +719,22 @@ printf(" is revised to %d\n",max_string_v);
 	fmax_string_v = max_string_v * 0.1;
 	fmin_chg_cur  = min_chg_cur  * 0.1;
 	fmin_bal_cur  = min_bal_cur  * 0.1;
-	printf("Charging  current: %7.1fa\n",fmin_chg_cur);
-	printf("Balancing current: %7.1fa\n",fmin_bal_cur);
-	printf("Charger max volts: %7.2fv\n",fmax_string_v);
+	printf("Charging  current BMS reports: %7.1fa\n",fmin_chg_cur);
+	printf("Balancing current BMS reports: %7.1fa\n",fmin_bal_cur);
+	printf("Charger max volts BMS reports: %7.2fv\n",fmax_string_v);
 
 /* Override */
-max_string_v = 1450;
-min_chg_cur  =   13;
+max_string_v = 2160; // (0.1 v)
+min_chg_cur  =   2;//13; // (0.1 a)
+min_bal_cur  =    1; // (0.1 a)
 fmax_string_v = max_string_v * 0.1;
 fmin_chg_cur  = min_chg_cur  * 0.1;
 fmin_bal_cur  = min_bal_cur  * 0.1;
-printf("Charging  current override: %7.1fa\n",fmin_chg_cur);
-printf("Balancing current override: %7.1fa\n",fmin_bal_cur);
-printf("Charger max volts override: %7.2fv\n",fmax_string_v);
-chgfull.ivolts    = max_string_v; // Max rate
-chgfull.iamps     = min_chg_cur;  // Max rate
+printf("Charging  current hard-code override: %7.1fa\n",fmin_chg_cur);
+printf("Balancing current hard-code override: %7.1fa\n",fmin_bal_cur);
+printf("Charger max volts hard-code override: %7.2fv\n",fmax_string_v);
+chgfull.ivolts    = max_string_v; // Max voltage
+chgfull.iamps     = min_chg_cur;  // Max current
 chgwork = chgfull;
 
 
@@ -831,6 +835,7 @@ static void discovery_end(void)
 printf("module_mask: 0x%02X ",module_mask);printfbits(module_mask,8);printf("\n");
 		state = 3;
 		charging_int(); // Initialize charging phase
+		printf("\n"); // Separate init printf from following 
 		return; // Set state to charging phase
 	}
 
@@ -1298,7 +1303,7 @@ printf("tthrd: 3 timerctr %d\n",timerctr);
 		break;
 
 	default: // Something seriously wrong
-		printf("timerthread state err: %d\n",state);
+		printf("ERR: timerthread state err: %d\n",state);
 		state = 9;
 		break;
 	}

@@ -21,6 +21,9 @@ gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout20032
 
 gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout200329.txt csvfieldselect200329.txt < ~/GliderWinchItems/GEVCUr/docs/data/log200329-1.txt | tee log200329.csv
 
+gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab  -# csvlinelayout250328.txt csvfieldselect250327.txt < log250325.txt | tee cancnvtmatlab-250325-0000.csv
+
+
 01/29/2025
 To compile--
 gcc -Wall cancnvtmatlab.c -o cancnvtmatlab
@@ -124,7 +127,18 @@ char buf[LINESZ];
 #define NAMESZ 128	// Max size of name field
 #define CSVLINESZ 2048	// Max output line size
 
-/* CAN field selection input list */
+struct CANFIELD
+{
+	unsigned int linenum; // Line number
+	  signed int fldnum;  // Payload field number
+	unsigned int paytype; // Payload type number
+	double offset;        // Offset
+  double scale;         // Scale
+	double lgr;           // Last Good Reading
+   char c[NAMESZ];      // Description field
+};
+
+/* CAN field ==> selection <== input list */
 #define CSVSELECTSZ 1024
 struct CSVSELECT
 {
@@ -138,18 +152,7 @@ struct CSVSELECT
 }csvselect[CSVSELECTSZ];
 int csvselectsz = 0;    // Number of entries loaded
 
-struct CANFIELD
-{
-	unsigned int linenum; // Line number
-	  signed int fldnum;  // Payload field number
-	unsigned int paytype; // Payload type number
-	double offset;        // Offset
-   double scale;        // Scale
-	double lgr;           // Last Good Reading
-   char c[NAMESZ];      // Description field
-};
-
-/* CAN field layout list */
+/* CAN field ==> layout <== list */
 #define CANFLDLAYOUTSZ 512
 #define MAXNUMFIELDS 32
 struct CANFLDLAYOUT	
@@ -157,7 +160,6 @@ struct CANFLDLAYOUT
 	unsigned int id;      // CAN id
 	struct CANFIELD canfield[MAXNUMFIELDS];
 }canfldlayout[CANFLDLAYOUTSZ];
-
 int canfldlayoutsz = 0;  // Number of entries loaded
 
 unsigned int canidtimetick = 0; // CAN id for GPS 64/sec time ticks
@@ -583,6 +585,18 @@ unsigned int kflag;
 					j = csvselect[i].layoutidx;
 					k = csvselect[i].canfieldidx;
 					dtmp = canfldlayout[j].canfield[k].lgr;
+
+#if 0
+if (canfldlayout[i].id == 0xB2000000)
+{
+	printf("i %2d, j %2d, k %2d, %0.1f ",i,j,k,dtmp);
+	for (int kk=0; kk < 32; kk++)
+	{
+			printf("%08X %d %0.0f ",canfldlayout[i].id,kk,canfldlayout[i].canfield[kk].lgr);
+	}
+	printf("\n");
+}
+#endif
 					nn = sprintf(pcline,pfmt,dtmp); // Convert binary to formatted ascii
 					pcline += nn;       // Add number chars generated
 					strcpy(pcline,","); // Add comma separator
@@ -1152,7 +1166,7 @@ char convertpayloadBMS_MULTI(struct CANRCVBUF* p, struct CANFIELD* pfld)
 		{ // Convert U16 cell reading and save in field array for this CAN ID
 			dtmp = p->cd.us[i+1]; // Convert to float
 			(pfld + i + celln)->lgr = dtmp;
-//printf("BAT %08X %d %0.1f\n",p->id,celln+i, dtmp*0.1);
+//printf("BAT %08X %2d %0.1f\n",p->id,celln+i, (pfld + i + celln)->lgr*0.1);
 		}
 		break;
 

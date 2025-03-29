@@ -460,6 +460,7 @@ n += 1;
 			printf("  %s"  ,csvselect[i].f);
 			printf("\t\t%s\n",csvselect[i].c);
 		}
+		exit(0);
 	}
 //return 0;
 /* ============= Make list of CAN id versus field definition number ================== */
@@ -1202,6 +1203,12 @@ char convertpayloadBMS_MULTI(struct CANRCVBUF* p, struct CANFIELD* pfld)
 			(pfld + 26)->lgr = p->cd.uc[6]; // Mode
 			break;
 		}	
+		break;
+
+	case CMD_CMD_MISCHB: // (45) Heartbeat (w status)
+		(pfld + 24)->lgr = p->cd.uc[4]; // Battery
+		(pfld + 25)->lgr = p->cd.uc[5]; // FETs
+		(pfld + 26)->lgr = p->cd.uc[6]; // Mode
 		break;
 
 	default:

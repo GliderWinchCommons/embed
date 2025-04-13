@@ -71,7 +71,7 @@ can.cd.uc[7] = Temp
  #define MISCQ_SET_FETBITS  27 // Set FET on/off discharge bits
  #define MISCQ_SET_DCHGTST  28 // Set discharge test via heater fet load on|off
  #define MISCQ_SET_DCHGFETS 30 // Set discharge FETs: all, on|off, or single
- #define MISCQ_SET_SELFDCHG 31 // Set ON|OFF self-discharge mode
+ #define MISCQ_SET_SELFDCHG 31 // Set self-discharge mode: OFF = charge; ON = self-discharge
  #define MISCQ_PRM_MAXCHG   32 // Get Parameter: Max charging current
  #define MISCQ_SET_ZEROCUR  33 // 1 = Zero external current in effect; 0 = maybe not.
  #define MISCQ_READ_AUX     34 // BMS responds with A,B,C,D AUX register readings (12 msgs)
@@ -1201,7 +1201,6 @@ return;
 *******************************************************************************/	
 static void chgstatusget(void)
 { // Here end of wait for BMS nodes to respond to status request
-	// Here all nodes updated their status
 	if (module_celltoohi != 0)
 	{ // Here one of more modules are showing one or more cells over target
 		if (reducechgcurrent() != 0)
@@ -1216,6 +1215,7 @@ static void chgstatusget(void)
 		}
 		// Here, chg current at minimum AND cell too high
 		module_tripped |= module_celltoohi; // Show module tripped max
+printf("chgstatusget:module_tripped %04X\n",module_tripped);	
 		if (module_mask == module_tripped)
 		{ // Here, all modules have tripped their max.
 			sendcanmsg_dump(0);
@@ -1294,16 +1294,16 @@ printf(" timerctr %d el %d state %d  ",timerctr, elcon.timeout,state);
 		if ((int)(timerctr - discoverytime) > 0)
 		{ // Here, end of Discovery phase
 			state = 1; // Switch how CAN msgs handled
+			sendcan_type2(MISCQ_SET_SELFDCHG,0); // Set low currrent charge ON
 			printf("Discovery: end %d\n",timerctr);
 			discovery_end();
 		}
 		if ((int)(timerctr - discoverytimepoll) > 0)
 		{
 			discoverytimepoll = timerctr + DISCOVERY_POLL;
-			sendcan_type2(MISCQ_CHG_LIMITS,0);
-			sendcan_type2(MISCQ_STATUS,0);
-//			sendcanmsg(&cantx_chglmt);
-//			sendcanmsg(&cantx_status);
+			sendcan_type2(MISCQ_CHG_LIMITS,0); // Request charge limit parameters
+			sendcan_type2(MISCQ_STATUS,0); // Request status
+
 			printf("Discovery poll %d\n",timerctr);
 		}
 		break;

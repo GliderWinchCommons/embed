@@ -1170,11 +1170,13 @@ static int reducechgcurrent(void)
 		}
 		else
 		{ // Current in the ELCON high range
+float ttt = ftmpw;			
 			ftmpw *= CHG_REDUCE_FAC; // Reduce by a factor
+printf("CHG_REDUCE: new %6.2f prev %6.2f\n",ftmpw, ttt);
 		}
 
 		if (ftmpw < (float)chgbalance.iamps)
-		{ // Here, reudction is below minimum possible
+		{ // Here, reduction is below minimum possible
 			chgwork.iamps = chgbalance.iamps; // Min forever
 			return 0;
 		}
@@ -1182,7 +1184,7 @@ static int reducechgcurrent(void)
 		chgwork.iamps = ftmpw * 10.0;
 		return 1;
 	}
-	return 0;
+	return 0; // Continue with minimum forever
 }	
 /******************************************************************************
  * static void printchgrate(void);

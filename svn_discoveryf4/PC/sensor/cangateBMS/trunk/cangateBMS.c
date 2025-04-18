@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
 	int	port;	// Socket port number
 //	char xbuf[256];
 
-printf ("\n### CANGATEBMS ### 04/14/2024\n\n");
+printf ("\n### CANGATEBMS ### 04/17/2025\n\n");
 
 printf("BAUDRATE is FIXED AT: %s baud\n",baudratesetting);
 

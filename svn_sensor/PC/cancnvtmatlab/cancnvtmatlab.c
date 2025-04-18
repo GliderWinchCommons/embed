@@ -1152,6 +1152,7 @@ char convertpayloadBMS_MULTI(struct CANRCVBUF* p, struct CANFIELD* pfld)
 	uint8_t celln;
 	char flag = 0;
 	double dtmp;
+	uint8_t idx;
 
 	union FI
 	{
@@ -1176,7 +1177,7 @@ char convertpayloadBMS_MULTI(struct CANRCVBUF* p, struct CANFIELD* pfld)
 		switch(p->cd.uc[1])
 		{
 		case MISCQ_TEMP_CAL: // (04) BMS Temperature
-			uint8_t idx = (p->cd.uc[3] & 0x3);
+			idx = (p->cd.uc[3] & 0x3);
 			if (idx > 2) idx = 2; // JIC
 			fi.ui = p->cd.ui[1];
 			float ftmp = fi.f;

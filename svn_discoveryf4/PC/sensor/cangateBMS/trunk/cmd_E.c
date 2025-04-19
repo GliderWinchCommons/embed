@@ -692,15 +692,23 @@ void elcondatacheck(struct CANRCVBUF* p)
 static void charging_int(void)
 {
 	int i;
-	uint32_t min_chg_cur = 1000;
-	uint32_t min_bal_cur = 1000;
-	uint32_t max_string_v = 0;
-	uint32_t tmp;
+#define NODATA 9999	
+	uint32_t min_chg_cur = NODATA;
+	uint32_t min_bal_cur = NODATA;
+	uint32_t max_string_v = NODATA;
+	float ftmp;
+	//float fminmax = 1e6;
+	float fminbal = 1e6;
+	float fminchg = 1e6;
+	uint8_t flag;
 
 	/* Start with all modules in not tripped state. */
 	module_tripped = 0;
 
 	/* Find minimum charge currents, and compute max string voltage. */
+	/* Column header */
+	printf("             maxVolts maxAmps balAmps\n");
+	max_string_v = 0;
 	for (i = 0; i < bmsnodes_online; i++)
 	{
 		if (bmsnode[i].canchg.id == 0)
@@ -708,22 +716,54 @@ static void charging_int(void)
 			printf("%08X did not report charger limits (code %d\n",MISCQ_CHG_LIMITS,bmsnode[i].id);
 			state = 9;
 			doneflag = 1;
-			return;
+			exit(-1);
 		}
+
 		/* Sum max module voltages for string. */
 		max_string_v += bmsnode[i].canchg.cd.us[3];
-printf("  max_string_v loop: %d %4d\n",i, bmsnode[i].canchg.cd.us[3]);
-		/* Find minimum charge current for string. */
-		tmp = bmsnode[i].canchg.cd.uc[4];
-		/* Find minimum balancing current for string. */
-		if (tmp < min_chg_cur) min_chg_cur = tmp;
-		tmp = bmsnode[i].canchg.cd.uc[5];
-		if (tmp < min_bal_cur) min_bal_cur = tmp;
-	}
+		ftmp = (float)bmsnode[i].canchg.cd.us[3] *0.1f;
+		printf(" %d %08X   %5.1f ",i, bmsnode[i].canchg.id,ftmp);
 
-printf("\nMax voltage (0.1) sum from modules: %d",max_string_v);
-max_string_v = 2151;
-printf(" is revised to %d\n",max_string_v);
+		/* Find minimum charge current for string. */
+		min_chg_cur = bmsnode[i].canchg.cd.uc[4];
+		ftmp = (float)bmsnode[i].canchg.cd.uc[4];
+		if (ftmp < fminchg) fminchg = ftmp;
+		printf("   %4.1f",ftmp*0.1f);
+		min_chg_cur = bmsnode[i].canchg.cd.uc[4];
+
+		/* Find minimum balancing current for string. */
+		min_bal_cur = bmsnode[i].canchg.cd.uc[5];
+		ftmp = (float)bmsnode[i].canchg.cd.uc[5];
+		if (ftmp < fminbal) fminbal = ftmp;
+		printf("   %4.1f\n",ftmp*0.1f);
+	}
+#ifndef SKIPPRINT2
+//	printf("min_chg_cur %3d min_bal_cur %3d max_string_v %4d\n",min_chg_cur,min_bal_cur,max_string_v);
+	printf("Summary: %10.1f  %6.1f %6.1f\n",(float)max_string_v*0.1f,(float)min_chg_cur*0.1f,(float)min_bal_cur*0.1f);
+#endif	
+
+	/* Check that all modules reported their voltage and current limits, */
+	flag = 0;
+	for (i = 0; i < bmsnodes_online; i++)
+	{
+		if ((min_chg_cur == NODATA) || (min_bal_cur == NODATA) )
+		{
+			printf(" %d %08X NODATA for max/min volts, amps, etc.\n",i,bmsnode[i].id);
+			flag = 1;
+		}
+	}
+	for (i = 0; i < bmsnodes_online; i++)
+	{
+		if ((min_chg_cur == 0) ||
+	        (min_bal_cur == 0) ||
+	        (max_string_v == 0) )
+		{
+			printf("PROBLEM WITH MODULE PARAMETERS ZERO\n");
+			printf(" %d %08X NODATA for max/min volts, amps, etc. (flag %d)\n",i,bmsnode[i].id,flag);
+			flag = 2;
+		}
+	}
+	if (flag != 0) exit (-1);
 
 	/* Load two sets of values for setting ELCON. */
 	chgfull.ivolts    = max_string_v; // Max rate
@@ -737,12 +777,14 @@ printf(" is revised to %d\n",max_string_v);
 	fmax_string_v = max_string_v * 0.1;
 	fmin_chg_cur  = min_chg_cur  * 0.1;
 	fmin_bal_cur  = min_bal_cur  * 0.1;
-	printf("Charging  current BMS reports: %7.1fa\n",fmin_chg_cur);
-	printf("Balancing current BMS reports: %7.1fa\n",fmin_bal_cur);
-	printf("Charger max volts BMS reports: %7.1fv\n",fmax_string_v);
+	printf("Max Charging current from BMS reports:  %7.1fa\n",fmin_chg_cur);
+	printf("Max Balancing current from BMS reports: %7.1fa\n",fmin_bal_cur);
+	printf("Max string volts from BMS reports:      %7.1fv\n",fmax_string_v);
 
 /* Override */
 max_string_v = 2160; // (0.1 v)
+#if 1
+
 min_chg_cur  =   13; // (1.3 a)
 min_bal_cur  =    1; // (0.1 a)
 fmax_string_v = max_string_v * 0.1;
@@ -751,11 +793,12 @@ fmin_bal_cur  = min_bal_cur  * 0.1;
 printf("Charging  current hard-code override: %7.1fa\n",fmin_chg_cur);
 printf("Balancing current hard-code override: %7.1fa\n",fmin_bal_cur);
 printf("Charger max volts hard-code override: %7.1fv\n",fmax_string_v);
+#endif
+
 chgbalance.ivolts = max_string_v; // Balancing (min) rate
 chgbalance.iamps  = min_bal_cur;  // Balancing (min) rate
 chgfull.ivolts    = max_string_v; // Max voltage
 chgfull.iamps     = min_chg_cur;  // Max current
-
 chgwork = chgfull;
 
 	/* Check for bogus parameters received. */
@@ -1109,7 +1152,9 @@ static void sendcanmsg(struct CANRCVBUF* pcan)
 // This appears to insert a delay for consecutive calls to this routine????	
 if (pcan->dlc == 0)	
 {
+#ifndef SKIPPRINT2	
 	printf("\t\t\tSENDCANMSG dlc err\n");
+#endif	
 	pcan->dlc = 8;
 	flag = 1;
 }	
@@ -1128,7 +1173,6 @@ if (flag == 1)
 	printf("\n");
 }
 #endif
-
 
 	return;
 }
@@ -1160,30 +1204,38 @@ static int checkallresponded(void)
 #define CHG_HILO 1.3 // ELCON switch from low current to hi pulses
 static int reducechgcurrent(void)
 {
+float ttt;	
 	float ftmpw; // Be lazy and  use floating point
 	if (chgwork.iamps != chgbalance.iamps)
 	{ // Here, we have not reached the minimum
 		ftmpw = (float)chgwork.iamps * 0.1;
-		if (ftmpw < CHG_HILO)
-		{ // Current level is in the ELCON low range
+		if (ftmpw < (CHG_HILO-0.05) )
+		{ // Current level is in the ELCON low step reduction range
 			ftmpw -= CHG_REDUCE_INC; // Linear reduction
+#ifndef SKIPPRINT2			
+	printf("CHG REDUCE LINEAR: %6.2f\n",ftmpw);
+#endif	
 		}
 		else
-		{ // Current in the ELCON high range
-float ttt = ftmpw;			
+		{ // Current in the ELCON high reduction step range
+			ttt = ftmpw;			
 			ftmpw *= CHG_REDUCE_FAC; // Reduce by a factor
-printf("CHG_REDUCE: new %6.2f prev %6.2f\n",ftmpw, ttt);
+#ifndef SKIPPRINT2			
+	printf("CHG_REDUCE FACTOR: new %6.2f prev %6.2f\n",ftmpw, ttt);
+#endif	
 		}
 
 		if (ftmpw < (float)chgbalance.iamps)
 		{ // Here, reduction is below minimum possible
 			chgwork.iamps = chgbalance.iamps; // Min forever
-			return 0;
 		}
 
 		chgwork.iamps = ftmpw * 10.0;
 		return 1;
 	}
+#ifndef SKIPPRINT2	
+	printf("CHG REDUCE EQUAL chgwork.iamps %d  chgbalance.iamps %d\n",chgwork.iamps, chgbalance.iamps);
+#endif	
 	return 0; // Continue with minimum forever
 }	
 /******************************************************************************
@@ -1210,14 +1262,20 @@ static void chgstatusget(void)
 			sendcanmsg_elcon(&chgwork); 
 			sendcanmsg_dump(module_celltoohi); // Turn on dump for module
 #ifndef SKIPPRINT 
-		printf("celltoohi but not min current: reduced charge rate is"); printchgrate();printf("a ");
-		printfbits(module_celltoohi,num_bms_modules);printf("\n");
+	printf("celltoohi but not min current: reduced charge rate is"); printchgrate();printf("a ");
+	printfbits(module_celltoohi,num_bms_modules);printf("\n");
 #endif
+#ifndef SKIPPRINT2
+	printf("chgstatusget: chgwork.iamps %d\n",chgwork.iamps);
+#endif		
 			return;
 		}
 		// Here, chg current at minimum AND cell too high
 		module_tripped |= module_celltoohi; // Show module tripped max
-printf("chgstatusget:module_tripped %04X\n",module_tripped);	
+
+#ifndef SKIPPRINT2
+	printf("chgstatusget:module_tripped %04X\n",module_tripped);
+#endif	
 		if (module_mask == module_tripped)
 		{ // Here, all modules have tripped their max.
 			sendcanmsg_dump(0);
@@ -1233,12 +1291,16 @@ printf("chgstatusget:module_tripped %04X\n",module_tripped);
 		{ // Here, not all modules tripped max
 			// Turn BMS DUMP on for modules 'toohi'
 			sendcanmsg_dump(module_celltoohi);
-printf("chgstatusget: celltoohi: not all: %02X\n",module_celltoohi);
+
+#ifndef SKIPPRINT2
+	printf("chgstatusget: celltoohi: not all: %02X\n",module_celltoohi);
+#endif
 		}
 	}
 	else
 	{ // Here, no modules report celltoohi
 		sendcanmsg_dump(0); // Turn off DUMPs JIC
+
 #ifndef SKIPPRINT 
 		printf("No modules report celltoohi: charge rate "); printchgrate();printf("\n");
 #endif
@@ -1279,7 +1341,9 @@ static void cmd_E_timerthread(void)
 	{
 		elcon.present = 0;
 		elcon.id = 0;
-printf(" timerctr %d el %d state %d  ",timerctr, elcon.timeout,state);		
+#ifndef SKIPPRINT
+	printf(" timerctr %d el %d state %d  ",timerctr, elcon.timeout,state);		
+#endif
 		printf("ELCON timeout. It is not reporting\n");
 		elcon.timeout = timerctr + 2000;//ELCON_INTERVAL;
 		state = 9;
@@ -1312,7 +1376,7 @@ printf(" timerctr %d el %d state %d  ",timerctr, elcon.timeout,state);
 
 	case 1:
 #ifndef SKIPPRINT
-printf("tthrd: 1 timerctr %d\n",timerctr);
+	printf("tthrd: 1 timerctr %d\n",timerctr);
 #endif
 		break;
 
@@ -1320,7 +1384,7 @@ printf("tthrd: 1 timerctr %d\n",timerctr);
 		if ((int)(timerctr - timechgloop) > 0)
 		{ // BMS nodes should have responded by now
 #ifndef SKIPPRINT			
-printf("tthrd: 2 timerctr %d\n",timerctr);
+	printf("tthrd: 2 timerctr %d\n",timerctr);
 #endif
 			if (checkallresponded() != 0)
 			{ // state was set to 4;
@@ -1339,7 +1403,7 @@ printf("tthrd: 2 timerctr %d\n",timerctr);
 		if ((int)(timerctr - timechgstatuspoll) > 0)		
 		{ // Here, start a new charging update cycle
 #ifndef SKIPPRINT			
-printf("tthrd: 3 timerctr %d\n",timerctr);
+	printf("tthrd: 3 timerctr %d\n",timerctr);
 #endif
 			// Request cell readings (which triggers a status update)
 			cantx_cells.cd.uc[2] = (adcrate << 4) | ((groupctr & 0xF) << 0);

@@ -674,7 +674,7 @@ void elcondatacheck(struct CANRCVBUF* p)
 
 		if ((p->cd.uc[4] & ELCON_STATUS_COMM_TO) != 0)
 			printf("\tELCON reports ELCON_STATUS_COMM_TO: communcation timeout\n");
-		state = 9; // Avoid repetitive error msgs.
+		state = 10; // Avoid repetitive error msgs.
 		return;
 	}
 	if (elcon_ivolts > fmax_string_v)
@@ -692,14 +692,13 @@ void elcondatacheck(struct CANRCVBUF* p)
 static void charging_int(void)
 {
 	int i;
-#define NODATA 9999	
+	#define NODATA 9999	
 	uint32_t min_chg_cur = NODATA;
 	uint32_t min_bal_cur = NODATA;
 	uint32_t max_string_v = NODATA;
 	float ftmp;
-	//float fminmax = 1e6;
-	float fminbal = 1e6;
-	float fminchg = 1e6;
+	float fminbal = 1e6f;
+	float fminchg = 1e6f;
 	uint8_t flag;
 
 	/* Start with all modules in not tripped state. */
@@ -725,21 +724,28 @@ static void charging_int(void)
 		printf(" %d %08X   %5.1f ",i, bmsnode[i].canchg.id,ftmp);
 
 		/* Find minimum charge current for string. */
-		min_chg_cur = bmsnode[i].canchg.cd.uc[4];
 		ftmp = (float)bmsnode[i].canchg.cd.uc[4];
 		if (ftmp < fminchg) fminchg = ftmp;
+		{
+			min_chg_cur = fminchg;
+		}
 		printf("   %4.1f",ftmp*0.1f);
-		min_chg_cur = bmsnode[i].canchg.cd.uc[4];
 
 		/* Find minimum balancing current for string. */
-		min_bal_cur = bmsnode[i].canchg.cd.uc[5];
 		ftmp = (float)bmsnode[i].canchg.cd.uc[5];
 		if (ftmp < fminbal) fminbal = ftmp;
+		{
+			min_bal_cur = fminbal;
+		}
 		printf("   %4.1f\n",ftmp*0.1f);
 	}
 #ifndef SKIPPRINT2
 //	printf("min_chg_cur %3d min_bal_cur %3d max_string_v %4d\n",min_chg_cur,min_bal_cur,max_string_v);
 	printf("Summary: %10.1f  %6.1f %6.1f\n",(float)max_string_v*0.1f,(float)min_chg_cur*0.1f,(float)min_bal_cur*0.1f);
+	ftmp  =  max_string_v;
+	ftmp *= 1.08f;
+	max_string_v = ftmp;
+	printf("Summary: adj%7.1f \n",(float)max_string_v*0.1f);
 #endif	
 
 	/* Check that all modules reported their voltage and current limits, */
@@ -777,25 +783,24 @@ static void charging_int(void)
 	fmax_string_v = max_string_v * 0.1;
 	fmin_chg_cur  = min_chg_cur  * 0.1;
 	fmin_bal_cur  = min_bal_cur  * 0.1;
-	printf("Max Charging current from BMS reports:  %7.1fa\n",fmin_chg_cur);
-	printf("Max Balancing current from BMS reports: %7.1fa\n",fmin_bal_cur);
-	printf("Max string volts from BMS reports:      %7.1fv\n",fmax_string_v);
+	printf("Min of max Charging  current from BMS reports: %7.1fa\n",fmin_chg_cur);
+	printf("Min of max Balancing current from BMS reports: %7.1fa\n",fmin_bal_cur);
+	printf("Sum of max module volts(adj) from BMS reports: %7.1fv\n",fmax_string_v);
 
-/* Override */
+/* Override values sent from nodes */
+#if 0
 max_string_v = 2160; // (0.1 v)
-#if 1
-
 min_chg_cur  =   13; // (1.3 a)
 min_bal_cur  =    1; // (0.1 a)
 fmax_string_v = max_string_v * 0.1;
 fmin_chg_cur  = min_chg_cur  * 0.1;
 fmin_bal_cur  = min_bal_cur  * 0.1;
-printf("Charging  current hard-code override: %7.1fa\n",fmin_chg_cur);
-printf("Balancing current hard-code override: %7.1fa\n",fmin_bal_cur);
-printf("Charger max volts hard-code override: %7.1fv\n",fmax_string_v);
+printf("Charging  current hard-code override:   %7.1fa\n",fmin_chg_cur);
+printf("Balancing current hard-code override:   %7.1fa\n",fmin_bal_cur);
+printf("Charger max volts hard-code override:   %7.1fv\n",fmax_string_v);
 #endif
 
-chgbalance.ivolts = max_string_v; // Balancing (min) rate
+chgbalance.ivolts = max_string_v;
 chgbalance.iamps  = min_bal_cur;  // Balancing (min) rate
 chgfull.ivolts    = max_string_v; // Max voltage
 chgfull.iamps     = min_chg_cur;  // Max current
@@ -812,26 +817,25 @@ chgwork = chgfull;
 	{
 		printf("ERR: Volts limit is 400.0\n");
 		state = 9;
-		return;	
 	}
 	if (min_chg_cur > 100)
 	{
 		printf("ERR: Charge amps limit is 10.0\n");
 		state = 9;
-		return;
 	}
 	if ((min_bal_cur == 0) || (min_chg_cur == 0))
 	{
 		printf("ERR: Charge amps or Balance amps must not be zero\n");
 		state = 9;
-		return;			
 	}
 	if (min_bal_cur > min_chg_cur)
 	{
 		printf("ERR: Balance amps greater than charge amps makes no sense\n");
 		state = 9;
-		return;					
 	}
+
+	if (state == 9)
+		exit(-1);
 
 	/* Set keep-alive timeouts. */
 	for (i = 0; i < bmsnodes_online; i++)
@@ -1128,6 +1132,10 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 		}
 		break;
 
+	case 10:
+		printf("EXIT (state==10)\n");
+		exit(0);
+
 	default:
 		printf("cmd_E_do_msg: switch statement error: %d\n",state);
 		state = 9;
@@ -1266,8 +1274,16 @@ static void chgstatusget(void)
 	printfbits(module_celltoohi,num_bms_modules);printf("\n");
 #endif
 #ifndef SKIPPRINT2
-	printf("chgstatusget: chgwork.iamps %d\n",chgwork.iamps);
+	printf("chgstatusget: chgwork.iamps %4.1f\n",(float)chgwork.iamps*0.1f);
 #endif		
+			if ((module_mask == module_tripped) || (module_mask == module_celltoohi))
+			{
+							printf("\nAll modules have tripped their max. ELCON set off.\n"
+				"############################# DONE! #############################\n");
+				state = 10; // DONE
+				doneflag = 1;
+			}
+
 			return;
 		}
 		// Here, chg current at minimum AND cell too high
@@ -1283,7 +1299,7 @@ static void chgstatusget(void)
 			sendcan_type2(MISCQ_SET_SELFDCHG,0); // Complete charge balancing
 			printf("\nAll modules have tripped their max. ELCON set off.\n"
 				"############################# DONE! #############################\n");
-			state = 9; // DONE
+			state = 10; // DONE
 			doneflag = 1;
 			return;
 		}

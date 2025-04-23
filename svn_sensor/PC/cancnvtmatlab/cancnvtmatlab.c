@@ -23,6 +23,9 @@ gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab csvlinelayout20032
 
 gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab  -# csvlinelayout250328.txt csvfieldselect250327.txt < log250325.txt | tee cancnvtmatlab-250325-0000.csv
 
+gcc -Wall cancnvtmatlab.c -o cancnvtmatlab && ./cancnvtmatlab  -# csvlinelayout250328.txt csvfieldselect250328.txt < log250417-1058.txt | tee cancnvtmatlab-250417-1058-debug.csv
+
+
 
 01/29/2025
 To compile--
@@ -1162,7 +1165,8 @@ char convertpayloadBMS_MULTI(struct CANRCVBUF* p, struct CANFIELD* pfld)
 
 	switch (p->cd.uc[0])
 	{
-	case CMD_CMD_CELLPC: // Here, Response to PC requesting Cell voltages
+	case CMD_CMD_CELLHB: // 44 Heartbeat sends cell voltages
+	case CMD_CMD_CELLPC: // 49 Here, Response to PC requesting Cell voltages
 		celln = (p->cd.uc[1] >> 4) & 0xf; // Cell number of 1st payload U16
 		for (i = 0; i < 3; i++)
 		{ // Convert U16 cell reading and save in field array for this CAN ID
@@ -1172,7 +1176,6 @@ char convertpayloadBMS_MULTI(struct CANRCVBUF* p, struct CANFIELD* pfld)
 		}
 		break;
 
-// TODO: Additional fields
 	case CMD_CMD_MISCPC: // Here, Response to PC requesting misc (various) readings
 		switch(p->cd.uc[1])
 		{

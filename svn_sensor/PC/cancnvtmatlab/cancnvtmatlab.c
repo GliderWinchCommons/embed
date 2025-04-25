@@ -188,6 +188,7 @@ char cmdsw_t;
 char cmdsw_x;
 char cmdsw_c;
 char cmdsw_b;
+char cmdsw_bb;
 char * helplist = {"\nCommand line layout\n\
 ./cancnvtmatlab <options> <path/file input file #1> <path/file input file #2> <path/file input file ...> e.g.\n\
 ./cancnvtmatlab -t csvlinelayout.txt csvfieldselect.txt < ~/GliderWinchItems/dynamometer/docs/data/log190504.txt\n\
@@ -196,7 +197,17 @@ char * helplist = {"\nCommand line layout\n\
  t - print input tables\n\
  x - do not convert input data file\n\
  c - csv position lines between csv data lines\n\
- # - skip printing missing CAN ids\n"};
+ # - skip printing missing CAN ids\n\
+ ## - skip printing missing CAN ids =>AND<= skip printing list of missing CAN ids at end-of-input\n"};
+
+struct MISSINGCANIDS
+{
+	uint32_t id; // CAN id 
+	uint32_t ct; // Number of cases
+};
+#define MISSINGCANIDSSIZE 256
+struct MISSINGCANIDS missingcanids[MISSINGCANIDSSIZE];
+uint32_t missingcanidssize; // Count of cases
 
 /* Declarations */
 void    cmd_f_do_msg(struct CANFIELD* pfld, struct CANRCVBUF* p, int k);
@@ -278,7 +289,12 @@ int main(int argc, char **argv)
 				case 'x': cmdsw_x = 1; break;// x - do not convert input data file
 				case 'C':
 				case 'c': cmdsw_c = 1; break;// c - csv position lines between csv data lines
-				case '#': cmdsw_b = 1; break;// # - skip listing lines with missing CAN ids
+				case '#': cmdsw_b = 1; // # - skip listing lines with missing CAN ids
+					if (*(pv+j+1) == '#')
+					{ // Here -##
+						cmdsw_bb = 1; // Skip reminder of missing layout CAN msgs
+					}
+					break;
 				default:
 					printf("\nCommand line switch %c is not in list\n%s",*(pv+j), helplist);
 					break;
@@ -652,16 +668,39 @@ if (canfldlayout[i].id == 0xB2000000)
 			}
 			else
 			{ // Here, Not found: this CAN id does not have a payload layout entry in the array
-				if (cmdsw_b == 0)	// Skip this line command line switch is off
+				// Build list of CAN msgs not in layout array
+				errflag = 1; // One or more missing
+				for (k = 0; k < missingcanidssize; k++)
+				{
+					if (missingcanids[k].id == can.id)
+					{ // Here it is in list
+						missingcanids[k].ct += 1;
+						break;
+					}
+				}
+				if (k == missingcanidssize)
+				{ // Here, not in list. Add to list
+					missingcanids[k].id = can.id;
+					missingcanids[k].ct = 1; // Instances count start from 1
+					missingcanidssize  += 1; // Increment size of list
+				}
+
+				if (cmdsw_b == 0)	// Skip if this line command line switch is off
 					printf("# Not in payload layout array: 0X%08X\n", can.id);
-				else
-					errflag = 1;
 			}
 		}		
 	}
-	if (errflag != 0)
-	{
-		printf("\n# Not in payload layout array error, one or more times\n");
+	/* End of input file */
+	if (cmdsw_bb == 0)
+	{ // Here switch was '-#' and not '-##'
+		if (errflag != 0)
+		{ // Here, one or more missing CAN id errors, so print the list
+			printf("\nList of CAN ids not in layout array and number of CAN msgs encountered\n");
+			for (k = 0; k < missingcanidssize; k++)
+			{
+				printf("%3d %3d %08X\n",k+1, missingcanids[k].ct,missingcanids[k].id);
+			}
+		}
 	}
 }
 

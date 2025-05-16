@@ -6,5 +6,5 @@
 #
 make clean
 make
-cp cangateBMSstart ~/bin/cangateBMS
-sudo cp cangateBMS /usr/local/bin
+#cp cangateBMSstart ~/bin/cangateBMS
+#sudo cp cangateBMS /usr/local/bin

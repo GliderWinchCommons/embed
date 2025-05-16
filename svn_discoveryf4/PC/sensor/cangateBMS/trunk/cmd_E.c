@@ -118,11 +118,14 @@ static struct timespec ts;
 /*  From: GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
 INSERT INTO CANID VALUES ('CANID_ELCON_TX','C7FA872E','ELCON1',1,1,'I16_I16_U8_U8_U8_U8','ELCON Charger transmit: ');
 INSERT INTO CANID VALUES ('CANID_ELCON_RX','C0372FA4','ELCON1',1,1,'I16_I16_U8_U8_U8_U8','ELCON Charger receive: '); */
-#define CANID_RX_DEFAULT CANID_ELCON_TX  // C7FA872C' This cmd RECEIVES; ==> ELCON transmits <==
-#define CANID_TX_DEFAULT CANID_ELCON_RX  // C0372FA4' This cmd SENDS; ==> ELCON receives <==
+#define CANID_RX_DEFAULT  CANID_ELCON_TX  // C7FA872C' This cmd RECEIVES; ==> ELCON transmits <==
+#define CANID_TX_DEFAULT  CANID_ELCON_RX  // C0372FA4' This cmd SENDS; ==> ELCON receives <==
 #define CANID_STATUS_POLL CANID_UNI_BMS_PC_I // AEC00000 PC originates
+#define CANID_EMCMMC_CTL  CANID_CMD_PC_EMC //'98000000','UNIT_PC2EMC', 1,1,'U8_U8_U8_X4','PC sends commands to EMC
 
-//#define SKIPPRINT
+/* printf for debugging */
+#define SKIPPRINT
+#define SKIPPRINT2
 
 union UF
 {
@@ -216,6 +219,7 @@ static struct CANRCVBUF cantx_type2k; // Generic TYPE2 msg to set
 static struct CANRCVBUF cantx_cells; // Poll for cell readings
 static struct CANRCVBUF cantx_elcon; // poll ELCON
 static struct CANRCVBUF cantx_dump;  // Specific module DUMP update
+static struct CANRCVBUF cantx_Emx;   // Send commands to EMCMMC (bmsmot)
 
 //The following are for getting cell readings
 static uint32_t adcrate; // *1818 ADC rate. 
@@ -233,6 +237,8 @@ static double fmin_bal_cur;
 static double fmax_string_v;
 
 static int32_t donect; // Throttle "DONE" msg
+
+static int8_t EmMode; // 0 = Direct ELCON charging control; 1 = EMCMMC (bmsmot)
 
 /******************************************************************************
  * static void print_chgingdisplay(void);
@@ -405,16 +411,52 @@ static int scansize(int len, int x)
 	return 0;
 }
 /******************************************************************************
+ * static void print_Emx_List(void);
+ * @brief 	: Help 
+*******************************************************************************/
+char* pEmx[] = {
+	"0 = EMCMMC Control: BMS Self discharging mode, ELCON stop charging ",
+	"1 = EMCMMC Control: ELCON start charging",
+	"2 = EMCMMC Control: BMS Node Low Current: set charging mode",
+	"3 = EMCMMC Control: BMS Node Low Current: self discharging/stop",
+	"4 = EMCMMC Control: Debug: ELCON: Force volts & amps setting",
+	"5 = EMCMMC Control: Debug: Set BMS poll rate",
+};
+static void print_Emx_List(void)
+{
+	int i;
+	for (i = 0; i < 6; i++)
+	{
+		printf("\t%s\n",pEmx[i]);
+	}
+	return;
+}
+/******************************************************************************
  * static void printhelp(void);
  * @brief 	: Help 
 *******************************************************************************/
+/* Modes see StringChgrTask.h */
+#define EMCCMD_ELIDLE   0 // ELCON: Self discharging/stop 
+#define EMCCMD_ELCHG    1 // ELCON: Start charging
+#define EMCCMD_LCCHG    2 // Node Low Current: set charging mode
+#define EMCCMD_LCIDLE   3 // Node Low Current: self discharging/stop 
+#define EMCCMD_DBGSET   4 // Debug: ELCON: Force volts & amps setting
+#define EMCCMD_POLLRATE 5 // Debug: Set BMS poll rate
+
 static void printhelp(void)
 {
 	printf("\n\t"
-	"Eh: prints this help\n\t"
+	"Eh: prints this command detail\n\t"
 	"En <count> = Set new count of BMS nodes on string\n\t"
 	"Ev: BMS discovery followed by charging\n\t"
-	"Ex: Shutdown ELCON\n "
+	"Ex: Shutdown ELCON\n\t"
+	"Emx: EMCMMC (bmsmot) control mode for ELCON\n\t"
+	"  0: ELCON: Self discharging/stop \n\t"
+	"  1: ELCON: Start charging\n\t"
+	"  2: BMS Node Low Current: set charging mode\n\t"
+	"  3: BMS Node Low Current: self discharging/stop\n\t"
+	"  4: Debug: ELCON: Force volts & amps setting\n\t"
+	"  5: Debug: Set BMS poll rate\n"
 		);
 }
 /******************************************************************************
@@ -424,9 +466,9 @@ static void printhelp(void)
 static void printsettings(void)
 {
 	printf("Setting----\n\tExpected number BMS modules on string: %d\n",num_bms_modules);
+	printf("\tControl with EMCMMC (bmsmot) [reset with Ev or restart cangateBMS]: EmMode = %d\n",EmMode);
 	return;
 }
-
 /******************************************************************************
  * static printcanmsg(struct CANRCVBUF* p);
  * @brief 	: CAN msg 
@@ -474,7 +516,7 @@ static int getbmslist(void)
 			return -1;
 		}
 	}
-	printf("paramIDlist (BMS nodes): paramsize %d\n",paramsize);
+	printf("paramIDlist (BMS nodes): table size (paramsize): %d\n",paramsize);
 	for (int j = 0; j < paramsize; j++)
 		printf("%2d %08X\n",j+1,paramid[j]);
 	printf("\n");
@@ -533,6 +575,13 @@ int cmd_E_init(char* p)
 	cantx_cells.cd.uc[1] = (0x3 << 6); // 0xC0 = All BMS nodes respond
 	cantx_cells.cd.uc[2] = (adcrate << 4) | ((groupctr & 0xF) << 0);	
 
+	/* Set command for EMCMMC (bmsmot) ELCON control. */
+	cantx_Emx.id = CANID_EMCMMC_CTL;
+	cantx_Emx.dlc = 8; // uc[0] amd uc[1] carry the ctl codes
+	cantx_Emx.cd.ull = 0; //jic
+	cantx_Emx.cd.uc[0] = CMD_EMC_SETMODE; // 53 [1]-[7] [0] = misc data: EMC TYPE2
+	cantx_Emx.cd.uc[1] = EMCCMD_ELIDLE;   //  0  ELCON: Self discharging/stop  
+
 	bmsnodes_online  = 0; // Number of discovered BMS nodes
 	module_celltoohi = 0; // One or more cells above max limit
 	module_selfdchg  = 0; // 1 = One or more cells tripped max
@@ -566,6 +615,28 @@ int cmd_E_init(char* p)
 		printsettings();
 		return 0;
 
+	case 'm': // Send EMCMMC (bmsmot) commands
+		EmMode = 1; // Mode 
+		switch (*(p+2))
+		{
+		case '0': // EMCCMD_ELIDLE:  // 0 // ELCON: Self discharging/stop 
+		case '1': // EMCCMD_ELCHG:   // 1 // ELCON: Start charging
+		case '2': // EMCCMD_LCCHG:   // 2 // Node Low Current: set charging mode
+		case '3': // EMCCMD_LCIDLE:  // 3 // Node Low Current: self discharging/stop 
+		case '4': // EMCCMD_DBGSET:  // 4 // Debug: ELCON: Force volts & amps setting
+		case '5': // EMCCMD_POLLRATE:// 5 // Debug: Set BMS poll rate
+			cantx_Emx.cd.uc[1] = *(p+2)- '0'; // Set numeric code
+			printf("Send CAN msg %08X %s\n", cantx_Emx.id, pEmx[*(p+2)-'0']);
+			sendcanmsg(&cantx_Emx);
+			return 0; //break;
+		default:
+			printf("Emx ERR: x = %c, not in case statement\n", *(p+2));
+			print_Emx_List();
+			return 0;
+		}
+		break;
+
+
 	case 'n': // Set number of modules on string
 		if (scansize(len,5) != 0) return -1; // check length
 		sscanf((p+2),"%d",&i); // get what they want as int
@@ -574,8 +645,10 @@ int cmd_E_init(char* p)
 		break;
 
 	case 'v': // Discovery then charge
+		EmMode = 0; // Set direct ELCON control
 		if (scansize(len,2) != 0) return -1;
-		printf("Start discovery of BMS nodes\nLook for nodes with CAN IDs in the following list\n");
+		printf("==================================================================================\n");
+		printf("Start discovery of BMS nodes\nLooking for nodes with CAN IDs in the following list\n");
 		if (getbmslist() != 0) // Get list of possible BMS nodes
 		{
 			ret = -1;
@@ -739,14 +812,16 @@ static void charging_int(void)
 		}
 		printf("   %4.1f\n",ftmp*0.1f);
 	}
-#ifndef SKIPPRINT2
+//#ifndef SKIPPRINT2
 //	printf("min_chg_cur %3d min_bal_cur %3d max_string_v %4d\n",min_chg_cur,min_bal_cur,max_string_v);
 	printf("Summary: %10.1f  %6.1f %6.1f\n",(float)max_string_v*0.1f,(float)min_chg_cur*0.1f,(float)min_bal_cur*0.1f);
 	ftmp  =  max_string_v;
-	ftmp *= 1.08f;
+#define VADJUST 1.00f
+	float ftmp2 = VADJUST;	
+	ftmp *= ftmp2;
 	max_string_v = ftmp;
-	printf("Summary: adj%7.1f \n",(float)max_string_v*0.1f);
-#endif	
+	printf("Summary: adj%7.1f adj factor: %4.2f \n",(float)max_string_v*0.1f, ftmp2);
+//#endif	
 
 	/* Check that all modules reported their voltage and current limits, */
 	flag = 0;
@@ -1058,11 +1133,13 @@ static void charging_poll(struct CANRCVBUF* p)
 			{ // Here msg has the status
 				// Update last received status msg
 				module_status_update(p,j);	
-//printf("STATUS %08X %02X %02X %02X %02X\n",p->id, p->cd.uc[4],p->cd.uc[5],p->cd.uc[6],p->cd.uc[7]);						
-printf("STATUS POLL %08X %d:",p->id, p->dlc);
-for (int w = 0; w < p->dlc; w++) 
-	printf(" %02X",p->cd.uc[w]);
-printf("\n");
+//printf("STATUS %08X %02X %02X %02X %02X\n",p->id, p->cd.uc[4],p->cd.uc[5],p->cd.uc[6],p->cd.uc[7]);
+#ifndef SKIPPRINT				
+	printf("STATUS POLL %08X %d:",p->id, p->dlc);
+	for (int w = 0; w < p->dlc; w++) 
+		printf(" %02X",p->cd.uc[w]);
+	printf("\n");
+#endif
 			}
 			return; // No need to check further
 		}
@@ -1099,6 +1176,11 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 	{
 		elcon_tx(p);
 		return;	
+	}
+
+	if (EmMode != 0)
+	{
+		return;
 	}
 
 	switch(state)
@@ -1212,7 +1294,7 @@ static int checkallresponded(void)
 #define CHG_HILO 1.3 // ELCON switch from low current to hi pulses
 static int reducechgcurrent(void)
 {
-float ttt;	
+  	float ttt;	
 	float ftmpw; // Be lazy and  use floating point
 	if (chgwork.iamps != chgbalance.iamps)
 	{ // Here, we have not reached the minimum
@@ -1228,9 +1310,7 @@ float ttt;
 		{ // Current in the ELCON high reduction step range
 			ttt = ftmpw;			
 			ftmpw *= CHG_REDUCE_FAC; // Reduce by a factor
-#ifndef SKIPPRINT2			
-	printf("CHG_REDUCE FACTOR: new %6.2f prev %6.2f\n",ftmpw, ttt);
-#endif	
+			printf("CHG_REDUCE FACTOR: new %6.2f prev %6.2f\n",ftmpw, ttt);
 		}
 
 		if (ftmpw < (float)chgbalance.iamps)
@@ -1250,13 +1330,14 @@ float ttt;
  * static void printchgrate(void);
  * @brief 	: printf charge rate "work"
 *******************************************************************************/
+#ifndef SKIPPRINT
 static void printchgrate(void)
 {
 	float famps = chgwork.iamps;
 	printf(" %7.1f",(famps*0.1));
 return;
 }
-
+#endif
 /******************************************************************************
  * static void chgstatusget(void);
  * @brief 	: Deal with responses to status polling

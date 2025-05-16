@@ -379,8 +379,8 @@ void do_printmenu(void)
 	printf("s - CONTACTOR: command request to retrieve all readings\n");
 	printf("t - Display all cell voltages of battery string in fixed window\n");
 	printf("u - list msg id's and msg ct between CAN 1 sec time mgs (e.g. u 00600000)\n");
-	printf("w - list msgs float (wf), integer (wi), half (wh), BigEnd 2 byte int (wy), byte (wb), with payload byte offset, (wi1 E1800000)\n");
 	printf("v - Version check (BMS) using CRC and CHKSUM\n");
+	printf("w - list msgs float (wf), integer (wi), half (wh), BigEnd 2 byte int (wy), byte (wb), with payload byte offset, (wi1 E1800000)\n");
 	printf("x - cancel command\n");
 	printf("Control C to quit program\n");
 	return;

@@ -154,6 +154,7 @@ static uint8_t headerctr;
 // zero duration = one-time only poll.
 #define DEFAULT_POLLDUR 1000 // Duration in ms
 static uint32_t polldur = DEFAULT_POLLDUR; // Duration between polls
+static  int32_t polltimeout;
 
 static uint8_t groupctr; // The six cell readings are sent in a group.
 
@@ -309,6 +310,7 @@ static int printsetmenu2(int j,int code)
 	char buf[256];
 	int subcode;
 	int k;
+	int32_t itmp;
 	char* pset = psetmenu[j];
 	walkfets_sw = 0;
 	switch(code)
@@ -372,6 +374,28 @@ Requester payload[3]
 	case MISCQ_SET_DUMP: // 13 DUMP FET on/off
 			printf("SET DUMP FET");
 			subcode = get01m9(pset);
+			if (subcode == 1)
+			{ // Put a limit on how long the dump will in effect
+				printf("Enter poll timeout (secs) [No entry, or zero = only one poll]\n");
+				polldur = 0;
+				polltimeout = 0;
+				k = read (STDIN_FILENO, buf, 256);	// Read chars from keyboard
+				if (k > 1)
+				{		
+					sscanf(buf,"%d",&itmp);	
+					if (strlen(buf) > 1)
+					{ // Something entered
+						if (itmp > 0)
+						{
+							polldur = 1000; // Duration between polls
+							polltimeout = itmp; // Timeout: count of 1 sec polls
+						}
+					}
+				}
+				printf("POLL (at one poll/sec) and set DUMP FET ON (code 13) for %d seconds\n",polltimeout);
+				printf("  Note: BMS continues DUMP FET for a 5 sec timeout after polling stops\n");
+
+			}
 		break;
 
 	case MISCQ_SET_DUMP2: // 14 DUMP FET on/off
@@ -853,15 +877,28 @@ static void sendcanmsg(struct CANRCVBUF* pcan)
 static void cmd_e_timerthread(void)
 {
 	if (polldur == 0)
+	{
+		polltimeout = 0; // jic
 		return;
+	}
 
 	if (kaON1 == 0) return; // No timer generated msgs
 
 	timerctr += 1; // 10 ms tick counter
 	if ((int)(timerctr - timernext) > 0)
 	{ // Time to output accumulated readings
+//printf("timer: polldur %d polltimeout %d\n",polldur,polltimeout);
+
 		timernext += polldur/10;
-//		timer_printresults();
+	//timer_printresults();
+
+		// Length time polling may be limited (e.g. DUMP FET)
+		polltimeout -= 1; // Count polls
+		if (polltimeout <= 0)
+		{ // Don't poll anymore.
+			polltimeout = 0;
+			return;
+		}
 
 		// Cell group 4 bit counter 
 		if (cantx.cd.uc[0] == CMD_CMD_CELLPOLL)

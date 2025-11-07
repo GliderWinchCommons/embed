@@ -625,10 +625,10 @@ int cmd_e_init(char* p)
 	else
 		cantx.cd.ui[1] = 0; // All, or string nodes, respond.
 
-	if (len < 3)
+	if (len < 4)
 	{
+		printf("A two char command calls for more input chars\n ");
 		printmenu(p);
-		printf("Too few chars: %d\n",len);
 		return -1;
 	}
 	else
@@ -638,33 +638,30 @@ int cmd_e_init(char* p)
 		switch ( *(p+1) )
 		{ 
 		case 'w': // 'ew' Set "Who" responds
-			if (len < 3)
+printf("ew len: %d\n", len);
+			if (len < 4)
 			{
-				printf("Need more info--Enter 0 or a CAN ID\n");
+				printf("Too few chars to specify CAN id: %d. Enter: ew xxxxxxxx (x = CAN id)\n",len);
 				return -1;
 			}
-			if (len < 12)
-			{ // Not enough chars for a CAN ID
-				canid_whoresp = 0;
-				printf("New: All nodes respond: %d\n",canid_whoresp );
+			if ((len > 4) && (len < 12))
+			{
+				printf("CAN id expected to be 8 chars, but was %d", len-4);
+				printf("   E.g. enter: ew xxxxxxxx (x = CAN id)\n");
+				return 0;
+			}
+			sscanf((p+2),"%x",&canid_whoresp);
+
+			if (canid_whoresp == 0)
+			{
+				printf("New: All nodes respond: %d\n",canid_whoresp);
 				printfsettings();
 				cd_uc1 = (0x3 << 6); // Save for re-entry init
 				cantx.cd.uc[1] = cd_uc1; // All BMSs respond
 				cantx.cd.ui[1] = 0; // CAN ID payload NULL
 				return 0;
-			}
-			sscanf((p+2),"%x",&canid_whoresp);
-			if (canid_whoresp == 0)
-			{
-				printf("New: All nodes respond: %d\n",canid_whoresp );
-				printfsettings();
-				cd_uc1 = (0x3 << 6); // Save for re-entry init
-				cantx.cd.uc[1] = cd_uc1; // Specified BMS responds
-				cantx.cd.ui[1] = canid_whoresp; // CAN ID of BMS
-				return 0;				
-			}
-			printf("New: BMS CAN ID: 0x%08X only responds\n",canid_whoresp);
-			printfsettings();
+			}		
+			printf("Target BMS CAN ID: 0x%08X only responds\n",canid_whoresp);
 			cd_uc1 = (0x1 << 6); // Save for re-entry init
 			cantx.cd.uc[1] = cd_uc1; // Specified BMS responds
 			cantx.cd.ui[1] = canid_whoresp; // CAN ID of BMS

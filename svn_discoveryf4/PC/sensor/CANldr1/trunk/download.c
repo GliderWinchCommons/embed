@@ -159,6 +159,8 @@ static void loadpay(uint8_t* po, uint32_t data)
 *******************************************************************************/
 static void sendcanmsg(struct CANRCVBUF* pcan)
 {
+usleep(400);
+
 	struct PCTOGATEWAY pctogateway; 
 	pctogateway.mode_link = MODE_LINK;	// Set mode for routines that receive and send CAN msgs
 	pctogateway.cmprs.seq = canseqnumber;	// Add sequence number (for PC checking for missing msgs)
@@ -298,7 +300,6 @@ else
 {
 	usleep(1000);
 }
-
 	sendcanmsg(&cantx); // Tell CAN node we are done and wait your reply.
 	return;
 }
@@ -571,6 +572,7 @@ if (req_size == 0xFEEDBACC)
 			state_timer_retry_ct = 0; // Reset timeout retry counter
 			data_retry_ct = 0; // Reset if previous was a retry
 			crc = ~0L;  // CRC initialized.
+usleep(1000);
 			send_CANnodeid_data(); // Send a burst
 			break;
 		}

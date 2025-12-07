@@ -15,6 +15,14 @@
 #include "timer_thread.h" // Timer thread for sending keep-alive CAN msgs
 #include "../../../../../svn_common/trunk/db/gen_db.h"
 
+/* The following are defaults which can be changed with commands. The changes
+   remain in effect until cangateBMS is restarted. */
+#define EXPECTED_NUM_MODULES_DEFAULT 4  // Default number of modules expected
+#define DEFAULT_ELCON_INPUT_VOLTAGE 120 // Default ELCON input power voltage (volts)
+#define DEFAULT_ELCON_INPUT_CURRENT  8  // Default ELCON input power max current (amps)
+#define DEFAULT_ELCON_INPUT_POWER 1250  // Default ELCON input power max (watts)
+#define DEFAULT_ELCON_OUTPUT_CURRENT_MAX 8 // Max charging current
+
 /* See BQTask.h
 Payload--
 can.cd.uc[4] = Battery status
@@ -212,7 +220,13 @@ static uint32_t timechgstatuspoll;
 static uint32_t timechgloop;
 
 /* Supply a default number of modules on the string. */
-static uint8_t num_bms_modules = 3;//6; // Number of BMS modules on string
+static uint8_t num_bms_modules = EXPECTED_NUM_MODULES_DEFAULT; // Number of BMS modules expected on string
+
+/* Start with default values for ELCON input and output limitations. */
+static float input_volts = DEFAULT_ELCON_INPUT_VOLTAGE; // 120 Default ELCON input power voltage (volts)
+static float input_amps  = DEFAULT_ELCON_INPUT_CURRENT; // 15  // Default ELCON input power max current (amps)
+static float input_watts = DEFAULT_ELCON_INPUT_POWER;   // 1250  // Default ELCON input power max (watts)
+static float output_amps = DEFAULT_ELCON_OUTPUT_CURRENT_MAX; // 8 // Max charging current
 
 static struct CANRCVBUF cantx_type2; // Generic TYPE2 msg to read
 static struct CANRCVBUF cantx_type2k; // Generic TYPE2 msg to set
@@ -232,11 +246,11 @@ static uint32_t elcon_ivolts;
 static uint32_t elcon_iamps;
 static uint8_t elcon_overvolts; // 0 == OK; 1 = last report was over voltage
 
-static double fmin_chg_cur;
-static double fmin_bal_cur;
-static double fmax_string_v;
+static float fmin_chg_cur;
+static float fmin_bal_cur;
+static float fmax_string_v;
 
-static int32_t donect; // Throttle "DONE" msg
+static int32_t donect; // Throttle rate of "DONE" msgs
 
 static int8_t EmMode; // 0 = Direct ELCON charging control; 1 = EMCMMC (bmsmot)
 
@@ -448,6 +462,8 @@ static void printhelp(void)
 	printf("\n\t"
 	"Eh: prints this command detail\n\t"
 	"En <count> = Set new count of BMS nodes on string\n\t"
+	"Ec Set ELCON: input volts input amps limit input input_watts limit\n\t"
+	"Eo Set ELCON: output (charging) amps limit\n\t"
 	"Ev: BMS discovery followed by charging\n\t"
 	"Ex: Shutdown ELCON\n\t"
 	"Emx: EMCMMC (bmsmot) control mode for ELCON\n\t"
@@ -469,6 +485,19 @@ static void printsettings(void)
 	printf("\tControl with EMCMMC (bmsmot) [reset with Ev or restart cangateBMS]: EmMode = %d\n",EmMode);
 	return;
 }
+/******************************************************************************
+ * static void printpowersettings(void);
+ * @brief 	: Help 
+*******************************************************************************/
+static void printpowersettings(void)
+{
+	printf("Setting----\n\tExpected number BMS modules on string: %d\n",num_bms_modules);
+	printf("\tControl with EMCMMC (bmsmot) [reset with Ev or restart cangateBMS]: EmMode = %d\n",EmMode);
+	printf("ELCON INPUT: %8.1f volts  %8.1f amps limit  %8.0f watts limit\n", input_volts, input_amps, input_watts );
+	printf("ELCON OUTPUT: %8.1f amps limit\n", output_amps);
+	return;
+}
+
 /******************************************************************************
  * static printcanmsg(struct CANRCVBUF* p);
  * @brief 	: CAN msg 
@@ -533,6 +562,10 @@ int cmd_E_init(char* p)
 	int i;
 	int ret = 0;
 	uint32_t len = strlen(p);
+	float tmpv;
+	float tmpa;
+	float tmpw;
+	float tmpo;
 
 	printf("%c%c %i\n",*p,*(p+1),len);
 
@@ -602,6 +635,7 @@ int cmd_E_init(char* p)
 	{ 
 		printhelp();
 		printsettings();
+		printpowersettings();
 		return 0;
 
 	}	
@@ -613,6 +647,7 @@ int cmd_E_init(char* p)
 	case 'h':
 		printhelp();
 		printsettings();
+		printpowersettings();		
 		return 0;
 
 	case 'm': // Send EMCMMC (bmsmot) commands
@@ -647,6 +682,7 @@ int cmd_E_init(char* p)
 	case 'v': // Discovery then charge
 		EmMode = 0; // Set direct ELCON control
 		if (scansize(len,2) != 0) return -1;
+		printpowersettings();
 		printf("==================================================================================\n");
 		printf("Start discovery of BMS nodes\nLooking for nodes with CAN IDs in the following list\n");
 		if (getbmslist() != 0) // Get list of possible BMS nodes
@@ -658,6 +694,72 @@ int cmd_E_init(char* p)
 		sendcan_type2(MISCQ_CHG_LIMITS,0);
 		sendcan_type2(MISCQ_STATUS,0);
 		canmsgstimeout = timerctr + CANMSGSTIMEOUT;
+		break;
+
+	case 'c': // Set ELCON max current limit
+		ret = sscanf((p+2),"%f %f %f", &tmpv,&tmpa,&tmpw);
+		if (ret < 3)
+		{
+			printf("Try again: I did not see three values: %d\n",ret);
+			return 1;
+		}
+		if (tmpv >= 260) 
+		{
+			printf("Try again: Input voltage must be less than or equal 260 volts: %f\n",tmpv);
+			return 1;
+		}
+		if (tmpv < 90)
+		{
+			printf("Try again: Input voltage must be greater than 90 volts: %f\n",tmpv);
+			return 1;
+		}
+		if (tmpv > 0) 
+		{
+			input_volts = tmpv;
+		}
+
+		if ((tmpa > 15) || (tmpa < 0))
+		{
+			printf("Try again: Input current must be greater than zero and less or equal to 15 amps: %f\n",tmpa);
+			return 1;
+		}
+		if (tmpa != 0) 
+		{
+			input_amps = tmpa;
+		}
+		if ((tmpw > 3300) || (tmpw < 0))
+		{
+			printf("Try again: Input power must be greater than zero and less or equal 3300 watts: %f\n",tmpv);
+			return 1;
+		}
+		if (tmpw > 0) 
+		{
+			input_watts = tmpw;
+		}
+		printpowersettings();
+		break;
+
+	case 'o': // Set output charge current limit
+		ret = sscanf((p+2),"%f",&tmpo);
+		if (ret < 1)
+		{
+			printf("Try again: I did not see a value: %d\n",ret);
+			return 1;
+		}
+		if (tmpo == 0)
+		{
+			break;
+		}
+		if ((tmpo > 16) || (tmpo < 0.1))
+		{
+			printf("Try again: Output charging current must be greater than 0.1a and less or equal to 16a: %f\n",tmpo);
+			return 1;
+		}
+		if (tmpo > 0.1)
+		{
+			output_amps = tmpo;
+		}
+		printpowersettings();
 		break;
 
 	case 'x': // Close down
@@ -711,7 +813,7 @@ int cmd_E_init(char* p)
  ******************************************************************************/
 void elcondatacheck(struct CANRCVBUF* p)
 {
-	double dtmp;
+	float dtmp;
 
 	elcon_ivolts = (p->cd.uc[0] << 8) | (p->cd.uc[1]);
 	elcon_iamps  = (p->cd.uc[2] << 8) | (p->cd.uc[3]);
@@ -814,13 +916,14 @@ static void charging_int(void)
 	}
 //#ifndef SKIPPRINT2
 //	printf("min_chg_cur %3d min_bal_cur %3d max_string_v %4d\n",min_chg_cur,min_bal_cur,max_string_v);
-	printf("Summary: %10.1f  %6.1f %6.1f\n",(float)max_string_v*0.1f,(float)min_chg_cur*0.1f,(float)min_bal_cur*0.1f);
+	printf("String reported:  %10.1f  %6.1f %6.1f\n",(float)max_string_v*0.1f,(float)min_chg_cur*0.1f,(float)min_bal_cur*0.1f);
 	ftmp  =  max_string_v;
+// This was for boosting value for the proxy pack debugging	
 #define VADJUST 1.00f
 	float ftmp2 = VADJUST;	
 	ftmp *= ftmp2;
 	max_string_v = ftmp;
-	printf("Summary: adj%7.1f adj factor: %4.2f \n",(float)max_string_v*0.1f, ftmp2);
+	printf("String adjusted:   adj%7.1f adj factor: %4.2f \n",(float)max_string_v*0.1f, ftmp2);
 //#endif	
 
 	/* Check that all modules reported their voltage and current limits, */
@@ -846,15 +949,8 @@ static void charging_int(void)
 	}
 	if (flag != 0) exit (-1);
 
-	/* Load two sets of values for setting ELCON. */
-	chgfull.ivolts    = max_string_v; // Max rate
-	chgfull.iamps     = min_chg_cur;  // Max rate
-	chgbalance.ivolts = max_string_v; // Balancing (min) rate
-	chgbalance.iamps  = min_bal_cur;  // Balancing (min) rate
 
-	// Start with full rate
-	chgwork = chgfull;
-
+	/* NOTE: floats are in 1x units, ints (uint_16t) in 10x */
 	fmax_string_v = max_string_v * 0.1;
 	fmin_chg_cur  = min_chg_cur  * 0.1;
 	fmin_bal_cur  = min_bal_cur  * 0.1;
@@ -862,7 +958,28 @@ static void charging_int(void)
 	printf("Min of max Balancing current from BMS reports: %7.1fa\n",fmin_bal_cur);
 	printf("Sum of max module volts(adj) from BMS reports: %7.1fv\n",fmax_string_v);
 
-/* Override values sent from nodes */
+/* Computer charge current max to be the minimum of string charge max, and ELCON power source
+   which can be input voltage & current limited, watts available, or simply
+   a charge current that the Op has entered.
+ */
+	// Minimum of ELCON input (volt * current) watts, default (or Op updates) input power
+	float ftmp_in_watts  = (input_volts * input_amps); // Power: input v * i;
+	if (ftmp_in_watts < input_watts) ftmp_in_watts = input_watts; // Which is lower?
+
+	// Minimum of above with charging watts, given string voltage
+	float ftmp_chg_watts = (fmax_string_v * fmin_chg_cur); // BMS reported v & i
+	if (ftmp_chg_watts < ftmp_in_watts) ftmp_chg_watts = ftmp_in_watts; // Which is lower?
+
+	// Charging current as set by the smallest of the max wattages
+	float ftmp_cur = ftmp_chg_watts / fmax_string_v; 
+
+	// Mininum of current based on watts and current reported by modules
+	if (ftmp_cur < fmin_chg_cur) ftmp_cur = fmin_chg_cur;
+
+	// Update charging current, and scale to 0.1a units
+	min_chg_cur = 10.0f * ftmp_cur;
+
+/* DEBUG: Override values sent from nodes */
 #if 0
 max_string_v = 2160; // (0.1 v)
 min_chg_cur  =   13; // (1.3 a)
@@ -875,11 +992,19 @@ printf("Balancing current hard-code override:   %7.1fa\n",fmin_bal_cur);
 printf("Charger max volts hard-code override:   %7.1fv\n",fmax_string_v);
 #endif
 
-chgbalance.ivolts = max_string_v;
-chgbalance.iamps  = min_bal_cur;  // Balancing (min) rate
-chgfull.ivolts    = max_string_v; // Max voltage
-chgfull.iamps     = min_chg_cur;  // Max current
-chgwork = chgfull;
+	chgbalance.ivolts = max_string_v;
+	chgbalance.iamps  = min_bal_cur;  // Balancing (min) rate
+	chgfull.ivolts    = max_string_v; // Max voltage
+	chgfull.iamps     = fmin_chg_cur * 10.0f;  // Max current
+	chgwork = chgfull; // Copy to working struct
+
+	printf("Sum of max module volts(adj) from BMS reports: %7.1fv\n",fmax_string_v);
+	printf("Final determination:         max string volts: %7.1fv\n",fmax_string_v);
+	printf("Final determination:     max charging current: %7.1fv\n",ftmp_cur);
+	printf("Final determination:          max ELCON watts: %7.0fv\n",ftmp_chg_watts);
+
+	// Let the hapless Op know what the bozo programmer cobbled together.
+	printf("Using these: %10.1f  %6.1f %6.1f\n",(float)max_string_v*0.1f,(float)min_chg_cur*0.1f,(float)min_bal_cur*0.1f);	
 
 	/* Check for bogus parameters received. */
 	if (fmax_string_v < FMIN_STRING_V)
@@ -951,6 +1076,7 @@ static void discovery_end(void)
 		printf ("Discovered BMS nodes count %d not equal expected count %d\n",
 			bmsnodes_online,num_bms_modules);	
 		printdiscovered();
+		printf("Change number of expected modules with En command\n");
 			state = 9;		
 			return;
 	}
@@ -996,7 +1122,7 @@ printf("module_mask: 0x%02X ",module_mask);printfbits(module_mask,8);printf("\n"
 	}
 	if (bmsnodes_online != num_bms_modules)
 	{
-		printf ("Discovered BMS nodes count %d not equal expected count %d\n",
+		printf ("Discovered BMS nodes count %d NOT EQUAL EXPECTED count %d\n",
 			bmsnodes_online,num_bms_modules);	
 		printdiscovered();
 	}

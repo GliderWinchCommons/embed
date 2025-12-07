@@ -8,4 +8,4 @@
 #   log250212-1340.txt | tee #cancnvtmatlab-250212-1340.csv
 
 gcc -Wall cancnvtmatlab.c -o cancnvtmatlab 
-./cancnvtmatlab csvlinelayout$1.txt csvfieldselect$2.txt < log$3.txt | tee cancnvtmatlab-$3.csv
+./cancnvtmatlab -# csvlinelayout$1.txt csvfieldselect$2.txt < log$3.txt | tee cancnvtmatlab-$3.csv

@@ -612,8 +612,8 @@ T 527 B1C00000 27 51     0.0    1.0 "CANID_UNIT_BMS19 Status: mode"
 #   4 ZTENSION
 #   5 CL switch: full scale
 #   6 CL switch: reset
-T 528 32000000 1  46     0.0    1.0 "CP status"
-T 529 32000000 2  46     0.0    1.0 "CP reserved"
-T 530 32000000 3  46     0.0    1.0 "CP bits: switch & pb in error"
-T 531 32000000 4  46     0.0    1.0 "CP bits: switch & pb on/off "
-T 532 32000000 5  46     0.0   0.01 "CP CL position pct"
+T 528 32000000 1  49     0.0    1.0 "CP status"
+T 529 32000000 2  49     0.0    1.0 "CP reserved"
+T 530 32000000 3  49     0.0    1.0 "CP bits: switch & pb in error"
+T 531 32000000 4  49     0.0    1.0 "CP bits: switch & pb on/off "
+T 532 32000000 5  49     0.0   0.01 "CP CL position pct"

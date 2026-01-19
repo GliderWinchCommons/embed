@@ -202,7 +202,8 @@ int cmd_v_init(char* p)
 		{
 			printf("BMS CRC CHKSUM check\n");
 			idxcrcchk = 0; // Start at beginning
-			for (int k = 0; k < CRCCHKSZ; k++)
+			int k;
+			for (k = 0; k < CRCCHKSZ; k++)
 			{
 				crcchk[k].flgcrc = 0;
 				crcchk[k].flgchk = 0;
@@ -363,7 +364,8 @@ static void timer_printresults(void)
 		{
 			bubble_sort_crcchk(crcchk, idxcrcchk);
 		}
-		for (int k = 0; k < idxcrcchk; k++)
+		int k;
+		for (k = 0; k < idxcrcchk; k++)
 		{
 			uint8_t ff = (crcchk[k].flgcrc << 1) | crcchk[k].flgchk;
 			switch(ff)
@@ -407,7 +409,8 @@ static void cmd_v_timerthread(void)
 		printf("\n");
 
 		// Update copy of struct for later comparison if 'vc' commanded
-		for (int k = 0; k < idxcrcchk; k++)
+		int k;
+		for (k = 0; k < idxcrcchk; k++)
 			crcchkx[k] = crcchk[k];
 		idxcrcchkx = idxcrcchk;
 
@@ -487,7 +490,8 @@ static void comparcrcchk(void)
 		return;
 	}
 printf("Number entries: %d\n",idxcrcchkx);
-	for (int k = 0; k < idxcrcchkx; k++)
+	int k;
+	for (k = 0; k < idxcrcchkx; k++)
 	{
 		/* Build the path/file */
 		const char* w = getenv("HOME");

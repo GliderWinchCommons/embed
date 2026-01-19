@@ -546,7 +546,8 @@ static int getbmslist(void)
 		}
 	}
 	printf("paramIDlist (BMS nodes): table size (paramsize): %d\n",paramsize);
-	for (int j = 0; j < paramsize; j++)
+	int j;
+	for (j = 0; j < paramsize; j++)
 		printf("%2d %08X\n",j+1,paramid[j]);
 	printf("\n");
 	return 0;
@@ -1262,7 +1263,8 @@ static void charging_poll(struct CANRCVBUF* p)
 //printf("STATUS %08X %02X %02X %02X %02X\n",p->id, p->cd.uc[4],p->cd.uc[5],p->cd.uc[6],p->cd.uc[7]);
 #ifndef SKIPPRINT				
 	printf("STATUS POLL %08X %d:",p->id, p->dlc);
-	for (int w = 0; w < p->dlc; w++) 
+	int w;
+	for (w = 0; w < p->dlc; w++) 
 		printf(" %02X",p->cd.uc[w]);
 	printf("\n");
 #endif
@@ -1384,7 +1386,8 @@ if (pcan->dlc == 0)
 if (flag == 1)
 {	
 	printf("TX: %08x %d:",pcan->id, pcan->dlc);
-	for (int w = 0; w < pcan->dlc; w++)
+	int w;
+	for (w = 0; w < pcan->dlc; w++)
 		printf(" %02X",pcan->cd.u8[w]);
 	printf("\n");
 }

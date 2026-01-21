@@ -126,7 +126,8 @@ bldct += 1;
 static void printCANmsg(struct CANRCVBUF* pcan)
 {
 	printf("\t0x%08X %d: uc[0] %dd: ",pcan->id,pcan->dlc,pcan->cd.uc[0]);
-	for (int i= 0; i < pcan->dlc; i++)
+	int i;
+	for (i= 0; i < pcan->dlc; i++)
 		printf(" %02X",pcan->cd.uc[i]);
 	printf("\n");
 	return;
@@ -159,7 +160,8 @@ static void sendcanmsg(struct CANRCVBUF* pcan)
 #if 0
 printf("state_msg %d state_timer %d: ",state_msg,state_timer);
 printf("TX:%3d %08X %d: ",canseqnumber,pcan->id, pcan->dlc);
-for (int i = 0; i < pcan->dlc; i++)printf(" %02X", pcan->cd.u8[i]);
+int i;
+for (i = 0; i < pcan->dlc; i++)printf(" %02X", pcan->cd.u8[i]);
 printf("\n");
 #endif
 	canseqnumber += 1;
@@ -331,7 +333,8 @@ void download_canbus_msg(struct CANRCVBUF* p)
 #if 0
 printf("Rcv: state_msg %d state_timer %d: ",state_msg,state_timer);
 printf("TX:%3d %08X %d: ",canseqnumber,p->id, p->dlc);
-for (int i = 0; i < p->dlc; i++)printf(" %02X", p->cd.u8[i]);
+int i;
+for (i = 0; i < p->dlc; i++)printf(" %02X", p->cd.u8[i]);
 printf("\n");	
 #endif
 

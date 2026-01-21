@@ -597,7 +597,7 @@ unsigned int kflag;
       { // Here, CAN msg is a time tick msg
 				// Generate CSV line using last-good-reading
 				// Build CSV line
-  				skip = 0; // Debugging skip count to throttle output
+  			skip = 0; // Debugging skip count to throttle output
 				pcline = &cline[0];
 				for (i = 0; i < csvselectsz; i++)
 				{
@@ -851,6 +851,15 @@ For convenience, the following from PAYLOAD_TYPE_INSERT.sql--
 		float ff;
 	}ui_ff;
 
+void dbgx(struct CANRCVBUF* pcanx)
+{
+	printf("\t%08X %d ",pcanx->id,pcanx->dlc);
+	for (int z = 0; z < pcanx->dlc; z++) 
+		printf("%02X ",pcanx->cd.uc[z]);
+	printf("\n");
+
+}
+
 void convertpayload(struct CANRCVBUF* pcanx, struct CANFIELD* pfld)
 {
 //	if (pfld->paytype == 51)
@@ -894,7 +903,7 @@ return;
 
 	case I16_X6:
 		if (k == 0) {ui_ff.ui = payI16(pcanx,0); break;}
-		if (k == 1) {ui_ff.ui = pcanx->cd.uc[5]; break;}
+		if (k == 1) {ui_ff.ui = pcanx->cd.uc[6]; break;}
 		break;
 
 	case I16_I16_X6:

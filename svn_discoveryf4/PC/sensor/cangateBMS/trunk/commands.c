@@ -364,7 +364,7 @@ void do_printmenu(void)
 				"k2 - reset\n");
 
 	printf("l - list unix time/date in heartbeat time msgs (l e1000000)\n");
-	printf("m - list msgs for id entered 'm xxxxxxxx (CAN ID as 8 hex digits)'\n");
+	printf("m - list msgs for id(s) entered 'm xxx yyy zzz etc.(e.g. 234 or 2340 or 23400000) '\n");
 	printf("n - list msg id's and msg ct during 1 sec (coarse computer timing)\n");
 	printf("p - ELCON Charger: \n\t"
 				"p  Set voltage and current to zero\n\t"

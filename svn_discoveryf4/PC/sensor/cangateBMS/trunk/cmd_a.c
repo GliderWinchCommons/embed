@@ -398,7 +398,7 @@ static void printhelp(void)
 
 	printf("Help:\nCell reading lines end with code for initiator of msg\n\t"
 		"44 = HB (heartbeat) timeout\n\t"
-		"45 = Misc data heartbeat timeoutn\t"
+		"45 = Misc data heartbeat timeout\n\t"
 		"46 = EMC1 (B0000000) polled BMS\n\t"
 		"47 = PC   (AEC00000) polled BMS\n\t"
 		"48 = misc data: response to emc1 type2\n\t"

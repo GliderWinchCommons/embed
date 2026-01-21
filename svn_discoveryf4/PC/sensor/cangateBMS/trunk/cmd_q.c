@@ -128,7 +128,8 @@ int cmd_q_init(char *p)
 			}
 		}
 		printf("Command q: Size of sql file edited = %d\n",wk.size);
-		for (int i = 0; i < wk.size; i++)
+		int i;
+		for (i = 0; i < wk.size; i++)
 		{
 			printf("%4d 0X%08X %s: %s: %s: %s\n",i,canidsql[i].id,canidsql[i].name,canidsql[i].hex,canidsql[i].type,canidsql[i].msg_fmt);
 		}

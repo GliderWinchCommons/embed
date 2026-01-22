@@ -165,7 +165,7 @@ INSERT INTO CANID VALUES ('CANID_MSG_ENG1_T1'      ,'41200000','ENG_T1',1,3,'U8_
 INSERT INTO CANID VALUES ('CANID_HB_ENG1_T1'       ,'82800000','ENG_T1',1,4,'U8_FF','Eng1_t1: Heartbeat temperature #1 calibrated');
 
 -- GPS/Logger
-INSERT INTO CANID VALUES ('CANID_HB_FIX_HT_TYP_NSAT','B1C00000','GPS',1,1,'UNDEF','GPS: fix: heigth:type fix:number sats');
+INSERT INTO CANID VALUES ('CANID_HB_FIX_HT_TYP_NSAT','B1C00004','GPS',1,1,'UNDEF','GPS: fix: heigth:type fix:number sats');
 INSERT INTO CANID VALUES ('CANID_HB_FIX_LATLON',     'A1C00000','GPS',1,2,'UNDEF','GPS: fix: lattitude:longitude');
 INSERT INTO CANID VALUES ('CANID_HB_LG_ER1',         'D1C00004','GPS',1,3,'UNDEF','GPS: 1st code  CANID-UNITID_CO_OLI GPS checksum error');
 INSERT INTO CANID VALUES ('CANID_HB_LG_ER2',         'D1C00014','GPS',1,4,'UNDEF','GPS: 2nd code  CANID-UNITID_CO_OLI GPS Fix error');
@@ -194,7 +194,7 @@ INSERT INTO CANID VALUES ('CANID_MSG_SHAFT1_SPEED' ,'82A00000', 'DRIVE_SHAFT',1,
 INSERT INTO CANID VALUES ('CANID_MSG_SHAFT1_COUNT' ,'82E00000', 'DRIVE_SHAFT',1,3,'U8_U32','Shaft1: Cumulative count, polled msg');
 INSERT INTO CANID VALUES ('CANID_HB_SHAFT1_SPEED'  ,'E2800000', 'DRIVE_SHAFT',1,4,'U8_FF' ,'Shaft1: Speed (RPM), hearbeat');
 INSERT INTO CANID VALUES ('CANID_HB_SHAFT1_COUNT'  ,'E2A00000', 'DRIVE_SHAFT',1,5,'U8_U32','Shaft1: Cumulative count, hearbeat');
-INSERT INTO CANID VALUES ('CANID_CMD_SHAFT1I'      ,'A0600000', 'GENCMD',1,5,'UNDEF','Shaft1: I Command CAN: incoming');
+INSERT INTO CANID VALUES ('CANID_CMD_SHAFT1I'      ,'A0600004', 'GENCMD',1,5,'UNDEF','Shaft1: I Command CAN: incoming');
 -- Sensor board reflective shaft encoder (../svn_sensor/sensor/se2/trunk)
 INSERT INTO CANID VALUES ('CANID_SE2H_ADC3_HistB',   'D0800034', 'SHAFT_LOWERSHV',1,1,'UNDEF','Shaft encoder: Lower sheave:SE2: ADC3 HistogramB tx: bin number, rx: send bin count');
 INSERT INTO CANID VALUES ('CANID_SE2H_COUNTERnSPEED','30800000', 'SHAFT_LOWERSHV',1,1,'UNDEF','Shaft encoder: Lower sheave:SE2: (Lower sheave) Count and speed');

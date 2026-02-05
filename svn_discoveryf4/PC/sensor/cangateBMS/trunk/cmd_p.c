@@ -4,6 +4,12 @@
 * Board              : PC
 * Description        : ELCON Charger 
 *******************************************************************************/
+/*
+02/04/2026 - After first test with ELCON connected to GSM winch:
+- Change max volts to ELCON max of 450, and add wattage limit.
+- Add 'pg' command that sets default volts & amps (and starts ELCON)
+*/
+
 #include "cmd_p.h"
 #include "gatecomm.h"
 #include "PC_gateway_comm.h"	// Common to PC and STM32
@@ -59,9 +65,17 @@ uint32_t kaON;  // 0 = keep-alive is off; 1 = keep-alive = on.
 static uint32_t timerctr;
 static uint32_t timernext; // Next timer count
 
+static char dd[64];
+
 
 #define DEFAULT_POLLDUR 900 // Duration in ms
 static uint32_t polldur = DEFAULT_POLLDUR; // Number of polls per sec
+
+// Default or ps command settings
+#define DEFAULT_VOLTS 415.8  // Max voltage of 6 modules of 18 cells
+#define DEFAULT_AMPS  3.8;   // Max amps for 1600 watts at default_volts
+static float fvolts_set = DEFAULT_VOLTS;
+static float famps_set  = DEFAULT_AMPS;
 
 /******************************************************************************
  * static printcanmsg(struct CANRCVBUF* p);
@@ -85,6 +99,7 @@ static void printcanmsg(struct CANRCVBUF* p)
 *******************************************************************************/
 int cmd_p_init(char* p)
 {
+	double ftmp;
 	lctr = 0;
 	uint32_t len = strlen(p);
 
@@ -111,6 +126,7 @@ int cmd_p_init(char* p)
 	switch ( *(p+1) )
 	{ 
 	case ' ': // 'This is a p' with a space following
+	case '\n':
 		sendcanmsg(&cantx); // Send (default) msg to turn ELCON charging off.
 		return 0;
 
@@ -129,17 +145,64 @@ int cmd_p_init(char* p)
 			sscanf( (p+3), "%f %f",&fvolts, &famps);
 			printf(" Volts %6.1f  Amps %6.1f\n",fvolts,famps);
 			ivolts = fvolts * 10.0f;
-			iamps  = famps * 10.0f;
-			if (ivolts > 4000)
+			iamps  = famps  * 10.0f;
+/* The ELCON HK-J-H440-10 Voltage range spec: 110-440v */		
+			if (ivolts > 4500)
 			{
-				printf("Volts limit is 400.0\n");
+				printf("Volts limit is 450.0\n");
 				return -1;
 			}
+/* The ELCON HK-J-H440-10 Voltage range spec: 10a */		
 			if (iamps > 100)
 			{
 				printf("Amps limit is 10.0\n");
 				return -1;
 			}
+/* The ELCON HK-J-H440-10 power max spec: 3300w (@220vac input) */		
+			ftmp = fvolts * famps;
+			if (ftmp >= 3300.0)
+			{ // Here even with 220vac the volts*amps is too high
+					printf("\tERROR: Volts * amps -> %0.1f watts, exceeds 3300 power limit (with 220vac input)\n",ftmp);
+					return -1;
+			}
+
+			if (ftmp >= 1600.0)
+			{
+				printf("Volts * amps -> %0.1f watts, exceeds 1600 power limit (with 110vac input)\n",ftmp);
+				printf ("Is input power 220vac? Enter Y (or y) for yes, or <enter> for no\n");
+				dd[0] = '\n';
+				read (STDIN_FILENO, &dd[0], 64);	// Read chars from keyboard
+printf("\n..%c..\n",dd[0]);
+				if ((dd[0] == 'Y') || (dd[0] == 'y'))
+				{ // Here Op indicates input is 220vac
+					if (ftmp >= 3300.0)
+					{ // Here with 220vac the volts*amps is too high
+ 						printf("\tERROR: Volts * amps -> %0.1f watts, exceeds 3300 power limit (with 220vac input)\n",ftmp);
+ 						return -1;
+					}
+				}
+				else
+				{
+				// Here Op indicates input is 110 vac and volts*amps is over 1600
+					printf("\tERROR: Volts * amps -> %0.1f watts, exceeds 1600 power limit (with 110vac input)\n",ftmp);
+					return -1;
+				}
+			}
+			fvolts_set = fvolts;
+			famps_set = famps;
+			printf("Until cangateBMS is restarted, pg command will use these default values\n");
+			printf("Default volts %0.1f default amps %0.1f Power max is %0.1f\n",fvolts_set,famps_set,ftmp);
+
+		case 'g': // "Go" start ELCON will the default volts and amps.
+			{
+				printf(" Start ELCON with these settings (use ps command to change settings)\n");
+				printf("Default volts %0.1f default amps %0.1f Power max is %0.1f\n",fvolts_set,famps_set,fvolts_set*famps_set);
+				ivolts = fvolts_set * 10.0f;
+				iamps  = famps_set  * 10.0f;
+				break;
+			}
+
+			// Here the volts*amps is within the limits of ELCON, given the input vac level.
 			cantx.cd.uc[0] = (ivolts >> 8);
 			cantx.cd.uc[1] = (ivolts & 0xFF);
 			cantx.cd.uc[2] = (iamps >> 8);

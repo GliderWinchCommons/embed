@@ -368,9 +368,10 @@ void do_printmenu(void)
 	printf("n - list msg id's and msg ct during 1 sec (coarse computer timing)\n");
 	printf("p - ELCON Charger: \n\t"
 				"p  Set voltage and current to zero\n\t"
+				"pg Set ELCON on with default volts & amps\n\t"
+				"ps <vvv.v> <iii.i> Set default voltage and current (CANID: C0372FA4)\n\t"
 				"pd Display ELCON sends: (CANID: C7FA872E)\n\t"
 				"pm Display msg => OTHERS SENT <= to ELCON: (CANID: C0372FA4)\n\t"
-				"ps <vvv.v> <iii.i> Set voltage and current (CANID: C0372FA4)\n\t"
 				"pj Set charger off bit to 1 \n\t"
 				"po Set charger off bit to 0\n");
 

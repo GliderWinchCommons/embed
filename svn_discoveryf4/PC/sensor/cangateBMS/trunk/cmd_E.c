@@ -17,11 +17,11 @@
 
 /* The following are defaults which can be changed with commands. The changes
    remain in effect until cangateBMS is restarted. */
-#define EXPECTED_NUM_MODULES_DEFAULT 4  // Default number of modules expected
+#define EXPECTED_NUM_MODULES_DEFAULT  6 // Default number of modules expected
 #define DEFAULT_ELCON_INPUT_VOLTAGE 120 // Default ELCON input power voltage (volts)
-#define DEFAULT_ELCON_INPUT_CURRENT  8  // Default ELCON input power max current (amps)
-#define DEFAULT_ELCON_INPUT_POWER 1250  // Default ELCON input power max (watts)
-#define DEFAULT_ELCON_OUTPUT_CURRENT_MAX 8 // Max charging current
+#define DEFAULT_ELCON_INPUT_CURRENT  15 // Default ELCON input power max current (amps)
+#define DEFAULT_ELCON_INPUT_POWER  1600 // Default ELCON input power max (watts)
+#define DEFAULT_ELCON_OUTPUT_CURRENT_MAX 3.8 // Default Max charging current
 
 /* See BQTask.h
 Payload--
@@ -107,7 +107,9 @@ can.cd.uc[7] = Temp
 #define ELCON_STATUS_COMM_TO   (1 << 4) // Communications timeout
 
 FILE* fpIn;
-char *paramlist = "/GliderWinchItems/BMS/bmsadbms1818/params/paramIDlist";
+//char *paramlist = "/GliderWinchItems/BMS/bmsadbms1818/params/paramIDlist";
+// This path/file assumes the execution takes place in the cangateBMS directory
+char *paramlist = "../../../../../../../GliderWinchItems/BMS/bmsadbms1818/params/paramIDlist";
 
 extern int fdp;	/* port file descriptor */
 
@@ -223,13 +225,13 @@ static uint32_t timechgloop;
 static uint8_t num_bms_modules = EXPECTED_NUM_MODULES_DEFAULT; // Number of BMS modules expected on string
 
 /* Start with default values for ELCON input and output limitations. */
-static float input_volts = DEFAULT_ELCON_INPUT_VOLTAGE; // 120 Default ELCON input power voltage (volts)
-static float input_amps  = DEFAULT_ELCON_INPUT_CURRENT; // 15  // Default ELCON input power max current (amps)
-static float input_watts = DEFAULT_ELCON_INPUT_POWER;   // 1250  // Default ELCON input power max (watts)
-static float output_amps = DEFAULT_ELCON_OUTPUT_CURRENT_MAX; // 8 // Max charging current
+static float input_volts = DEFAULT_ELCON_INPUT_VOLTAGE;      //  120 Default input power voltage (volts)
+static float input_amps  = DEFAULT_ELCON_INPUT_CURRENT;      //   15 Default input power max current (amps)
+static float input_watts = DEFAULT_ELCON_INPUT_POWER;        // 1600 Default input power max (watts)
+static float output_amps = DEFAULT_ELCON_OUTPUT_CURRENT_MAX; //  3.8 Default Max charging current (amps)
 
 static struct CANRCVBUF cantx_type2; // Generic TYPE2 msg to read
-static struct CANRCVBUF cantx_type2k; // Generic TYPE2 msg to set
+static struct CANRCVBUF cantx_type2k;// Generic TYPE2 msg to set
 static struct CANRCVBUF cantx_cells; // Poll for cell readings
 static struct CANRCVBUF cantx_elcon; // poll ELCON
 static struct CANRCVBUF cantx_dump;  // Specific module DUMP update
@@ -462,8 +464,8 @@ static void printhelp(void)
 	printf("\n\t"
 	"Eh: prints this command detail\n\t"
 	"En <count> = Set new count of BMS nodes on string\n\t"
-	"Ec Set ELCON: input volts input amps limit input input_watts limit\n\t"
-	"Eo Set ELCON: output (charging) amps limit\n\t"
+	"Ec <vac> <amps> <watts> Set ELCON: input volts; input amps limit; input_watts limit\n\t"
+	"Eo <amps> Set ELCON: output (charging) amps limit\n\t"
 	"Ev: BMS discovery followed by charging\n\t"
 	"Ex: Shutdown ELCON\n\t"
 	"Emx: EMCMMC (bmsmot) control mode for ELCON\n\t"
@@ -519,13 +521,15 @@ static void printcanmsg(struct CANRCVBUF* p)
 static int getbmslist(void)
 {
 	uint32_t id;
+/*	The following are not needed when going to a relative path/file. 02/05/26--
 	char *home_dir  = getenv("HOME");
 	char *fullpath = malloc(strlen(home_dir)+1 + strlen(paramlist)+1);
     strcpy(fullpath, home_dir);
     strcat(fullpath, paramlist);
-    printf("paramlist: fullpath: %s\n", fullpath);
+*/    
+    printf("paramlist: fullpath: %s\n", paramlist);
 
-	if ( (fpIn = fopen (fullpath,"r")) == NULL)
+	if ( (fpIn = fopen (paramlist,"r")) == NULL)
 	{
 		printf ("\nFile with possible BMS node CAN IDs did not open: %s\n",paramlist); 
 		printf ("Run mklist1.c to generate file\n");
@@ -701,7 +705,11 @@ int cmd_E_init(char* p)
 		ret = sscanf((p+2),"%f %f %f", &tmpv,&tmpa,&tmpw);
 		if (ret < 3)
 		{
-			printf("Try again: I did not see three values: %d\n",ret);
+			printf("Try again: I did not see three values: saw just %d\n",ret);
+			printf("Ec <input vac> <input amps> <input watts>\n");
+			printf("\tinput vac less than 260, greater or equal 90\n");
+			printf("\tinput amps 0 - 15.0\n");
+			printf("\tinput watts 0 - 3300.0");
 			return 1;
 		}
 		if (tmpv >= 260) 
@@ -753,7 +761,7 @@ int cmd_E_init(char* p)
 		}
 		if ((tmpo > 16) || (tmpo < 0.1))
 		{
-			printf("Try again: Output charging current must be greater than 0.1a and less or equal to 16a: %f\n",tmpo);
+			printf("Try again: Output charging current must be greater than 0.1a and less or equal to 16.0a: %f\n",tmpo);
 			return 1;
 		}
 		if (tmpo > 0.1)

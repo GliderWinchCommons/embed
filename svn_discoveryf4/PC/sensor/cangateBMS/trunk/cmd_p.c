@@ -8,6 +8,8 @@
 02/04/2026 - After first test with ELCON connected to GSM winch:
 - Change max volts to ELCON max of 450, and add wattage limit.
 - Add 'pg' command that sets default volts & amps (and starts ELCON)
+02/07/2026 - Set default V & I for temporary work with 4 modules
+
 */
 
 #include "cmd_p.h"
@@ -18,6 +20,12 @@
 #include "../../../../../svn_common/trunk/db/gen_db.h"
 
 extern int fdp;	/* port file descriptor */
+
+// Default or ps command settings
+#define DEFAULT_VOLTS 250.0  // 4 module temporary 415.8 // Max voltage of 6 modules of 18 cells
+#define DEFAULT_AMPS    4.0  // 4 module temporary   3.8;// Max amps for 1600 watts at default_volts
+static float fvolts_set = DEFAULT_VOLTS;
+static float famps_set  = DEFAULT_AMPS;
 
 static void sendcanmsg(struct CANRCVBUF* pcan);
 static void printcanmsg(struct CANRCVBUF* p);
@@ -71,11 +79,6 @@ static char dd[64];
 #define DEFAULT_POLLDUR 900 // Duration in ms
 static uint32_t polldur = DEFAULT_POLLDUR; // Number of polls per sec
 
-// Default or ps command settings
-#define DEFAULT_VOLTS 415.8  // Max voltage of 6 modules of 18 cells
-#define DEFAULT_AMPS  3.8;   // Max amps for 1600 watts at default_volts
-static float fvolts_set = DEFAULT_VOLTS;
-static float famps_set  = DEFAULT_AMPS;
 
 /******************************************************************************
  * static printcanmsg(struct CANRCVBUF* p);

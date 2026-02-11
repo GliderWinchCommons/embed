@@ -196,15 +196,6 @@ printf("\n..%c..\n",dd[0]);
 			printf("Until cangateBMS is restarted, pg command will use these default values\n");
 			printf("Default volts %0.1f default amps %0.1f Power max is %0.1f\n",fvolts_set,famps_set,ftmp);
 
-		case 'g': // "Go" start ELCON will the default volts and amps.
-			{
-				printf(" Start ELCON with these settings (use ps command to change settings)\n");
-				printf("Default volts %0.1f default amps %0.1f Power max is %0.1f\n",fvolts_set,famps_set,fvolts_set*famps_set);
-				ivolts = fvolts_set * 10.0f;
-				iamps  = famps_set  * 10.0f;
-				break;
-			}
-
 			// Here the volts*amps is within the limits of ELCON, given the input vac level.
 			cantx.cd.uc[0] = (ivolts >> 8);
 			cantx.cd.uc[1] = (ivolts & 0xFF);
@@ -214,8 +205,22 @@ printf("\n..%c..\n",dd[0]);
 			sendcanmsg(&cantx);
 			printcanmsg(&cantx);
 			break;
-		}
-			printf("Not enough chars for ps command: %d",len);
+		}	
+		printf("Not enough chars for ps command: %d",len);
+		break;
+		
+	case 'g': // "Go" start ELCON will the default volts and amps.
+		printf(" Start ELCON with these settings (use ps command to change settings)\n");
+		printf("Default volts %0.1f default amps %0.1f Power max is %0.1f\n",fvolts_set,famps_set,fvolts_set*famps_set);
+		ivolts = fvolts_set * 10.0f;
+		iamps  = famps_set  * 10.0f;
+		cantx.cd.uc[0] = (ivolts >> 8);
+		cantx.cd.uc[1] = (ivolts & 0xFF);
+		cantx.cd.uc[2] = (iamps >> 8);
+		cantx.cd.uc[3] = (iamps & 0xFF);
+		cantx.cd.uc[4] = 0; // Charging on
+		sendcanmsg(&cantx);
+		printcanmsg(&cantx);
 		break;
 
 	case 'j': // Set charger off bit to 1

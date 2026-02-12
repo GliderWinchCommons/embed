@@ -134,8 +134,10 @@ INSERT INTO CANID VALUES ('CANID_ELCON_RX','C0372FA4','ELCON1',1,1,'I16_I16_U8_U
 #define CANID_EMCMMC_CTL  CANID_CMD_PC_EMC //'98000000','UNIT_PC2EMC', 1,1,'U8_U8_U8_X4','PC sends commands to EMC
 
 /* printf for debugging */
-#define SKIPPRINT
-#define SKIPPRINT2
+// Note these are "negative". Commenting out includes printfs.
+#define SKIPPRINT  
+#define SKIPPRINT2 
+#define SKIPPRINT3 
 
 union UF
 {
@@ -1155,9 +1157,11 @@ static void discovery_init(void)
 	discoverytime     = timerctr + DISCOVERY_INTERVAL;
 	discoverytimepoll = timerctr + DISCOVERY_POLL;
 	elcon.timeout     = timerctr + ELCON_INTERVAL + 100;
+#ifdef SKIPPRINT3	
 printf("Discovery init:     discoverytime %3d\n",discoverytime);
 printf("Discovery init: discoverytimepoll %3d\n",discoverytimepoll);
 printf("Discovery init:     elcon.timeout %3d\n",elcon.timeout);
+#endif
 	return;
 }
 
@@ -1203,8 +1207,10 @@ printf("BMS node found %08X\n",p->id);
 			{ // Here msg has the current and voltage limits
 				bmsnode[j].canchg = *p; // Save msg with charger limits
 				bmsnode[j].timeout = timerctr + BMSPOLL_INTERVAL;
+#ifndef SKIPPRINT3				
 printf("LIM: %2d %2d %2d %08X",i, j,bmsnodes_online,p->id);						
 printcanmsg(p);printf("\n");
+#endif
 
 			}
 			else
@@ -1213,8 +1219,10 @@ printcanmsg(p);printf("\n");
 				{
 				bmsnode[j].canstatus = *p; // Save msg with charger limits
 				bmsnode[j].timeout = timerctr + BMSPOLL_INTERVAL;
+#ifndef SKIPPRINT3				
 printf("STA: %2d %2d %2d %08X",i, j,bmsnodes_online,p->id);						
 printcanmsg(p);printf("\n");
+#endif
 				}
 			}
 			return;

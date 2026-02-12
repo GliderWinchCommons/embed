@@ -22,7 +22,7 @@
 extern int fdp;	/* port file descriptor */
 
 // Default or ps command settings
-#define DEFAULT_VOLTS 250.0  // 4 module temporary 415.8 // Max voltage of 6 modules of 18 cells
+#define DEFAULT_VOLTS 260.0  // 4 module temporary 415.8 // Max voltage of 6 modules of 18 cells
 #define DEFAULT_AMPS    4.0  // 4 module temporary   3.8;// Max amps for 1600 watts at default_volts
 static float fvolts_set = DEFAULT_VOLTS;
 static float famps_set  = DEFAULT_AMPS;

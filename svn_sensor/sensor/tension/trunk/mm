@@ -30,18 +30,30 @@ make
 # And now compile the main program and junk associated with
 cd ../../svn_sensor/sensor/tension/trunk
 make clean
+
+echo =========================
+pwd
+
 # The high flash table is defined in the .ld file.  We have two
 # types of processors: VE - 512K|64K, VC - 128K|20K.  The
 # following compiles both versions from the same .c source code,
 # but with different high flash defines in the .ld files.
 #
+# VE versions--
+# TODO
+# VE version--
+echo "VE version"
+export LDRAPPLD=ldrapp_VE.ld
+export TENSIONNAME=tension_VE
+make
+make flash
+
+
 # VC version--
 export LDRAPPLD=ldrapp_VC.ld
 export TENSIONNAME=tension_VC
 make
 make flash
 
-# VE versions--
-# TODO
 
 exit

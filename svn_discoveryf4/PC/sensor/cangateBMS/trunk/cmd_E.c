@@ -930,7 +930,7 @@ static void charging_int(void)
 	printf("String reported:  %10.1f  %6.1f %6.1f\n",(float)max_string_v*0.1f,(float)min_chg_cur*0.1f,(float)min_bal_cur*0.1f);
 	ftmp  =  max_string_v;
 // This was for boosting value for the proxy pack debugging	
-#define VADJUST 1.00f
+#define VADJUST 1.035f
 	float ftmp2 = VADJUST;	
 	ftmp *= ftmp2;
 	max_string_v = ftmp;
@@ -969,6 +969,10 @@ static void charging_int(void)
 	printf("Min of max Balancing current from BMS reports: %7.1fa\n",fmin_bal_cur);
 	printf("Sum of max module volts(adj) from BMS reports: %7.1fv\n",fmax_string_v);
 
+fmin_chg_cur = 20; // (2.0a)
+printf("OVERRIDE CHG CURRENT. SET TO: %0.1f\n",fmin_chg_cur);
+
+
 /* Computer charge current max to be the minimum of string charge max, and ELCON power source
    which can be input voltage & current limited, watts available, or simply
    a charge current that the Op has entered.
@@ -1002,6 +1006,7 @@ printf("Charging  current hard-code override:   %7.1fa\n",fmin_chg_cur);
 printf("Balancing current hard-code override:   %7.1fa\n",fmin_bal_cur);
 printf("Charger max volts hard-code override:   %7.1fv\n",fmax_string_v);
 #endif
+
 
 	chgbalance.ivolts = max_string_v;
 	chgbalance.iamps  = min_bal_cur;  // Balancing (min) rate

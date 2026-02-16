@@ -969,7 +969,9 @@ static void charging_int(void)
 	printf("Min of max Balancing current from BMS reports: %7.1fa\n",fmin_bal_cur);
 	printf("Sum of max module volts(adj) from BMS reports: %7.1fv\n",fmax_string_v);
 
-fmin_chg_cur = 20; // (2.0a)
+// Charge current override
+min_chg_cur = 2.0;
+fmin_chg_cur  = min_chg_cur  * 0.1;
 printf("OVERRIDE CHG CURRENT. SET TO: %0.1f\n",fmin_chg_cur);
 
 

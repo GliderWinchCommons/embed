@@ -969,12 +969,6 @@ static void charging_int(void)
 	printf("Min of max Balancing current from BMS reports: %7.1fa\n",fmin_bal_cur);
 	printf("Sum of max module volts(adj) from BMS reports: %7.1fv\n",fmax_string_v);
 
-// Charge current override
-min_chg_cur = 20;
-fmin_chg_cur  = min_chg_cur  * 0.1;
-printf("OVERRIDE CHG CURRENT. SET TO: %0.1f\n",fmin_chg_cur);
-
-
 /* Computer charge current max to be the minimum of string charge max, and ELCON power source
    which can be input voltage & current limited, watts available, or simply
    a charge current that the Op has entered.
@@ -995,6 +989,12 @@ printf("OVERRIDE CHG CURRENT. SET TO: %0.1f\n",fmin_chg_cur);
 
 	// Update charging current, and scale to 0.1a units
 	min_chg_cur = 10.0f * ftmp_cur;
+
+// Charge current override
+min_chg_cur = 20;
+fmin_chg_cur  = min_chg_cur  * 0.1;
+ftmp_cur = fmin_chg_cur;
+printf("OVERRIDE CHG CURRENT. SET TO: %0.1fa\n",fmin_chg_cur);
 
 /* DEBUG: Override values sent from nodes */
 #if 0

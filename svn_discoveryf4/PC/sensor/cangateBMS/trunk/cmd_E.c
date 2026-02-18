@@ -1018,8 +1018,8 @@ printf("Charger max volts hard-code override:   %7.1fv\n",fmax_string_v);
 
 	printf("Sum of max module volts(adj) from BMS reports: %7.1fv\n",fmax_string_v);
 	printf("Final determination:         max string volts: %7.1fv\n",fmax_string_v);
-	printf("Final determination:     max charging current: %7.1fv\n",ftmp_cur);
-	printf("Final determination:          max ELCON watts: %7.0fv\n",ftmp_chg_watts);
+	printf("Final determination:     max charging current: %7.1fa\n",ftmp_cur);
+	printf("Final determination:          max ELCON watts: %7.0fw\n",ftmp_chg_watts);
 
 	// Let the hapless Op know what the bozo programmer cobbled together.
 	printf("Using these: %10.1f  %6.1f %6.1f\n",(float)max_string_v*0.1f,(float)min_chg_cur*0.1f,(float)min_bal_cur*0.1f);	

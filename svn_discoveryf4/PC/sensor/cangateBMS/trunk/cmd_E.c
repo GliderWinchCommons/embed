@@ -21,7 +21,9 @@
 #define DEFAULT_ELCON_INPUT_VOLTAGE 120 // Default ELCON input power voltage (volts)
 #define DEFAULT_ELCON_INPUT_CURRENT  15 // Default ELCON input power max current (amps)
 #define DEFAULT_ELCON_INPUT_POWER  1600 // Default ELCON input power max (watts)
-#define DEFAULT_ELCON_OUTPUT_CURRENT_MAX 2.0 // Default module override current max
+#define DEFAULT_ELCON_OUTPUT_CURRENT_MAX 2.0 // Non-zero default module overrides module current max
+#define DEFAULT_ELCON_OUTPUT_VOLTS_MAX 0 // Default of zero does not override module sum (volts)
+#define VADJUST 1.035f // Default factor for increasing charge voltage over module reported
 
 extern uint32_t msg_sw;	// Command in effect
 
@@ -233,6 +235,7 @@ static float input_volts = DEFAULT_ELCON_INPUT_VOLTAGE;      //  120 Default inp
 static float input_amps  = DEFAULT_ELCON_INPUT_CURRENT;      //   15 Default input power max current (amps)
 static float input_watts = DEFAULT_ELCON_INPUT_POWER;        // 1600 Default input power max (watts)
 static float output_amps = DEFAULT_ELCON_OUTPUT_CURRENT_MAX; //  3.8 Default Max charging current (amps)
+static float output_volts = DEFAULT_ELCON_OUTPUT_VOLTS_MAX;  //    0 Default does not override modules (volts)
 
 static struct CANRCVBUF cantx_type2; // Generic TYPE2 msg to read
 static struct CANRCVBUF cantx_type2k;// Generic TYPE2 msg to set
@@ -469,7 +472,8 @@ static void printhelp(void)
 	"Eh: prints this command detail\n\t"
 	"En <count> = Set new count of BMS nodes on string\n\t"
 	"Ec <vac> <amps> <watts> Set ELCON: input volts; input amps limit; input_watts limit\n\t"
-	"Eo <amps> Charging max amps. Non-zero overrides BMS module reports\n\t"
+	"Eo <amps> Charging max amps. Greater than zero overrides BMS module reports\n\t"
+	"Er <voltss> Charging max volts. Greater than zero overrides BMS module reports\n\t"
 	"Ev: BMS discovery followed by charging\n\t"
 	"Ex: Shutdown ELCON\n\t"
 	"Emx: EMCMMC (bmsmot) control mode for ELCON\n\t"
@@ -501,6 +505,10 @@ static void printpowersettings(void)
 	printf("\tControl with EMCMMC (bmsmot) [reset with Ev or restart cangateBMS]: EmMode = %d\n",EmMode);
 	printf("ELCON INPUT: %8.1f volts  %8.1f amps limit  %8.0f watts limit\n", input_volts, input_amps, input_watts );
 	printf("ELCON OUTPUT: %8.1f amps limit\n", output_amps);
+	if (output_volts > 0)
+	{
+		printf("ELCON OUTPUT OVERRIDE: %0.1f volts\n ",output_volts);
+	}
 	return;
 }
 
@@ -755,7 +763,7 @@ int cmd_E_init(char* p)
 		break;
 
 	case 'o': // Set output charge current limit
-		printf("Charging max override default is %0.1f\n",output_amps);
+		printf("Charging max override default is %0.1f amps\n",output_amps);
 		printf("If this value is greater than zero it will override module reported currents\n");
 
 		ret = sscanf((p+2),"%f",&tmpo);
@@ -766,6 +774,7 @@ int cmd_E_init(char* p)
 		}
 		if (tmpo == 0)
 		{
+			return 0;
 			break;
 		}
 		if ((tmpo > 16) || (tmpo < 0.1))
@@ -781,6 +790,28 @@ int cmd_E_init(char* p)
 		{
 			output_amps = 0;
 		}
+		printpowersettings();
+		return 0;
+		break;
+
+	case 'r': // Set max charge voltage
+		printf("Charging max override default is %0.1f volts\n",output_volts);
+		printf("If this value is greater than zero it will override sum of module max volts\n");
+
+		ret = sscanf((p+2),"%f",&tmpo);
+		if (ret < 1)
+		{
+			printf("I did not see a value: No changes made.\nTry Er again if you want to change the override value\n");
+			return 1;
+		}
+		printf("Entered: %0.1f\n",tmpo);
+		
+		if (((tmpo > 450.0) || (tmpo < 109.0)) && (tmpo > 0))
+		{ // Here value is outside the ELCON limits
+			printf("Try again: Output charging voltage must be greater than 109.0 and less or equal to 450.0: %f\n",tmpo);
+			return 1;
+		}
+		output_volts = tmpo;
 		printpowersettings();
 		return 0;
 		break;
@@ -942,7 +973,6 @@ static void charging_int(void)
 	printf("String reported:  %10.1f  %6.1f %6.1f\n",(float)max_string_v*0.1f,(float)min_chg_cur*0.1f,(float)min_bal_cur*0.1f);
 	ftmp  =  max_string_v;
 // This was for boosting value for the proxy pack debugging	
-#define VADJUST 1.035f
 	float ftmp2 = VADJUST;	
 	ftmp *= ftmp2;
 	max_string_v = ftmp;
@@ -1002,7 +1032,7 @@ static void charging_int(void)
 	// Update charging current, and scale to 0.1a units
 	min_chg_cur = 10.0f * ftmp_cur;
 
-	// Override modules
+	// Override max allowable current derived from module reports
 	if (output_amps > 0)
 	{ // Override module report derived charge current
 		// Charge current override
@@ -1012,19 +1042,11 @@ static void charging_int(void)
 		printf("OVERRIDE CHG CURRENT. SET TO: %0.1fa\n",fmin_chg_cur);
 	}
 
-/* DEBUG: Override values sent from nodes */
-#if 0
-max_string_v = 2160; // (0.1 v)
-min_chg_cur  =   13; // (1.3 a)
-min_bal_cur  =    1; // (0.1 a)
-fmax_string_v = max_string_v * 0.1;
-fmin_chg_cur  = min_chg_cur  * 0.1;
-fmin_bal_cur  = min_bal_cur  * 0.1;
-printf("Charging  current hard-code override:   %7.1fa\n",fmin_chg_cur);
-printf("Balancing current hard-code override:   %7.1fa\n",fmin_bal_cur);
-printf("Charger max volts hard-code override:   %7.1fv\n",fmax_string_v);
-#endif
-
+	// Override max charging voltage derived from sum of reported module max voltages
+	if (output_volts > 0)
+	{
+		max_string_v = output_volts * 10;		
+	}
 
 	chgbalance.ivolts = max_string_v;
 	chgbalance.iamps  = min_bal_cur;  // Balancing (min) rate

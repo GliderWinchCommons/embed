@@ -23,6 +23,8 @@
 #define DEFAULT_ELCON_INPUT_POWER  1600 // Default ELCON input power max (watts)
 #define DEFAULT_ELCON_OUTPUT_CURRENT_MAX 3.8 // Default Max charging current
 
+extern uint32_t msg_sw;	// Command in effect
+
 /* See BQTask.h
 Payload--
 can.cd.uc[4] = Battery status
@@ -684,6 +686,7 @@ int cmd_E_init(char* p)
 		sscanf((p+2),"%d",&i); // get what they want as int
 		num_bms_modules = i; // egads a uint8_t!
 		printf("\nUntil cangateBMS restarted, number of modules on string now: %d\n",num_bms_modules);
+		return 0;
 		break;
 
 	case 'v': // Discovery then charge
@@ -748,6 +751,7 @@ int cmd_E_init(char* p)
 			input_watts = tmpw;
 		}
 		printpowersettings();
+		return 0;
 		break;
 
 	case 'o': // Set output charge current limit
@@ -771,6 +775,7 @@ int cmd_E_init(char* p)
 			output_amps = tmpo;
 		}
 		printpowersettings();
+		return 0;
 		break;
 
 	case 'x': // Close down
@@ -901,7 +906,7 @@ static void charging_int(void)
 			printf("%08X did not report charger limits (code %d\n",MISCQ_CHG_LIMITS,bmsnode[i].id);
 			state = 9;
 			doneflag = 1;
-			exit(-1);
+			return;
 		}
 
 		/* Sum max module voltages for string. */
@@ -934,7 +939,7 @@ static void charging_int(void)
 	float ftmp2 = VADJUST;	
 	ftmp *= ftmp2;
 	max_string_v = ftmp;
-	printf("String adjusted:   adj%7.1f adj factor: %4.2f \n",(float)max_string_v*0.1f, ftmp2);
+	printf("String adjusted:  adj%7.1f adj factor: %0.3f \n",(float)max_string_v*0.1f, ftmp2);
 //#endif	
 
 	/* Check that all modules reported their voltage and current limits, */
@@ -958,7 +963,7 @@ static void charging_int(void)
 			flag = 2;
 		}
 	}
-	if (flag != 0) exit (-1);
+	if (flag != 0) return;
 
 
 	/* NOTE: floats are in 1x units, ints (uint_16t) in 10x */
@@ -1053,7 +1058,7 @@ printf("Charger max volts hard-code override:   %7.1fv\n",fmax_string_v);
 	}
 
 	if (state == 9)
-		exit(-1);
+		return;
 
 	/* Set keep-alive timeouts. */
 	for (i = 0; i < bmsnodes_online; i++)
@@ -1078,15 +1083,15 @@ static void discovery_end(void)
 
 	/* Check if ELCON present. */
 	printf("ELCON: %08X sent: ELCON ",elcon.can.id);
-		if (elcon.present == 0)
-		{ // Here ELCON msg received
-			flag = 1;
-			printf("missing\n");
-		}
-		else
-		{
-			printf("reporting\n");
-		}
+	if (elcon.present == 0)
+	{ // Here ELCON msg not received
+		flag = 1;
+		printf("missing\n");
+	}
+	else
+	{
+		printf("reporting\n");
+	}
 
 	/* Discovered module count must match expected count. */
 	if (bmsnodes_online != num_bms_modules)
@@ -1114,6 +1119,8 @@ static void discovery_end(void)
 			printf("%08X missing status\n",bmsnode[i].id);
 		}
 	}
+
+	// Error flag checking
 	if (flag == 0)
 	{ // All are OK, display list for hapless Op
 
@@ -1367,7 +1374,7 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 
 	case 10:
 		printf("EXIT (state==10)\n");
-		exit(0);
+		return;
 
 	default:
 		printf("cmd_E_do_msg: switch statement error: %d\n",state);
@@ -1562,7 +1569,13 @@ static void chgstatusget(void)
  * @brief 	: Send keep-alive msg
 *******************************************************************************/	
 static void cmd_E_timerthread(void)
-{
+{	
+	// Don't send unless 'E' command is in effect
+	if (msg_sw != 'E')
+	{
+		return;
+	}	
+
 	//int i;
 	timerctr += 1; // 100 ms tick running counter
 
@@ -1570,7 +1583,7 @@ static void cmd_E_timerthread(void)
 	{
 		printf("CAN msgs are not coming in\n");
 		canmsgstimeout += CANMSGSTIMEOUT;
-		state = 9;
+//		state = 9;
 	}
 
 	if (doneflag == 1)
@@ -1594,8 +1607,8 @@ static void cmd_E_timerthread(void)
 	printf(" timerctr %d el %d state %d  ",timerctr, elcon.timeout,state);		
 #endif
 		printf("ELCON timeout. It is not reporting\n");
-		elcon.timeout = timerctr + 2000;//ELCON_INTERVAL;
-		state = 9;
+		elcon.timeout = timerctr + 100;//ELCON_INTERVAL;
+//		state = 9;
 	}
 
 	switch(state)

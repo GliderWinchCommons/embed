@@ -192,11 +192,6 @@ void do_command_keybrd(char* p)
 static uint8_t menu_oto_sw = 0;
 	case 'x': // 'x' cancels current command
 //		cmd_a_do_stop();  // Disable ascii sending if enabled
-		if (menu_oto_sw == 0)
-		{
-			menu_oto_sw = 1;
-//			do_printmenu();	  // Nice display for the hapless Op.
-		}
 		timer_thread_shutdown(); // Cancel timer thread if running
 		msg_sw = 'x';
 		cmd_q_initsw = 0;	// OTO initialization switch
@@ -204,6 +199,11 @@ static uint8_t menu_oto_sw = 0;
 //		kaON1 = 0; // cmd_a timer by-pass
 //		kaON2 = 0; // cmd_v timer by-pass
 		close_ncurses(); // Command 't' window 
+		if (menu_oto_sw == 0)
+		{
+			menu_oto_sw = 1;
+//			do_printmenu();	  // Nice display for the hapless Op.
+		}		
 		break;
 
 	case 'c': // 'c' requests & displays launch parameters

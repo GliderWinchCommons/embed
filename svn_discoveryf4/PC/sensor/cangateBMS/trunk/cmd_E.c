@@ -1638,9 +1638,9 @@ static void cmd_E_timerthread(void)
 	{
 		elcon.present = 0;
 		elcon.id = 0;
-#ifndef SKIPPRINT
+//#ifndef SKIPPRINT
 	printf(" timerctr %d el %d state %d  ",timerctr, elcon.timeout,state);		
-#endif
+//#endif
 		printf("ELCON timeout. It is not reporting\n");
 		elcon.timeout = timerctr + ELCON_INTERVAL;
 //		state = 9;

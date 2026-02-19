@@ -805,7 +805,7 @@ int cmd_E_init(char* p)
 			return 1;
 		}
 		printf("Entered: %0.1f\n",tmpo);
-		
+
 		if (((tmpo > 450.0) || (tmpo < 109.0)) && (tmpo > 0))
 		{ // Here value is outside the ELCON limits
 			printf("Try again: Output charging voltage must be greater than 109.0 and less or equal to 450.0: %f\n",tmpo);
@@ -830,9 +830,11 @@ int cmd_E_init(char* p)
 		}
 	}
 	
-	elcon_timer_keep_alive  = ELCON_KEEP_ALIVE;
+	
 	sendcanmsg(&cantx_elcon);	// Send ELCON poll
 	starttimer();
+	elcon_timer_keep_alive  = timerctr + ELCON_KEEP_ALIVE;
+	elcon.timeout = timerctr + ELCON_INTERVAL;
 	return ret;
 }
 /******************************************************************************
@@ -1640,7 +1642,7 @@ static void cmd_E_timerthread(void)
 	printf(" timerctr %d el %d state %d  ",timerctr, elcon.timeout,state);		
 #endif
 		printf("ELCON timeout. It is not reporting\n");
-		elcon.timeout = timerctr + 100;//ELCON_INTERVAL;
+		elcon.timeout = timerctr + ELCON_INTERVAL;
 //		state = 9;
 	}
 

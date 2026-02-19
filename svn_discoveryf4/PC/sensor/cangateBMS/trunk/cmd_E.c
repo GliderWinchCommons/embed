@@ -21,7 +21,7 @@
 #define DEFAULT_ELCON_INPUT_VOLTAGE 120 // Default ELCON input power voltage (volts)
 #define DEFAULT_ELCON_INPUT_CURRENT  15 // Default ELCON input power max current (amps)
 #define DEFAULT_ELCON_INPUT_POWER  1600 // Default ELCON input power max (watts)
-#define DEFAULT_ELCON_OUTPUT_CURRENT_MAX 3.8 // Default Max charging current
+#define DEFAULT_ELCON_OUTPUT_CURRENT_MAX 2.0 // Default module override current max
 
 extern uint32_t msg_sw;	// Command in effect
 
@@ -469,7 +469,7 @@ static void printhelp(void)
 	"Eh: prints this command detail\n\t"
 	"En <count> = Set new count of BMS nodes on string\n\t"
 	"Ec <vac> <amps> <watts> Set ELCON: input volts; input amps limit; input_watts limit\n\t"
-	"Eo <amps> Set ELCON: output (charging) amps limit\n\t"
+	"Eo <amps> Charging max amps. Non-zero overrides BMS module reports\n\t"
 	"Ev: BMS discovery followed by charging\n\t"
 	"Ex: Shutdown ELCON\n\t"
 	"Emx: EMCMMC (bmsmot) control mode for ELCON\n\t"
@@ -755,10 +755,13 @@ int cmd_E_init(char* p)
 		break;
 
 	case 'o': // Set output charge current limit
+		printf("Charging max override default is %0.1f\n",output_amps);
+		printf("If this value is greater than zero it will override module reported currents\n");
+
 		ret = sscanf((p+2),"%f",&tmpo);
 		if (ret < 1)
 		{
-			printf("Try again: I did not see a value: %d\n",ret);
+			printf("I did not see a value: No changes made.\nTry Eo again if you want to change the override value\n");
 			return 1;
 		}
 		if (tmpo == 0)
@@ -773,6 +776,10 @@ int cmd_E_init(char* p)
 		if (tmpo > 0.1)
 		{
 			output_amps = tmpo;
+		}
+		else
+		{
+			output_amps = 0;
 		}
 		printpowersettings();
 		return 0;
@@ -995,11 +1002,15 @@ static void charging_int(void)
 	// Update charging current, and scale to 0.1a units
 	min_chg_cur = 10.0f * ftmp_cur;
 
-// Charge current override
-min_chg_cur = 20;
-fmin_chg_cur  = min_chg_cur  * 0.1;
-ftmp_cur = fmin_chg_cur;
-printf("OVERRIDE CHG CURRENT. SET TO: %0.1fa\n",fmin_chg_cur);
+	// Override modules
+	if (output_amps > 0)
+	{ // Override module report derived charge current
+		// Charge current override
+		min_chg_cur = output_amps * 10;
+		fmin_chg_cur  = min_chg_cur  * 0.1;
+		ftmp_cur = fmin_chg_cur;
+		printf("OVERRIDE CHG CURRENT. SET TO: %0.1fa\n",fmin_chg_cur);
+	}
 
 /* DEBUG: Override values sent from nodes */
 #if 0

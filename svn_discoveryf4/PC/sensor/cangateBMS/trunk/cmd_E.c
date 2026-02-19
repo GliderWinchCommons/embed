@@ -1349,6 +1349,7 @@ void elcon_tx(struct CANRCVBUF* p)
 //printcanmsg(p);printf("do_msg: timerctr %d el %d\n",timerctr, elcon.timeout);
 	elcon.can = *p; // Save latest response from ELCON
 	elcon.present = 1;
+printf("CTRELCON: %d\n",timerctr);
 	elcon.timeout = timerctr + ELCON_INTERVAL;
 	elcondatacheck(p); // Update ELCON payload data
 	return;

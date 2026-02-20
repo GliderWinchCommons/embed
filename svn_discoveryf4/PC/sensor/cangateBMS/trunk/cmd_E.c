@@ -1374,6 +1374,11 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 	/* Overall check on gateway functioning. Reset timeout. */
 	canmsgstimeout = timerctr + CANMSGSTIMEOUT;
 
+	if (EmMode != 0)
+	{
+		return;
+	}
+
 	/* Handle CAN msgs */
 	// ELCON sent this msg
 	if (CANID_ELCON_TX == (p->id & ~0x3))
@@ -1383,10 +1388,7 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 		return;	
 	}
 
-	if (EmMode != 0)
-	{
-		return;
-	}
+
 
 	switch(state)
 	{

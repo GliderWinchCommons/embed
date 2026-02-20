@@ -261,7 +261,7 @@ static float fmax_string_v;
 
 static int32_t donect; // Throttle rate of "DONE" msgs
 
-static int8_t EmMode; // 0 = Direct ELCON charging control; 1 = EMCMMC (bmsmot)
+static int8_t msgbypass; // 1 = bypass (ignore) CAN msgs arriving (see E_do_msg())
 
 /******************************************************************************
  * static void print_chgingdisplay(void);
@@ -473,7 +473,7 @@ static void printhelp(void)
 	"En <count> = Set new count of BMS nodes on string\n\t"
 	"Ec <vac> <amps> <watts> Set ELCON: input volts; input amps limit; input_watts limit\n\t"
 	"Eo <amps> Charging max amps. Greater than zero overrides BMS module reports\n\t"
-	"Er <voltss> Charging max volts. Greater than zero overrides BMS module reports\n\t"
+	"Er <volts> Charging max volts. Greater than zero overrides BMS module reports\n\t"
 	"Ev: BMS discovery followed by charging\n\t"
 	"Ex: Shutdown ELCON\n\t"
 	"Emx: EMCMMC (bmsmot) control mode for ELCON\n\t"
@@ -492,7 +492,6 @@ static void printhelp(void)
 static void printsettings(void)
 {
 	printf("Setting----\n\tExpected number BMS modules on string: %d\n",num_bms_modules);
-	printf("\tControl with EMCMMC (bmsmot) [reset with Ev or restart cangateBMS]: EmMode = %d\n",EmMode);
 	return;
 }
 /******************************************************************************
@@ -502,7 +501,6 @@ static void printsettings(void)
 static void printpowersettings(void)
 {
 	printf("Setting----\n\tExpected number BMS modules on string: %d\n",num_bms_modules);
-	printf("\tControl with EMCMMC (bmsmot) [reset with Ev or restart cangateBMS]: EmMode = %d\n",EmMode);
 	printf("ELCON INPUT: %8.1f volts  %8.1f amps limit  %8.0f watts limit\n", input_volts, input_amps, input_watts );
 	printf("ELCON OUTPUT: %8.1f amps limit\n", output_amps);
 	if (output_volts > 0)
@@ -584,7 +582,8 @@ int cmd_E_init(char* p)
 	float tmpw;
 	float tmpo;
 
-	printf("%c%c %i\n",*p,*(p+1),len);
+// Echo command plus number of chars entered
+//	printf("%c%c %i\n",*p,*(p+1),len);
 
 	#define USEC 1500 // micoseconds wait
 	ts.tv_sec = 0;
@@ -645,10 +644,10 @@ int cmd_E_init(char* p)
 	chgzero.ivolts = 0;
 	chgzero.iamps  = 0;
 
-	timerctr   = 0;	
+	timerctr = 0;	
 
-	state = 11; // Idle state: ignore CAN msgs until Ev command 
-	EmMode = 1;
+	state     = 11; // Idle state: ignore CAN msgs until Ev command 
+	msgbypass =  1; // Intially ignore incoming CAN msgs 
 
 	/* Check keyboard input. */
 	if (len < 3)
@@ -657,8 +656,8 @@ int cmd_E_init(char* p)
 		printsettings();
 		printpowersettings();
 		return 0;
-
 	}	
+
 	/* POLLER requests BMS node, string, or all. */
 	switch ( *(p+1) )
 	{ 
@@ -671,7 +670,9 @@ int cmd_E_init(char* p)
 		return 0;
 
 	case 'm': // Send EMCMMC (bmsmot) commands
-		EmMode = 1; // Mode 
+		printf("This sub-command is disabled\n");
+		return 0;
+
 		switch (*(p+2))
 		{
 		case '0': // EMCCMD_ELIDLE:  // 0 // ELCON: Self discharging/stop 
@@ -689,34 +690,40 @@ int cmd_E_init(char* p)
 			print_Emx_List();
 			return 0;
 		}
-		break;
+		return 0;
 
 	case 'n': // Set number of modules on string
-		if (scansize(len,5) != 0) return -1; // check length
+		if (scansize(len,5) != 0) 
+			return -1; // check length
 		sscanf((p+2),"%d",&i); // get what they want as int
 		num_bms_modules = i; // egads a uint8_t!
 		printf("\nUntil cangateBMS restarted, number of modules on string now: %d\n",num_bms_modules);
 		return 0;
-		break;
 
 	case 'v': // Discovery then charge
-		EmMode = 0; // Set direct ELCON control
-		if (scansize(len,2) != 0) return -1;
+		/* msgbypass switch intially set to 1 by-passes processing incoming CAN msgs for the 
+		   other case statements.
+			Note that 'v' exits via 'break' which starts the timer thread. */
+		msgbypass = 0; // Begin processing incoming CAN msgs
+
+		if (scansize(len,2) != 0) 
+			return -1; // 
 		printpowersettings();
 		printf("==================================================================================\n");
 		printf("Start discovery of BMS nodes\nLooking for nodes with CAN IDs in the following list\n");
 		if (getbmslist() != 0) // Get list of possible BMS nodes
 		{
-			ret = -1;
+			return -1;
 			break;
 		}
-		discovery_init(); // (Note: this sets state to zero)
+		discovery_init(); // (Note: this sets state to zero which processes CAN msgs for discovery)
 		sendcan_type2(MISCQ_CHG_LIMITS,0);
 		sendcan_type2(MISCQ_STATUS,0);
 		canmsgstimeout = timerctr + CANMSGSTIMEOUT;
+		progresstime   = timerctr + PROGRESSTIME;
 		break;
 
-	case 'c': // Set ELCON max current limit
+	case 'c': // Set ELCON input limits
 		ret = sscanf((p+2),"%f %f %f", &tmpv,&tmpa,&tmpw);
 		if (ret < 3)
 		{
@@ -762,7 +769,6 @@ int cmd_E_init(char* p)
 		}
 		printpowersettings();
 		return 0;
-		break;
 
 	case 'o': // Set output charge current limit
 		printf("Charging max override default is %0.1f amps\n",output_amps);
@@ -777,7 +783,6 @@ int cmd_E_init(char* p)
 		if (tmpo == 0)
 		{
 			return 0;
-			break;
 		}
 		if ((tmpo > 16) || (tmpo < 0.1))
 		{
@@ -794,7 +799,6 @@ int cmd_E_init(char* p)
 		}
 		printpowersettings();
 		return 0;
-		break;
 
 	case 'r': // Set max charge voltage
 		printf("Charging max override default is %0.1f volts\n",output_volts);
@@ -816,7 +820,6 @@ int cmd_E_init(char* p)
 		output_volts = tmpo;
 		printpowersettings();
 		return 0;
-		break;
 
 	case 'x': // Close down
 		sendcanmsg_dump(0);
@@ -831,7 +834,6 @@ int cmd_E_init(char* p)
 			break;
 		}
 	}
-	
 	
 	sendcanmsg(&cantx_elcon);	// Send ELCON poll
 	starttimer();
@@ -1104,6 +1106,7 @@ static void charging_int(void)
 	}
 
 	/* Charging state. */
+	timechgstatuspoll = timerctr + CHGSTATPOLL; // +20
 	state = 3;
 	return;
 }
@@ -1178,6 +1181,7 @@ static void discovery_end(void)
 		module_mask = ((1 << bmsnodes_online) - 1);
 printf("module_mask: 0x%02X ",module_mask);printfbits(module_mask,8);printf("\n");
 		state = 3; // ????
+		timechgstatuspoll = timerctr + CHGSTATPOLL; // +20
 		charging_int(); // Initialize charging phase
 		printf("\n"); // Separate init printf from following 
 		return; // Set state to charging phase
@@ -1374,7 +1378,8 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 	/* Overall check on gateway functioning. Reset timeout. */
 	canmsgstimeout = timerctr + CANMSGSTIMEOUT;
 
-	if (EmMode != 0)
+	// Ignore incoming CAN msgs until Ev command given
+	if (msgbypass != 0)
 	{
 		return;
 	}
@@ -1387,8 +1392,6 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 //printf("RCV %d\n",timerctr);
 		return;	
 	}
-
-
 
 	switch(state)
 	{
@@ -1417,7 +1420,7 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 		if (donect-- < 0) // Throttle msgs
 		{
 			donect = 1024;
-			printf("DONE, or bombed out %08X\n", p->id);
+			printf("DONE, (or bombed out) \n");
 		}
 		break;
 

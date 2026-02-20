@@ -208,8 +208,8 @@ static int8_t doneflag; //
 #define BMSPOLL_TIMEOUT  50 // BMS report failure
 #define DISCOVERY_INTERVAL 20 // Number of 0.1 secs to wait for discovery
 #define DISCOVERY_POLL   10 // Polling for discovery interval
-#define ELCON_INTERVAL   18 // ELCON timeout: it should report once per second
-#define ELCON_KEEP_ALIVE 10 // Number of 0.1 secs between ELCON keep-alive
+#define ELCON_INTERVAL   21 // ELCON timeout: it should report once per second
+#define ELCON_KEEP_ALIVE  9 // Number of 0.1 secs between ELCON keep-alive
 #define CANMSGSTIMEOUT  100 // Timeout for no CAN msgs coming in (gateway problems?)
 #define PROGRESSTIME     10 // Hapless op keep-alive
 #define CHGSTATPOLL      20 // Charging: wait to start next status update
@@ -318,7 +318,7 @@ static void print_chgingdisplay(void)
  * static void printfbits(uint32_t x, uint8_t n );
  * @brief 	: Print bits : 0 - n i
  * @param   : x = value 
- * @param   : n = number of bits to print
+ * @param   : n = number of bits to print (i.e. number of BMS modules discovered)
  ******************************************************************************/
 static char bitline[66];
 static void printfbits(uint32_t x, uint8_t n )
@@ -647,6 +647,8 @@ int cmd_E_init(char* p)
 
 	timerctr   = 0;	
 
+	state = 11; // Idle state: ignore CAN msgs until Ev command 
+
 	/* Check keyboard input. */
 	if (len < 3)
 	{ 
@@ -688,7 +690,6 @@ int cmd_E_init(char* p)
 		}
 		break;
 
-
 	case 'n': // Set number of modules on string
 		if (scansize(len,5) != 0) return -1; // check length
 		sscanf((p+2),"%d",&i); // get what they want as int
@@ -708,7 +709,7 @@ int cmd_E_init(char* p)
 			ret = -1;
 			break;
 		}
-		discovery_init();
+		discovery_init(); // (Note: this sets state to zero)
 		sendcan_type2(MISCQ_CHG_LIMITS,0);
 		sendcan_type2(MISCQ_STATUS,0);
 		canmsgstimeout = timerctr + CANMSGSTIMEOUT;
@@ -1109,6 +1110,7 @@ static void charging_int(void)
  * static void discovery(void);
  * @brief 	: Discovery time duration expired.
 *******************************************************************************/
+//static char* pEvcommand = "Ev\n";
 static void discovery_end(void)
 {
 	int i;
@@ -1121,7 +1123,14 @@ static void discovery_end(void)
 	if (elcon.present == 0)
 	{ // Here ELCON msg not received
 		flag = 1;
-		printf("missing\n");
+		printf("missing.\n\n==== REPEAT discovery cycle\n\n");
+		discovery_init(); // (Note: this sets state to zero)
+		sendcan_type2(MISCQ_CHG_LIMITS,0);
+		sendcan_type2(MISCQ_STATUS,0);
+		canmsgstimeout = timerctr + CANMSGSTIMEOUT;
+		state = 0;
+		return;
+
 	}
 	else
 	{
@@ -1349,7 +1358,7 @@ void elcon_tx(struct CANRCVBUF* p)
 //printcanmsg(p);printf("do_msg: timerctr %d el %d\n",timerctr, elcon.timeout);
 	elcon.can = *p; // Save latest response from ELCON
 	elcon.present = 1;
-printf("CTRELCON: %d\n",timerctr);
+//printf("CTRELCON: %d\n",timerctr);
 	elcon.timeout = timerctr + ELCON_INTERVAL;
 	elcondatacheck(p); // Update ELCON payload data
 	return;
@@ -1411,6 +1420,9 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 	case 10:
 		printf("EXIT (state==10)\n");
 		return;
+
+	case 11: // Idle until Ev command starts
+		break;		
 
 	default:
 		printf("cmd_E_do_msg: switch statement error: %d\n",state);

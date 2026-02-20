@@ -648,6 +648,7 @@ int cmd_E_init(char* p)
 	timerctr   = 0;	
 
 	state = 11; // Idle state: ignore CAN msgs until Ev command 
+	EmMode = 1;
 
 	/* Check keyboard input. */
 	if (len < 3)
@@ -1375,9 +1376,10 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 
 	/* Handle CAN msgs */
 	// ELCON sent this msg
-	if (CANID_ELCON_TX == p->id)
+	if (CANID_ELCON_TX == (p->id & ~0x3))
 	{
 		elcon_tx(p);
+//printf("RCV %d\n",timerctr);
 		return;	
 	}
 

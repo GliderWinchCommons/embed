@@ -1,0 +1,46 @@
+pins.txt
+
+03/17/2026
+
+Two units--
+HB 02000000
+HB 14000000
+
+Originals in the plastic clam-shell holder for the Discovery F4
+3-D printed frame made to hold
+- Discovery F4
+- CAN subboard: non-isolated 
+- CAN subboard: isolated w 5v-5v module to power CAN driver
+Frame/post to hold ftdi module--
+- USART2 (USB-gateway 2000000 baud w original software)
+- USART6 (USB-115200 baud monitor?)
+
+USART2 (FTDI module)
+1 blk gnd
+2 
+3
+4 wht PA3 RX
+5 blu PA2 TX
+6
+
+USART6
+1 gnd blk
+2
+3
+4 wht PC7 RX
+5 blu PC6 TX
+6
+
+CAN1
+GND blk
+red +5
+wht PD1 TX
+blu PD0 RX
+grn gnd
+
+CAN2
+GND blk
+red +5
+wht PD1 TX
+blu PD0 RX
+

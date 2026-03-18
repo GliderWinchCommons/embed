@@ -5,6 +5,7 @@
 * Description        : PC charging BMS string with ELCON charger
 *******************************************************************************/
 /*
+02/24/26 - updates for testing with ELCON
 */
 #include <time.h>
 #include <errno.h>
@@ -215,6 +216,7 @@ static int8_t doneflag; //
 #define CHGSTATPOLL      20 // Charging: wait to start next status update
 #define CHGWAITREPLY     10 // Charging: wait to for BMS nodes to respond
 #define TIMEOUT_ERR_IDLE 20 // Throttle error msgs
+#define DONECT          100 // DONE msg 
 
 /* Time counters for timerctr ticks. */
 static uint32_t timerctr; // Running count of 0.1 sec ticks
@@ -357,7 +359,7 @@ static void printdiscovered(void)
 /******************************************************************************
  * static void sendcanmsg_dump(uint8_t bits);
  * @brief 	: Send CAN msgs to each online module to turn DUMP on/off
- * @param   : bits: 1 = DUMP ON, 0 = DUMP OFF
+ * @param   : module bits: bit position-- 1 = DUMP ON, 0 = DUMP OFF
  ******************************************************************************/
 static void sendcanmsg_dump(uint8_t bits)
 {
@@ -1336,7 +1338,7 @@ static void charging_poll(struct CANRCVBUF* p)
 			bmsnode[j].can = *p; // Save lastest CAN 
 			// We are most interested in status at the moment
 			if ((p->cd.uc[1] == MISCQ_STATUS) && (p->cd.uc[0] == 0x31))
-			{ // Here msg has the status
+			{ // Here the 0x31 shows msg has the status
 				// Update last received status msg
 				module_status_update(p,j);	
 //printf("STATUS %08X %02X %02X %02X %02X\n",p->id, p->cd.uc[4],p->cd.uc[5],p->cd.uc[6],p->cd.uc[7]);
@@ -1417,11 +1419,8 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 		break; 
 
 	case 9:
-		if (donect-- < 0) // Throttle msgs
-		{
-			donect = 1024;
-			printf("DONE, (or bombed out) \n");
-		}
+		donect = timerctr + 1;
+		state = 12;
 		break;
 
 	case 10:
@@ -1429,7 +1428,15 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 		return;
 
 	case 11: // Idle until Ev command starts
-		break;		
+		break;
+
+	case 12:			
+		if ((int)(timerctr - donect) > 0)
+		{
+			donect += DONECT;
+			printf("DONE, (or bombed out)\n");
+		}
+		break;
 
 	default:
 		printf("cmd_E_do_msg: switch statement error: %d\n",state);
@@ -1502,6 +1509,7 @@ static int checkallresponded(void)
 /******************************************************************************
  * static void reducechgcurrent(void);
  * @brief 	: Cut back charging current command
+ * @return  : 0 = Charging at chgbalance amps, 1 = Above 
 *******************************************************************************/
 #define CHG_REDUCE_FAC 0.625 // Reduction factor
 #define CHG_REDUCE_INC 0.1  // Reduction increment (amps)
@@ -1512,13 +1520,13 @@ static int reducechgcurrent(void)
 	float ftmpw; // Be lazy and  use floating point
 	if (chgwork.iamps != chgbalance.iamps)
 	{ // Here, we have not reached the minimum
-		ftmpw = (float)chgwork.iamps * 0.1;
+		ftmpw = (float)chgwork.iamps * 0.1; // Convert 0.1a steps to 1.0 amps
 		if (ftmpw < (CHG_HILO-0.05) )
 		{ // Current level is in the ELCON low step reduction range
 			ftmpw -= CHG_REDUCE_INC; // Linear reduction
-#ifndef SKIPPRINT2			
-	printf("CHG REDUCE LINEAR: %6.2f\n",ftmpw);
-#endif	
+//#ifndef SKIPPRINT2			
+			printf("CHG REDUCE LINEAR: new %6.2f\n",ftmpw);
+//#endif	
 		}
 		else
 		{ // Current in the ELCON high reduction step range
@@ -1573,15 +1581,17 @@ static void chgstatusget(void)
 #endif		
 			if ((module_mask == module_tripped) || (module_mask == module_celltoohi))
 			{
-							printf("\nAll modules have tripped their max. ELCON set off.\n"
-				"############################# DONE! #############################\n");
+				printf(
+				"\n#################################################################\n"
+				  "All modules have tripped their max or all modules report celltoohi. ELCON set off.\n"
+				  "############################# DONE! #############################\n");
 				state = 10; // DONE
 				doneflag = 1;
 			}
 
 			return;
 		}
-		// Here, chg current at minimum AND cell too high
+  // ==> Here, chg current at minimum AND cell too high <==
 		module_tripped |= module_celltoohi; // Show module tripped max
 
 #ifndef SKIPPRINT2
@@ -1589,7 +1599,7 @@ static void chgstatusget(void)
 #endif	
 		if (module_mask == module_tripped)
 		{ // Here, all modules have tripped their max.
-			sendcanmsg_dump(0);
+			sendcanmsg_dump(0); // Set dump off for all modules
 			sendcanmsg_elcon(&chgzero); // Shutdown ELCON
 			sendcan_type2(MISCQ_SET_SELFDCHG,0); // Complete charge balancing
 			printf("\nAll modules have tripped their max. ELCON set off.\n"
@@ -1601,7 +1611,7 @@ static void chgstatusget(void)
 		else
 		{ // Here, not all modules tripped max
 			// Turn BMS DUMP on for modules 'toohi'
-			sendcanmsg_dump(module_celltoohi);
+			sendcanmsg_dump(module_celltoohi); // Step thru list setting dump on
 
 #ifndef SKIPPRINT2
 	printf("chgstatusget: celltoohi: not all: %02X\n",module_celltoohi);
@@ -1609,7 +1619,7 @@ static void chgstatusget(void)
 		}
 	}
 	else
-	{ // Here, no modules report celltoohi
+	{ // ==> Here, no modules report celltoohi <==
 		sendcanmsg_dump(0); // Turn off DUMPs JIC
 
 #ifndef SKIPPRINT 

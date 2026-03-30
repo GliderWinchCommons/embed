@@ -127,6 +127,8 @@ static void cmd_E_timerthread(void);
 static int starttimer(void);
 static void printfbits(uint32_t x, uint8_t n);
 
+static uint8_t exitflag; // Suppress repeating end if charging msgs
+
 // Time delay for consecutive CAN msgs
 static struct timespec ts;
 
@@ -605,7 +607,7 @@ int cmd_E_init(char* p)
 	cantx_type2.cd.ui[1] = 0; // CAN ID payload zero
 	cantx_type2.cd.uc[0] = CMD_CMD_TYPE2;	
 	cantx_type2.cd.uc[2] = MISCQ_CHG_LIMITS;
-	cantx_type2.cd.uc[1] = (0x3 << 6); // Nodes respond
+	cantx_type2.cd.uc[1] = (0x3 << 6); // ALL nodes respond
 
 	cantx_type2k = cantx_type2;
 
@@ -647,6 +649,8 @@ int cmd_E_init(char* p)
 	chgzero.iamps  = 0;
 
 	timerctr = 0;	
+
+	exitflag = 0; // Flag to allow just one end-of-charging msg
 
 	state     = 11; // Idle state: ignore CAN msgs until Ev command 
 	msgbypass =  1; // Intially ignore incoming CAN msgs 
@@ -1424,7 +1428,14 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 		break;
 
 	case 10:
-		printf("EXIT (state==10)\n");
+		// Skip repeated ending msgs
+		if (exitflag != 0)
+		{
+			// Set nodes into charge/balance mode to complete charging
+			sendcan_type2(MISCQ_SET_SELFDCHG, 0);
+			exitflag = 1;
+			printf("ELCON CHARGING TERMINATED [E cmd state is 10]\n");
+		}
 		return;
 
 	case 11: // Idle until Ev command starts

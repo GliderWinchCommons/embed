@@ -235,10 +235,10 @@ static char* preadmenu[] = {
 };
 /* Menu for MISCQ codes that set something in the BMS. */
 static char* psetmenu[] = {
- " 13 SET_DUMP	    // Turn on Dump FET for no more than payload[3] secs\n\t",
+ " 13 SET_DUMP	    // Turn on Dump FET \n\t",
  " 14 SET_DUMP2     // Set DUMP2 FET FET: on|off\n\t",
- " 15 SET_HEATER    // Enable Heater mode to payload [3] temperature\n\t",
- " 17 SET_CHARGER   // Disable charger for no more than payload[3] secs\n\t",
+ " 15 SET_HEATER    // Enable Heater mode temperature\n\t",
+ " 17 SET_CHARGER   // Disable charger \n\t",
  " 28 SET_DCHGTST   // Set discharge test with heater fet load: ON|OFF\n\t",
  " 30 SET_DCHGFETS  // Set discharge FETs: all on or off, or single\n\t",
  " 31 SET_SELFDCHG  // Set ON|OFF self-discharge mode\n\t",
@@ -311,7 +311,7 @@ static int getpolltimeout(void)
 {
 	char buf[256];
 	int k;
-	uint32_t itmp;
+	uint32_t itmp = 0;
 // Put a limit on how long the dump will in effect
 		printf("Enter the time (secs) (integer) polling is in effect [No entry, or zero = only one poll]\n");
 		polldur = 0;
@@ -324,14 +324,13 @@ static int getpolltimeout(void)
 			{ // Something entered
 				if (itmp > 0)
 				{
-					polldur = 1000; // Duration between polls
+					polldur = 1000; // Duration (ms) between polls
 					polltimeout = itmp; // Timeout: count of 1 sec polls
 				}
 			}
 		}
 		return itmp;
 }
-
 /******************************************************************************
  * static int printsetmenu2(int j);
  * @brief 	: Display menu for MISCQ settings, and get selection
@@ -423,7 +422,7 @@ Requester payload[3]
 			subcode = get01m9(pset);
 			break;
 
-	case MISCQ_TRICKL_OFF: // 17 Turn trickle charger off for no more than ‘payload [3]’ secs
+	case MISCQ_TRICKL_OFF: // 17 Turn trickle charger off
 			printf("SET LOW CURRENT CHARGER OFF\n");
 			subcode = get02(pset, 0, 255);
 			polltimeout = getpolltimeout();

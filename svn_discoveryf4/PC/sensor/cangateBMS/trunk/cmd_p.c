@@ -36,10 +36,39 @@ static uint32_t lctr; // Output line counter
 static void cmd_p_timerthread(void);
 static int starttimer(void);
 /*  From: GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql
-INSERT INTO CANID VALUES ('CANID_ELCON_TX','C7FA872E','ELCON1',1,1,'I16_I16_U8_U8_U8_U8','ELCON Charger transmit: ');
+INSERT INTO CANID VALUES ('CANID_ELCON_TX','C7FA872C','ELCON1',1,1,'I16_I16_U8_U8_U8_U8','ELCON Charger transmit: ');
 INSERT INTO CANID VALUES ('CANID_ELCON_RX','C0372FA4','ELCON1',1,1,'I16_I16_U8_U8_U8_U8','ELCON Charger receive: '); */
 #define CANID_RX_DEFAULT CANID_ELCON_TX  // C7FA872C' This cmd RECEIVES; ELCON transmits
 #define CANID_TX_DEFAULT CANID_ELCON_RX  // C0372FA4' This cmd SENDS; ELCON receives
+
+/* Battery status bits: 'battery_status'  uc[4] */
+#define BSTATUS_NOREADING (1 << 0)	// Exactly zero = no reading
+#define BSTATUS_OPENWIRE  (1 << 1)  // Negative or over 4.3v indicative of open wire
+#define BSTATUS_CELLTOOHI (1 << 2)  // One or more cells above max limit
+#define BSTATUS_CELLTOOLO (1 << 3)  // One or more cells below min limit
+#define BSTATUS_CELLBAL   (1 << 4)  // Cell balancing in progress
+#define BSTATUS_CHARGING  (1 << 5)  // Low power charger ON
+#define BSTATUS_DUMPTOV   (1 << 6)  // Discharge to a voltage in progress
+#define BSTATUS_CELLVRYLO (1 << 7)  // One or more cells very low
+
+#define MISCQ_STATUS      1 // status
+
+static uint32_t bmslist[] = {
+0XB0A00000,
+0XB0C00000,
+0XB0E00000,
+0XB1000000,
+0XB1200000,
+0XB1400000,
+0XB1600000,
+0XB1800000,
+0XB1A00000,
+0XB1C00000,
+0XB1E00000,
+0XB2000000,
+0XB2200000,
+};
+static uint8_t bmslistsize = sizeof(bmslist);
 
 union UF
 {
@@ -75,10 +104,8 @@ static uint32_t timernext; // Next timer count
 
 static char dd[64];
 
-
 #define DEFAULT_POLLDUR 900 // Duration in ms
 static uint32_t polldur = DEFAULT_POLLDUR; // Number of polls per sec
-
 
 /******************************************************************************
  * static printcanmsg(struct CANRCVBUF* p);
@@ -266,8 +293,10 @@ static char* tsw[5] = {
 
 void cmd_p_do_msg(struct CANRCVBUF* p)
 {
+		uint32_t idmsk;
 		int i;
 		int ts;
+
 	/* Expect the BMS node CAN msg format TYPE2, etc
 	     and skip other CAN IDs.
 	   These #defines originate from the processing of the .sql file
@@ -306,6 +335,28 @@ void cmd_p_do_msg(struct CANRCVBUF* p)
 		fmsgamps  = itmpamps;	
 		printf ("%6.1f V %6.1f I  CHG ON: %d\n",fmsgvolts*0.1,fmsgamps*0.1,(p->cd.uc[4] & 1));
 
+	}
+	idmsk = (p->id & 0xfffffffc);
+	for (i = 0; i < bmslistsize; i++)
+	{
+		if (idmsk == bmslist[i])
+		{ // CAN id is in BMS list
+			if ((p->cd.uc[1] == MISCQ_STATUS) && (p->cd.uc[0] == 0x31))
+			{ // Here the 0x31 shows msg has the status	
+printf("MS %02X %02X\n",p->cd.uc[3],p->cd.uc[4]);
+				if ((p->cd.uc[4] & BSTATUS_CELLTOOHI) != 0)
+				{ // Here, BMS reports a toohi
+					printf("BMS %08X reports one or more cells too high\n",idmsk);
+					// Set charger off bit to 0	
+					cantx.cd.uc[0] = (ivolts >> 8);
+					cantx.cd.uc[1] = (ivolts & 0xFF);
+					cantx.cd.uc[2] = (iamps >> 8);
+					cantx.cd.uc[3] = (iamps & 0xFF);		
+					cantx.cd.uc[4] = 0;
+					sendcanmsg(&cantx);			
+				}
+			}
+		}
 	}
 	return; // CAN ID is not ELCON Charger
 }

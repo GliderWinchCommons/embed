@@ -343,16 +343,13 @@ void cmd_p_do_msg(struct CANRCVBUF* p)
 		{ // CAN id is in BMS list
 			if ((p->cd.uc[1] == MISCQ_STATUS) && (p->cd.uc[0] == 0x31))
 			{ // Here the 0x31 shows msg has the status	
-printf("MS %02X %02X\n",p->cd.uc[3],p->cd.uc[4]);
+//printf("MS %02X %02X\n",p->cd.uc[3],p->cd.uc[4]);
 				if ((p->cd.uc[4] & BSTATUS_CELLTOOHI) != 0)
 				{ // Here, BMS reports a toohi
 					printf("BMS %08X reports one or more cells too high\n",idmsk);
 					// Set charger off bit to 0	
-					cantx.cd.uc[0] = (ivolts >> 8);
-					cantx.cd.uc[1] = (ivolts & 0xFF);
-					cantx.cd.uc[2] = (iamps >> 8);
-					cantx.cd.uc[3] = (iamps & 0xFF);		
-					cantx.cd.uc[4] = 0;
+					cantx.cd.ull   = 0; // Clear all payload bytes
+					cantx.cd.uc[4] = 1; // Battery protection, charger close output
 					sendcanmsg(&cantx);			
 				}
 			}

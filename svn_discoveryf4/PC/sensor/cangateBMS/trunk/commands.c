@@ -350,7 +350,7 @@ void do_printmenu(void)
 				"ds aaaaaaaa  (bms status: CANID: aaaaaaaa)\n");
 
 	printf("e - BMS polling msgs: e<enter> for menu\n");
-	printf("E - EMCn (ELCON chging): E<enter> for menu\n");
+	printf("E - EMCn (ELCON charging): E<enter> for menu\n");
 	printf("f - display fix: (e.g. f<enter>, or f E2600000<enter>\n");
     printf("g - GEVCUr: command request to retrieve all readings\n");
 	printf("h - This menu \n");
@@ -366,15 +366,7 @@ void do_printmenu(void)
 	printf("l - list unix time/date in heartbeat time msgs (l e1000000)\n");
 	printf("m - list msgs for id(s) entered 'm xxx yyy zzz etc.(e.g. 234 or 2340 or 23400000) '\n");
 	printf("n - list msg id's and msg ct during 1 sec (coarse computer timing)\n");
-	printf("p - ELCON Charger: \n\t"
-				"p  Set voltage and current to zero\n\t"
-				"pg Set ELCON on with default volts & amps\n\t"
-				"ps <vvv.v> <iii.i> Set default voltage and current (CANID: C0372FA4)\n\t"
-				"pd Display ELCON sends: (CANID: C7FA872C)\n\t"
-				"pm Display msg => OTHERS SENT <= to ELCON: (CANID: C0372FA4)\n\t"
-				"pj Set charger off bit to 1 \n\t"
-				"po Set charger off bit to 0\n");
-
+	printf("p - ELCON Charger: manual control. p<enter> for menu\n");
 	printf("q - Identify received msgs from CANID.sql file\n");
 	printf("r - send high priority RESET\n");
 	printf("s - CONTACTOR: command request to retrieve all readings\n");

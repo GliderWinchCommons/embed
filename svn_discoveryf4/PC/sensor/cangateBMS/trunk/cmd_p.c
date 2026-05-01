@@ -30,7 +30,11 @@ static float famps_set  = DEFAULT_AMPS;
 static void sendcanmsg(struct CANRCVBUF* pcan);
 static void printcanmsg(struct CANRCVBUF* p);
 
-static uint8_t canseqnumber;
+// Control sending of eak 31 0 CAN msg to change self-discharge mode
+static uint8_t BMSflagx = 0; // Flag to send eak 31 0 or 1 CAN msg to BMSs
+static uint8_t lagflag  = 0; // Flag to send eak msg after ELCON update
+
+static uint8_t canseqnumber; // 1st byte of ascii CAN msg
 static uint32_t lctr; // Output line counter
 
 static void cmd_p_timerthread(void);
@@ -40,6 +44,7 @@ INSERT INTO CANID VALUES ('CANID_ELCON_TX','C7FA872C','ELCON1',1,1,'I16_I16_U8_U
 INSERT INTO CANID VALUES ('CANID_ELCON_RX','C0372FA4','ELCON1',1,1,'I16_I16_U8_U8_U8_U8','ELCON Charger receive: '); */
 #define CANID_RX_DEFAULT CANID_ELCON_TX  // C7FA872C' This cmd RECEIVES; ELCON transmits
 #define CANID_TX_DEFAULT CANID_ELCON_RX  // C0372FA4' This cmd SENDS; ELCON receives
+#define CANID_BMS_DEFAULT CANID_UNI_BMS_PC_I //CANID_UNI_BMS_PC_I AEC00000 BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID // Default pollster
 
 /* Battery status bits: 'battery_status'  uc[4] */
 #define BSTATUS_NOREADING (1 << 0)	// Exactly zero = no reading
@@ -88,6 +93,7 @@ struct CELLMSG
 
 static struct CANRCVBUF cantx;
 static uint32_t canid_rx;
+static struct CANRCVBUF caneak;
 
 static float fvolts;
 static float famps;
@@ -109,6 +115,24 @@ static uint32_t polldur = DEFAULT_POLLDUR; // Number of polls per sec
 
 /******************************************************************************
  * static printcanmsg(struct CANRCVBUF* p);
+ * @brief 	: Help menu
+ ******************************************************************************/
+static void printhelp(void)
+{
+	printf("p - ELCON Charger: \n\t"
+				"p  Set voltage and current to zero\n\t"
+				"pg Set ELCON on with default volts & amps\n\t"
+				"ps <vvv.v> <iii.i> Set default voltage and current (CANID: C0372FA4)\n\t"
+				"pd Display ELCON sends: (CANID: C7FA872C)\n\t"
+				"pm Display msg => OTHERS SENT <= to ELCON: (CANID: C0372FA4)\n\t"
+				"pj Set charger off bit to 1 \n\t"
+				"po Set charger off bit to 0\n\t"
+				"pc Send eak 31 0 CAN msg. Turn BMS self-discharge mode OFF\n\t"
+				"px Send eak 31 1 CAN msg. Turn BMS self-discharge mode ON\n");
+	return;
+}
+/******************************************************************************
+ * static printcanmsg(struct CANRCVBUF* p);
  * @brief 	: CAN msg 
  * @param	: p = pointer 
 *******************************************************************************/
@@ -120,7 +144,6 @@ static void printcanmsg(struct CANRCVBUF* p)
 		printf (" %02X",p->cd.uc[i]);
 	return;
 }
-
 /******************************************************************************
  * int cmd_p_init(char* p);
  * @brief 	: Reset 
@@ -151,6 +174,18 @@ int cmd_p_init(char* p)
 	cantx.cd.ull   = 0; // Clear all payload bytes
 	cantx.cd.uc[4] = 1; // Battery protection, charger close output
 
+	/* Set up CAN msg to all BMS to turn off self-discharge mode */
+	caneak.id       =  CANID_BMS_DEFAULT;
+	caneak.dlc      =  8;
+	caneak.cd.uc[0] = CMD_CMD_TYPE2; // Payload code: (42) Request BMS responses	
+	caneak.cd.uc[1] = 0xC0; // All, or string nodes, respond.	
+	caneak.cd.uc[2] = 31; // Command code: self-discharge mode
+// Don't change previous setting
+//caneak.cd.uc[3] =  0; // Sub command value: OFF
+	caneak.cd.ui[1] =  0; // Clear CAN id payload field
+
+	BMSflagx  = 0; // JIC
+	lagflag   = 0; // JIC
 
 	/* POLLER requests BMS node, string, or all. */
 	switch ( *(p+1) )
@@ -158,6 +193,8 @@ int cmd_p_init(char* p)
 	case ' ': // 'This is a p' with a space following
 	case '\n':
 		sendcanmsg(&cantx); // Send (default) msg to turn ELCON charging off.
+		printhelp();
+		printf("(p with no 2nd  non-space char sets ELCON volts and amps set to zero)\n");
 		return 0;
 
 	case 'd': // Display msg =>from<= ELCON, do not send to ELCON
@@ -264,18 +301,29 @@ printf("\n..%c..\n",dd[0]);
 		sendcanmsg(&cantx);
 		break;
 
+	case 'c': // Send eak 31 0 CAN msg to turn OFF self-discharge mode
+		BMSflagx = 1; // Turn self-discharge mode on
+		break;
+
+	case 'x': // Send eak 31 1 CAN msg to turn ON self-discharge mode
+		BMSflagx = 2; // Turn self-discharge mode off
+		break;
+
+	case 'h': // Help menu
+		printhelp();
+		return 0;		
+
 	default:
 		printf("2nd char not recognized: %c\n", *(p+1));
+		printhelp();
 		return -1;
 	}
 
-	sendcanmsg(&cantx);
-	timerctr   = 0;
-	timernext  = polldur/10;
-	starttimer();
+	timerctr   = 0; // JIC
+	timernext  = 2; // First msg goes out in 0.2 secs
+	starttimer();   // Timer paces msg sending
 	return 0;
 }
-
 /******************************************************************************
  * void cmd_p_do_msg(struct CANRCVBUF* p);
  * @brief 	: Output msgs for the id that was entered with the 'm' command
@@ -336,6 +384,7 @@ void cmd_p_do_msg(struct CANRCVBUF* p)
 		printf ("%6.1f V %6.1f I  CHG ON: %d\n",fmsgvolts*0.1,fmsgamps*0.1,(p->cd.uc[4] & 1));
 
 	}
+	// Code added to shut down ELCON when BMS reports a toohi
 	idmsk = (p->id & 0xfffffffc);
 	for (i = 0; i < bmslistsize; i++)
 	{
@@ -350,7 +399,8 @@ void cmd_p_do_msg(struct CANRCVBUF* p)
 					// Set charger off bit to 0	
 					cantx.cd.ull   = 0; // Clear all payload bytes
 					cantx.cd.uc[4] = 1; // Battery protection, charger close output
-					sendcanmsg(&cantx);			
+// Let timer thread send msg	sendcanmsg(&cantx);
+					BMSflagx = 1; // Set onboard chargers ON
 				}
 			}
 		}
@@ -380,9 +430,27 @@ static void cmd_p_timerthread(void)
 {
 	timerctr += 1; // 10 ms tick counter
 	if ((int)(timerctr - timernext) > 0)
-	{ // Time to output accumulated readings
+	{ // Send ELCON command CAN msg
 		timernext += polldur/10;
 		sendcanmsg(&cantx);	// Send next request
+		lagflag = 1; // (Don't send two consecutive msgs)
+	}
+	else
+	{
+		if (lagflag != 0)
+		{ // Send "eak 31 0" CAN msg to enable or disable BMS onboard chargers
+			if (BMSflagx == 2)
+			{ // Disable onboard chargers
+				caneak.cd.uc[3] =  1; // Sub command value: self-discharge ON (charger OFF)
+			}
+			else if (BMSflagx == 1)
+			{ // Enable onboard chargers
+				caneak.cd.uc[3] =  0; // Sub command value: self-discharge OFF (charger ON)
+			}
+			BMSflagx = 0;
+			lagflag  = 0;
+			sendcanmsg(&caneak); // Send msg to all BMS turn set self-discharge mode 
+		}
 	}
 	return;
 }

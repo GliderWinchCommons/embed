@@ -1652,6 +1652,7 @@ static void cmd_E_timerthread(void)
 	//int i;
 	timerctr += 1; // 100 ms tick running counter
 
+// canmsgstimeout is reset to new value each time CAN msg is received
 	if ((int)(timerctr - canmsgstimeout) > 0)
 	{
 		printf("CAN msgs are not coming in\n");
@@ -1704,9 +1705,10 @@ static void cmd_E_timerthread(void)
 		{
 			discoverytimepoll = timerctr + DISCOVERY_POLL;
 			sendcan_type2(MISCQ_CHG_LIMITS,0); // Request BMS charge limit parameters
-			sendcan_type2(MISCQ_STATUS,0);     // Request BMS status
-
 			printf("Discovery poll %d\n",timerctr);
+			sendcan_type2(MISCQ_STATUS,0);     // Request BMS status
+			timestatewait = timerctr + CHGWAITREPLY; // +5
+			state = 2;
 		}
 		break;
 

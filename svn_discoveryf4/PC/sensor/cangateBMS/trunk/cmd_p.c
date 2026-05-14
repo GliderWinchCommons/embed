@@ -120,13 +120,13 @@ static uint32_t polldur = DEFAULT_POLLDUR; // Number of polls per sec
 static void printhelp(void)
 {
 	printf("p - ELCON Charger: \n\t"
-				"p  Set voltage and current to zero\n\t"
+				"p  Set ELCON voltage and current to zero\n\t"
 				"pg Set ELCON on with default volts & amps\n\t"
 				"ps <vvv.v> <iii.i> Set default voltage and current (CANID: C0372FA4)\n\t"
 				"pd Display ELCON sends: (CANID: C7FA872C)\n\t"
 				"pm Display msg => OTHERS SENT <= to ELCON: (CANID: C0372FA4)\n\t"
-				"pj Set charger off bit to 1 \n\t"
-				"po Set charger off bit to 0\n\t"
+				"pj Set ELCON off bit to 1 \n\t"
+				"po Set ELCON off bit to 0\n\t"
 				"pc Send eak 31 0 CAN msg. Turn BMS self-discharge mode OFF\n\t"
 				"px Send eak 31 1 CAN msg. Turn BMS self-discharge mode ON\n");
 	return;

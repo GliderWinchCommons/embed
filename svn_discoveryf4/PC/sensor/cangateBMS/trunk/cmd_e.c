@@ -167,7 +167,6 @@ static uint8_t walkfets_sw;
  * @brief 	: CAN msg 
  * @param	: p = pointer 
 *******************************************************************************/
-#if 0
 static void printcanmsg(struct CANRCVBUF* p)
 {
 	int i;
@@ -176,9 +175,24 @@ static void printcanmsg(struct CANRCVBUF* p)
 		printf (" %02X",p->cd.uc[i]);
 	return;
 }
-#endif
 /******************************************************************************
- * static printmenu(char* p);
+ * static displaymsg(struct CANRCVBUF* p);
+ * @brief 	: Print incoming CAN msg for some cases
+ * @param	: p = pointer to CAN msg
+*******************************************************************************/
+static void displaymsg(struct CANRCVBUF* p)
+{
+	switch (p->cd.uc[1])
+	{
+	case 38: // MISCQ_MORSE_TRAP   38 // Retrieve stored morse_trap code.
+		printf("MISCQ_CODE 38");
+		printcanmsg(p);
+		printf(" blink %d\n",p->cd.ui[1]);
+	}
+	return;
+}
+/******************************************************************************
+ * static void printfsettings(void);
  * @brief 	: Print boilerplate
  * @param	: p = pointer to line
 *******************************************************************************/
@@ -227,6 +241,7 @@ static char* preadmenu[] = {
  " 34 READ_AUX     // BMS responds with A,B,C,D AUX register readings (12 msgs)\n\t",
  " 36 PROC_TEMP    // Processor calibrated internal temperature (deg C)\n\t",
  " 37 MISCQ_CHG_LIMITS  // Show params: Module V max, Ext chg current max, Ext. chg bal\n\t",
+ " 38 MISCQ_MORSE_TRAP  // Retrieve stored morse_trap code\n\t", 
  " 39 MISCQ_FAN_STATUS  // Retrieve fan: pct and rpm\n\t",
  " 41 MISCQ_PROG_CRC    // Retrieve installed program's: CRC\n\t",
  " 42 MISCQ_PROG_CHKSUM // Retrieve installed program's: Checksum\n\t",
@@ -863,8 +878,13 @@ void cmd_e_do_msg(struct CANRCVBUF* p)
 
 	/* Here, CAN msg is from a BMS module. */
 	/* Ignore msgs that are not the type requested. */	
-	if ( !((p->cd.uc[0] == CMD_CMD_TYPE2) || (p->cd.uc[0] == CMD_CMD_CELLPOLL)) )  
-	{ // Here, not what we are looking for.
+	if (p->cd.uc[0] == CMD_CMD_CELLPOLL)
+	{
+		return;
+	}
+	if (p->cd.uc[0] == CMD_CMD_MISCPC)
+	{ // Here, display the return
+		displaymsg(p);
 		return;
 	}
 	return;

@@ -16,6 +16,15 @@
 #include "timer_thread.h" // Timer thread for sending keep-alive CAN msgs
 #include "../../../../../svn_common/trunk/db/gen_db.h"
 
+/* printf for debugging */
+// Note these are "negative". Commenting out includes printfs.
+#define SKIPPRINT  
+#define SKIPPRINT2 
+#define SKIPPRINT3 
+
+#define NOELCON // define this for debugging without ELCON
+
+
 /* The following are defaults which can be changed with commands. The changes
    remain in effect until cangateBMS is restarted. */
 #define EXPECTED_NUM_MODULES_DEFAULT  6 // Default number of modules expected
@@ -41,6 +50,7 @@ can.cd.uc[7] = Temp
 #define BSTATUS_X_ALLTOOHI   (1 << 2)  // All cells presently report over max
 #define BSTATUS_X_ALLTRIPPED (1 << 3)  // All cells have been tripped
 #define BSTATUS_X_MINLOADED  (1 << 4)  // One or more far below min even under load
+#define BSTATUS_X_CELLTOOHI2 (1 << 5)  // One of more above CELLTOOHI plus increment
 
 /* Battery status bits: 'battery_status' payload [4] */
 #define BSTATUS_NOREADING (1 << 0)	// Exactly zero = no reading
@@ -123,6 +133,12 @@ can.cd.uc[7] = Temp
 #define ELCON_STATUS_BATT_DISC (1 << 3) // Battery disconnected
 #define ELCON_STATUS_COMM_TO   (1 << 4) // Communications timeout
 
+/*  From: GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql */
+#define CANID_RX_DEFAULT  CANID_ELCON_TX  // C7FA872C' This cmd RECEIVES; ==> ELCON transmits <==
+#define CANID_TX_DEFAULT  CANID_ELCON_RX  // C0372FA4' This cmd SENDS; ==> ELCON receives <==
+#define CANID_STATUS_POLL CANID_UNI_BMS_PC_I // AEC00000 PC originates
+#define CANID_EMCMMC_CTL  CANID_CMD_PC_EMC //'98000000','UNIT_PC2EMC', 1,1,'U8_U8_U8_X4','PC sends commands to EMC
+
 FILE* fpIn;
 //char *paramlist = "/GliderWinchItems/BMS/bmsadbms1818/params/paramIDlist";
 // This path/file assumes the execution takes place in the cangateBMS directory
@@ -143,20 +159,6 @@ static uint8_t exitflag; // Suppress repeating end if charging msgs
 
 // Time delay for consecutive CAN msgs
 static struct timespec ts;
-
-/*  From: GliderWinchCommons/embed/svn_common/trunk/db/CANID_INSERT.sql */
-#define CANID_RX_DEFAULT  CANID_ELCON_TX  // C7FA872C' This cmd RECEIVES; ==> ELCON transmits <==
-#define CANID_TX_DEFAULT  CANID_ELCON_RX  // C0372FA4' This cmd SENDS; ==> ELCON receives <==
-#define CANID_STATUS_POLL CANID_UNI_BMS_PC_I // AEC00000 PC originates
-#define CANID_EMCMMC_CTL  CANID_CMD_PC_EMC //'98000000','UNIT_PC2EMC', 1,1,'U8_U8_U8_X4','PC sends commands to EMC
-
-/* printf for debugging */
-// Note these are "negative". Commenting out includes printfs.
-#define SKIPPRINT  
-#define SKIPPRINT2 
-#define SKIPPRINT3 
-
-//#define NOELCON // define this for debugging without ELCON
 
 union UF
 {
@@ -216,7 +218,7 @@ static char buf[LINESIZE];
 static int8_t state; // 
 static int8_t doneflag; //
 
-// The following are 0.1 sec timer ticks
+// The following are 0.1 sec timer ticks for various timeouts
 #define SECSTOWAIT       50 // Duration to monitor
 #define BMSPOLL_INTERVAL 30 // BMS poll for status
 #define BMSPOLL_TIMEOUT  50 // BMS report failure
@@ -231,6 +233,11 @@ static int8_t doneflag; //
 #define TIMEOUT_ERR_IDLE 20 // Throttle error msgs
 #define DONECT          100 // DONE msg 
 #define ELCONZEROWAIT    40 // ELCON current set to zero, settling wait duration
+#ifndef NOELCON
+  #define PRINTPROGRESS (600*10) // print something for hapless Op (ticksperminute * number of minutes)
+#else
+  #define PRINTPROGRESS (150) // print something for hapless Op (0.1 sec ticks)
+#endif
 
 /* Time counters for timerctr ticks. */
 static uint32_t timerctr; // Running count of 0.1 sec ticks
@@ -241,6 +248,7 @@ static uint32_t elcon_timer_keep_alive;
 static uint32_t canmsgstimeout; // Input CAN msg timeout
 static uint32_t progresstime; 
 static uint32_t timestatewait;
+static uint32_t timeprintprogress; // Output progress
 
 /* Supply a default number of modules on the string. */
 static uint8_t num_bms_modules = EXPECTED_NUM_MODULES_DEFAULT; // Number of BMS modules expected on string
@@ -285,6 +293,51 @@ static int8_t flagdiscoveryrepeat; // Terminate discovery phase repeats
 
 static void sendcanmsg_dump(uint8_t bits);
 static void canmsg_elcon_update(struct CHGVALUES* pchgrate);
+
+
+/******************************************************************************
+ * static void printdatetime(void);
+ * @brief 	: print "now"
+ ******************************************************************************/
+static void printdatetime(void)
+{
+	time_t Ecmdtimestamp = time(&Ecmdtimestamp);
+   struct tm *tstamp = localtime(&Ecmdtimestamp);
+   char buffer[80];
+    strftime(buffer, sizeof(buffer), "%Y%m%d_%H%M%S ", tstamp);
+    printf("%s",buffer);
+    return;
+ }
+ /******************************************************************************
+ * static void printprogress(void);
+ * @brief 	: print ELCON command & reply, BMS module voltage sum
+ ******************************************************************************/
+void printprogress(void)
+{
+	// Sum BMS module voltages
+	int j; int sum = 0;	
+	for (j = 0; j < bmsnodes_online; j++)
+	{ //
+		sum += bmsnode[j].can.cd.us[2];
+	}
+	sum = 9999;
+
+int i; 
+printf("PPROG: %08X %d: ",cantx_elcon.id,cantx_elcon.dlc);
+for (i = 0; i < cantx_elcon.dlc; i++) 
+	printf("%02X ",cantx_elcon.cd.uc[i]);
+printf("\n");
+
+	printdatetime();
+	printf(" ELCON CMD V I  ELCON REPLY V  I  BMS TOS V \n");
+	printf("\t\t  %6.1f %6.1f  %6.1f %6.1f     %6.1f\n", 
+		(float)(cantx_elcon.cd.uc[0]*256+cantx_elcon.cd.uc[1])*0.1,
+		(float)(cantx_elcon.cd.uc[2]*256+cantx_elcon.cd.uc[3])*0.1,
+		(float)(elcon.can.cd.uc[0]*256+elcon.can.cd.uc[1])*0.1,
+		(float)(elcon.can.cd.uc[2]*256+elcon.can.cd.uc[3])*0.1,
+		(float)sum*0.1);
+	return;
+}
 
 /******************************************************************************
  * static void end_wrapup(char* p);
@@ -634,11 +687,15 @@ int cmd_E_init(char* p)
 	float tmpw;
 	float tmpo;
 
+
+	printf("Time Now: "); printdatetime(); printf("\n");
+
+#if 0
 // Warning during early debugging
 printf("\nE command compiles but not debugged & tested. THIS MAY NOT WORK!\n<ENTER> to continue; x to quit\n");
 char z = getchar();
 if (z == 'x') return -1;
-
+#endif
 
 // Echo command plus number of chars entered
 //	printf("%c%c %i\n",*p,*(p+1),len);
@@ -687,7 +744,7 @@ if (z == 'x') return -1;
 	cantx_Emx.dlc = 8; // uc[0] amd uc[1] carry the ctl codes
 	cantx_Emx.cd.ull = 0; //jic
 	cantx_Emx.cd.uc[0] = CMD_EMC_SETMODE; // 53 [1]-[7] [0] = misc data: EMC TYPE2
-	cantx_Emx.cd.uc[1] = EMCCMD_ELIDLE;   //  0  ELCON: Self discharging/stop  
+	cantx_Emx.cd.uc[1] = 1; // OBC off // EMCCMD_ELIDLE;   //  0  ELCON: Self discharging/stop  
 
 	bmsnodes_online  = 0; // Number of discovered BMS nodes
 	module_celltoohi = 0; // One or more cells above max limit
@@ -781,9 +838,10 @@ if (z == 'x') return -1;
 		}
 		discovery_init(); // (Note: this sets state to zero which processes CAN msgs for discovery)
 		sendcan_type2(MISCQ_CHG_LIMITS,0);
-		canmsgstimeout = timerctr + CANMSGSTIMEOUT;
+		canmsgstimeout    = timerctr + CANMSGSTIMEOUT;
+		progresstime      = timerctr + PROGRESSTIME;
+		timeprintprogress = timerctr + PRINTPROGRESS;
 		sendcan_type2(MISCQ_STATUS,0);
-		progresstime   = timerctr + PROGRESSTIME;
 		break;
 
 	case 'c': // Set ELCON input limits
@@ -944,20 +1002,21 @@ void elcondatacheck(struct CANRCVBUF* p)
 	dtmp = elcon_ivolts * 0.1;
 	if (dtmp < FNOC_STRING_V)
 	{ // Here, ELCON presumed not connected to string (battery)
+		printdatetime(); 
 		printf("ELCON reports: %0.1f volts and presumed not connected to battery\n",dtmp);
 	}
 	if ((dtmp < FMIN_STRING_V) && (dtmp > FNOC_STRING_V))
 	{ // Here, string voltage too low for charging
+		printdatetime(); 		
 		printf("ELCON reports: %0.1f volts which is too low for charging.\n",dtmp);
 	}
 
 	/* Check ELCON status byte. */
 	if ((p->cd.uc[4] & ((1 << 5) - 1)) != 0)
 	{ // Here one or more error flags
-#ifndef SKIPPRINT		
+		printdatetime(); 
 		printf("ELCON status byte [4] = 0x%02X ",p->cd.uc[4]);
-#endif		
-		printfbits(p->cd.uc[4],5); printf("\n");
+//		printfbits(p->cd.uc[4],5); printf("\n");
 		if ((p->cd.uc[4] & ELCON_STATUS_HW_FAIL) != 0)
 			printf("\tELCON reports HW_FAIL: hardware failure!\n");
 
@@ -1200,6 +1259,7 @@ static void discovery_end(void)
 		1 BMS node(s) missing charger limits
 		2 BMS node(s) missing status
 	*/
+	printdatetime(); 
 	printf("DISCOVERY END\n");
 
 #ifndef NOELCON	 // Disable to allow some debugging w/o an ELCON
@@ -1211,6 +1271,7 @@ static void discovery_end(void)
 		flagdiscoveryrepeat += 1;
 		if (flagdiscoveryrepeat > FLAGDISCOVERYREPEAT)
 		{
+			printdatetime(); 
 			printf(" So sorry we cannot continue\n\n");
 			printf("Check: ELCON should be sending CAN id: 0xC7FA872C\n");
 		
@@ -1515,6 +1576,7 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 			// Set nodes into charge/balance mode to complete charging
 			sendcan_type2(MISCQ_SET_SELFDCHG, 0);
 			exitflag = 1;
+			printdatetime();
 			printf("ELCON CHARGING TERMINATED [E cmd state is 10]\n");
 		}
 		return;
@@ -1526,13 +1588,15 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 		if ((int)(timerctr - donect) > 0)
 		{
 			donect += DONECT;
+			printdatetime();
 			printf("DONE, (or bombed out)\n");
 		}
 		state = 9;
 		break;
 
 	default:
-		printf("cmd_E_do_msg: switch statement error: %d\n",state);
+		printdatetime();
+		printf("PROG ERROR! cmd_E_do_msg: switch statement error: %d\n",state);
 		state = 9;
 		break;
 	}
@@ -1570,6 +1634,7 @@ if (pcan->dlc == 0)
 #if 1
 if (flag == 1)
 {	
+	printdatetime(); 	
 	printf("TX: %08X %d:",pcan->id, pcan->dlc);
 	int w;
 	for (w = 0; w < pcan->dlc; w++)
@@ -1605,20 +1670,21 @@ static int checkallresponded(void)
  * @brief 	: Cut back charging current command
  * @return  : 0 = Charging at chgbalance amps, 1 = Above 
 *******************************************************************************/
-#define CHG_REDUCE_FAC 0.625 // Reduction factor
-#define CHG_REDUCE_INC 0.1  // Reduction increment (amps)
-#define CHG_HILO 1.3 // ELCON switch from low current to hi pulses
+#define CHG_REDUCE_FAC 0.625f // Reduction factor
+#define CHG_REDUCE_INC 0.1f   // Reduction increment (amps)
+#define CHG_HILO 0.6f         // Threshold to switch to linear reduction
 static int reducechgcurrent(void)
 {
   	float ttt;	
 	float ftmpw; // Be lazy and  use floating point
 	if (chgwork.iamps != chgbalance.iamps)
 	{ // Here, we have not reached the minimum
-		ftmpw = (float)chgwork.iamps * 0.1; // Convert 0.1a steps to 1.0
-		if (ftmpw < (CHG_HILO-0.05) )
+		ftmpw = (float)chgwork.iamps * 0.1f; // Convert 0.1a steps to 1.0
+		if (ftmpw < (CHG_HILO-0.05f) )
 		{ // Current level is in the ELCON low step reduction range
 			ftmpw -= CHG_REDUCE_INC; // Linear reduction
-//#ifndef SKIPPRINT2			
+//#ifndef SKIPPRINT2		
+			printdatetime(); 
 			printf("CHG REDUCE LINEAR: new %6.2f\n",ftmpw);
 //#endif	
 		}
@@ -1626,16 +1692,17 @@ static int reducechgcurrent(void)
 		{ // Current in the ELCON high reduction step range
 			ttt = ftmpw;			
 			ftmpw *= CHG_REDUCE_FAC; // Reduce by a factor
+			printdatetime(); 
 			printf("CHG_REDUCE FACTOR %0.3f: new %6.2f prev %6.2f\n",CHG_REDUCE_FAC,ftmpw, ttt);
 		}
 
-		if (ftmpw < (float)chgbalance.iamps)
+		if ((ftmpw * 10.0f) < (float)chgbalance.iamps)
 		{ // Here, reduction is below minimum possible
 			chgwork.iamps = chgbalance.iamps; // Set min forever
 		}
 		else
 		{ // Update new computed charge current
-			chgwork.iamps = ftmpw * 10.0; 
+			chgwork.iamps = ftmpw * 10.0f; 
 		}
 		return 1;
 	}
@@ -1705,6 +1772,14 @@ static void cmd_E_timerthread(void)
 //		state = 9;
 	}
 
+	/* Output status periodically. */
+	if ((int)(timerctr - timeprintprogress) >= 0)
+	{ // Print a status for the hapless Op
+		timeprintprogress	+= PRINTPROGRESS;
+		printdatetime();
+    	printprogress();
+	}
+
 	switch(state)
 	{
 	case 0: // Discovery phase
@@ -1715,7 +1790,8 @@ static void cmd_E_timerthread(void)
 		}
 		if ((int)(timerctr - discoverytime) >= 0)
 		{ // Here, end of duration for Discovery phase 
-			sendcan_type2(MISCQ_SET_SELFDCHG,0); // Set low currrent charge ON
+			sendcan_type2(MISCQ_SET_SELFDCHG,1); // Set low currrent charge 1=OFF // 0=ON
+			printdatetime();
 			printf("Discovery: duration end at time counter: %d\n",timerctr);
 			discovery_end();
 			sendupdatedelcon(&chgwork);				
@@ -1727,6 +1803,7 @@ static void cmd_E_timerthread(void)
 		{
 			discoverytimepoll = timerctr + DISCOVERY_POLL;
 			sendcan_type2(MISCQ_CHG_LIMITS,0); // Request BMS charge limit parameters
+			printdatetime();
 			printf("Discovery poll %d\n",timerctr);
 			sendcan_type2(MISCQ_STATUS,0);     // Request BMS status
 			timestatewait = timerctr + CHGWAITREPLY; // +5

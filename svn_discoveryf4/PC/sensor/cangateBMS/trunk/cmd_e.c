@@ -85,6 +85,8 @@ static int starttimer(void);
  #define MISCQ_FAN_SET_SPD  40 // Set fan: pct (0 - 100)
  #define MISCQ_PROG_CRC     41 // Retrieve installed program's: CRC
  #define MISCQ_PROG_CHKSUM  42 // Retrieve installed program's: Checksum
+ #define MISCQ_PROG_CRCCHK  43 // Retrieve for both 41 and 42 (two msgs)
+ #define MISCQ_SUMCELLVOLTS 44 // Sum of (valid) cell voltages
 
 #define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
 #define FET_HEATER   (1 << 1) // 1 = HEATER FET ON
@@ -182,12 +184,27 @@ static void printcanmsg(struct CANRCVBUF* p)
 *******************************************************************************/
 static void displaymsg(struct CANRCVBUF* p)
 {
+	//printcanmsg(p);
+	//printf(" MISCQ_CODE %02d: ",p->cd.uc[1]);
+
 	switch (p->cd.uc[1])
 	{
+	case 18: // TOP OF STACK voltage
+		printf("TOPOFSTACK ");
+		printf("%0.1fV\n",((float)p->cd.us[2])*0.001f);
+		break;		
+
 	case 38: // MISCQ_MORSE_TRAP   38 // Retrieve stored morse_trap code.
-		printf("MISCQ_CODE 38");
 		printcanmsg(p);
+		printf("MORSE_TRAP ");
 		printf(" blink %d\n",p->cd.ui[1]);
+		break;
+
+	case 44: // MISCQ_SUMCELLVOLTS 44 // Sum of (valid) cell voltages
+		printcanmsg(p);
+		printf("MISCQ_SUMCELLVOLTS ");
+		printf("%0.2fV\n",(float)p->cd.ui[1]*0.001);// Convert 0.1mv to volts
+		break;
 	}
 	return;
 }
@@ -240,12 +257,13 @@ static char* preadmenu[] = {
  " 32 PRM_MAXCHG   // Get Parameter: Max charging current\n\t",
  " 34 READ_AUX     // BMS responds with A,B,C,D AUX register readings (12 msgs)\n\t",
  " 36 PROC_TEMP    // Processor calibrated internal temperature (deg C)\n\t",
- " 37 MISCQ_CHG_LIMITS  // Show params: Module V max, Ext chg current max, Ext. chg bal\n\t",
- " 38 MISCQ_MORSE_TRAP  // Retrieve stored morse_trap code\n\t", 
- " 39 MISCQ_FAN_STATUS  // Retrieve fan: pct and rpm\n\t",
- " 41 MISCQ_PROG_CRC    // Retrieve installed program's: CRC\n\t",
- " 42 MISCQ_PROG_CHKSUM // Retrieve installed program's: Checksum\n\t",
- " 43 MISCQ_PROG_CRCCHK // Retrieve for both 41 and 42 (two msgs)\n", 
+ " 37 MISCQ_CHG_LIMITS   // Show params: Module V max, Ext chg current max, Ext. chg bal\n\t",
+ " 38 MISCQ_MORSE_TRAP   // Retrieve stored morse_trap code\n\t", 
+ " 39 MISCQ_FAN_STATUS   // Retrieve fan: pct and rpm\n\t",
+ " 41 MISCQ_PROG_CRC     // Retrieve installed program's: CRC\n\t",
+ " 42 MISCQ_PROG_CHKSUM  // Retrieve installed program's: Checksum\n\t",
+ " 43 MISCQ_PROG_CRCCHK  // Retrieve for both 41 and 42 (two msgs)\n\t", 
+ " 44 MISCQ_SUMCELLVOLTS // Sum of (valid) cell voltages\n",
  "256 END_TABLE\n"
 };
 /* Menu for MISCQ codes that set something in the BMS. */
@@ -822,7 +840,7 @@ printf("ew len: %d\n", len);
 				printf("Selection j failed: %d\n",ret);
 				return -1; // Failed, or aborted
 			}
-printf("poll j\n");
+printf("poll to retrieve readings (j) for MISCQ code: %d\n",ret);
 			cantx.cd.uc[2] = ret; //  [1] TYPE2 MISCQ code	
 			break;
 
@@ -871,10 +889,11 @@ turned on by the hapless Op typing 'm' as the first char and hitting return.
 void cmd_e_do_msg(struct CANRCVBUF* p)
 {
 //		int i;
-//printf("\n%08X %d: ", p->id,p->dlc);for (i=0; i<p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 	uint32_t utmp = (p->id & 0xfffffffc);
 	if ((utmp < (uint32_t)CANID_UNIT_BMS01) || (utmp > (uint32_t)CANID_UNIT_BMS18))
 		return; // CAN ID is not a BMS module function.
+
+//printf("\n%08X %d: ", p->id,p->dlc);for (i=0; i<p->dlc; i++) printf(" %02X",p->cd.uc[i]);
 
 	/* Here, CAN msg is from a BMS module. */
 	/* Ignore msgs that are not the type requested. */	

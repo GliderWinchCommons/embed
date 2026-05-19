@@ -203,7 +203,7 @@ static void displaymsg(struct CANRCVBUF* p)
 	case 44: // MISCQ_SUMCELLVOLTS 44 // Sum of (valid) cell voltages
 		printcanmsg(p);
 		printf("MISCQ_SUMCELLVOLTS ");
-		printf("%0.2fV\n",(float)p->cd.ui[1]*0.001);// Convert 0.1mv to volts
+		printf("%8.2fV\n",(float)p->cd.ui[1]*0.001);// Convert 0.1mv to volts
 		break;
 	}
 	return;

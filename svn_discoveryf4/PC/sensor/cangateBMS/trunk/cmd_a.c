@@ -91,6 +91,7 @@ static void cp_can_msg_display(struct CANRCVBUF* p);
  #define MISCQ_PROG_CRC     41 // Retrieve installed program's: CRC
  #define MISCQ_PROG_CHKSUM  42 // Retrieve installed program's: Checksum
  #define MISCQ_PROG_CRCCHK  43 // Retrieve for both 41 and 42 (two msgs)
+ #define MISCQ_SUMCELLVOLTS 44 // Sum of (valid) cell voltages
 
 #define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
 #define FET_HEATER   (1 << 1) // 1 = HEATER FET ON
@@ -1087,14 +1088,22 @@ void printf_hdr_status(void)
 	"| | | | | Onboard charger ON | DUMP2 ON\n"
 	"| | | | | | Discharge to target voltage in progress\n"
 	"| | | | | | | One or more cells very low\n"
-	"| | | | | | | |     DUMP FET ON\n"
-	"| | | | | | | |     | HEATER FET ON\n"
-	"| | | | | | | |     | | DUMP2 FET ON\n"
-	"| | | | | | | |     | | | On board charger normal rate\n"
-	"| | | | | | | |     | | | | Charger low rate ON\n"
-	"| | | | | | | |     | | | | |   Self-discharge ON\n"
-	"| | | | | | | |     | | | | |   | One or more cells tripped\n"	
-	"0 1 2 3 4 5 6 7     0 1 2 3 4   0 1 \n",canid_rx);
+	"| | | | | | | | DUMP FET ON\n"
+	"| | | | | | | |  | ABOVENTRIP One or more cells above (max - hysteresis) & tripped\n"
+	"| | | | | | | |  | | LAUNCHNG One or more cells are below launch no-go threhold\n"
+	"| | | | | | | |  | | | ALLTOOHI All cells presently report over max\n"
+	"| | | | | | | |  | | | | ALLTRIPPED All cells have been tripped\n"
+	"| | | | | | | |  | | | | MINLOADED One or more far below min even under load\n"
+	"| | | | | | | |  | | | | | CELLTOOHI2 (1 << 5)  // One of more above CELLTOOHI plus increment\n"
+	"| | | | | | | |  | | | | | | CELLTOOHIa (1 << 6)  // 1 = CELLTOOHI2 implmented\n"
+	"| | | | | | | |  | | | | | | | Reserved\n"
+	"| | | | | | | |  | | | | | | | |  | HEATER FET ON\n"
+	"| | | | | | | |  | | | | | | | |  | | DUMP2 FET ON\n"
+	"| | | | | | | |  | | | | | | | |  | | | On board charger normal rate\n"
+	"| | | | | | | |  | | | | | | | |  | | | | Charger low rate ON\n"
+	"| | | | | | | |  | | | | | | | |  | | | | |   Self-discharge ON\n"
+	"| | | | | | | |  | | | | | | | |  | | | | |   | One or more cells tripped\n"	
+	"0 1 2 3 4 5 6 7  0 1 2 3 4 5 6 7  0 1 2 3 4   0 1 \n",canid_rx);
 }
 //static uint8_t hdrctr;
 static void miscq_status(struct CANRCVBUF* p)
@@ -1110,23 +1119,48 @@ static void miscq_status(struct CANRCVBUF* p)
 #define BSTATUS_CHARGING  (1 << 5)  // Low power charger ON
 #define BSTATUS_DUMPTOV   (1 << 6)  // Discharge to a voltage in progress
 #define BSTATUS_CELLVRYLO (1 << 7)  // One or more cells very low
+
+Battery extended status bits: 'battery_ext_status' payload [3] 
+#define BSTATUS_X_ABOVENTRIP (1 << 0)  // One or more cells above (max - hysteresis) & tripped
+#define BSTATUS_X_LAUNCH_NG  (1 << 1)  // One or more cells are below launch no-go threhold
+#define BSTATUS_X_ALLTOOHI   (1 << 2)  // All cells presently report over max
+#define BSTATUS_X_ALLTRIPPED (1 << 3)  // All cells have been tripped
+#define BSTATUS_X_MINLOADED  (1 << 4)  // One or more far below min even under load
+#define BSTATUS_X_CELLTOOHI2 (1 << 5)  // One of more above CELLTOOHI plus increment
+#define BSTATUS_X_CELLTOOHIa (1 << 6)  // 1 = CELLTOOHI2 implmented 
+
 */	
-char cc;
+char cc; 
+	// Periodic print header
 	if (oto_sw-- < 1)
 	{
 		oto_sw = 32;
 		printf_hdr_status();
 	}
 
+	// First battery status byte
 	for (i = 0; i < 8; i++)
 	{
 		if ((p->cd.uc[4] & (1 << i)) == 0)
 			cc = '.';
 		else
-			cc = 'B';
+			cc = '1';
 		printf("%c ",cc);
 	}
-	printf("    ");
+	printf(" ");
+
+	// Extended battery status byte
+	for (i = 0; i < 8; i++)
+	{
+		if ((p->cd.uc[3] & (1 << i)) == 0)
+			cc = '.';
+		else
+			cc = '1';
+		printf("%c ",cc);
+	}
+	printf(" ");
+
+
 /* FET status bits" 'fet_status' 
 #define FET_DUMP     (1 << 0) // 1 = DUMP FET ON
 #define FET_HEATER   (1 << 1) // 1 = HEATER FET ON
@@ -1139,7 +1173,7 @@ char cc;
 		if ((p->cd.uc[5] & (1 << i)) == 0)
 			cc = '.';
 		else
-			cc = 'F';
+			cc = '1';
 		printf("%c ",cc);
 	}
 /* Mode status bits 'mode_status' 
@@ -1152,7 +1186,7 @@ char cc;
 		if ((p->cd.uc[6] & (1 << i)) == 0)
 			cc = '.';
 		else
-			cc = 'M';
+			cc = '1';
 		printf("%c ",cc);
 	}
 	printf("\n");

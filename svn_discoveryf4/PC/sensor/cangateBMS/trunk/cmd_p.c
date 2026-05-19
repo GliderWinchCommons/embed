@@ -46,15 +46,42 @@ INSERT INTO CANID VALUES ('CANID_ELCON_RX','C0372FA4','ELCON1',1,1,'I16_I16_U8_U
 #define CANID_TX_DEFAULT CANID_ELCON_RX  // C0372FA4' This cmd SENDS; ELCON receives
 #define CANID_BMS_DEFAULT CANID_UNI_BMS_PC_I //CANID_UNI_BMS_PC_I AEC00000 BMSV1 UNIversal From PC,  Incoming msg to BMS: X4=target CANID // Default pollster
 
-/* Battery status bits: 'battery_status'  uc[4] */
+/* Battery extended status bits: 'battery_ext_status' payload [3] */
+#define BSTATUS_X_ABOVENTRIP (1 << 0)  // One or more cells above (max - hysteresis) & tripped
+#define BSTATUS_X_LAUNCH_NG  (1 << 1)  // One or more cells are below launch no-go threhold
+#define BSTATUS_X_ALLTOOHI   (1 << 2)  // All cells presently report over max
+#define BSTATUS_X_ALLTRIPPED (1 << 3)  // All cells have been tripped
+#define BSTATUS_X_MINLOADED  (1 << 4)  // One or more far below min even under load
+#define BSTATUS_X_CELLTOOHI2 (1 << 5)  // One of more above CELLTOOHI plus increment
+#define BSTATUS_X_CELLTOOHIa (1 << 6)  // 1 = CELLTOOHI2 implmented 
+
+
+/* Battery status bits: 'battery_status' payload [4] */
 #define BSTATUS_NOREADING (1 << 0)	// Exactly zero = no reading
 #define BSTATUS_OPENWIRE  (1 << 1)  // Negative or over 4.3v indicative of open wire
 #define BSTATUS_CELLTOOHI (1 << 2)  // One or more cells above max limit
-#define BSTATUS_CELLTOOLO (1 << 3)  // One or more cells below min limit
+#define BSTATUS_CELLTOOLO (1 << 3)  // One or more cells too low for any discharging
 #define BSTATUS_CELLBAL   (1 << 4)  // Cell balancing in progress
-#define BSTATUS_CHARGING  (1 << 5)  // Low power charger ON
+#define BSTATUS_CHARGING  (1 << 5)  // Low power charger ON | DUMP2 ON
 #define BSTATUS_DUMPTOV   (1 << 6)  // Discharge to a voltage in progress
 #define BSTATUS_CELLVRYLO (1 << 7)  // One or more cells very low
+
+/* FET status bits" 'fet_status' payload [5] */
+#define FET_DUMP      (1 << 0) // 1 = DUMP FET ON
+#define FET_HEATER    (1 << 1) // 1 = HEATER FET ON
+#define FET_DUMP2     (1 << 2) // 1 = DUMP2 FET ON (external charger)
+#define FET_CHGR      (1 << 3) // 1 = Charger FET enabled: Normal charge rate
+#define FET_CHGR_VLC  (1 << 4) // 1 = Charger FET enabled: Very Low Charge rate
+#define FET_PWM       (1 << 5) // PWM mode is on
+
+/* Mode status bits 'mode_status' payload [6] */
+#define MODE_SELFDCHG  (1 << 0) // 1 = Self discharge; 0 = charging
+#define MODE_CELLTRIP  (1 << 1) // 1 = One or more cells tripped max
+//#define MODE_TRIPBTD   (1 << 2) // 1 = One or more cells tripped & below target-delta
+
+/* Temperature status 'temp_status' payload [7] */
+#define TEMPTUR_OVMAX  (1 << 0) // 1 = One or more temperature sensors above max threshold
+
 
 #define MISCQ_STATUS      1 // status
 

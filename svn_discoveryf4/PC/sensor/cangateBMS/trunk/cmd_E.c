@@ -51,6 +51,7 @@ can.cd.uc[7] = Temp
 #define BSTATUS_X_ALLTRIPPED (1 << 3)  // All cells have been tripped
 #define BSTATUS_X_MINLOADED  (1 << 4)  // One or more far below min even under load
 #define BSTATUS_X_CELLTOOHI2 (1 << 5)  // One of more above CELLTOOHI plus increment
+#define BSTATUS_X_CELLTOOHIa (1 << 6)  // 1 = CELLTOOHI2 implmented 
 
 /* Battery status bits: 'battery_status' payload [4] */
 #define BSTATUS_NOREADING (1 << 0)	// Exactly zero = no reading
@@ -113,6 +114,13 @@ can.cd.uc[7] = Temp
  #define MISCQ_READ_ADDR    35 // BMS responds with 'n' bytes sent in [3]
  #define MISCQ_PROC_TEMP    36 // Processor calibrated internal temperature (deg C)
  #define MISCQ_CHG_LIMITS   37 // Show params: Module V max, Ext chg current max, Ext. chg bal
+ #define MISCQ_MORSE_TRAP   38 // Retrieve stored morse_trap code.
+ #define MISCQ_FAN_STATUS   39 // Retrieve fan: pct and rpm 
+ #define MISCQ_FAN_SET_SPD  40 // Set fan: pct (0 - 100)
+ #define MISCQ_PROG_CRC     41 // Retrieve installed program's: CRC
+ #define MISCQ_PROG_CHKSUM  42 // Retrieve installed program's: Checksum
+ #define MISCQ_PROG_CRCCHK  43 // Retrieve for both 41 and 42 (two msgs)
+ #define MISCQ_SUMCELLVOLTS 44 // Sum of (valid) cell voltages
 
 #define FMIN_STRING_V 109.0 // Below this string voltage ELCON will not charge
 #define FNOC_STRING_V 80.0  // Below this ELCON NOT CONNECTED to string
@@ -186,6 +194,7 @@ struct BMSNODE
 	struct CANRCVBUF can;    // Last received CAN msg for this 'id'
 	struct CANRCVBUF canchg; // Discovery: charger limits
 	struct CANRCVBUF canstatus; // Last received BMS status msg
+	struct CANRCVBUF cansumcellvolts; // Last received BMS summcellvolts
 	uint32_t id;	          // CAN ID for this node
 	uint32_t discoveryct;    // Number of BMS msgs during discovery
 	uint32_t discoverylimits;// Number of BMS mgs with limits
@@ -199,13 +208,15 @@ static struct BMSNODE elcon;    // Use this for the ELCON.
 static struct BMSNODE bmsnode[BMSNODESZ];
 
 // bits positioned by module index BMSnode list
-static uint32_t module_celltoohi; // One or more cells above max limit
-static uint32_t module_selfdchg;  // 1 = One or more cells tripped max
-static uint32_t module_tripped;   // 1 = Module reported one or cells over max
-static uint32_t module_mask;      // Bits set for modules present
-static uint32_t module_responded; // Status msgs received update bits
-static uint32_t module_dump;      // 1 = set bms dump on; 0 = off
-//static uint32_t module_celltrip;// 1 = Self discharge; 0 = charging
+static uint32_t module_celltoohi;  // One or more cells above max limit
+static uint32_t module_celltoohi2; // One or more cells above max limit + increment
+static uint32_t module_celltoohia; // 1 = module_celltoohi2 implemented
+static uint32_t module_selfdchg;   // 1 = One or more cells tripped max
+static uint32_t module_tripped;    // 1 = Module reported one or cells over max
+static uint32_t module_mask;       // Bits set for modules present
+static uint32_t module_responded;  // Status msgs received update bits
+static uint32_t module_dump;       // 1 = set bms dump on; 0 = off
+//static uint32_t module_celltrip; // 1 = Self discharge; 0 = charging
 
 #define PARAMLISTSZ 32 // Possible size of paramlist
 static uint32_t paramid[PARAMLISTSZ];
@@ -308,34 +319,45 @@ static void printdatetime(void)
     printf("%s",buffer);
     return;
  }
+/******************************************************************************
+ * static void printmodulevolts(void);
+ * @brief 	: BMS module voltage sum
+ ******************************************************************************/ 
+ static void printmodulevolts(void)
+ {
+ 	float fsum = 0;
+ 	float ftmp;
+	// Sum BMS module voltages
+	int j;	
+	for (j = 0; j < bmsnodes_online; j++)
+	{ //
+		ftmp = (float)bmsnode[j].cansumcellvolts.cd.ui[1]*0.001;
+		fsum += ftmp;
+		printf("\t%08X %8.2fV\n",bmsnode[j].cansumcellvolts.id,ftmp);// Convert 0.1mv to volts		
+	}
+	printf("\t   Total %8.2fV\n",fsum);
+	return;
+ }
  /******************************************************************************
  * static void printprogress(void);
  * @brief 	: print ELCON command & reply, BMS module voltage sum
  ******************************************************************************/
 void printprogress(void)
 {
-	// Sum BMS module voltages
-	int j; int sum = 0;	
-	for (j = 0; j < bmsnodes_online; j++)
-	{ //
-		sum += bmsnode[j].can.cd.us[2];
-	}
-	sum = 9999;
-
-int i; 
-printf("PPROG: %08X %d: ",cantx_elcon.id,cantx_elcon.dlc);
-for (i = 0; i < cantx_elcon.dlc; i++) 
-	printf("%02X ",cantx_elcon.cd.uc[i]);
-printf("\n");
-
+	int i; 
+	printf("PPROG: %08X %d: ",cantx_elcon.id,cantx_elcon.dlc);
+	for (i = 0; i < cantx_elcon.dlc; i++) 
+		printf("%02X ",cantx_elcon.cd.uc[i]);
+	printf("\n");
 	printdatetime();
-	printf(" ELCON CMD V I  ELCON REPLY V  I  BMS TOS V \n");
-	printf("\t\t  %6.1f %6.1f  %6.1f %6.1f     %6.1f\n", 
+	printf("\n  ELCON CMD V    I   ELCON REPLY V   I \n");
+	printf("       %6.1f %5.1f        %6.1f %5.1f\n", 
 		(float)(cantx_elcon.cd.uc[0]*256+cantx_elcon.cd.uc[1])*0.1,
 		(float)(cantx_elcon.cd.uc[2]*256+cantx_elcon.cd.uc[3])*0.1,
 		(float)(elcon.can.cd.uc[0]*256+elcon.can.cd.uc[1])*0.1,
-		(float)(elcon.can.cd.uc[2]*256+elcon.can.cd.uc[3])*0.1,
-		(float)sum*0.1);
+		(float)(elcon.can.cd.uc[2]*256+elcon.can.cd.uc[3])*0.1);
+
+	printmodulevolts();
 	return;
 }
 
@@ -746,15 +768,16 @@ if (z == 'x') return -1;
 	cantx_Emx.cd.uc[0] = CMD_EMC_SETMODE; // 53 [1]-[7] [0] = misc data: EMC TYPE2
 	cantx_Emx.cd.uc[1] = 1; // OBC off // EMCCMD_ELIDLE;   //  0  ELCON: Self discharging/stop  
 
-	bmsnodes_online  = 0; // Number of discovered BMS nodes
-	module_celltoohi = 0; // One or more cells above max limit
-	module_selfdchg  = 0; // 1 = One or more cells tripped max
-	module_tripped   = 0; // 1 = Module reported one or cells over max
-	module_mask      = 0; // Bits set for modules present
-	module_responded = 0; // Status msgs received update bits
-	module_dump      = 0; // 1 = set bms dump on; 0 = off
-	state            = 0; // 
-	doneflag         = 0; //
+	bmsnodes_online   = 0; // Number of discovered BMS nodes
+	module_celltoohi  = 0; // One or more cells above max limit
+	module_celltoohi2 = 0; // One or more cells above max limit + increment
+	module_selfdchg   = 0; // 1 = One or more cells tripped max
+	module_tripped    = 0; // 1 = Module reported one or cells over max
+	module_mask       = 0; // Bits set for modules present
+	module_responded  = 0; // Status msgs received update bits
+	module_dump       = 0; // 1 = set bms dump on; 0 = off
+	state             = 0; // 
+	doneflag          = 0; //
 
 	chgzeroiv.ivolts = 0; // Zero current (i) and volts (v)
 	chgzeroiv.iamps  = 0;
@@ -840,7 +863,7 @@ if (z == 'x') return -1;
 		sendcan_type2(MISCQ_CHG_LIMITS,0);
 		canmsgstimeout    = timerctr + CANMSGSTIMEOUT;
 		progresstime      = timerctr + PROGRESSTIME;
-		timeprintprogress = timerctr + PRINTPROGRESS;
+		timeprintprogress = timerctr + 40; // Short delay then do first line
 		sendcan_type2(MISCQ_STATUS,0);
 		break;
 
@@ -1445,9 +1468,9 @@ printcanmsg(p);printf("\n");
 }
 /******************************************************************************
  * static void module_status_update(struct CANRCVBUF* p, uint8_t j);
- * @brief 	: Extract status from CAN msg and set bit for string
+ * @brief 	: Extract status from CAN msg and set bit in a word
  * @param   : p = pointer to BMS node CAN msg with MISCQ_STATUS code
- * @param   : j = index as in BMSnode[j]
+ * @param   : j = index for the module (as in BMSnode[j])
 *******************************************************************************/
 void module_status_update(struct CANRCVBUF* p, uint8_t j)
 {
@@ -1456,11 +1479,25 @@ void module_status_update(struct CANRCVBUF* p, uint8_t j)
 	// Set bit for module in a word for string
 	module_responded |= (1 << j); // Poll response results
 
+	// Update bit for module for one or more cells over max
 	if ((p->cd.uc[4] & BSTATUS_CELLTOOHI) == 0)
 		module_celltoohi &= ~(1 << j);
 	else
 		module_celltoohi |=  (1 << j);
 
+	// Update celltoohi2 (cell max plus charging increment) implemented
+	if ((p->cd.uc[3] & BSTATUS_X_CELLTOOHIa) == 0)
+		module_celltoohia &= ~(1 << j);
+	else
+		module_celltoohia |=  (1 << j);		
+
+ // Here module has implemented the CELLTOOHI2 code
+	if ((p->cd.uc[3] & BSTATUS_X_CELLTOOHI2) == 0)
+		module_celltoohi2 &= ~(1 << j);
+	else
+		module_celltoohi2 |=  (1 << j);		
+
+	// Update self-discharge/charge mode 
 	if ((p->cd.uc[6] & MODE_SELFDCHG) == 0)
 		module_selfdchg &= ~(1 << j);
 	else
@@ -1485,18 +1522,25 @@ static void charging_poll(struct CANRCVBUF* p)
 			bmsnode[j].timeout = timerctr + BMSPOLL_TIMEOUT;
 			bmsnode[j].can = *p; // Save lastest CAN 
 			// We are most interested in status at the moment
-			if ((p->cd.uc[1] == MISCQ_STATUS) && (p->cd.uc[0] == 0x31))
-			{ // Here the 0x31 shows msg has the status
-				// Update last received status msg
-				module_status_update(p,j);	
-//printf("STATUS %08X %02X %02X %02X %02X %02X\n",p->id, p->cd.uc[3], p->cd.uc[4],p->cd.uc[5],p->cd.uc[6],p->cd.uc[7]);
-#if 0  //#ifdef NOELCON
-	printf("STATUS: %08X %d:",p->id, p->dlc);
-	int w;
-	for (w = 0; w < p->dlc; w++) 
-		printf(" %02X",p->cd.uc[w]);
-	printf("\n");
-#endif
+			if (p->cd.uc[0] == 0x31)
+			{ // TYPE2 response msg
+				if (p->cd.uc[1] == MISCQ_STATUS)
+				{ // Here the 0x31 shows msg has the status
+					// Update last received status msg
+					module_status_update(p,j);	
+	//printf("STATUS %08X %02X %02X %02X %02X %02X\n",p->id, p->cd.uc[3], p->cd.uc[4],p->cd.uc[5],p->cd.uc[6],p->cd.uc[7]);
+	#if 0  //#ifdef NOELCON
+		printf("STATUS: %08X %d:",p->id, p->dlc);
+		int w;
+		for (w = 0; w < p->dlc; w++) 
+			printf(" %02X",p->cd.uc[w]);
+		printf("\n");
+	#endif
+				}
+				if (p->cd.uc[1] == MISCQ_SUMCELLVOLTS)
+				{ // Sum of cell voltages for module
+					bmsnode[j].cansumcellvolts = *p; // Save module sum of cells msg
+				}
 			}
 			return; // No need to check further
 		}
@@ -1724,6 +1768,28 @@ return;
 }
 #endif
 /******************************************************************************
+ * static int toohilogic(void);
+ * @brief 	: Check of any module reports toohi (or toohi2 if implemented)
+ * @return  : 0 = no toohi, 1 = one or more modules over
+*******************************************************************************/
+static int toohilogic(void)
+{
+	// Are any modules that implement the toohi2 status
+	// over the call max + increment?
+	if ((module_celltoohi2 & module_celltoohia) != 0)	
+	{ // Here yes, so even with charger IR drop allowance it is too high
+		return 1; // one or more modules over
+	}
+
+	// Are any modules that do not implement the toohi2 status
+	// over the cell max?
+	if ((module_celltoohi & ~module_celltoohia) != 0)	
+	{ // Here, yes toohi for modules not implementing toohi2 status
+		return 1; // one or more modules over
+	}
+	return 0; // No modules over toohi, or toohi2 (if implemented)
+}
+/******************************************************************************
  * static void cmd_E_timerthread(void);
  * @brief 	: Send keep-alive msg
 *******************************************************************************/	
@@ -1828,7 +1894,8 @@ static void cmd_E_timerthread(void)
 			state = 7;
 			break;
 		}
-		if (module_celltoohi != 0)
+//		if (module_celltoohi != 0) // Previous 
+		if (toohilogic() != 0) // New toohi and toohi2 logic test
 		{ // Here one of more modules are showing one or more cells over target
 			// Is step-down current at minimum?
 			if (chgwork.iamps == chgbalance.iamps)
@@ -1871,11 +1938,11 @@ static void cmd_E_timerthread(void)
 		// Request BMS status
 		sendcan_type2(MISCQ_STATUS,0); 
 		timestatewait = timerctr + CHGSTATPOLL; // +20
-		state = 22;
 
 		// Wait for units to respond to status request
 		timestatewait = timerctr + CHGWAITREPLY; // +5
 		state = 22;
+		sendcan_type2(MISCQ_SUMCELLVOLTS,0); // Get sum of cells from modules
 		break;
 
 	case 22: // Wait for units to respond to poll
@@ -1888,7 +1955,8 @@ static void cmd_E_timerthread(void)
 			break;
 		}
 		// Here, all units have responded
-		if (module_celltoohi != 0)
+//		if (module_celltoohi != 0) // Previous toohi test
+		if (toohilogic() != 0) // New toohi and toohi2 logic test			
 		{ // Here one of more modules are showing one or more cells over target
 			state = 8;  // DONE (one or more toohi after zero current duration)
 			break;
@@ -1921,6 +1989,7 @@ static void cmd_E_timerthread(void)
 		sendcan_type2(MISCQ_STATUS,0); 
 		// Wait for units to respond
 		timestatewait = timerctr + CHGWAITREPLY; // +5
+		sendcan_type2(MISCQ_SUMCELLVOLTS,0); // Get sum of cells from modules		
 		state = 2;
 		break;
 

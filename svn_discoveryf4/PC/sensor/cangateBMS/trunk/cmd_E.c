@@ -22,7 +22,7 @@
 #define SKIPPRINT2 
 #define SKIPPRINT3 
 
-//#define NOELCON // define this for debugging without ELCON
+#define NOELCON // define this for debugging without ELCON
 
 
 /* The following are defaults which can be changed with commands. The changes
@@ -54,7 +54,7 @@ can.cd.uc[7] = Temp
 #define BSTATUS_X_CELLTOOHIa (1 << 6)  // 1 = CELLTOOHI2 implmented 
 
 /* Battery status bits: 'battery_status' payload [4] */
-#define BSTATUS_NOREADING (1 << 0)	// Exactly zero = no reading
+#define BSTATUS_NOREADING (1 << 0)  // Exactly zero = no reading
 #define BSTATUS_OPENWIRE  (1 << 1)  // Negative or over 4.3v indicative of open wire
 #define BSTATUS_CELLTOOHI (1 << 2)  // One or more cells above max limit
 #define BSTATUS_CELLTOOLO (1 << 3)  // One or more cells too low for any discharging
@@ -218,9 +218,15 @@ static uint32_t module_responded;  // Status msgs received update bits
 static uint32_t module_dump;       // 1 = set bms dump on; 0 = off
 //static uint32_t module_celltrip; // 1 = Self discharge; 0 = charging
 
+/* Wait duration before checking BMS status when ELCON is set to zero. */
+#define TOOHILOOPCTMAX    9  // Number of times through loop before terminating.
+#define TOOHIWAITINITIAL 40  // First wait duration for the toohi loop
+static uint32_t toohiloopctr;         // Working ctr
+static uint32_t timetoohiwait;        // time tick count for wait loop
+
 #define PARAMLISTSZ 32 // Possible size of paramlist
 static uint32_t paramid[PARAMLISTSZ];
-static uint8_t paramsize; // Number loaded into list
+static uint8_t paramsize; // Number of entries loaded into list
 
 /* Line buffer size */
 #define LINESIZE 2048
@@ -244,6 +250,7 @@ static int8_t doneflag; //
 #define TIMEOUT_ERR_IDLE 20 // Throttle error msgs
 #define DONECT          100 // DONE msg 
 #define ELCONZEROWAIT    40 // ELCON current set to zero, settling wait duration
+#define ELCONRAMPUP   10000 // Delay to let ELCON current ramp up from zero
 #ifndef NOELCON
   #define PRINTPROGRESS (600*10) // print something for hapless Op (ticksperminute * number of minutes)
 #else
@@ -260,6 +267,8 @@ static uint32_t canmsgstimeout; // Input CAN msg timeout
 static uint32_t progresstime; 
 static uint32_t timestatewait;
 static uint32_t timeprintprogress; // Output progress
+
+static uint32_t printprogresstick = PRINTPROGRESS;
 
 /* Supply a default number of modules on the string. */
 static uint8_t num_bms_modules = EXPECTED_NUM_MODULES_DEFAULT; // Number of BMS modules expected on string
@@ -302,10 +311,51 @@ static int8_t msgbypass; // 1 = bypass (ignore) CAN msgs arriving (see E_do_msg(
 static int8_t flagdiscoveryrepeat; // Terminate discovery phase repeats
 #endif
 
+#define BQREQ_SIZE 4  // Number of different requests	
+
 static void sendcanmsg_dump(uint8_t bits);
 static void canmsg_elcon_update(struct CHGVALUES* pchgrate);
 
-
+// Help list for BMS status bits
+static void printfstatushelp(void)
+{
+printf("\nSTATUS BITS HELP\n"
+"payload [3] Battery extended status bits: battery_ext_status \n"
+"   BSTATUS_X_ABOVENTRIP (1 << 0)  // One or more cells above (max - hysteresis) & tripped\n"
+"   BSTATUS_X_LAUNCH_NG  (1 << 1)  // One or more cells are below launch no-go threhold\n"
+"   BSTATUS_X_ALLTOOHI   (1 << 2)  // All cells presently report over max\n"
+"   BSTATUS_X_ALLTRIPPED (1 << 3)  // All cells have been tripped\n"
+"   BSTATUS_X_MINLOADED  (1 << 4)  // One or more far below min even under load\n"
+"   BSTATUS_X_CELLTOOHI2 (1 << 5)  // One of more above CELLTOOHI plus increment\n"
+"   BSTATUS_X_CELLTOOHIa (1 << 6)  // 1 = CELLTOOHI2 implmented \n"
+"\n"
+" payload [4] Battery status bits: battery_status \n"
+"   BSTATUS_NOREADING (1 << 0)	// Exactly zero = no reading\n"
+"   BSTATUS_OPENWIRE  (1 << 1)  // Negative or over 4.3v indicative of open wire\n"
+"   BSTATUS_CELLTOOHI (1 << 2)  // One or more cells above max limit\n"
+"   BSTATUS_CELLTOOLO (1 << 3)  // One or more cells too low for any discharging\n"
+"   BSTATUS_CELLBAL   (1 << 4)  // Cell balancing in progress\n"
+"   BSTATUS_CHARGING  (1 << 5)  // Low power charger ON | DUMP2 ON\n"
+"   BSTATUS_DUMPTOV   (1 << 6)  // Discharge to a voltage in progress\n"
+"   BSTATUS_CELLVRYLO (1 << 7)  // One or more cells very low\n"
+"\n"
+" payload [5] FET status bits fet_status \n"
+"   FET_DUMP      (1 << 0) // 1 = DUMP FET ON\n"
+"   FET_HEATER    (1 << 1) // 1 = HEATER FET ON\n"
+"   FET_DUMP2     (1 << 2) // 1 = DUMP2 FET ON (external charger)\n"
+"   FET_CHGR      (1 << 3) // 1 = Charger FET enabled: Normal charge rate\n"
+"   FET_CHGR_VLC  (1 << 4) // 1 = Charger FET enabled: Very Low Charge rate\n"
+"   FET_PWM       (1 << 5) // PWM mode is on\n"
+"\n"
+"payload [6] Mode status bits mode_status\n"
+"   MODE_SELFDCHG  (1 << 0) // 1 = Self discharge; 0 = charging\n"
+"   MODE_CELLTRIP  (1 << 1) // 1 = One or more cells tripped max\n"
+"   MODE_TRIPBTD   (1 << 2) // 1 = One or more cells tripped & below target-delta\n"
+"\n"
+" payload [7] Temperature status 'temp_status' \n"
+"   TEMPTUR_OVMAX  (1 << 0) // 1 = One or more temperature sensors above max threshold\n"
+"\n");
+}
 /******************************************************************************
  * static void printdatetime(void);
  * @brief 	: print "now"
@@ -320,22 +370,61 @@ static void printdatetime(void)
     return;
  }
 /******************************************************************************
+ * static void  statusbytebits(uint8_t b, uint8_t n);
+ * @brief 	: Print status bits for status byte
+ * @arg     : b = byte with bits to be printed
+ * @arg     : n = number of bits to print, starting at bit 0
+ ******************************************************************************/ 
+static void  statusbytebits(uint8_t b, uint8_t n)
+{
+	int i;
+	for (i = 0; i <  n; i++)
+	{
+		if ((b & (1<<i)) == 0)
+			printf(".");
+		else
+			printf("1");
+	}
+	printf(" ");
+	return;
+}
+/******************************************************************************
+ * static void  printfstatusbits(int j);
+ * @brief 	: Print status bits for module
+ ******************************************************************************/ 
+static void  printfstatusbits(int j)
+{
+	statusbytebits(bmsnode[j].canstatus.cd.uc[3],7); // BSTATUS_X
+	statusbytebits(bmsnode[j].canstatus.cd.uc[4],8); // BSTATUS
+	statusbytebits(bmsnode[j].canstatus.cd.uc[5],6); // FET
+	statusbytebits(bmsnode[j].canstatus.cd.uc[6],3); // MODE
+	statusbytebits(bmsnode[j].canstatus.cd.uc[7],1); // TEMPTUR
+	return;
+}
+
+/******************************************************************************
  * static void printmodulevolts(void);
- * @brief 	: BMS module voltage sum
+ * @brief 	: BMS module voltage sum plus status bits, and more
  ******************************************************************************/ 
  static void printmodulevolts(void)
  {
  	float fsum = 0;
  	float ftmp;
+
+ 	printf("                           0123456 01234567 012345 012 0\n");
+
 	// Sum BMS module voltages
 	int j;	
 	for (j = 0; j < bmsnodes_online; j++)
 	{ //
 		ftmp = (float)bmsnode[j].cansumcellvolts.cd.ui[1]*0.001;
 		fsum += ftmp;
-		printf("\t%08X %8.2fV\n",bmsnode[j].cansumcellvolts.id,ftmp);// Convert 0.1mv to volts		
+		printf("\t%08X %8.2fV ",bmsnode[j].cansumcellvolts.id,ftmp);// Convert 0.1mv to volts
+		printfstatusbits(j);
+		printf("\n");
 	}
-	printf("\t   Total %8.2fV\n",fsum);
+	// Sum of cells and diff with ELCON reported voltages
+	printf("\t   Total %8.2fV  diff %0.1f\n",fsum,(float)(elcon.can.cd.uc[0]*256+elcon.can.cd.uc[1])*0.1 - fsum);
 	return;
  }
  /******************************************************************************
@@ -357,7 +446,7 @@ void printprogress(void)
 		(float)(elcon.can.cd.uc[0]*256+elcon.can.cd.uc[1])*0.1,
 		(float)(elcon.can.cd.uc[2]*256+elcon.can.cd.uc[3])*0.1);
 
-	printmodulevolts();
+	printmodulevolts(); // Also prints status bytes expanded
 	return;
 }
 
@@ -368,6 +457,11 @@ void printprogress(void)
  ******************************************************************************/
 static void sendupdatedelcon(struct CHGVALUES* p)
 {
+	timeprintprogress	+= printprogresstick;
+	                     
+	printdatetime();
+ 	printprogress();
+
 	canmsg_elcon_update(p);
 	sendcanmsg(&cantx_elcon); 
 	return;
@@ -380,17 +474,22 @@ static void sendupdatedelcon(struct CHGVALUES* p)
 char* pfail = 
  "\n###############################################################\n"
 	"One or more of the discovered modules failed to respond to poll\n"
-	"############################# ENDED! ##########################\n";
+	"############################# ENDED1 ##########################\n";
 
 char* pdone = 		
  "\n#################################################################\n"
 	"One or more modules toohi after wait when ELCON current was zero.\n"
-	"############################# DONE 2 ############################\n";
+	"############################# DONE 1 ############################\n";
 
 char* palltripped =
  "\n########################################################################\n"
 	"All modules have tripped their max with ELCON at minimum charge current.\n"
-	"############################# DONE 1 ###################################\n";
+	"############################# DONE 2 ###################################\n";
+
+char* pmodulect =
+ "\n########################################################################\n"
+	"Module count discovered does not match expected count.                  \n"
+	"############################# ENDED2 ###################################\n";
 		  
 void end_wrapup(char* p)
 {
@@ -398,7 +497,7 @@ void end_wrapup(char* p)
 	printf("%s",p);
 	sendcan_type2(MISCQ_SET_SELFDCHG,0); // Set low currrent charge ON
 	state = 9;
-	sendcanmsg_dump(0);
+	sendcanmsg_dump(0); // JIC any dumps were turned on
 	return;
 }
 /******************************************************************************
@@ -599,8 +698,10 @@ static void printhelp(void)
 	"Eh: prints this command detail\n\t"
 	"En <count> = Set new count of BMS nodes on string\n\t"
 	"Ec <vac> <amps> <watts> Set ELCON: input volts; input amps limit; input_watts limit\n\t"
-	"Eo <amps> Charging max amps. Greater than zero overrides BMS module reports\n\t"
+	"Eo <amps> Charging max amps. Greater than zero overrides BMS module reports\n\t"	
+	"Ep <secs> Duration between progress printouts (default = 600 secs)\n\t"
 	"Er <volts> Charging max volts. Greater than zero overrides BMS module reports\n\t"
+	"Es Status bits help list\n\t"
 	"Ev: BMS discovery followed by charging\n\t"
 	"Ex: Shutdown ELCON\n\t"
 	"Emx: EMCMMC (bmsmot) control mode for ELCON\n\t"
@@ -710,7 +811,46 @@ int cmd_E_init(char* p)
 	float tmpo;
 
 
-	printf("Time Now: "); printdatetime(); printf("\n");
+	printf("Date_Time Now: "); printdatetime(); printf("\n");
+
+/* Do the following before initializing. */
+/* Check keyboard input. */
+	if (len < 3)
+	{ 
+		printhelp();
+		printsettings();
+		printpowersettings();
+		return 0;
+	}	
+
+	/* POLLER requests BMS node, string, or all. */
+	switch ( *(p+1) )
+	{ 
+	case '\n':
+	case ' ':
+	case 'h':
+		printhelp();
+		printsettings();
+		printpowersettings();		
+		return 0;	
+
+	case 's': // Status help
+		printfstatushelp();
+		return 0;
+
+	case 'p': // Progress printout duration
+		if (scansize(len,5) != 0) 
+			return -1; // check length
+		sscanf((p+2),"%d",&i); // get what they want as int
+		if (i < 4)
+		{
+			printf("Duration less than 4 sec is not acceptable: %d\n ",i);
+			return 0;
+		}
+		printf("Duration in MINUTES:SECONDS between progress printouts %d:%02d\n",i/60,i%60);
+		printprogresstick = (i * 10); // 0.1 tick count
+		return 0;
+	}
 
 #if 0
 // Warning during early debugging
@@ -863,7 +1003,9 @@ if (z == 'x') return -1;
 		sendcan_type2(MISCQ_CHG_LIMITS,0);
 		canmsgstimeout    = timerctr + CANMSGSTIMEOUT;
 		progresstime      = timerctr + PROGRESSTIME;
-		timeprintprogress = timerctr + 40; // Short delay then do first line
+		timeprintprogress = timerctr + 40; // Short delay then do first line				
+		toohiloopctr      = 0; // Reset counter for number of waits. 
+		timetoohiwait     = TOOHIWAITINITIAL; // Initial toohi wait.
 		sendcan_type2(MISCQ_STATUS,0);
 		break;
 
@@ -970,12 +1112,11 @@ if (z == 'x') return -1;
 		sendupdatedelcon(&chgzeroiv); // Update and send ELCON
 		return -1;
 
-
 	default:
-		printf("2nd char not recognized: %c\n", *(p+1));
+		printf("==> 2nd char not recognized: %c\n", *(p+1));
 		{
-			ret = -1;
-			break;
+			printhelp();
+			return -1;
 		}
 	}
 	
@@ -1053,7 +1194,7 @@ void elcondatacheck(struct CANRCVBUF* p)
 			printf("\tELCON reports ELCON_STATUS_BATT_DISC: battery disconnect\n");
 
 		if ((p->cd.uc[4] & ELCON_STATUS_COMM_TO) != 0)
-			printf("\tELCON reports ELCON_STATUS_COMM_TIMEOUT: communcation timeout\n");
+			printf("\tELCON reports ELCON_STATUS_COMM_TIMEOUT: communication timeout\n");
 //		state = 10; // Avoid repetitive error msgs.
 		return;
 	}
@@ -1324,8 +1465,9 @@ static void discovery_end(void)
 			bmsnodes_online,num_bms_modules);	
 		printdiscovered();
 		printf("Change number of expected modules with En command\n");
-			state = 9;	// Timer thread idle
-			return;
+		end_wrapup(pmodulect);
+		state = 9;	// Timer thread idle
+		return;
 	}
 	printf("SUCCESS: Discovered BMS nodes equals Expected number of BMS nodes %d\n",bmsnodes_online);
 
@@ -1610,7 +1752,7 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 
 	case 9:
 		donect = timerctr + 1;
-		state = 12;
+		state = 11;
 		break;
 
 	case 10:
@@ -1841,9 +1983,9 @@ static void cmd_E_timerthread(void)
 	/* Output status periodically. */
 	if ((int)(timerctr - timeprintprogress) >= 0)
 	{ // Print a status for the hapless Op
-		timeprintprogress	+= PRINTPROGRESS;
+		timeprintprogress	+= printprogresstick;
 		printdatetime();
-    	printprogress();
+    printprogress();
 	}
 
 	switch(state)
@@ -1912,12 +2054,17 @@ static void cmd_E_timerthread(void)
 			// Set charging current to zero
 			sendupdatedelcon(&chgzeroiv); // Update and send ELCON
 
-			timestatewait = timerctr + ELCONZEROWAIT;
+			timestatewait = timerctr + timetoohiwait;
 			state = 21;
 			break;
 		}
 		// Here no modules reported toohi
 		timestatewait  = timerctr + CHGSTATPOLL;
+
+		/* Reset counter for number of waits. */
+		toohiloopctr = 0;
+		timetoohiwait = TOOHIWAITINITIAL; // Initial wait			
+
 		state = 3; // Continue charging
 		break;
 
@@ -1937,7 +2084,7 @@ static void cmd_E_timerthread(void)
 
 		// Request BMS status
 		sendcan_type2(MISCQ_STATUS,0); 
-		timestatewait = timerctr + CHGSTATPOLL; // +20
+//		timestatewait = timerctr + CHGSTATPOLL; // +20
 
 		// Wait for units to respond to status request
 		timestatewait = timerctr + CHGWAITREPLY; // +5
@@ -1955,20 +2102,37 @@ static void cmd_E_timerthread(void)
 			break;
 		}
 		// Here, all units have responded
-//		if (module_celltoohi != 0) // Previous toohi test
 		if (toohilogic() != 0) // New toohi and toohi2 logic test			
 		{ // Here one of more modules are showing one or more cells over target
-			state = 8;  // DONE (one or more toohi after zero current duration)
+			toohiloopctr += 1;
+			if (toohiloopctr >= TOOHILOOPCTMAX)
+			{ // Here, toohi still showing after increasing waits
+				state = 8;  // DONE (one or more toohi after zero current duration)
+				break;
+			}
+			timetoohiwait += timetoohiwait; // Double wait duration
+			timestatewait  = timerctr + timetoohiwait;
+			state = 21; // Execute another poll for status
 			break;
 		}
-		// Step down charging current
-			reducechgcurrent();
-			sendupdatedelcon(&chgwork);
 
-		state = 3; // Waiting for next cycle
+		/* Here, no modules reported a toohi! We shall continue charging. */
+		// Reset counter for number of waits.
+		toohiloopctr = 0;
+		timetoohiwait = TOOHIWAITINITIAL; // Initial wait				
+
+		// Step down charging current
+		reducechgcurrent();
+		sendupdatedelcon(&chgwork);
+
+		// Short delay for progress print to let ELCON current ramp up from zero 
+		timeprintprogress	= timerctr + ELCONRAMPUP; // 10000 
+
 		// Set wait for beginning next cycle
 		timestatewait = timerctr + CHGSTATPOLL; // +20
 		print_chgingdisplay();
+
+		state = 3; // Waiting for next cycle
 		break;
 
 	case 3:	// Check for end of wait-for-next-cycle
@@ -2025,6 +2189,7 @@ static void cmd_E_timerthread(void)
 *******************************************************************************/
 static int starttimer(void)
 {
+	timerctr = 0; // jic
 	/* Start timer thread for sending CAN msgs. */
 	int ret = timer_thread_init(&cmd_E_timerthread, 100000); // 100ms
 	if (ret != 0)

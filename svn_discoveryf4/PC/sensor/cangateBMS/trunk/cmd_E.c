@@ -244,7 +244,7 @@ static int8_t doneflag; //
 #define ELCON_INTERVAL   21 // ELCON timeout: it should report once per second
 #define ELCON_KEEP_ALIVE  9 // Number of 0.1 secs between ELCON keep-alive
 #define CANMSGSTIMEOUT  100 // Timeout for no CAN msgs coming in (gateway problems?)
-#define PROGRESSTIME     10 // Hapless op keep-alive
+#define PROGRESSTIME     40 // Hapless op keep-alive
 #define CHGSTATPOLL      20 // Charging: wait to start next status update
 #define CHGWAITREPLY     12 // Charging: wait to for BMS nodes to respond
 #define TIMEOUT_ERR_IDLE 20 // Throttle error msgs
@@ -434,12 +434,13 @@ static void  printfstatusbits(int j)
 void printprogress(void)
 {
 	int i; 
+	printdatetime();
 	printf("PPROG: %08X %d: ",cantx_elcon.id,cantx_elcon.dlc);
 	for (i = 0; i < cantx_elcon.dlc; i++) 
 		printf("%02X ",cantx_elcon.cd.uc[i]);
 	printf("\n");
-	printdatetime();
-	printf("\n  ELCON CMD V    I   ELCON REPLY V   I \n");
+	//printdatetime();
+	printf("  ELCON CMD V    I   ELCON REPLY V   I \n");
 	printf("       %6.1f %5.1f        %6.1f %5.1f\n", 
 		(float)(cantx_elcon.cd.uc[0]*256+cantx_elcon.cd.uc[1])*0.1,
 		(float)(cantx_elcon.cd.uc[2]*256+cantx_elcon.cd.uc[3])*0.1,
@@ -457,10 +458,9 @@ void printprogress(void)
  ******************************************************************************/
 static void sendupdatedelcon(struct CHGVALUES* p)
 {
-	timeprintprogress	+= printprogresstick;
-	                     
-	printdatetime();
- 	printprogress();
+	//timeprintprogress	+= printprogresstick;                     
+	//printdatetime();
+ 	//printprogress();
 
 	canmsg_elcon_update(p);
 	sendcanmsg(&cantx_elcon); 
@@ -1003,7 +1003,7 @@ if (z == 'x') return -1;
 		sendcan_type2(MISCQ_CHG_LIMITS,0);
 		canmsgstimeout    = timerctr + CANMSGSTIMEOUT;
 		progresstime      = timerctr + PROGRESSTIME;
-		timeprintprogress = timerctr + 40; // Short delay then do first line				
+		timeprintprogress = timerctr + 50; // Short delay then do first line				
 		toohiloopctr      = 0; // Reset counter for number of waits. 
 		timetoohiwait     = TOOHIWAITINITIAL; // Initial toohi wait.
 		sendcan_type2(MISCQ_STATUS,0);
@@ -1515,7 +1515,8 @@ printf("module_mask: 0x%02X ",module_mask);printfbits(module_mask,8);printf("\n"
 	timestatewait = timerctr + CHGSTATPOLL; // +20
 	charging_int(); // Initialize charging phase
 	printf("\n"); // Separate init printf from following 
-	state = 3; // Begin timer state with poll for status
+	timeprintprogress = timerctr + 50;
+//	state = 3; // Begin timer state with poll for status
 	return; 
 }
 /******************************************************************************
@@ -1984,7 +1985,6 @@ static void cmd_E_timerthread(void)
 	if ((int)(timerctr - timeprintprogress) >= 0)
 	{ // Print a status for the hapless Op
 		timeprintprogress	+= printprogresstick;
-		printdatetime();
     printprogress();
 	}
 
@@ -2002,7 +2002,8 @@ static void cmd_E_timerthread(void)
 			printdatetime();
 			printf("Discovery: duration end at time counter: %d\n",timerctr);
 			discovery_end();
-			sendupdatedelcon(&chgwork);				
+			sendupdatedelcon(&chgwork);			
+			timeprintprogress = timerctr + 40; // Short delay for first progress print	
 			timestatewait = timerctr + 2; // Short wait
 			state = 3;
 			break;	
@@ -2033,7 +2034,7 @@ static void cmd_E_timerthread(void)
 #endif
 		if (checkallresponded() != 0)
 		{ // Not all BMS nodes responded
-			state = 7;
+			state = 7;;
 			break;
 		}
 //		if (module_celltoohi != 0) // Previous 

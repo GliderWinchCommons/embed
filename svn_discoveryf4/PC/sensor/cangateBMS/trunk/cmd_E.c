@@ -489,6 +489,8 @@ char* palltripped =
 char* pmodulect =
  "\n########################################################################\n"
 	"Module count discovered does not match expected count.                  \n"
+	" - Use ""En <number of modules>"" to change default module count \n"	
+	" - BMS progress listing continues, but zero current and voltage to ELCON\n"
 	"############################# ENDED2 ###################################\n";
 		  
 void end_wrapup(char* p)
@@ -1748,6 +1750,9 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 	case 4: // One or more modules did not respond to status update
 		break;	
 
+	case 7:
+		break;		
+
 	case 8: // Successful completion.
 		break; 
 
@@ -1947,12 +1952,11 @@ static void cmd_E_timerthread(void)
 	//int i;
 	timerctr += 1; // 100 ms tick running counter
 
-// canmsgstimeout is reset to new value each time CAN msg is received
+	// canmsgstimeout is reset to new value each time CAN msg is received
 	if ((int)(timerctr - canmsgstimeout) > 0)
 	{
 		printf("CAN msgs are not coming in\n");
 		canmsgstimeout += CANMSGSTIMEOUT;
-//		state = 9;
 	}
 
 	if (doneflag == 1)
@@ -1978,7 +1982,6 @@ static void cmd_E_timerthread(void)
 		printf("ELCON timeout. It is not reporting\n");
 		elcon.timeout = timerctr + ELCON_INTERVAL;
 #endif		
-//		state = 9;
 	}
 
 	/* Output status periodically. */
@@ -2019,6 +2022,7 @@ static void cmd_E_timerthread(void)
 		}
 		break;
 
+
 	case 1:
 #ifndef SKIPPRINT
 	printf("tthrd: 1 timerctr %d\n",timerctr);
@@ -2034,10 +2038,11 @@ static void cmd_E_timerthread(void)
 #endif
 		if (checkallresponded() != 0)
 		{ // Not all BMS nodes responded
-			state = 7;;
+			state = 7;
+printf("Checkallresponded fail case 1\n");
+
 			break;
 		}
-//		if (module_celltoohi != 0) // Previous 
 		if (toohilogic() != 0) // New toohi and toohi2 logic test
 		{ // Here one of more modules are showing one or more cells over target
 			// Is step-down current at minimum?
@@ -2080,12 +2085,8 @@ static void cmd_E_timerthread(void)
 		cantx_cells.cd.uc[2] = (groupctr & 0x0f);
 		groupctr += 1;
 
-		// Check that discovered modules update
-//		module_responded = 0;
-
 		// Request BMS status
 		sendcan_type2(MISCQ_STATUS,0); 
-//		timestatewait = timerctr + CHGSTATPOLL; // +20
 
 		// Wait for units to respond to status request
 		timestatewait = timerctr + CHGWAITREPLY; // +5
@@ -2099,7 +2100,8 @@ static void cmd_E_timerthread(void)
 		// Here responses should have been received
 		if (checkallresponded() != 0)
 		{ // FAIL
-			state = 7;
+//			state = 7;
+printf("Checkallresponded fail case 22\n");
 			break;
 		}
 		// Here, all units have responded
@@ -2148,10 +2150,10 @@ static void cmd_E_timerthread(void)
 		sendcanmsg(&cantx_cells);    // Cell readings
 		cantx_cells.cd.uc[2] = (groupctr & 0x0f);
 		groupctr += 1;
-		// Check that discovered modules update
-//		module_responded = 0;
+
 		// Request status
 		sendcan_type2(MISCQ_STATUS,0); 
+
 		// Wait for units to respond
 		timestatewait = timerctr + CHGWAITREPLY; // +5
 		sendcan_type2(MISCQ_SUMCELLVOLTS,0); // Get sum of cells from modules		
@@ -2164,14 +2166,13 @@ static void cmd_E_timerthread(void)
 
 	case 7: // FAIL (not all discovered nodes responded to poll)		
 		end_wrapup(pfail);
+		state = 9;
 		break;
 
 	case 8: // DONE 
 		end_wrapup(pdone);
 
 	case 9: // Idle end
-		break;
-
 	case 10:
 	case 11:
 	case 12:

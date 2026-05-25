@@ -22,7 +22,7 @@
 #define SKIPPRINT2 
 #define SKIPPRINT3 
 
-#define NOELCON // define this for debugging without ELCON
+//#define NOELCON // define this for debugging without ELCON
 
 
 /* The following are defaults which can be changed with commands. The changes

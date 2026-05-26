@@ -22,7 +22,7 @@
 #define SKIPPRINT2 
 #define SKIPPRINT3 
 
-//#define NOELCON // define this for debugging without ELCON
+#define NOELCON // define this for debugging without ELCON
 
 
 /* The following are defaults which can be changed with commands. The changes
@@ -234,6 +234,7 @@ static char buf[LINESIZE];
 
 static int8_t state; // 
 static int8_t doneflag; //
+static int8_t flagreducedtominforever;
 
 // The following are 0.1 sec timer ticks for various timeouts
 #define SECSTOWAIT       50 // Duration to monitor
@@ -250,7 +251,7 @@ static int8_t doneflag; //
 #define TIMEOUT_ERR_IDLE 20 // Throttle error msgs
 #define DONECT          100 // DONE msg 
 #define ELCONZEROWAIT    40 // ELCON current set to zero, settling wait duration
-#define ELCONRAMPUP   10000 // Delay to let ELCON current ramp up from zero
+#define ELCONRAMPUP     100 // Delay to let ELCON current ramp up from zero
 #ifndef NOELCON
   #define PRINTPROGRESS (600*10) // print something for hapless Op (ticksperminute * number of minutes)
 #else
@@ -274,10 +275,10 @@ static uint32_t printprogresstick = PRINTPROGRESS;
 static uint8_t num_bms_modules = EXPECTED_NUM_MODULES_DEFAULT; // Number of BMS modules expected on string
 
 /* Start with default values for ELCON input and output limitations. */
-static float input_volts = DEFAULT_ELCON_INPUT_VOLTAGE;      //  120 Default input power voltage (volts)
-static float input_amps  = DEFAULT_ELCON_INPUT_CURRENT;      //   15 Default input power max current (amps)
-static float input_watts = DEFAULT_ELCON_INPUT_POWER;        // 1600 Default input power max (watts)
-static float output_amps = DEFAULT_ELCON_OUTPUT_CURRENT_MAX; //  3.8 Default Max charging current (amps)
+static float input_volts  = DEFAULT_ELCON_INPUT_VOLTAGE;      //  120 Default input power voltage (volts)
+static float input_amps   = DEFAULT_ELCON_INPUT_CURRENT;      //   15 Default input power max current (amps)
+static float input_watts  = DEFAULT_ELCON_INPUT_POWER;        // 1600 Default input power max (watts)
+static float output_amps  = DEFAULT_ELCON_OUTPUT_CURRENT_MAX; //  3.8 Default Max charging current (amps)
 static float output_volts = DEFAULT_ELCON_OUTPUT_VOLTS_MAX;  //    0 Default does not override modules (volts)
 
 static struct CANRCVBUF cantx_type2; // Generic TYPE2 msg to read
@@ -356,18 +357,26 @@ printf("\nSTATUS BITS HELP\n"
 "   TEMPTUR_OVMAX  (1 << 0) // 1 = One or more temperature sensors above max threshold\n"
 "\n");
 }
+
+
 /******************************************************************************
  * static void printdatetime(void);
  * @brief 	: print "now"
  ******************************************************************************/
+static time_t Ecmdtimestamp_prev; // Save for computing differences
 static void printdatetime(void)
 {
+	int i;
 	time_t Ecmdtimestamp = time(&Ecmdtimestamp);
    struct tm *tstamp = localtime(&Ecmdtimestamp);
    char buffer[80];
-    strftime(buffer, sizeof(buffer), "%Y%m%d_%H%M%S ", tstamp);
-    printf("%s",buffer);
-    return;
+   strftime(buffer, sizeof(buffer), "%Y%m%d_%H%M%S ", tstamp);
+   printf("%s",buffer);
+   i = Ecmdtimestamp - Ecmdtimestamp_prev;
+   printf("%3d:%02d ", (i/60), (i%60));
+
+	Ecmdtimestamp_prev = Ecmdtimestamp;
+  return;
  }
 /******************************************************************************
  * static void  statusbytebits(uint8_t b, uint8_t n);
@@ -411,7 +420,7 @@ static void  printfstatusbits(int j)
  	float fsum = 0;
  	float ftmp;
 
- 	printf("                           0123456 01234567 012345 012 0\n");
+ 	printf("\t                   0123456 01234567 012345 012 0\n");
 
 	// Sum BMS module voltages
 	int j;	
@@ -435,7 +444,7 @@ void printprogress(void)
 {
 	int i; 
 	printdatetime();
-	printf("PPROG: %08X %d: ",cantx_elcon.id,cantx_elcon.dlc);
+	printf("LoopCtr: %2d PROG: %08X %d: ",toohiloopctr, cantx_elcon.id,cantx_elcon.dlc);
 	for (i = 0; i < cantx_elcon.dlc; i++) 
 		printf("%02X ",cantx_elcon.cd.uc[i]);
 	printf("\n");
@@ -452,7 +461,7 @@ void printprogress(void)
 }
 
 /******************************************************************************
- * static void end_wrapup(char* p);
+ * static void sendupdatedelcon(struct CHGVALUES* p);
  * @brief 	: Update payload for elcon and send CAN msg to ELCON
  * @param   : p = pointer to stuct with values
  ******************************************************************************/
@@ -492,12 +501,21 @@ char* pmodulect =
 	" - Use ""En <number of modules>"" to change default module count \n"	
 	" - BMS progress listing continues, but zero current and voltage to ELCON\n"
 	"############################# ENDED2 ###################################\n";
+
+char* pminafterreduced =
+ "\n########################################################################\n"
+	"One or more modules toohi after ELCON current zero AND charge level\n"
+	"   is at minimum\n"	
+	"############################## DONE 3 ###################################\n";
+
 		  
 void end_wrapup(char* p)
 {
-	sendcanmsg(&cantx_elcon); // ELCON shutdown
+	// Set charging current to zero
+	chgzeroiv.ivolts = 0; // Complete shutdown of ELCON.
+	sendupdatedelcon(&chgzeroiv); // Update and send ELCON
 	printf("%s",p);
-	sendcan_type2(MISCQ_SET_SELFDCHG,0); // Set low currrent charge ON
+	sendcan_type2(MISCQ_SET_SELFDCHG,0); // Set low currrent chargers (OBCs) ON
 	state = 9;
 	sendcanmsg_dump(0); // JIC any dumps were turned on
 	return;
@@ -920,6 +938,7 @@ if (z == 'x') return -1;
 	module_dump       = 0; // 1 = set bms dump on; 0 = off
 	state             = 0; // 
 	doneflag          = 0; //
+	flagreducedtominforever = 0; //
 
 	chgzeroiv.ivolts = 0; // Zero current (i) and volts (v)
 	chgzeroiv.iamps  = 0;
@@ -1891,6 +1910,7 @@ static int reducechgcurrent(void)
 		if ((ftmpw * 10.0f) < (float)chgbalance.iamps)
 		{ // Here, reduction is below minimum possible
 			chgwork.iamps = chgbalance.iamps; // Set min forever
+			flagreducedtominforever = 1; // Flag for timer routine to do a "DONE"
 		}
 		else
 		{ // Update new computed charge current
@@ -2006,7 +2026,7 @@ static void cmd_E_timerthread(void)
 			printf("Discovery: duration end at time counter: %d\n",timerctr);
 			discovery_end();
 			sendupdatedelcon(&chgwork);			
-			timeprintprogress = timerctr + 40; // Short delay for first progress print	
+			timeprintprogress = timerctr + ELCONRAMPUP; // Short delay for first progress print	
 			timestatewait = timerctr + 2; // Short wait
 			state = 3;
 			break;	
@@ -2116,20 +2136,28 @@ printf("Checkallresponded fail case 22\n");
 			timetoohiwait += timetoohiwait; // Double wait duration
 			timestatewait  = timerctr + timetoohiwait;
 			state = 21; // Execute another poll for status
-			break;
+// Print progress each loop for hapless Op.			
+			timeprintprogress	= timerctr + 5;
+    	break;
 		}
 
 		/* Here, no modules reported a toohi! We shall continue charging. */
 		// Reset counter for number of waits.
 		toohiloopctr = 0;
-		timetoohiwait = TOOHIWAITINITIAL; // Initial wait				
+		timetoohiwait = TOOHIWAITINITIAL; // Initial wait
 
 		// Step down charging current
 		reducechgcurrent();
+		// If already at minimum current it is time to quit.	
+		if (flagreducedtominforever != 0) 
+		{
+			state = 8;
+			break;
+		}
 		sendupdatedelcon(&chgwork);
 
 		// Short delay for progress print to let ELCON current ramp up from zero 
-		timeprintprogress	= timerctr + ELCONRAMPUP; // 10000 
+		timeprintprogress	= timerctr + ELCONRAMPUP; // 10 secs (100)
 
 		// Set wait for beginning next cycle
 		timestatewait = timerctr + CHGSTATPOLL; // +20
@@ -2158,6 +2186,10 @@ printf("Checkallresponded fail case 22\n");
 		timestatewait = timerctr + CHGWAITREPLY; // +5
 		sendcan_type2(MISCQ_SUMCELLVOLTS,0); // Get sum of cells from modules		
 		state = 2;
+		break;
+
+	case 5:
+		end_wrapup(pminafterreduced);
 		break;
 
    case 6: // All modules have tripped AND charge current was minimum

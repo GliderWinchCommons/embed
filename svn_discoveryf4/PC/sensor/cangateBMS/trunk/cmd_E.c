@@ -33,7 +33,7 @@
 #define DEFAULT_ELCON_INPUT_POWER  1600 // Default ELCON input power max (watts)
 #define DEFAULT_ELCON_OUTPUT_CURRENT_MAX 2.0 // Non-zero default module overrides module current max
 #define DEFAULT_ELCON_OUTPUT_VOLTS_MAX 0 // Default of zero does not override module sum (volts)
-#define VADJUST 1.035f // Default factor for increasing charge voltage over module reported
+#define VADJUST 1.050f // Default factor for increasing charge voltage over module reported
 
 extern uint32_t msg_sw;	// Command in effect
 
@@ -1360,7 +1360,7 @@ static void charging_int(void)
 		printf("OVERRIDE CHG CURRENT. SET TO: %0.1fa\n",fmin_chg_cur);
 	}
 
-	min_bal_cur = 1; // Step down charging current to this level
+	min_bal_cur = 2; // 1; // Step down charging current to this level
 	fmin_bal_cur  = min_bal_cur  * 0.1;
 	printf("OVERRIDE MIN BAL CURRENT. SET TO: %0.1fa\n",fmin_bal_cur);
 
@@ -1885,7 +1885,7 @@ static int checkallresponded(void)
  * @brief 	: Cut back charging current command
  * @return  : 0 = Charging at chgbalance amps, 1 = Above 
 *******************************************************************************/
-#define CHG_REDUCE_FAC 0.625f // Reduction factor
+#define CHG_REDUCE_FAC 0.5f //0.625f // Reduction factor
 #define CHG_REDUCE_INC 0.1f   // Reduction increment (amps)
 #define CHG_HILO 0.6f         // Threshold to switch to linear reduction
 static int reducechgcurrent(void)

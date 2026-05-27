@@ -420,7 +420,8 @@ static void  printfstatusbits(int j)
  	float fsum = 0;
  	float ftmp;
 
- 	printf("\t                   0123456 01234567 012345 012 0\n");
+ 	printf("\t                ta ....... ..+-BCD  DH2CL. STB .  Status Bytes\n");
+ 	printf("\t                   0123456 01234567 012345 012 0 [3][4][5][6][7]\n");
 
 	// Sum BMS module voltages
 	int j;	
@@ -430,6 +431,9 @@ static void  printfstatusbits(int j)
 		fsum += ftmp;
 		printf("\t%08X %8.2fV ",bmsnode[j].cansumcellvolts.id,ftmp);// Convert 0.1mv to volts
 		printfstatusbits(j);
+		printf(" %02X %02X %02X %02X %02X",bmsnode[j].canstatus.cd.uc[3],bmsnode[j].canstatus.cd.uc[4],
+			                                bmsnode[j].canstatus.cd.uc[5],bmsnode[j].canstatus.cd.uc[6],
+		                                  bmsnode[j].canstatus.cd.uc[7]);
 		printf("\n");
 	}
 	// Sum of cells and diff with ELCON reported voltages

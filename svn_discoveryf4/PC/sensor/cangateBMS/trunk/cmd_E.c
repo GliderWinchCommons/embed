@@ -1598,7 +1598,7 @@ printf("BMS node found %08X\n",p->id);
 				bmsnodes_online += 1;
 				if (bmsnodes_online >= BMSNODESZ)
 				{
-					printf("ERR: Discovery is finding more than possible %d\n",BMSNODESZ);
+					printf("ERR: Discovery is finding more modules than possible %d\n",BMSNODESZ);
 					state = 9;
 					return;
 				}
@@ -1767,6 +1767,7 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 	case 21:
 	case 22:	
 	case 3:
+	case 9:
 		charging_poll(p);	
 		break;
 
@@ -1779,10 +1780,12 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 	case 8: // Successful completion.
 		break; 
 
+#if 0
 	case 9:
 		donect = timerctr + 1;
 		state = 11;
 		break;
+#endif
 
 	case 10:
 		// Skip repeated ending msgs
@@ -2208,10 +2211,22 @@ printf("Checkallresponded fail case 22\n");
 	case 8: // DONE 
 		end_wrapup(pdone);
 
-	case 9: // Idle end
 	case 10:
 	case 11:
 	case 12:
+	case 9: // Idle end
+			// Request cell readings (which triggers a status update)
+		cantx_cells.cd.uc[2] = (adcrate << 4) | ((groupctr & 0xF) << 0);
+		sendcanmsg(&cantx_cells);    // Cell readings
+		cantx_cells.cd.uc[2] = (groupctr & 0x0f);
+		groupctr += 1;
+
+		// Request status
+		sendcan_type2(MISCQ_STATUS,0); 
+
+		// Wait for units to respond
+		timestatewait = timerctr + CHGWAITREPLY; // +5
+		sendcan_type2(MISCQ_SUMCELLVOLTS,0); // Get sum of cells from modules		
 		break;		
 
 	default: // Something seriously wrong

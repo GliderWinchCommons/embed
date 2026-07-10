@@ -33,6 +33,7 @@
 #define DEFAULT_ELCON_INPUT_POWER  1600 // Default ELCON input power max (watts)
 #define DEFAULT_ELCON_OUTPUT_CURRENT_MAX 2.0 // Non-zero default module overrides module current max
 #define DEFAULT_ELCON_OUTPUT_VOLTS_MAX 0 // Default of zero does not override module sum (volts)
+#define DEFAULT_CHARGE_CURRENT_TERMINATION 1.0 // Current (amps) where toohi2 causes E cmd to 'wrapup'
 #define VADJUST 1.050f // Default factor for increasing charge voltage over module reported
 
 extern uint32_t msg_sw;	// Command in effect
@@ -280,6 +281,7 @@ static float input_amps   = DEFAULT_ELCON_INPUT_CURRENT;      //   15 Default in
 static float input_watts  = DEFAULT_ELCON_INPUT_POWER;        // 1600 Default input power max (watts)
 static float output_amps  = DEFAULT_ELCON_OUTPUT_CURRENT_MAX; //  3.8 Default Max charging current (amps)
 static float output_volts = DEFAULT_ELCON_OUTPUT_VOLTS_MAX;  //    0 Default does not override modules (volts)
+static float charge_current_termination = DEFAULT_CHARGE_CURRENT_TERMINATION; // (1.0) Current to end charging
 
 static struct CANRCVBUF cantx_type2; // Generic TYPE2 msg to read
 static struct CANRCVBUF cantx_type2k;// Generic TYPE2 msg to set
@@ -724,6 +726,7 @@ static void printhelp(void)
 	"Ec <vac> <amps> <watts> Set ELCON: input volts; input amps limit; input_watts limit\n\t"
 	"Eo <amps> Charging max amps. Greater than zero overrides BMS module reports\n\t"	
 	"Ep <secs> Duration between progress printouts (default = 600 secs)\n\t"
+	"Eq <amps> Charge current level where toohi2 ends this command\n\t"
 	"Er <volts> Charging max volts. Greater than zero overrides BMS module reports\n\t"
 	"Es Status bits help list\n\t"
 	"Ev: BMS discovery followed by charging\n\t"
@@ -847,7 +850,7 @@ int cmd_E_init(char* p)
 		return 0;
 	}	
 
-	/* POLLER requests BMS node, string, or all. */
+	/* The following is for updating parameters without initializing charging cycle. */
 	switch ( *(p+1) )
 	{ 
 	case '\n':
@@ -873,6 +876,23 @@ int cmd_E_init(char* p)
 		}
 		printf("Duration in MINUTES:SECONDS between progress printouts %d:%02d\n",i/60,i%60);
 		printprogresstick = (i * 10); // 0.1 tick count
+		return 0;
+
+case 'q': // Override default with new charge current termination
+		if (scansize(len,5) != 0) 
+			return -1; // check length
+		tmpa = 0;
+		sscanf((p+2),"%f",&tmpa); // Get keyboard input (float)
+		if ((tmpa <= 0.2) || (tmpa > 16.0))
+		{ // Here input is out of range
+			printf("Charge current level for terimnation is currently %0.1f\n",charge_current_termination);
+			printf("Keyboard input was %0.1f and must be greater than 0.2 and less than or equal 16.0 ",tmpa);
+			return 0;
+		}
+		// Here input is within bounds
+		printf("Charge current level for terimnation was %0.1fa\n",charge_current_termination);
+		charge_current_termination = tmpa;
+		printf("New level is %0.1fa\n",charge_current_termination);
 		return 0;
 	}
 
@@ -1372,7 +1392,9 @@ static void charging_int(void)
 	}
 
 	chgbalance.ivolts = max_string_v;
-	chgbalance.iamps  = min_bal_cur;  // Balancing (min) rate
+//	chgbalance.iamps  = min_bal_cur;  // Balancing (min) rate
+	chgbalance.iamps  = charge_current_termination; 
+
 	chgfull.ivolts    = max_string_v; // Max voltage
 	chgfull.iamps     = fmin_chg_cur * 10.0f;  // Max current
 	
@@ -1888,8 +1910,8 @@ static int checkallresponded(void)
  * @brief 	: Cut back charging current command
  * @return  : 0 = Charging at chgbalance amps, 1 = Above 
 *******************************************************************************/
-#define CHG_REDUCE_FAC 0.5f //0.625f // Reduction factor
-#define CHG_REDUCE_INC 0.1f   // Reduction increment (amps)
+#define CHG_REDUCE_FAC 0.5f //0.625f // Scale Reduction factor
+#define CHG_REDUCE_INC 0.1f   // Linear Reduction increment (amps)
 #define CHG_HILO 0.6f         // Threshold to switch to linear reduction
 static int reducechgcurrent(void)
 {
@@ -2073,15 +2095,11 @@ printf("Checkallresponded fail case 1\n");
 		if (toohilogic() != 0) // New toohi and toohi2 logic test
 		{ // Here one of more modules are showing one or more cells over target
 			// Is step-down current at minimum?
-			if (chgwork.iamps == chgbalance.iamps)
+			if (chgwork.iamps <= chgbalance.iamps)
 			{ // Yes.
 				// Set module(s) tripped
 				module_tripped |= module_celltoohi;
-			}
-			// Are all modules tripped?
-			if (module_mask == module_tripped)
-			{ // Yes. ===> DONE <===
-				state = 6;
+				state = 8;
 				break;
 			}
 			// Set charging current to zero
@@ -2194,6 +2212,8 @@ printf("Checkallresponded fail case 22\n");
 		sendcan_type2(MISCQ_SUMCELLVOLTS,0); // Get sum of cells from modules		
 		state = 2;
 		break;
+
+
 
 	case 5:
 		end_wrapup(pminafterreduced);

@@ -27,8 +27,8 @@ ij x
 #   from the #defines.
 
 echo "java defines"
-cd ~/GliderWinchCommons/javaparams/pcc_gen_defines/dist
-java -jar pcc_gen_defines.jar | tee ~/GliderWinchCommons/embed/svn_common/trunk/db/gen_db.h
+cd ../../../../javaparams/pcc_gen_defines/dist
+java -jar pcc_gen_defines.jar | tee ../../../embed/svn_common/trunk/db/gen_db.h
 
 echo "java defines static final"
 cd ~/GliderWinchCommons/javaparams/pcc_gen_static_final/dist

@@ -236,8 +236,9 @@ static char buf[LINESIZE];
 static int8_t state; // 
 static int8_t doneflag; //
 static int8_t flagreducedtominforever;
+static int8_t canmsgstimeoutflag; 
 
-// The following are 0.1 sec timer ticks for various timeouts
+// The following are => 0.1 sec <= timer ticks for various timeouts
 #define SECSTOWAIT       50 // Duration to monitor
 #define BMSPOLL_INTERVAL 30 // BMS poll for status
 #define BMSPOLL_TIMEOUT  50 // BMS report failure
@@ -333,7 +334,7 @@ printf("\nSTATUS BITS HELP\n"
 "   BSTATUS_X_CELLTOOHIa (1 << 6)  // 1 = CELLTOOHI2 implmented \n"
 "\n"
 " payload [4] Battery status bits: battery_status \n"
-"   BSTATUS_NOREADING (1 << 0)	// Exactly zero = no reading\n"
+"   BSTATUS_NOREADING (1 << 0)  // Exactly zero = no reading\n"
 "   BSTATUS_OPENWIRE  (1 << 1)  // Negative or over 4.3v indicative of open wire\n"
 "   BSTATUS_CELLTOOHI (1 << 2)  // One or more cells above max limit\n"
 "   BSTATUS_CELLTOOLO (1 << 3)  // One or more cells too low for any discharging\n"
@@ -892,7 +893,7 @@ case 'q': // Override default with new charge current termination
 		// Here input is within bounds
 		printf("Charge current level for terimnation was %0.1fa\n",charge_current_termination);
 		charge_current_termination = tmpa;
-		printf("New level is %0.1fa\n",charge_current_termination);
+		printf("\tNew level is %0.1fa\n",charge_current_termination);
 		return 0;
 	}
 
@@ -1377,14 +1378,13 @@ static void charging_int(void)
 		min_chg_cur = output_amps * 10;
 		fmin_chg_cur  = min_chg_cur  * 0.1;
 		ftmp_cur = fmin_chg_cur;
-		printf("OVERRIDE CHG CURRENT. SET TO: %0.1fa\n",fmin_chg_cur);
+		printf("                 OVERRIDE CHG CURRENT. SET TO: %7.1fa\n",fmin_chg_cur);
 	}
 
 	min_bal_cur = 2; // 1; // Step down charging current to this level
 	fmin_bal_cur  = min_bal_cur  * 0.1;
-	printf("OVERRIDE MIN BAL CURRENT. SET TO: %0.1fa\n",fmin_bal_cur);
-
-
+  printf("             OVERRIDE MIN BAL CURRENT. SET TO: %7.1fa\n",fmin_bal_cur);
+	
 	// Override max charging voltage derived from sum of reported module max voltages
 	if (output_volts > 0)
 	{
@@ -1406,7 +1406,7 @@ static void charging_int(void)
 	chgzeroi.iamps  = 0;
 	chgzeroi.ivolts = chgfull.ivolts; // Zero current full voltage 
 
-	printf("Sum of max module volts(adj) from BMS reports: %7.1fv\n",fmax_string_v);
+  printf("Sum of max module volts(adj) from BMS reports: %7.1fv\n",fmax_string_v);
 	printf("Final determination:         max string volts: %7.1fv\n",fmax_string_v);
 	printf("Final determination:     max charging current: %7.1fa\n",ftmp_cur);
 	printf("Final determination:          max ELCON watts: %7.0fw\n",ftmp_chg_watts);
@@ -1545,7 +1545,7 @@ static void discovery_end(void)
 	}
 	else
 	{
-		printf(" looks good\n");
+		printf("  LOOKS GOOD!\n");
 	}
 
 	// All are OK, display list for hapless Op
@@ -1760,7 +1760,8 @@ void elcon_tx(struct CANRCVBUF* p)
 void cmd_E_do_msg(struct CANRCVBUF* p)
 {
 	/* Overall check on gateway functioning. Reset timeout. */
-	canmsgstimeout = timerctr + CANMSGSTIMEOUT;
+	//canmsgstimeout = timerctr + CANMSGSTIMEOUT;
+	canmsgstimeoutflag = 1;
 
 	// Ignore incoming CAN msgs until Ev command given
 	if (msgbypass != 0)
@@ -1915,9 +1916,10 @@ static int checkallresponded(void)
 #define CHG_HILO 0.6f         // Threshold to switch to linear reduction
 static int reducechgcurrent(void)
 {
-  	float ttt;	
+  float ttt;	
 	float ftmpw; // Be lazy and  use floating point
-	if (chgwork.iamps != chgbalance.iamps)
+
+	if (chgwork.iamps >= chgbalance.iamps)
 	{ // Here, we have not reached the minimum
 		ftmpw = (float)chgwork.iamps * 0.1f; // Convert 0.1a steps to 1.0
 		if (ftmpw < (CHG_HILO-0.05f) )
@@ -1939,6 +1941,8 @@ static int reducechgcurrent(void)
 		if ((ftmpw * 10.0f) < (float)chgbalance.iamps)
 		{ // Here, reduction is below minimum possible
 			chgwork.iamps = chgbalance.iamps; // Set min forever
+		  
+		  // This should trigger the wrapup and terminiation of this routine
 			flagreducedtominforever = 1; // Flag for timer routine to do a "DONE"
 		}
 		else
@@ -1948,9 +1952,14 @@ static int reducechgcurrent(void)
 		return 1;
 	}
 #ifndef SKIPPRINT2	
-	printf("CHG REDUCE EQUAL chgwork.iamps %d  chgbalance.iamps %d\n",chgwork.iamps, chgbalance.iamps);
+	printf("CHG REDUCE !(chgwork.iamps >= chgbalance.iamps) : chgwork.iamps %d  chgbalance.iamps %d\n",chgwork.iamps, chgbalance.iamps);
 #endif	
-	return 0; // Continue with minimum forever
+	// Here, work.iamps is less than chgbalance.iamps
+	chgwork.iamps = chgbalance.iamps; // Set min
+
+  // This should trigger the wrapup and terminiation of this routine
+	flagreducedtominforever = 1; // Flag for timer routine to do a "DONE"
+	return 0;
 }	
 /******************************************************************************
  * static void printchgrate(void);
@@ -2001,20 +2010,33 @@ static void cmd_E_timerthread(void)
 	//int i;
 	timerctr += 1; // 100 ms tick running counter
 
-	// canmsgstimeout is reset to new value each time CAN msg is received
+	/* Note: There are number of places where canmsgstimeout get 
+	refreshed and this is has the hazard of the thread timer
+	interrupting during the updating. Using a flag that is set
+	in a single non-interruptable store takes care of this.
+*/
 	if ((int)(timerctr - canmsgstimeout) > 0)
-	{
-		printf("CAN msgs are not coming in\n");
+	{ // Incoming CAN msgs should be setting the flag to 1.
+		if (canmsgstimeoutflag == 0)
+		{ // Timeout with no CAN msgs
+			printf("CAN msgs are not coming in\n");
+		}
+		canmsgstimeoutflag = 0;
 		canmsgstimeout += CANMSGSTIMEOUT;
 	}
 
+	// Redirect timer to end this mess
 	if (doneflag == 1)
 	{ // Stop 
 		state = 8;
-		return;
+	}
+	// Another flag to end this mess
+	if (flagreducedtominforever != 0) 
+	{
+		state = 8;
 	}
 
-	/* Send ELCON commands */
+	/* Keep-alive: Send ELCON command with last payload setting. */
 	if ((int)(timerctr - elcon_timer_keep_alive) >= 0)
 	{ // Time to output accumulated readings
 		elcon_timer_keep_alive += ELCON_KEEP_ALIVE;
@@ -2050,18 +2072,18 @@ static void cmd_E_timerthread(void)
 		}
 		if ((int)(timerctr - discoverytime) >= 0)
 		{ // Here, end of duration for Discovery phase 
-			sendcan_type2(MISCQ_SET_SELFDCHG,1); // Set low currrent charge 1=OFF // 0=ON
+			sendcan_type2(MISCQ_SET_SELFDCHG,1); // Set low currrent chargers (OBCC) 1=OFF, 0=ON
 			printdatetime();
 			printf("Discovery: duration end at time counter: %d\n",timerctr);
 			discovery_end();
 			sendupdatedelcon(&chgwork);			
 			timeprintprogress = timerctr + ELCONRAMPUP; // Short delay for first progress print	
 			timestatewait = timerctr + 2; // Short wait
-			state = 3;
+			state = 3; // <== NOTE 
 			break;	
 		}
 		if ((int)(timerctr - discoverytimepoll) >= 0)
-		{
+		{ // Here, time to do another poll.
 			discoverytimepoll = timerctr + DISCOVERY_POLL;
 			sendcan_type2(MISCQ_CHG_LIMITS,0); // Request BMS charge limit parameters
 			printdatetime();

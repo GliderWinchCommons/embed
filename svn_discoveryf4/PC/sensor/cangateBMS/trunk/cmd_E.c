@@ -1841,10 +1841,14 @@ void cmd_E_do_msg(struct CANRCVBUF* p)
 		state = 9;
 		break;
 
+ case 99:
+ 			msgbypass = 1; // jic
+ 			exit(0);
+ 			break;
+
 	default:
 		printdatetime();
-		printf("PROG ERROR! cmd_E_do_msg: switch statement error: %d\n",state);
-		state = 9;
+		printf("PROG ERROR! cmd_E_do_msg: switch statement default: %d\n",state);
 		break;
 	}
 	return;

@@ -377,6 +377,7 @@ static void printdatetime(void)
    printf("%s",buffer);
    i = Ecmdtimestamp - Ecmdtimestamp_prev;
    printf("%3d:%02d ", (i/60), (i%60));
+//printf(" \n--chgwork.iamps %i, chgbalance.iamps %i--\n",chgwork.iamps, chgbalance.iamps);
 
 	Ecmdtimestamp_prev = Ecmdtimestamp;
   return;
@@ -1251,11 +1252,11 @@ void elcondatacheck(struct CANRCVBUF* p)
 	return;
 }
 /******************************************************************************
- * static void charging_int(struct CANRCVBUF* p);
+ * static void charging_init(struct CANRCVBUF* p);
  * @brief 	: Initialize for charging
  * @param   : p = pointer to CAN msg
  ******************************************************************************/
-static void charging_int(void)
+static void charging_init(void)
 {
 	int i;
 	#define NODATA 9999	
@@ -1339,7 +1340,11 @@ static void charging_int(void)
 			flag = 2;
 		}
 	}
-	if (flag != 0) return;
+	if (flag != 0) 
+	{
+		printf("\ncharging_init: return due to flag: %i\n",flag);
+		return;
+	}
 
 
 	/* NOTE: floats are in 1x units, ints (uint_16t) in 10x */
@@ -1382,6 +1387,7 @@ static void charging_int(void)
 	}
 
 	min_bal_cur = 2; // 1; // Step down charging current to this level
+	min_bal_cur   = charge_current_termination * 10;  // Op used 'Eq' to change value
 	fmin_bal_cur  = min_bal_cur  * 0.1;
   printf("             OVERRIDE MIN BAL CURRENT. SET TO: %7.1fa\n",fmin_bal_cur);
 	
@@ -1393,7 +1399,7 @@ static void charging_int(void)
 
 	chgbalance.ivolts = max_string_v;
 //	chgbalance.iamps  = min_bal_cur;  // Balancing (min) rate
-	chgbalance.iamps  = charge_current_termination; 
+	chgbalance.iamps  = min_bal_cur; 
 
 	chgfull.ivolts    = max_string_v; // Max voltage
 	chgfull.iamps     = fmin_chg_cur * 10.0f;  // Max current
@@ -1545,7 +1551,7 @@ static void discovery_end(void)
 	}
 	else
 	{
-		printf("  LOOKS GOOD!\n");
+		printf("--LOOKS GOOD!--\n");
 	}
 
 	// All are OK, display list for hapless Op
@@ -1560,7 +1566,7 @@ printf("module_mask: 0x%02X ",module_mask);printfbits(module_mask,8);printf("\n"
 
 	// Timer timeout for beginning of sequencing with timer thread
 	timestatewait = timerctr + CHGSTATPOLL; // +20
-	charging_int(); // Initialize charging phase
+	charging_init(); // Initialize charging phase
 	printf("\n"); // Separate init printf from following 
 	timeprintprogress = timerctr + 50;
 //	state = 3; // Begin timer state with poll for status

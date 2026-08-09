@@ -524,7 +524,7 @@ void end_wrapup(char* p)
 	sendupdatedelcon(&chgzeroiv); // Update and send ELCON
 	printf("%s",p);
 	sendcan_type2(MISCQ_SET_SELFDCHG,0); // Set low currrent chargers (OBCs) ON
-	state = 9;
+	state = 99;
 	sendcanmsg_dump(0); // JIC any dumps were turned on
 	return;
 }
@@ -2276,6 +2276,9 @@ printf("Checkallresponded fail case 22\n");
 		timestatewait = timerctr + CHGWAITREPLY; // +5
 		sendcan_type2(MISCQ_SUMCELLVOLTS,0); // Get sum of cells from modules		
 		break;		
+
+	case 99:
+			exit(0);
 
 	default: // Something seriously wrong
 		printf("ERR: timerthread state err: %d\n",state);
